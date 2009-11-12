@@ -15,11 +15,12 @@ syntax: regexp
 \.pdf$
 
 # Build directories
-#/ecmwf_bufr_lib.*
+ecmwf_bufr_lib
 ecmwf_bufr_lib/.*
 ecmwf_bufr_lib/.*/.*
 ecmwf_bufr_lib/.*/.*/.*
 ecmwf_bufr_lib/.*/.*/.*/.*
+f2py_build
 
 #syntx: glob
 #

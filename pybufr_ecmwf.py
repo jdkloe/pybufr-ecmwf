@@ -236,17 +236,25 @@ class bufr_interface_ecmwf(bufr_interface):
         FINTEGERDEFINITION=" -i4"
         CINTEGERDEFINITION=" -DFOPEN64 "
 
-        CFLAGS=CFLAGS+CINTEGERDEFINITION
-        FFLAGS=FFLAGS+FINTEGERDEFINITION
+        # switch of (as test)
+        g95_present = False
 
         if   (g95_present):
             FC = "g95"
             FFLAGS = FFLAGS+" -fno-second-underscore"
             FFLAGS = FFLAGS+" -r8"
+            FFLAGS = FFLAGS+" -fPIC"
+            CFLAGS = CFLAGS+" -fPIC"
             #CNAME="_g95"
         elif (gfortran_present):
             FC = "gfortran"
             FFLAGS = FFLAGS+" -fno-second-underscore"
+            FFLAGS = FFLAGS+" -fPIC"
+            CFLAGS = CFLAGS+" -fPIC"
+            #FINTEGERDEFINITION=" -fdefault-integer-4"
+            # an explicit 4-byte default integer options seems not to exists
+            # for gfortran, so lets just hope that is the default ...
+            FINTEGERDEFINITION=""
             #CNAME="_gfortran"
         elif (g77_present):
             FC = "g77"
@@ -287,6 +295,9 @@ class bufr_interface_ecmwf(bufr_interface):
         AR="ar"
         # a command to generate an index of an archive file
         RL = "/usr/bin/ranlib"
+
+        CFLAGS=CFLAGS+CINTEGERDEFINITION
+        FFLAGS=FFLAGS+FINTEGERDEFINITION
 
         # Unfortunately, the config files supplied with this library seem
         # somewhat outdated and sometimes incorrect, or incompatible with
@@ -345,6 +356,8 @@ class bufr_interface_ecmwf(bufr_interface):
         FullnameBufrLibFile = os.path.join(Source_Dir,BufrLibFile)
         if (os.path.exists(FullnameBufrLibFile)):
             print "Build seems successfull"
+            # remove any old symlink that might be present
+            os.remove(BufrLibFile)
             # make a symlink in a more convenient location
             os.symlink(FullnameBufrLibFile,BufrLibFile)
         else:
@@ -382,7 +395,77 @@ class bufr_interface_ecmwf(bufr_interface):
             # command is present in default path
             return True
         #  #]        
+    def __adapt_f2py_signature_file__(file):
+        #  #[
+        #signature_file = "f2py_build/signatures.pyf"
+
+        # these values are defined in parameter.F 
+        # PARAMETER(JSUP =   9,
+        #          JSEC0=   3,
+        #          JSEC1=  40,
+        #          JSEC2=4096,
+        #          JSEC3=   4
+        #          JSEC4=   2,
+        #          JELEM=320000,
+        #          JSUBS=400,
+        #          JCVAL=150 ,
+        #          JBUFL=512000,
+        #          JBPW =  32,
+        #          JTAB =3000,
+        #          JCTAB=3000,
+        #          JCTST=9000,
+        #          JCTEXT=9000,
+        #          JWORK=4096000,
+        #          JKEY=46,
+        #          JTMAX=10,
+        #          JTCLAS=64,
+        #          JTEL=255)
         
+        edits = {}
+        edits['JSUP']  = 9
+        edits['JSEC0'] = 3
+        edits['JSEC1'] = 40
+        edits['JSEC2'] = 4096
+        edits['JSEC3'] = 4
+        edits['JSEC4'] = 2
+        edits['JELEM'] = 320000
+        edits['JSUBS'] = 400
+        edits['JCVAL'] = 150
+        edits['JBUFL'] = 512000
+        edits['JBPW'] = 32
+        edits['JTAB'] = 3000
+        edits['JCTAB'] = 3000
+        edits['JCTST'] = 9000
+        edits['JCTEXT'] = 9000
+        edits['JWORK'] = 4096000
+        edits['JKEY'] = 46
+        edits['JTMAX'] = 10
+        edits['JTCLAS'] = 64
+        edits['JTEL'] = 255
+        # edits[''] = 
+
+        lines = open(signature_file).readlines()
+        fd = open(signature_file,"wt")
+        for l in lines:
+            if 'dimension' in l:
+                for e in edits.keys():
+                    txt = '('+e.lower()+')'
+                    value = edits[e]
+                    if txt in l:
+                        l=l.replace(txt,str(value))
+        fd.write(l)
+        fd.close()
+        #  #]
+# notes
+# dit commando werkt ! en creeert een file ./f2py_build/signatures.pyf
+# f2py --build-dir ./f2py_build -m ecmwfbufr -h signatures.pyf ecmwf_bufr_lib/bufr_000380/bufrdc/*.F
+# na aanpassen van de pyf file met mijn scriptje adapt_signature_file.py
+# kom ik weer een stuk verder...
+
+# voor gfortran werkt het nu met dit commando!!!!!
+# f2py ./f2py_build/signatures.pyf -L./ -lbufr -c
+# er is nu inderdaad een ecmwfbufr.so file aangemaakt !!!!!!
+
 class bufrmsg:
     pass
 
