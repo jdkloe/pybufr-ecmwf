@@ -28,6 +28,7 @@ import sys  # system functions
 import re   # regular expression handling
 import glob # allow for filename expansion
 import subprocess # support running additional executables
+import shutil # portable file copying functions
 #  #]
 
 class bufr_interface:
@@ -52,7 +53,16 @@ class bufr_interface_ecmwf(bufr_interface):
         else:
             print "Entering installation sequence:"
             self.__install__()
-        
+
+        self.wrapper_name = "ecmwfbufr.so"
+        if (os.path.exists(self.wrapper_name)):
+            print "python wrapper seems already present"
+            return
+        else:
+            print "Entering wrapper generation sequence:"
+            Source_Dir = self.__get_source_dir__()
+            self.__generate_python_wrapper__(Source_Dir)
+
         #  #]
     def __download_library__(self):
         #  #[
@@ -155,13 +165,11 @@ class bufr_interface_ecmwf(bufr_interface):
         if (self.verbose):
             print "created local copy of: ",MostRecentBufrTarFileName
         #  #]
-    def __install__(self):
+    def __get_source_dir__(self):
         #  #[
         list_of_bufrtarfiles = glob.glob(os.path.join(self.ecmwf_bufr_lib_dir,"*.tar.gz"))
         if (len(list_of_bufrtarfiles)==0):
-            self.__download_library__()
-            # reload the list (hopefully we have a copy of the tarfile now)
-            list_of_bufrtarfiles = glob.glob(os.path.join(self.ecmwf_bufr_lib_dir,"*.tar.gz"))
+            return None
 
         list_of_bufrtarfiles.sort(reverse=True)
         if (self.verbose):
@@ -173,6 +181,16 @@ class bufr_interface_ecmwf(bufr_interface):
         (BUFR_Dir,ext2) = os.path.splitext(BUFR_Tar)
         
         Source_Dir = os.path.join(self.ecmwf_bufr_lib_dir,BUFR_Dir)
+        return Source_Dir
+        #  #]
+    def __install__(self):
+        #  #[
+        Source_Dir = self.__get_source_dir__()
+        if (Source_Dir == None):
+            self.__download_library__()
+            # retry (hopefully we have a copy of the tarfile now)
+            Source_Dir = self.__get_source_dir__()
+            
         if (not os.path.exists(Source_Dir)):
             Cmd = "cd "+self.ecmwf_bufr_lib_dir+";tar zxvf "+TarFile_to_Install
             print "Executing command: ",Cmd
@@ -357,7 +375,8 @@ class bufr_interface_ecmwf(bufr_interface):
         if (os.path.exists(FullnameBufrLibFile)):
             print "Build seems successfull"
             # remove any old symlink that might be present
-            os.remove(BufrLibFile)
+            if (os.path.exists(BufrLibFile)):
+                os.remove(BufrLibFile)
             # make a symlink in a more convenient location
             os.symlink(FullnameBufrLibFile,BufrLibFile)
         else:
@@ -397,11 +416,6 @@ class bufr_interface_ecmwf(bufr_interface):
         #  #]        
     def __generate_python_wrapper__(self,Source_Dir):
         #  #[
-        self.wrapper_name = "ecmwfbufr.so"
-        if (os.path.exists(self.wrapper_name)):
-            print "python wrapper seems already present, nothing to do..."
-            return
-
         wrapper_build_dir   = "f2py_build"
         wrapper_module_name = "ecmwfbufr"
         signatures_filename = "signatures.pyf"
@@ -489,32 +503,43 @@ class bufr_interface_ecmwf(bufr_interface):
         edits['JTEL'] = 255
         # edits[''] = 
 
+        # read the file
         lines = open(signature_file).readlines()
+
+        # create a backup copy, to allow manual inspection
+        Source      = signature_file
+        Destination = signature_file+".bak"
+        shutil.copyfile(Source,Destination)
+        
         fd = open(signature_file,"wt")
         for l in lines:
             if 'dimension' in l:
+                #print "adapting line: ",l
                 for e in edits.keys():
                     txt = '('+e.lower()+')'
                     value = edits[e]
                     if txt in l:
                         l=l.replace(txt,str(value))
-        fd.write(l)
+                #print "to           : ",l
+            fd.write(l)
         fd.close()
         #  #]
-# notes
-# dit commando werkt ! en creeert een file ./f2py_build/signatures.pyf
-# f2py --build-dir ./f2py_build -m ecmwfbufr -h signatures.pyf ecmwf_bufr_lib/bufr_000380/bufrdc/*.F
-# na aanpassen van de pyf file met mijn scriptje adapt_signature_file.py
-# kom ik weer een stuk verder...
 
-# voor gfortran werkt het nu met dit commando!!!!!
-# f2py ./f2py_build/signatures.pyf -L./ -lbufr -c
-# er is nu inderdaad een ecmwfbufr.so file aangemaakt !!!!!!
+#  #[ some notes:
+# manually, if I issue this command, it seems to work! this creates the file ./f2py_build/signatures.pyf
+#   f2py --build-dir ./f2py_build -m ecmwfbufr -h signatures.pyf ecmwf_bufr_lib/bufr_000380/bufrdc/*.F
+
+# afterwards I have to adapt the pyf file with my little adapt_signature_file.py script
+# Then for gfortran the following command works fine:
+#   f2py ./f2py_build/signatures.pyf -L./ -lbufr -c
+# now indeed the wrapper shared object file ecmwfbufr.so has been generated.
 
 # Note that on my home machine I have to use:
 # setenv LD_LIBRARY_PATH /home/jos/bin/gcc-trunk/lib64/
 # since I have gfortran installed in a non-default location
- 
+# (otherwise the linking step needed to create the *.so file fails)
+#  #]
+
 class bufrmsg:
     pass
 
