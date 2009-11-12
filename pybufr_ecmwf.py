@@ -395,7 +395,52 @@ class bufr_interface_ecmwf(bufr_interface):
             # command is present in default path
             return True
         #  #]        
-    def __adapt_f2py_signature_file__(file):
+    def __generate_python_wrapper__(self,Source_Dir):
+        #  #[
+        self.wrapper_name = "ecmwfbufr.so"
+        if (os.path.exists(self.wrapper_name)):
+            print "python wrapper seems already present, nothing to do..."
+            return
+
+        wrapper_build_dir   = "f2py_build"
+        wrapper_module_name = "ecmwfbufr"
+        signatures_filename = "signatures.pyf"
+
+        # call f2py and create a signature file that defines the
+        # interfacing to the fortran routines in this library
+        Cmd = "f2py --build-dir "+wrapper_build_dir+\
+              " -m "+wrapper_module_name+\
+              " -h "+signatures_filename+\
+              " "+Source_Dir+"/bufrdc/*.F"
+        print "Executing command: ",Cmd
+        os.system(Cmd)
+
+        # safety check: see if the signatures.pyf file really is created
+        signatures_fullfilename = os.path.join(wrapper_build_dir,signatures_filename)
+        if (not os.path.exists(signatures_fullfilename)):
+            print "ERROR: build of python wrapper failed"
+            print "the signatures file could not be found"
+            sys.exit(1)
+
+        # adapt the signature file
+        # this is needed, since the wrapper generation fails to do a number
+        # of file includes that are essential for the interface definition
+        # To circumvent this, remove the not-properly defined constants
+        # and replace them by their numerical values
+        self.__adapt_f2py_signature_file__(signatures_fullfilename)
+
+        Cmd = "f2py ./f2py_build/signatures.pyf -L./ -lbufr -c"
+        print "Executing command: ",Cmd
+        os.system(Cmd)
+
+        # finally, again check for the presence of the wrapper
+        # to see if the build was successfull
+        if (os.path.exists(self.wrapper_name)):
+            print "python wrapper seems already present, nothing to do..."
+            return
+
+        #  #]
+    def __adapt_f2py_signature_file__(self,signature_file):
         #  #[
         #signature_file = "f2py_build/signatures.pyf"
 
@@ -466,6 +511,10 @@ class bufr_interface_ecmwf(bufr_interface):
 # f2py ./f2py_build/signatures.pyf -L./ -lbufr -c
 # er is nu inderdaad een ecmwfbufr.so file aangemaakt !!!!!!
 
+# Note that on my home machine I have to use:
+# setenv LD_LIBRARY_PATH /home/jos/bin/gcc-trunk/lib64/
+# since I have gfortran installed in a non-default location
+ 
 class bufrmsg:
     pass
 
