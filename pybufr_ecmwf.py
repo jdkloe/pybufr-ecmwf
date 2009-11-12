@@ -60,7 +60,7 @@ class bufr_interface_ecmwf(bufr_interface):
             return
         else:
             print "Entering wrapper generation sequence:"
-            Source_Dir = self.__get_source_dir__()
+            (Source_Dir,TarFile_to_Install) = self.__get_source_dir__()
             self.__generate_python_wrapper__(Source_Dir)
 
         #  #]
@@ -181,11 +181,11 @@ class bufr_interface_ecmwf(bufr_interface):
         (BUFR_Dir,ext2) = os.path.splitext(BUFR_Tar)
         
         Source_Dir = os.path.join(self.ecmwf_bufr_lib_dir,BUFR_Dir)
-        return Source_Dir
+        return (Source_Dir,TarFile_to_Install)
         #  #]
     def __install__(self):
         #  #[
-        Source_Dir = self.__get_source_dir__()
+        (Source_Dir,TarFile_to_Install) = self.__get_source_dir__()
         if (Source_Dir == None):
             self.__download_library__()
             # retry (hopefully we have a copy of the tarfile now)
@@ -420,12 +420,39 @@ class bufr_interface_ecmwf(bufr_interface):
         wrapper_module_name = "ecmwfbufr"
         signatures_filename = "signatures.pyf"
 
+        SrcFiles = ["buxdes.F",
+                    "bufren.F",
+                    "bufrex.F",
+                    "btable.F",
+                    "get_name_unit.F",
+                    "bus012.F",
+                    "busel.F",
+                    "buprs0.F",
+                    "buprs1.F",
+                    "buprs2.F",
+                    "buprs3.F",
+                    "buukey.F",
+                    "bupkey.F",
+                    "buprq.F"]
+        #SrcFileList = ' '.join(os.path.join(Source_Dir,"bufrdc",f) for f in SrcFiles)
+        # compilation of the wrapper seems to work when I use
+        # this selected set of fortran files, but when I try to import the module
+        # in python I get the following error (don't know yet why):
+        #   >>> import ecmwfbufr
+        #   Traceback (most recent call last):
+        #     File "<stdin>", line 1, in <module>
+        #   ImportError: ./ecmwfbufr.so: undefined symbol: _gfortran_concat_string
+        #   >>> 
+
+        # just take them all
+        SrcFileList = Source_Dir+"/bufrdc/*.F"
+
         # call f2py and create a signature file that defines the
         # interfacing to the fortran routines in this library
         Cmd = "f2py --build-dir "+wrapper_build_dir+\
               " -m "+wrapper_module_name+\
               " -h "+signatures_filename+\
-              " "+Source_Dir+"/bufrdc/*.F"
+              " "+SrcFileList
         print "Executing command: ",Cmd
         os.system(Cmd)
 
@@ -450,8 +477,12 @@ class bufr_interface_ecmwf(bufr_interface):
         # finally, again check for the presence of the wrapper
         # to see if the build was successfull
         if (os.path.exists(self.wrapper_name)):
-            print "python wrapper seems already present, nothing to do..."
+            print "a python wrapper to the ECMWF BUFR library has been generated"
             return
+        else:
+            print "ERROR: build of python wrapper failed"
+            print "the compilation or linking stage failed"
+            sys.exit(1)
 
         #  #]
     def __adapt_f2py_signature_file__(self,signature_file):
@@ -535,7 +566,7 @@ class bufr_interface_ecmwf(bufr_interface):
 # now indeed the wrapper shared object file ecmwfbufr.so has been generated.
 
 # Note that on my home machine I have to use:
-# setenv LD_LIBRARY_PATH /home/jos/bin/gcc-trunk/lib64/
+#   setenv LD_LIBRARY_PATH /home/jos/bin/gcc-trunk/lib64/
 # since I have gfortran installed in a non-default location
 # (otherwise the linking step needed to create the *.so file fails)
 #  #]
