@@ -133,7 +133,7 @@ class bufr_interface_ecmwf(bufr_interface):
         download_url = url_ecmwf_website+MostRecentBufrLibURL
 
         if (self.verbose):
-            print "trying to dowdload: ",BufrTarFileName
+            print "trying to dowdload: ",MostRecentBufrTarFileName
         try:
             # Get a file-like object for this website
             f = urllib.urlopen(download_url)
