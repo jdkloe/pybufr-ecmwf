@@ -169,7 +169,7 @@ class bufr_interface_ecmwf(bufr_interface):
         #  #[
         list_of_bufrtarfiles = glob.glob(os.path.join(self.ecmwf_bufr_lib_dir,"*.tar.gz"))
         if (len(list_of_bufrtarfiles)==0):
-            return None
+            return (None,None)
 
         list_of_bufrtarfiles.sort(reverse=True)
         if (self.verbose):
@@ -189,7 +189,7 @@ class bufr_interface_ecmwf(bufr_interface):
         if (Source_Dir == None):
             self.__download_library__()
             # retry (hopefully we have a copy of the tarfile now)
-            Source_Dir = self.__get_source_dir__()
+            (Source_Dir,TarFile_to_Install) = self.__get_source_dir__()
             
         if (not os.path.exists(Source_Dir)):
             Cmd = "cd "+self.ecmwf_bufr_lib_dir+";tar zxvf "+TarFile_to_Install
