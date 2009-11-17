@@ -362,13 +362,26 @@ class bufr_interface_ecmwf(bufr_interface):
         fd.write("RANLIB     = "+RL+"\n")
         fd.close()
         
+        # create a backup copy in the 
+        Source      = FullnameConfigFile
+        Destination = os.path.join(self.ecmwf_bufr_lib_dir,"ConfigFile")
+        shutil.copyfile(Source,Destination)
+
+        # check for the presence of needed libraries
+        # in case the fortran compiler is installed in a user account (like I have myself)
+        libpath = self.__check_needed_fc_libraries__()
+    
         # construct the compilation command:
         Cmd = "cd "+Source_Dir+";make ARCH="+ARCH+" CNAME="+CNAME+" R64="+R64+" A64="+A64
 
         # now issue the Make command
-        print "Executing command: ",Cmd
-        os.system(Cmd)
-
+        #print "Executing command: ",Cmd
+        #os.system(Cmd)
+        if (libpath == ""):
+            self.__RunShellCommand__(Cmd)
+        else:
+            self.__RunShellCommand__(Cmd,libpath=libpath)
+    
         # check the result
         BufrLibFile = "libbufr.a"
         FullnameBufrLibFile = os.path.join(Source_Dir,BufrLibFile)
@@ -383,18 +396,42 @@ class bufr_interface_ecmwf(bufr_interface):
             print "ERROR in bufr_interface_ecmwf.__install__:"
             print "No libbufr.a file seems generated."
             sys.exit(1)
+
+        # save the settings for later use
+        #self.make_settings = (ARCH,CNAME,R64,A64)
+        #self.compilers     = (FC,FFLAGS,CC,CFLAGS)
+        #self.tools         = (AR,RL)
+
+        # actually, this saving of settings is not the way I would
+        # prefer doing this. I think it is better to keep the 2 stages
+        # (installation of the BUFR library, and generation of the
+        #  python interface shared object) as separate as possible.
+        # This allows rerunning generation of the python interface
+        # without rerunning the installation of the BUFR library
+        # (which will at least save a lot of time during development)
+        #
+        # So in the __check_needed_fc_libraries__ routine should just
+        # read the config file generated above, and not use these
+        # settings in self, that might not always be defined.
+
         #  #]
-    def __CheckPresence__(self,command):
+    def __RunShellCommand__(self,Cmd,libpath=None):
         #  #[
-        if (self.verbose):
-            print "checking for presence of command: "+command
-        
-        result = []
-        
-        # get the real command, in case it was an alias
-        Cmd = "which "+command
+        # get the list of already defined env settings
+        e = os.environ
+        if (libpath):
+            # add the additional env setting
+            envname = "LD_LIBRARY_PATH"
+            if (e.has_key(envname)):
+                e[envname] = e[envname] + ";" + libpath
+            else:
+                e[envname] = libpath
+                
+                
         print "Executing command: ",Cmd
-        SubPr = subprocess.Popen(Cmd,shell=True,
+        SubPr = subprocess.Popen(Cmd,
+                                 shell=True,
+                                 env=e,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
 
@@ -407,13 +444,139 @@ class bufr_interface_ecmwf(bufr_interface):
         #print "lines_stdout: ",lines_stdout
         #print "lines_stderr: ",lines_stderr
 
+        return (lines_stdout,lines_stderr)
+        #  #]
+    def __CheckPresence__(self,command):
+        #  #[
+        if (self.verbose):
+            print "checking for presence of command: "+command
+        
+        result = []
+        
+        # get the real command, in case it was an alias
+        Cmd = "which "+command
+        (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+
         if (len(lines_stdout)==0):
             # command is not present in default path
             return False
         else:
             # command is present in default path
             return True
-        #  #]        
+        #  #]
+    def __check_needed_fc_libraries__(self):
+        #  #[
+        ConfigFile = os.path.join(self.ecmwf_bufr_lib_dir,"ConfigFile")
+        lines = open(ConfigFile).readlines()
+
+        # extract which fortran compiler is used
+        for l in lines:
+            parts=l.split('=')
+            if (parts[0].strip()=="FC"):
+                FortranCompiler = parts[1].strip()
+
+        if (FortranCompiler == "gfortran"):
+            print "Checking library availability for FortranCompiler = ",FortranCompiler
+            # get the real command, in case it was an alias
+            Cmd = "which "+FortranCompiler
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+            if (len(lines_stdout)==0):
+                # command is not present in default path
+                print "ERROR: gfortran seems not present in the default part"
+                sys.exit(1)
+            else:
+                # Return the canonical path of the specified filename, eliminating any
+                # symbolic links encountered in the path.
+                compiler1 = os.path.realpath(lines_stdout[0].strip())
+                print "compiler1=",compiler1
+                # gives in my case: /home/jos/bin/gcc-trunk/bin/gfortran
+                # find the corresponding f951 executable.
+                # Note that both g95 and gfortran use this name for their
+                # actual compiler executable, since the are forks of each other.
+                # For gfortran this executable resides inside the libexec folder
+                # next to the bin folder in which the gfortran command is installed
+                # (al least on my system, so I hope this is a more general rule)
+                (comp_path,comp) = os.path.split(compiler1)
+                (base,head)      = os.path.split(comp_path)
+                if (head=="bin"):
+                    Cmd = "find "+os.path.join(base,"libexec")+" | grep f951"
+                    (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+                    # ==> find /home/jos/bin/gcc-trunk/libexec/ | grep f951
+                    # on my system this returns:
+                    # /home/jos/bin/gcc-trunk/libexec/gcc/x86_64-unknown-linux-gnu/4.4.0/f951
+                    f951_cmd = lines_stdout[0].strip()
+                    Cmd = "ldd "+f951_cmd
+                    (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+                    # ==> ldd ~/bin/gcc-trunk/libexec/gcc/x86_64-unknown-linux-gnu/4.4.0/f951 
+                    # on my system this returns:
+                    # linux-vdso.so.1 =>  (0x00007fff602bb000)
+                    # libcloog.so.0 => not found
+                    # libppl_c.so.2 => not found
+                    # libppl.so.7 => not found
+                    # libgmpxx.so.4 => /usr/lib64/libgmpxx.so.4 (0x00007f163231d000)
+                    # libc.so.6 => /lib64/libc.so.6 (0x000000354d400000)
+                    # libgmp.so.3 => /usr/lib64/libgmp.so.3 (0x000000354d000000)
+                    # libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x0000003553400000)
+                    # libm.so.6 => /lib64/libm.so.6 (0x000000354d800000)
+                    # libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x0000003552000000)
+                    # /lib64/ld-linux-x86-64.so.2 (0x000000354c000000)
+
+                    missing_libraries = []
+                    for l in lines_stdout:
+                        if ("not found" in l):
+                            print "WARNING: system library not found: ",l,
+                            missing_libraries.append(l.split()[0].strip())
+                    if (len(missing_libraries)>0):
+                        # try to find the library setting to be used for these missing ones
+                        libpath   = ""
+                        libpath32 = os.path.join(base,"lib")
+                        libpath64 = os.path.join(base,"lib64")
+
+                        # see if the missing ones are present in the 32 bit lib folder
+                        # next to the bin folder holding gfortran
+                        uselib32 = True
+                        for ml in missing_libraries:
+                            name = os.path.join(libpath32,ml)
+                            if not os.path.exists(name):
+                                uselib32 = False
+                        if (uselib32):
+                            print "essential 32-bit libraries seem present in: ",libpath32
+                            print "adding this one to the LD_LIBRARY_PATH"
+                            libpath = libpath32
+                            
+                        uselib64=True
+                        for ml in missing_libraries:
+                            name = os.path.join(libpath64,ml)
+                            if not os.path.exists(name):
+                                uselib64 = False
+                        if (uselib64):
+                            print "essential 64-bit libraries seem present in: ",libpath64
+                            print "adding this one to the LD_LIBRARY_PATH"
+                            libpath = libpath64
+
+
+        #elif (FortranCompiler == "g95"):
+        #    print "Checking library availability for FortranCompiler = ",g95
+        #    pass            
+        else:
+            print "ERROR: checking not yet implemented for FortranCompiler: ",FortranCompiler
+            sys.exit(1)
+
+
+        # possible numpy check:
+        #ldd /usr/lib64/python2.5/site-packages/numpy/lib/_compiled_base.so
+        # gives:
+        #linux-vdso.so.1 =>  (0x00007fff62fc1000)
+        #libpython2.5.so.1.0 => /usr/lib64/libpython2.5.so.1.0 (0x00007fc77f72f000)
+        #libpthread.so.0 => /lib64/libpthread.so.0 (0x00007fc77f513000)
+        #libc.so.6 => /lib64/libc.so.6 (0x00007fc77f1a0000)
+        #libdl.so.2 => /lib64/libdl.so.2 (0x00007fc77ef9c000)
+        #libutil.so.1 => /lib64/libutil.so.1 (0x00007fc77ed99000)
+        #libm.so.6 => /lib64/libm.so.6 (0x00007fc77eb13000)
+        #/lib64/ld-linux-x86-64.so.2 (0x000000354c000000)
+
+        return libpath
+        #  #]
     def __generate_python_wrapper__(self,Source_Dir):
         #  #[
         wrapper_build_dir   = "f2py_build"
@@ -542,6 +705,7 @@ class bufr_interface_ecmwf(bufr_interface):
         Destination = signature_file+".bak"
         shutil.copyfile(Source,Destination)
         
+        print "Fixing array size definitions in signatures definition ..."
         fd = open(signature_file,"wt")
         for l in lines:
             if 'dimension' in l:
@@ -552,10 +716,44 @@ class bufr_interface_ecmwf(bufr_interface):
                     if txt in l:
                         l=l.replace(txt,str(value))
                 #print "to           : ",l
+            if (l.strip() == "end interface"):
+                self.__insert_pb_interface_definition__(fd)
             fd.write(l)
         fd.close()
         #  #]
+    def __insert_pb_interface_definition__(self,fd):
+        #  #[
+        indentation = 8*' '
+        lines_to_add = ["subroutine pbopen(cFileUnit,BufrFileName,mode,bufr_error_flag)",
+                        "   integer*4,     intent(out) :: cFileUnit",
+                        "   character(len=*), intent(in)  :: BufrFileName",
+                        "   character(len=1), intent(in)  :: mode",
+                        "   integer*4,     intent(out) :: bufr_error_flag ",
+                        "end subroutine pbopen",
+                        "subroutine pbclose(cFileUnit,bufr_error_flag)",
+                        "   integer*4,     intent(in)  :: cFileUnit",
+                        "   integer*4,     intent(out) :: bufr_error_flag ",
+                        "end subroutine pbclose",
+                        "subroutine pbbufr(cFileUnit,Buffer,BufferSizeBytes,MsgSizeBytes,&",
+                        "                  bufr_error_flag)",
+                        "   integer*4,              intent(in)  :: cFileUnit",
+                        "   integer*4,dimension(*), intent(out) :: Buffer",
+                        "   integer*4,              intent(in)  :: BufferSizeBytes",
+                        "   integer*4,              intent(out) :: MsgSizeBytes",
+                        "   integer*4,              intent(out) :: bufr_error_flag ",
+                        "end subroutine pbbufr",
+                        "subroutine pbwrite(cFileUnit,Buffer,MsgSizeBytes,bufr_return_value)",
+                        "   integer*4,              intent(in)  :: cFileUnit",
+                        "   integer*4,dimension(*), intent(in)  :: Buffer",
+                        "   integer*4,              intent(in)  :: MsgSizeBytes",
+                        "   integer*4,              intent(out) :: bufr_return_value",
+                        "end subroutine pbwrite"]
 
+        print "Inserting hardcoded interface to pbbufr routines in signatures file ..."
+        for l in lines_to_add:
+            fd.write(indentation+l+'\n')
+            
+        #  #]
 #  #[ some notes:
 # manually, if I issue this command, it seems to work! this creates the file ./f2py_build/signatures.pyf
 #   f2py --build-dir ./f2py_build -m ecmwfbufr -h signatures.pyf ecmwf_bufr_lib/bufr_000380/bufrdc/*.F
