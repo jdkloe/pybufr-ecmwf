@@ -162,3 +162,34 @@ for s in range(nsubsets):
 print "min/max lat",min(lat),max(lat)
 print "min/max lon",min(lon),max(lon)
 #  #]
+#  #[ call BUSEL
+
+# warning: this routine has no inputs, and acts on data stored
+#          during previous library calls
+# Therefore it only produces correct results when either bus0123 or bufrex
+# have been called previously on the same bufr message.....
+# However, it is not clear to me why it seems to correctly produce
+# the descriptor lists (both bare and expanded), but yet it does
+# not seem to fill the ktdlen and ltdexl values.
+
+ktdlen = 0
+ktdlst = np.zeros(MAXNRDESCR,   dtype=np.int)
+ktdexl = 0
+ktdexp = np.zeros(MAXNREXPDESCR,dtype=np.int)
+kerr   = 0
+
+print "calling: ecmwfbufr.busel():"
+ecmwfbufr.busel(ktdlen, # actual number of data descriptors
+                ktdlst, # list of data descriptors
+                ktdexl, # actual number of expanded data descriptors
+                ktdexp, # list of expanded data descriptors
+                kerr)   # error  message
+print "returned from: ecmwfbufr.busel()"
+print "kerr = ",kerr
+
+print "ktdlen = ",ktdlen
+print "ktdlst = ",ktdlst
+print "ktdexl = ",ktdexl
+print "ktdexp = ",ktdexp
+
+#  #]
