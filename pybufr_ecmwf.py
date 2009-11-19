@@ -27,15 +27,19 @@ import os   # operating system functions
 import sys  # system functions
 import re   # regular expression handling
 import glob # allow for filename expansion
-import subprocess # support running additional executables
-import shutil # portable file copying functions
+import subprocess  # support running additional executables
+import shutil      # portable file copying functions
 #  #]
 
 class bufr_interface:
+    #  #[
+    # could contain common code for bufr_interface_ecmwf
+    # and the bufr module written by Guilherme Castelao
     def __init__(self,verbose=False):
         self.verbose = verbose
-
+    #  #]
 class bufr_interface_ecmwf(bufr_interface):
+    #  #[
     def __init__(self,verbose=False):
         #  #[
 
@@ -378,9 +382,9 @@ class bufr_interface_ecmwf(bufr_interface):
         #print "Executing command: ",Cmd
         #os.system(Cmd)
         if (libpath == ""):
-            self.__RunShellCommand__(Cmd)
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
         else:
-            self.__RunShellCommand__(Cmd,libpath=libpath)
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
     
         # check the result
         BufrLibFile = "libbufr.a"
@@ -610,15 +614,23 @@ class bufr_interface_ecmwf(bufr_interface):
         # just take them all
         SrcFileList = Source_Dir+"/bufrdc/*.F"
 
+        # check for the presence of needed libraries
+        # in case the fortran compiler is installed in a user account (like I have myself)
+        libpath = self.__check_needed_fc_libraries__()
+
         # call f2py and create a signature file that defines the
         # interfacing to the fortran routines in this library
         Cmd = "f2py --build-dir "+wrapper_build_dir+\
               " -m "+wrapper_module_name+\
               " -h "+signatures_filename+\
               " "+SrcFileList
-        print "Executing command: ",Cmd
-        os.system(Cmd)
-
+        #print "Executing command: ",Cmd
+        #os.system(Cmd)
+        if (libpath == ""):
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+        else:
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
+    
         # safety check: see if the signatures.pyf file really is created
         signatures_fullfilename = os.path.join(wrapper_build_dir,signatures_filename)
         if (not os.path.exists(signatures_fullfilename)):
@@ -633,10 +645,15 @@ class bufr_interface_ecmwf(bufr_interface):
         # and replace them by their numerical values
         self.__adapt_f2py_signature_file__(signatures_fullfilename)
 
-        Cmd = "f2py ./f2py_build/signatures.pyf -L./ -lbufr -c"
-        print "Executing command: ",Cmd
-        os.system(Cmd)
-
+        Cmd = "f2py  --build-dir "+wrapper_build_dir+\
+              " ./f2py_build/signatures.pyf -L./ -lbufr -c"
+        #print "Executing command: ",Cmd
+        #os.system(Cmd)
+        if (libpath == ""):
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+        else:
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
+            
         # finally, again check for the presence of the wrapper
         # to see if the build was successfull
         if (os.path.exists(self.wrapper_name)):
@@ -707,7 +724,26 @@ class bufr_interface_ecmwf(bufr_interface):
         
         print "Fixing array size definitions in signatures definition ..."
         fd = open(signature_file,"wt")
+        inside_subroutine = False
         for l in lines:
+
+            if ('end subroutine' in l):
+                inside_subroutine = False
+            elif ('subroutine' in l):
+                inside_subroutine = True
+
+            if (inside_subroutine):
+                if (' ::' in l):
+                    # Add the intent(inplace) switch to all subroutine parameters
+                    # This might not be very pretty, but otherwise all parameters
+                    # are assigned the default, which is intent(in).
+                    # Maybe the proper way would be to sort out for each routine
+                    # in this library which parameters are intent(in) and which are
+                    # intent(out), but this is a huge task (and should be done
+                    # by ECMWF rather then by us I think...)
+                    (part1,part2) = l.split(' ::')
+                    l = part1+',intent(inplace) ::'+part2
+                
             if 'dimension' in l:
                 #print "adapting line: ",l
                 for e in edits.keys():
@@ -716,8 +752,10 @@ class bufr_interface_ecmwf(bufr_interface):
                     if txt in l:
                         l=l.replace(txt,str(value))
                 #print "to           : ",l
+
             if (l.strip() == "end interface"):
                 self.__insert_pb_interface_definition__(fd)
+
             fd.write(l)
         fd.close()
         #  #]
@@ -754,7 +792,371 @@ class bufr_interface_ecmwf(bufr_interface):
             fd.write(indentation+l+'\n')
             
         #  #]
-#  #[ some notes:
+    def __get_expected_ecmwf_bufr_table_names__(self,center,subcenter,
+                                                LocalVersion,MasterTableVersion,
+                                                EditionNumber,MasterTableNumber):
+        #  #[
+        # some local parameters used for detection of the
+        # BUFR tables naming convention (short, medium or long)
+        testfile_short  = "B0000980000.TXT"
+        # this format was introduced with bufr_000260
+        testfile_medium = "B000000000980000.TXT"
+        # this format was introduced with bufr_000270
+        testfile_long   = "B0000000000098000000.TXT"
+
+        # somne codes to define the conventions
+        conv_undefined = -1
+        conv_short     =  1
+        conv_medium    =  2
+        conv_long      =  3
+
+        (Source_Dir,TarFile_to_Install) = self.__get_source_dir__()
+        ecmwf_BUFR_TABLES_dir = os.path.join(Source_Dir,"bufrtables/")
+
+        #-------------------------------------------------------------
+        # see which BUFR tables naming convention is used (short/long)
+        #-------------------------------------------------------------
+        bufrtable_naming_convention = conv_undefined
+
+        testfile = os.path.join(ecmwf_BUFR_TABLES_dir,testfile_short)
+        if (os.path.exists(testfile)):
+            print "Using short BUFRtables naming convention ..."
+            bufrtable_naming_convention = conv_short
+
+        testfile = os.path.join(ecmwf_BUFR_TABLES_dir,testfile_medium)
+        if (os.path.exists(testfile)):
+            print "Using medium length BUFRtables naming convention ..."
+            bufrtable_naming_convention = conv_medium
+
+        testfile = os.path.join(ecmwf_BUFR_TABLES_dir,testfile_long)
+        if (os.path.exists(testfile)):
+            print "Using long BUFRtables naming convention ..."
+            bufrtable_naming_convention = conv_long
+
+        if (bufrtable_naming_convention == conv_undefined):
+            print "Sorry, unable to detect which BufrTable naming convention"
+            print "should be used. Assuming the short convention ....."
+            bufrtable_naming_convention = conv_short
+
+        copy_center            = center
+        copy_subcenter         = subcenter
+        copy_mastertablenumber = MasterTableNumber
+    
+        # exception: if version of local table is set to zero then
+        # it is assumed in BUGBTS that a standard ECMWF table is used !
+        if (LocalVersion == 0):
+            copy_center    = 98 # ECMWF
+            copy_subcenter = 0
+
+        # initialise
+        name_table_b = ''
+        name_table_d = ''
+
+        if   (bufrtable_naming_convention == conv_short):
+            if (EditionNumber <= 2):
+                table_format = "%2.2i%3.3i%2.2i%2.2i"
+                copy_subcenter = 0
+            else:
+                # starting from edition 3 the originating center has one digit more
+                table_format = "%3.3i%3.3i%2.2i%2.2i"
+            numeric_part = table_format % (copy_subcenter,copy_center,
+                                           MasterTableVersion,LocalVersion)
+            
+        elif (bufrtable_naming_convention == conv_medium):
+            table_format = "%3.3i%4.4i%4.4i%2.2i%2.2i"
+            if (EditionNumber <= 2):
+                copy_subcenter         = 0
+                copy_mastertablenumber = 0
+            numeric_part = table_format % (copy_mastertablenumber,
+                                           copy_subcenter,copy_center,
+                                           MasterTableVersion,LocalVersion)
+
+        elif (bufrtable_naming_convention == conv_long):
+            table_format = "%3.3i%5.5i%5.5i%3.3i%3.3i"
+            if (EditionNumber <= 2):
+                copy_subcenter         = 0
+                copy_mastertablenumber = 0
+            numeric_part = table_format % (copy_mastertablenumber,
+                                           copy_subcenter,copy_center,
+                                           MasterTableVersion,LocalVersion)
+
+        name_table_b = 'B'+numeric_part
+        name_table_d = 'D'+numeric_part
+
+        # xx=KSEC1(3)  = kcenter
+        # yy=KSEC1(15) = kMasterTableVersion
+        # zz=KSEC1(08) = kLocalVersion
+        # for bufr editions 1 and 2
+        # ww=0
+        # ss=0
+        # for bufr editions 3 and 4
+        # ww=KSEC1(16) = ksubcenter
+        # ss=KSEC1(14) = kMasterTableNumber
+        #
+        # naming convention for BUFR tables:
+        # [B/C/D]xxxxxyyzz
+        # with   xxxxx = originating centre          (tbd%kcenter)
+        #        yy    = version of mastertable used (tbd%kMasterTableVersion)
+        #        zz    = version of local table used (tbd%kLocalVersion)
+        #
+        # for more details see also file: buetab.f
+        # (which actually reads the BUFR tables)
+        #
+        # see also: bufrdc.f in SUBROUTINE BUGBTS()
+        #
+        #             BUFR EDITION 2 NAMING CONVENTION
+        #
+        #             BXXXXXYYZZ , CXXXXXYYZZ , DXXXXXYYZZ
+        #
+        #             B/C/D  - BUFR TABLE B/C/D
+        #             XXXXX  - ORIGINATING CENTRE
+        #             YY     - VERSION NUMBER OF MASTER TABLE
+        #                      USED( CURRENTLY 2 )
+        #             ZZ     - VERSION NUMBER OF LOCAL TABLE USED
+        #
+        #             BUFR EDITION 3 NAMING CONVENTION
+        #
+        #             BWWWXXXYYZZ , CWWWXXXYYZZ , DWWWXXXYYZZ
+        #
+        #             B/C/D  - BUFR TABLE B/C/D
+        #             WWW    - ORIGINATING SUB-CENTRE
+        #             XXX    - ORIGINATING CENTRE
+        #             YY     - VERSION NUMBER OF MASTER TABLE
+        #                      USED( CURRENTLY 2 )
+        #             ZZ     - VERSION NUMBER OF LOCAL TABLE USED
+        #
+        #
+        #             BUFR EDITION 4 NAMING CONVENTION
+        #
+        #             BSSSWWWWXXXXYYZZ , CSSSWWWWXXXXYYZZ , DSSSWWWWXXXXYYZZ
+        #
+        #             B      - BUFR TABLE 'B'
+        #             C      - BUFR TABLE 'C'
+        #             D      - BUFR TABLE 'D'
+        #             SSS    - MASTER TABLE
+        #             WWWW(W)   - ORIGINATING SUB-CENTRE
+        #             XXXX(X)   - ORIGINATING CENTRE
+        #             YY(Y)     - VERSION NUMBER OF MASTER
+        #                         TABLE USED( CURRENTLY 12 )
+        #             ZZ(Y)     - VERSION NUMBER OF LOCAL TABLE USED
+        
+        return (name_table_b,name_table_d)
+        #  #]
+    #  #]
+class bufrmsg:
+    #  #[
+    pass
+    # possible methods:
+    # -AddDescriptor
+    # -ExpandDescriptorList
+    # -Encode
+    # -Decode
+    # -PrintSections012
+    # -GetDescriptorProperties
+    # -FillOneRealValue
+    # -FillOneStringValue
+    # -GetOneRealValue
+    # -GetOneStringValue
+    # -...
+    #  #]
+class bufrfile:
+    #  #[
+    pass
+    # possible methods:
+    # -SetFilename
+    # -GetFilename
+    # -SetFilemode (r,w)
+    # -GetFilemode
+    # -OpenFile
+    # -CloseFile
+    # -GetNumBufrMsgs
+    # -ReadNextMsg
+    # -WriteMsg
+    # -PrintFileProperties
+    # -...
+    #  #]
+
+if __name__ == "__main__":
+        #  #[ test program
+        print "Starting test program:"
+        #  #[import additional modules needed for testing
+        import struct      # allow converting c datatypes and structs
+        import ecmwfbufr   # import the just created wrapper module
+        import numpy as np # import numerical capabilities
+        #  #]
+        # instantiate the class, and pass all settings to it
+        BI = bufr_interface_ecmwf(verbose=True)
+        #  #[ test of bufr file handling
+        center             = 210 # = ksec1( 3)
+        subcenter          =   0 # = ksec1(16)
+        LocalVersion       =   1 # = ksec1( 8)
+        MasterTableVersion =   0 # = ksec1(15)
+        EditionNumber      =   3 # =  ksec0( 3)
+        MasterTableNumber  =   0 # = ksec1(14)
+        (b,d) = BI.__get_expected_ecmwf_bufr_table_names__(center,subcenter,
+                                                           LocalVersion,MasterTableVersion,
+                                                           EditionNumber,MasterTableNumber)
+        print "tabel name B: ",b
+        print "tabel name D: ",d
+        #  #]
+        #  #[ read the binary data
+        fd=open('Testfile.BUFR','rb')
+        data=fd.read()
+        len(data)
+        
+        sizewords=len(data)/4
+        words = np.array(struct.unpack("<"+str(sizewords)+"i",data))
+        #print 'data[:4] = ',data[:4]
+        print 'data[:4] = ',';'.join(str(data[i]) for i in range(4) if data[i].isalnum())
+        print 'words[:4] = ',words[:4]
+        #  #]
+        #  #[ define the needed constants
+
+        # note: this block of constant parameters defining all array sizes
+        #       in the interfaces to this ecmwf library seems not available
+        #       through the f2py interface
+        #       It is defined in file:
+        #           ecmwf_bufr_lib/bufr_000380/bufrdc/parameter.F
+        #
+        #      PARAMETER(JSUP =   9,JSEC0=   3,JSEC1= 40,JSEC2=4096,JSEC3=   4,
+        #     1          JSEC4=2,JELEM=320000,JSUBS=400,JCVAL=150 ,JBUFL=512000,
+        #     2          JBPW =  32,JTAB =3000,JCTAB=3000,JCTST=9000,JCTEXT=9000,
+        #     3          JWORK=4096000,JKEY=46, JTMAX=10,JTCLAS=64,JTEL=255)
+        
+        # TODO: read this file from python, in stead of hardcoding the numbers below
+        #       and provide them as module parameters for pybufr_ecmwf.py
+        MAXNRDESCR    =     20 # 300
+        MAXNREXPDESCR =    140 # 160000
+        MAXNRSUBSETS  =    361 # 25
+        
+        ktdlen = MAXNRDESCR
+        # krdlen = MAXNRDELREPLFACTORS
+        kelem  = MAXNREXPDESCR
+        kvals  = MAXNREXPDESCR*MAXNRSUBSETS
+        # jbufl  = MAXBUFRMSGSIZE
+        # jsup   = LENGTHKSUP
+
+        #  #]
+        #  #[ handle BUFR tables
+
+        # define our own location for storing (symlinks to) the BUFR tables
+        private_BUFR_TABLES_dir = os.path.abspath("./tmp_BUFR_TABLES")
+        if (not os.path.exists(private_BUFR_TABLES_dir)):
+            os.mkdir(private_BUFR_TABLES_dir)
+            
+        # make the needed symlinks
+        ecmwf_BUFR_TABLES_dir = os.path.abspath("ecmwf_bufr_lib/bufr_000380/bufrtables/")
+        needed_B_table    = "B0000000000210000001.TXT"
+        needed_D_table    = "D0000000000210000001.TXT"
+        available_B_table = "B0000000000098013001.TXT"
+        available_D_table = "D0000000000098013001.TXT"
+        
+        # NOTE: the naming scheme used by ECMWF is sucht, that the table name can
+        #       be derived from elements from sections 0 and 1, which can be
+        #       decoded without loading bufr tables.
+        # TODO: implement this
+        
+        source      = os.path.join(ecmwf_BUFR_TABLES_dir,  available_B_table)
+        destination = os.path.join(private_BUFR_TABLES_dir,needed_B_table)
+        if (not os.path.exists(destination)):
+            os.symlink(source,destination)
+
+        source      = os.path.join(ecmwf_BUFR_TABLES_dir,  available_D_table)
+        destination = os.path.join(private_BUFR_TABLES_dir,needed_D_table)
+        if (not os.path.exists(destination)):
+            os.symlink(source,destination)
+            
+        # make sure the BUFR tables can be found
+        # also, force a slash at the end, otherwise the library fails to find the tables
+        e = os.environ
+        e["BUFR_TABLES"] = private_BUFR_TABLES_dir+os.path.sep
+
+        #  #]
+        #  #[ call BUS012
+        ksup   = np.zeros(         9,dtype=np.int)
+        ksec0  = np.zeros(         3,dtype=np.int)
+        ksec1  = np.zeros(        40,dtype=np.int)
+        ksec2  = np.zeros(      4096,dtype=np.int)
+        kerr   = 0
+        
+        print "calling: ecmwfbufr.bus012():"
+        ecmwfbufr.bus012(words,ksup,ksec0,ksec1,ksec2,kerr)
+        # optional parameters: kbufl)
+        print "returned from: ecmwfbufr.bus012()"
+        print "kerr = ",kerr
+        
+        print "ksup : ",ksup
+        print "sec0 : ",ksec0
+        print "sec1 : ",ksec1
+        print "sec2 : ",ksec2
+        #  #]
+        #  #[ call BUFREX
+        
+        # WARNING: getting this to work is rather tricky
+        # any wrong datatype in these definitions may lead to
+        # the code entering an infinite loop ...
+        # Note that the f2py interface only checks the lengths
+        # of these arrays, not the datatype. It will accept
+        # any type, as long as it is numeric for the non-string items
+        # If you are lucky you will get a MemoryError when you make a mistake
+        # but often this will not be the case, and the code just fails or
+        # produces faulty results without apparant reason.
+        
+        # these 4 are filled by the BUS012 call above
+        # ksup   = np.zeros(         9,dtype=np.int)
+        # ksec0  = np.zeros(         3,dtype=np.int)
+        # ksec1  = np.zeros(        40,dtype=np.int)
+        # ksec2  = np.zeros(      4096,dtype=np.int)
+        
+        ksec3  = np.zeros(         4,dtype=np.int)
+        ksec4  = np.zeros(         2,dtype=np.int)
+        cnames = np.zeros((kelem,64),dtype=np.character)
+        cunits = np.zeros((kelem,24),dtype=np.character)
+        values = np.zeros(     kvals,dtype=np.float64) # this is the default
+        cvals  = np.zeros((kvals,80),dtype=np.character)
+        kerr   = 0
+        
+        print "calling: ecmwfbufr.bufrex():"
+        ecmwfbufr.bufrex(words,ksup,ksec0,ksec1,ksec2,ksec3,ksec4,
+                         cnames,cunits,values,cvals,kerr)
+        # optional parameters: sizewords,kelem,kvals)
+        print "returned from: ecmwfbufr.bufrex()"
+        print "kerr = ",kerr
+
+        #  #]
+        #  #[ print a selection of the decoded numbers
+        print "Decoded BUFR message:"
+        print "ksup : ",ksup
+        print "sec0 : ",ksec0
+        print "sec1 : ",ksec1
+        print "sec2 : ",ksec2
+        print "sec3 : ",ksec3
+        print "sec4 : ",ksec4
+        print "cnames : ",cnames
+        print "cunits : ",cunits
+        print "values : ",values
+        
+        nsubsets  = 361 # number of subsets in this BUFR message
+        nelements =  44 # size of one expanded subset
+        lat = np.zeros(nsubsets)
+        lon = np.zeros(nsubsets)
+        for s in range(nsubsets):
+            # index_lat = nelements*(s-1)+24
+            # index_lon = nelements*(s-1)+25
+            index_lat = MAXNREXPDESCR*(s-1)+24
+            index_lon = MAXNREXPDESCR*(s-1)+25
+            lat[s] = values[index_lat]
+            lon[s] = values[index_lon]
+            if (30*(s/30)==s):
+                print "s=",s, "lat = ",lat[s]," lon = ",lon[s]
+
+        print "min/max lat",min(lat),max(lat)
+        print "min/max lon",min(lon),max(lon)
+        #  #]
+
+        #  #]
+
+#  #[ some obsolete notes:
 # manually, if I issue this command, it seems to work! this creates the file ./f2py_build/signatures.pyf
 #   f2py --build-dir ./f2py_build -m ecmwfbufr -h signatures.pyf ecmwf_bufr_lib/bufr_000380/bufrdc/*.F
 
@@ -768,19 +1170,3 @@ class bufr_interface_ecmwf(bufr_interface):
 # since I have gfortran installed in a non-default location
 # (otherwise the linking step needed to create the *.so file fails)
 #  #]
-
-class bufrmsg:
-    pass
-
-class bufrfile:
-    pass
-
-
-if __name__ == "__main__":
-        #  #[ test program
-        print "Starting test program:"
-
-        # instantiate the class, and pass all settings to it
-        BI = bufr_interface_ecmwf(verbose=True)
-        
-        #  #]
