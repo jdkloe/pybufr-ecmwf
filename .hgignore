@@ -16,11 +16,8 @@ syntax: regexp
 
 # Build directories
 ecmwf_bufr_lib
-ecmwf_bufr_lib/.*
-ecmwf_bufr_lib/.*/.*
-ecmwf_bufr_lib/.*/.*/.*
-ecmwf_bufr_lib/.*/.*/.*/.*
 f2py_build
+tmp_BUFR_TABLES
 
 #syntx: glob
 #
