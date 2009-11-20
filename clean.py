@@ -2,9 +2,15 @@
 
 import os,glob
 
-dir_to_delete   = ["ecmwf_bufr_lib/bufr_000380","f2py_build"]
+dir_to_delete   = ["ecmwf_bufr_lib/bufr_000380",
+                   "ecmwf_bufr_lib/bufr_000371",
+                   "ecmwf_bufr_lib/bufr_000381",
+                   "f2py_build",
+                   "tmp_BUFR_TABLES"]
 files_to_delete = glob.glob("*~")
-files_to_delete.extend(["libbufr.a"])
+files_to_delete.extend(["libbufr.a",
+                        "ecmwfbufr.so",
+                        "ecmwf_bufr_lib/ConfigFile"])
 
 for d in dir_to_delete:
     if (os.path.exists(d)):

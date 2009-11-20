@@ -20,6 +20,8 @@
 #
 # Modifications:
 # J. de Kloe   12-Nov-2009    Initial version
+# J. de Kloe   19-Nov-2009    First working version. Builds the ecmwfbufr.so file
+#                             at my home machine, and succesfully tested using it.
 #
 #  #]
 #  #[ imported modules
@@ -184,7 +186,20 @@ class bufr_interface_ecmwf(bufr_interface):
         (BUFR_Tar,ext1) = os.path.splitext(TarFile_to_Install)
         (BUFR_Dir,ext2) = os.path.splitext(BUFR_Tar)
         
+        # exception:
+        # it seems ECMWF has made a stupid mistake while packaging its bufr_000381
+        # version (released 20-Nov-2009). When unpacked, the software actually
+        # seems to be placed in a folder named bufr_000371 in stead of bufr_000381 !!
+        # So this hardcoded exception compensates for that:
+        if (BUFR_Dir == "bufr_000381"):
+            BUFR_Dir = "bufr_000371"
+
+        # a similar mistake was made form version 000351:
+        if (BUFR_Dir == "bufr_000351"):
+            BUFR_Dir = "bufr_000350"        
+
         Source_Dir = os.path.join(self.ecmwf_bufr_lib_dir,BUFR_Dir)
+
         return (Source_Dir,TarFile_to_Install)
         #  #]
     def __install__(self):
@@ -258,7 +273,7 @@ class bufr_interface_ecmwf(bufr_interface):
         FINTEGERDEFINITION=" -i4"
         CINTEGERDEFINITION=" -DFOPEN64 "
 
-        # switch of (as test)
+        # switch off (as test)
         g95_present = False
 
         if   (g95_present):
@@ -353,6 +368,8 @@ class bufr_interface_ecmwf(bufr_interface):
         # create our custom config file:
         print "Using: "+FC+" as fortran compiler"
         print "Using: "+CC+" as c compiler"
+
+        print "Creating ECMWF-BUFR config file: ",FullnameConfigFile
         fd = open(FullnameConfigFile,'wt')
         fd.write("#   Generic configuration file for linux.\n")
         fd.write("AR         = "+AR+"\n")
@@ -379,10 +396,10 @@ class bufr_interface_ecmwf(bufr_interface):
         Cmd = "cd "+Source_Dir+";make ARCH="+ARCH+" CNAME="+CNAME+" R64="+R64+" A64="+A64
 
         # now issue the Make command
-        #print "Executing command: ",Cmd
-        #os.system(Cmd)
         if (libpath == ""):
-            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+            print "Executing command: ",Cmd
+            os.system(Cmd)
+            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
         else:
             (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
     
@@ -492,11 +509,33 @@ class bufr_interface_ecmwf(bufr_interface):
                 # Return the canonical path of the specified filename, eliminating any
                 # symbolic links encountered in the path.
                 compiler1 = os.path.realpath(lines_stdout[0].strip())
+                # gives in my case at home: /home/jos/bin/gcc-trunk/bin/gfortran
+
+                # at work, I have a little wrapper script, to give some default
+                # commandline options like -Wall to the gfortran command
+                # In this case the gfortran command found by which actually is just a
+                # little shell script of a few hundred kb. The actual gfortran compiler
+                # is several 100 kb, so just the size to differentiate:
+                size = os.path.getsize(compiler1)
+                
+                # so in case the size indicates a script. try to extract the gfortran
+                # executable name from it
+                if (size<100000):                    
+                    print 'wrapper script detected'
+                    # read the script
+                    lines = open(compiler1).readlines()
+                    for l in lines:
+                        # for now, just assume the 1st line that has the gfortran
+                        # string, contains the call to the executable
+                        if ('gfortran' in l):
+                            compiler1 = l.split()[0]
+                            break
+
                 print "compiler1=",compiler1
-                # gives in my case: /home/jos/bin/gcc-trunk/bin/gfortran
-                # find the corresponding f951 executable.
+
+                # Now find the corresponding f951 executable.
                 # Note that both g95 and gfortran use this name for their
-                # actual compiler executable, since the are forks of each other.
+                # actual compiler executable, since they are forks of each other.
                 # For gfortran this executable resides inside the libexec folder
                 # next to the bin folder in which the gfortran command is installed
                 # (al least on my system, so I hope this is a more general rule)
@@ -511,6 +550,12 @@ class bufr_interface_ecmwf(bufr_interface):
                     f951_cmd = lines_stdout[0].strip()
                     Cmd = "ldd "+f951_cmd
                     (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+                    #if self.verbose:
+                    #    print "lines_stdout:"
+                    #    print '[%s]\n'.join(l for l in lines_stdout)
+                    #    print "lines_stderr:"
+                    #    print '[%s]\n'.join(l for l in lines_stderr)
+
                     # ==> ldd ~/bin/gcc-trunk/libexec/gcc/x86_64-unknown-linux-gnu/4.4.0/f951 
                     # on my system this returns:
                     # linux-vdso.so.1 =>  (0x00007fff602bb000)
@@ -526,13 +571,13 @@ class bufr_interface_ecmwf(bufr_interface):
                     # /lib64/ld-linux-x86-64.so.2 (0x000000354c000000)
 
                     missing_libraries = []
+                    libpath   = ""
                     for l in lines_stdout:
                         if ("not found" in l):
                             print "WARNING: system library not found: ",l,
                             missing_libraries.append(l.split()[0].strip())
                     if (len(missing_libraries)>0):
                         # try to find the library setting to be used for these missing ones
-                        libpath   = ""
                         libpath32 = os.path.join(base,"lib")
                         libpath64 = os.path.join(base,"lib64")
 
@@ -624,10 +669,11 @@ class bufr_interface_ecmwf(bufr_interface):
               " -m "+wrapper_module_name+\
               " -h "+signatures_filename+\
               " "+SrcFileList
-        #print "Executing command: ",Cmd
-        #os.system(Cmd)
+
         if (libpath == ""):
-            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+            print "Executing command: ",Cmd
+            os.system(Cmd)
+            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
         else:
             (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
     
@@ -638,6 +684,19 @@ class bufr_interface_ecmwf(bufr_interface):
             print "the signatures file could not be found"
             sys.exit(1)
 
+        ConfigFile = os.path.join(self.ecmwf_bufr_lib_dir,"ConfigFile")
+        lines = open(ConfigFile).readlines()
+
+        # extract which fortran compiler is used
+        FortranCompiler      = 'undefined'
+        FortranCompilerFlags = 'undefined'
+        for l in lines:
+            parts=l.split('=')
+            if (parts[0].strip()=="FC"):
+                FortranCompiler = parts[1].strip()
+            if (parts[0].strip()=="FFLAGS"):
+                FortranCompilerFlags = parts[1].strip()
+
         # adapt the signature file
         # this is needed, since the wrapper generation fails to do a number
         # of file includes that are essential for the interface definition
@@ -645,12 +704,18 @@ class bufr_interface_ecmwf(bufr_interface):
         # and replace them by their numerical values
         self.__adapt_f2py_signature_file__(signatures_fullfilename)
 
+        # it might be usefull for debugging to include this option: --debug-capi
+
         Cmd = "f2py  --build-dir "+wrapper_build_dir+\
+              " --fcompiler="+FortranCompiler+\
               " ./f2py_build/signatures.pyf -L./ -lbufr -c"
-        #print "Executing command: ",Cmd
-        #os.system(Cmd)
+              #" --debug-capi "+\
+              #" --f90flags="+FortranCompilerFlags+\
+
         if (libpath == ""):
-            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+            print "Executing command: ",Cmd
+            os.system(Cmd)
+            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
         else:
             (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
             
@@ -979,13 +1044,13 @@ class bufrfile:
 if __name__ == "__main__":
         #  #[ test program
         print "Starting test program:"
-        #  #[import additional modules needed for testing
+        # instantiate the class, and pass all settings to it
+        BI = bufr_interface_ecmwf(verbose=True)
+        #  #[ import additional modules needed for testing
         import struct      # allow converting c datatypes and structs
         import ecmwfbufr   # import the just created wrapper module
         import numpy as np # import numerical capabilities
         #  #]
-        # instantiate the class, and pass all settings to it
-        BI = bufr_interface_ecmwf(verbose=True)
         #  #[ test of bufr file handling
         center             = 210 # = ksec1( 3)
         subcenter          =   0 # = ksec1(16)
@@ -1045,7 +1110,9 @@ if __name__ == "__main__":
             os.mkdir(private_BUFR_TABLES_dir)
             
         # make the needed symlinks
-        ecmwf_BUFR_TABLES_dir = os.path.abspath("ecmwf_bufr_lib/bufr_000380/bufrtables/")
+        (Source_Dir,TarFile_to_Install) = BI.__get_source_dir__()
+        ecmwf_BUFR_TABLES_dir = os.path.join(Source_Dir,"bufrtables/")
+        ecmwf_BUFR_TABLES_dir = os.path.abspath(ecmwf_BUFR_TABLES_dir)
         needed_B_table    = "B0000000000210000001.TXT"
         needed_D_table    = "D0000000000210000001.TXT"
         available_B_table = "B0000000000098013001.TXT"
