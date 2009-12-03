@@ -26,6 +26,7 @@
 #                             the tarfile, in stead of assuming it is identical
 #                             to the tarfile name with stripped extension.
 # J. de Kloe   03-Dec-2009    moved BUSEL testcode from test_using_ecmwfbufr.py to here
+# J. de Kloe   03-Dec-2009    added tests for BUPRS0, BUPRS1, BUUKEY, and BUPRS2
 #  #]
 #  #[ imported modules
 import os   # operating system functions
@@ -1178,6 +1179,25 @@ if __name__ == "__main__":
         print "sec0 : ",ksec0
         print "sec1 : ",ksec1
         print "sec2 : ",ksec2
+        #  #]
+        #  #[ call BUPRS0
+        print "printing content of section 0:"
+        ecmwfbufr.buprs0(ksec0)
+        #  #]
+        #  #[ call BUPRS1
+        print "printing content of section 1:"
+        ecmwfbufr.buprs1(ksec1)
+        #  #]
+        #  #[ call BUUKEY
+
+        # this call fails. I have to sort out why ...
+        #print "calling buukey"
+        #key = np.zeros(52, dtype=np.int)
+        #ecmwfbufr.buukey(ksec1,ksec2,key,ksup,kerr)
+        #  #]
+        #  #[ call BUPRS2
+        #print "printing content of section 2:"
+        #ecmwfbufr.buprs2(ksup,key)
         #  #]
         #  #[ call BUFREX
         
