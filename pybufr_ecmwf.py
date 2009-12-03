@@ -22,13 +22,17 @@
 # J. de Kloe   12-Nov-2009    Initial version
 # J. de Kloe   19-Nov-2009    First working version. Builds the ecmwfbufr.so file
 #                             at my home machine, and succesfully tested using it.
-#
+# J. de Kloe   03-Dec-2009    implement some code to retrieve the source dir from
+#                             the tarfile, in stead of assuming it is identical
+#                             to the tarfile name with stripped extension.
 #  #]
 #  #[ imported modules
 import os   # operating system functions
 import sys  # system functions
 import re   # regular expression handling
 import glob # allow for filename expansion
+#import gzip # handle gzipped files
+import tarfile # handle tar archives
 import subprocess  # support running additional executables
 import shutil      # portable file copying functions
 #  #]
@@ -174,29 +178,46 @@ class bufr_interface_ecmwf(bufr_interface):
     def __get_source_dir__(self):
         #  #[
         list_of_bufrtarfiles = glob.glob(os.path.join(self.ecmwf_bufr_lib_dir,"*.tar.gz"))
+
+        # safety catch
         if (len(list_of_bufrtarfiles)==0):
             return (None,None)
 
+        # sort in reverse alphabetical order to get the newest one on top
         list_of_bufrtarfiles.sort(reverse=True)
         if (self.verbose):
             print "available library tarfiles: ",list_of_bufrtarfiles
             print "most recent library tarfile: ",list_of_bufrtarfiles[0]
 
         (path,TarFile_to_Install) = os.path.split(list_of_bufrtarfiles[0])
-        (BUFR_Tar,ext1) = os.path.splitext(TarFile_to_Install)
-        (BUFR_Dir,ext2) = os.path.splitext(BUFR_Tar)
-        
-        # exception:
-        # it seems ECMWF has made a stupid mistake while packaging its bufr_000381
-        # version (released 20-Nov-2009). When unpacked, the software actually
-        # seems to be placed in a folder named bufr_000371 in stead of bufr_000381 !!
-        # So this hardcoded exception compensates for that:
-        if (BUFR_Dir == "bufr_000381"):
-            BUFR_Dir = "bufr_000371"
 
-        # a similar mistake was made form version 000351:
-        if (BUFR_Dir == "bufr_000351"):
-            BUFR_Dir = "bufr_000350"        
+        # # extract the BUFR_Dir name in which the source code is to be found
+        # (BUFR_Tar,ext1) = os.path.splitext(TarFile_to_Install)
+        # (BUFR_Dir,ext2) = os.path.splitext(BUFR_Tar)
+        #
+        # # exception:
+        # # it seems ECMWF has made a stupid mistake while packaging its bufr_000381
+        # # version (released 20-Nov-2009). When unpacked, the software actually
+        # # seems to be placed in a folder named bufr_000371 in stead of bufr_000381 !!
+        # # So this hardcoded exception compensates for that:
+        # if (BUFR_Dir == "bufr_000381"):
+        #     BUFR_Dir = "bufr_000371"
+        #
+        # # a similar mistake was made form version 000351:
+        # if (BUFR_Dir == "bufr_000351"):
+        #     BUFR_Dir = "bufr_000350"        
+
+        # a safer wat to find out the actual name of the library source directory
+        # after unpacking, is to use the gzip module and look inside:
+
+        TarFileObj = tarfile.open(list_of_bufrtarfiles[0],'r:gz')
+        names = TarFileObj.getnames()
+        #print "names[0:5] = ",names[0:5]
+        # this library holds everything in a single subdirectory named something
+        # like bufr_000380, so I guess it is safe to assume that the first name
+        # in the archive will be the name of this directory.
+        BUFR_Dir = names[0]
+        TarFileObj.close()
 
         Source_Dir = os.path.join(self.ecmwf_bufr_lib_dir,BUFR_Dir)
 
