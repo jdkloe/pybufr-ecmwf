@@ -191,8 +191,9 @@ class bufr_interface_ecmwf(bufr_interface):
         # version (released 20-Nov-2009). When unpacked, the software actually
         # seems to be placed in a folder named bufr_000371 in stead of bufr_000381 !!
         # So this hardcoded exception compensates for that:
-        if (BUFR_Dir == "bufr_000381"):
-            BUFR_Dir = "bufr_000371"
+        # seems fixed now, so this workaround is no longer needed
+        #if (BUFR_Dir == "bufr_000381"):
+        #    BUFR_Dir = "bufr_000371"
 
         # a similar mistake was made form version 000351:
         if (BUFR_Dir == "bufr_000351"):
