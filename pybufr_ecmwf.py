@@ -1343,9 +1343,27 @@ if __name__ == "__main__":
                          ktdlst, # list of data descriptors
                          ktdexp, # list of expanded data descriptors
                          cnames) # descriptor names
-
         #  #]
-
+        #  #[ reinitialise all arrays
+        print '------------------------------'
+        print 'reinitialising all arrays...'
+        ksup   = np.zeros(         9,dtype=np.int)
+        ksec0  = np.zeros(         3,dtype=np.int)
+        ksec1  = np.zeros(        40,dtype=np.int)
+        ksec2  = np.zeros(      4096,dtype=np.int)
+        key = np.zeros(52, dtype=np.int)
+        ksec3  = np.zeros(         4,dtype=np.int)
+        ksec4  = np.zeros(         2,dtype=np.int)
+        cnames = np.zeros((kelem,64),dtype=np.character)
+        cunits = np.zeros((kelem,24),dtype=np.character)
+        values = np.zeros(     kvals,dtype=np.float64) # this is the default
+        cvals  = np.zeros((kvals,80),dtype=np.character)
+        ktdlen = 0
+        ktdlst = np.zeros(MAXNRDESCR,   dtype=np.int)
+        ktdexl = 0
+        ktdexp = np.zeros(MAXNREXPDESCR,dtype=np.int)
+        kerr   = 0
+        #  #]
 
         # add test calls to:
         #   buxdes: expand the descriptor list
