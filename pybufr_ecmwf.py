@@ -61,14 +61,15 @@ class bufr_interface_ecmwf(bufr_interface):
         # check for the presence of the library
         BufrLibFile = "libbufr.a"
         if (os.path.exists(BufrLibFile)):
-            print "library seems present"
+            pass
+            #print "library seems present"
         else:
             print "Entering installation sequence:"
             self.__install__()
 
         self.wrapper_name = "ecmwfbufr.so"
         if (os.path.exists(self.wrapper_name)):
-            print "python wrapper seems already present"
+            #print "python wrapper seems already present"
             return
         else:
             print "Entering wrapper generation sequence:"
@@ -1086,6 +1087,8 @@ if __name__ == "__main__":
                                                            EditionNumber,MasterTableNumber)
         print "tabel name B: ",b
         print "tabel name D: ",d
+        assert(b == 'B0000000000210000001')
+        assert(d == 'D0000000000210000001')
         #  #]
         #  #[ read the binary data
         fd=open('Testfile.BUFR','rb')
@@ -1095,8 +1098,9 @@ if __name__ == "__main__":
         sizewords=len(data)/4
         words = np.array(struct.unpack("<"+str(sizewords)+"i",data))
         #print 'data[:4] = ',data[:4]
-        print 'data[:4] = ',';'.join(str(data[i]) for i in range(4) if data[i].isalnum())
-        print 'words[:4] = ',words[:4]
+        #print 'data[:4] = ',';'.join(str(data[i]) for i in range(4) if data[i].isalnum())
+        #print 'words[:4] = ',words[:4]
+        assert(data[:4] == 'BUFR')
         #  #]
         #  #[ define the needed constants
 
@@ -1126,6 +1130,7 @@ if __name__ == "__main__":
 
         #  #]
         #  #[ handle BUFR tables
+        print '------------------------------'
 
         # define our own location for storing (symlinks to) the BUFR tables
         private_BUFR_TABLES_dir = os.path.abspath("./tmp_BUFR_TABLES")
@@ -1141,7 +1146,7 @@ if __name__ == "__main__":
         available_B_table = "B0000000000098013001.TXT"
         available_D_table = "D0000000000098013001.TXT"
         
-        # NOTE: the naming scheme used by ECMWF is sucht, that the table name can
+        # NOTE: the naming scheme used by ECMWF is such, that the table name can
         #       be derived from elements from sections 0 and 1, which can be
         #       decoded without loading bufr tables.
         # TODO: implement this
@@ -1163,6 +1168,7 @@ if __name__ == "__main__":
 
         #  #]
         #  #[ call BUS012
+        print '------------------------------'
         ksup   = np.zeros(         9,dtype=np.int)
         ksec0  = np.zeros(         3,dtype=np.int)
         ksec1  = np.zeros(        40,dtype=np.int)
@@ -1173,31 +1179,41 @@ if __name__ == "__main__":
         ecmwfbufr.bus012(words,ksup,ksec0,ksec1,ksec2,kerr)
         # optional parameters: kbufl)
         print "returned from: ecmwfbufr.bus012()"
-        print "kerr = ",kerr
-        
-        print "ksup : ",ksup
-        print "sec0 : ",ksec0
-        print "sec1 : ",ksec1
-        print "sec2 : ",ksec2
+        if (kerr != 0):
+            print "kerr = ",kerr
+            sys.exit(1)
+        print 'ksup = ',ksup
         #  #]
         #  #[ call BUPRS0
+        print '------------------------------'
         print "printing content of section 0:"
+        print "sec0 : ",ksec0
         ecmwfbufr.buprs0(ksec0)
         #  #]
         #  #[ call BUPRS1
+        print '------------------------------'
         print "printing content of section 1:"
+        print "sec1 : ",ksec1
         ecmwfbufr.buprs1(ksec1)
         #  #]
         #  #[ call BUUKEY
-
-        # this call fails. I have to sort out why ...
-        #print "calling buukey"
-        #key = np.zeros(52, dtype=np.int)
-        #ecmwfbufr.buukey(ksec1,ksec2,key,ksup,kerr)
+        key = np.zeros(52, dtype=np.int)
+        sec2_len = ksec2[0]
+        if (sec2_len > 0):
+            # buukey expands local ECMWF information from section 2 to the key array
+            print '------------------------------'
+            print "calling buukey"
+            ecmwfbufr.buukey(ksec1,ksec2,key,ksup,kerr)
         #  #]
         #  #[ call BUPRS2
-        #print "printing content of section 2:"
-        #ecmwfbufr.buprs2(ksup,key)
+        print '------------------------------'
+        print "length of sec2: ",sec2_len
+        if (sec2_len > 0):
+            print "sec2 : ",ksec2
+            print "printing content of section 2:"
+            ecmwfbufr.buprs2(ksup,key)
+        else:
+            print 'skipping section 2 [since it seems unused]'
         #  #]
         #  #[ call BUFREX
         
@@ -1217,6 +1233,7 @@ if __name__ == "__main__":
         # ksec1  = np.zeros(        40,dtype=np.int)
         # ksec2  = np.zeros(      4096,dtype=np.int)
         
+        print '------------------------------'
         ksec3  = np.zeros(         4,dtype=np.int)
         ksec4  = np.zeros(         2,dtype=np.int)
         cnames = np.zeros((kelem,64),dtype=np.character)
@@ -1234,6 +1251,7 @@ if __name__ == "__main__":
 
         #  #]
         #  #[ print a selection of the decoded numbers
+        print '------------------------------'
         print "Decoded BUFR message:"
         print "ksup : ",ksup
         print "sec0 : ",ksec0
@@ -1241,12 +1259,20 @@ if __name__ == "__main__":
         print "sec2 : ",ksec2
         print "sec3 : ",ksec3
         print "sec4 : ",ksec4
-        print "cnames : ",cnames
-        print "cunits : ",cunits
+        print "cnames [cunits] : "
+        for (i,cn) in enumerate(cnames):
+            cu = cunits[i]
+            txtn = ''.join(c for c in cn)
+            txtu = ''.join(c for c in cu)
+            if (txtn.strip() != ''):
+                print '[%3.3i]:%s [%s]' % (i,txtn,txtu)
+
         print "values : ",values
+        txt = ''.join(str(v)+';' for v in values[:20] if v>0.)
+        print "values[:20] : ",txt
         
-        nsubsets  = 361 # number of subsets in this BUFR message
-        nelements =  44 # size of one expanded subset
+        nsubsets  = ksec3[2] # 361 # number of subsets in this BUFR message
+        nelements = ksup[4] # 44 # size of one expanded subset
         lat = np.zeros(nsubsets)
         lon = np.zeros(nsubsets)
         for s in range(nsubsets):
@@ -1263,6 +1289,8 @@ if __name__ == "__main__":
         print "min/max lon",min(lon),max(lon)
         #  #]
         #  #[ call BUSEL
+        print '------------------------------'
+        # busel: fill the descriptor list arrays (only needed for printing)   
         
         # warning: this routine has no inputs, and acts on data stored
         #          during previous library calls
@@ -1270,7 +1298,7 @@ if __name__ == "__main__":
         # have been called previously on the same bufr message.....
         # However, it is not clear to me why it seems to correctly produce
         # the descriptor lists (both bare and expanded), but yet it does
-        # not seem to fill the ktdlen and ltdexl values.
+        # not seem to fill the ktdlen and ktdexl values.
         
         ktdlen = 0
         ktdlst = np.zeros(MAXNRDESCR,   dtype=np.int)
@@ -1286,14 +1314,50 @@ if __name__ == "__main__":
                         kerr)   # error  message
         print "returned from: ecmwfbufr.busel()"
         print "kerr = ",kerr
-        
+
+        print 'busel result:'
         print "ktdlen = ",ktdlen
-        print "ktdlst = ",ktdlst
         print "ktdexl = ",ktdexl
-        print "ktdexp = ",ktdexp
+
+        selection1 = np.where(ktdlst > 0)
+        #print 'selection1 = ',selection1[0]
+        ktdlen = len(selection1[0])
+        selection2 = np.where(ktdexp > 0)
+        #print 'selection2 = ',selection2[0]
+        ktdexl = len(selection2[0])
+
+        print 'fixed lengths:'
+        print "ktdlen = ",ktdlen
+        print "ktdexl = ",ktdexl
+
+        print 'descriptor lists:'
+        print "ktdlst = ",ktdlst[:ktdlen]
+        print "ktdexp = ",ktdexp[:ktdexl]
         
         #  #]
+        #  #[ call BUPRS3
+        print '------------------------------'
+        print "printing content of section 3:"
+        print "sec3 : ",ksec3
+        ecmwfbufr.buprs3(ksec3,
+                         ktdlst, # list of data descriptors
+                         ktdexp, # list of expanded data descriptors
+                         cnames) # descriptor names
 
+        #  #]
+
+
+        # add test calls to:
+        #   buxdes: expand the descriptor list
+        #    [only usefull when creating a bufr msg with table D entries
+        #   bufren: encode a bufr message
+        #   bupkey: pack ecmwf specific key into section 2
+        # and possibly to:
+        #   btable: tries to load a bufr-B table
+        #    [usefull for testing the presence of a needed table]
+        #   get_name_unit: get a name and unit string for a given descriptor
+        #   buprq: sets some switches that control the bufr library
+        #
         #  #]
 
 #  #[ some obsolete notes:
