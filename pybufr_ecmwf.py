@@ -557,7 +557,14 @@ class bufr_interface_ecmwf(bufr_interface):
                             break
 
                 print "compiler1=",compiler1
-
+                libpath = ''
+                if (compiler1 == 'echo'):
+                    print 'KNMI specific script found:'
+                    print 'see: /usr/local/free/gfortran.csh'
+                    print 'and: /usr/local/free/gfortran.sh'
+                    print 'Please do a manual LD_LIBRARY_PATH setting if needed ...'
+                    return
+                
                 # Now find the corresponding f951 executable.
                 # Note that both g95 and gfortran use this name for their
                 # actual compiler executable, since they are forks of each other.
