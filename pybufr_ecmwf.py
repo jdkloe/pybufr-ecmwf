@@ -48,8 +48,17 @@ class bufr_interface:
     #  #]
 class bufr_interface_ecmwf(bufr_interface):
     #  #[
-    def __init__(self,verbose=False):
+    def __init__(self,verbose=False,
+                 FortranCompiler=None,FortranLdLibraryPath=None,FFlags=None,
+                 CCompiler=None,CLdLibraryPath=None,CFlags=None):
         #  #[
+
+        self.FortranCompiler      = FortranCompiler
+        self.FortranLdLibraryPath = FortranLdLibraryPath
+        self.CCompiler            = CCompiler
+        self.CLdLibraryPath       = CLdLibraryPath
+        self.FFlags               = FFlags
+        self.CFlags               = CFlags
 
         # call the init of the parent class
         bufr_interface.__init__(self,verbose)
@@ -229,6 +238,8 @@ class bufr_interface_ecmwf(bufr_interface):
         #  #]
     def __install__(self):
         #  #[
+
+        #  #[ download and unpack the ECMWF BUFR library tar file
         (Source_Dir,TarFile_to_Install) = self.__get_source_dir__()
         if (Source_Dir == None):
             self.__download_library__()
@@ -236,15 +247,75 @@ class bufr_interface_ecmwf(bufr_interface):
             (Source_Dir,TarFile_to_Install) = self.__get_source_dir__()
             
         if (not os.path.exists(Source_Dir)):
+
+            # safety catch
+            if (TarFile_to_Install == None):
+                print "ERROR: no tarfile available for BUFR library."
+                print "Maybe the automatic download failed?"
+                print "If you try to install without internet connection you have"
+                print "to manually create a directory named ecmwf_bufr_lib and place"
+                print "a copy of a recent ECMWF BUFR library tarfile in it before"
+                print "running the pybufr_ecmwf.py command."
+                sys.exit(1)
+
             Cmd = "cd "+self.ecmwf_bufr_lib_dir+";tar zxvf "+TarFile_to_Install
             print "Executing command: ",Cmd
             os.system(Cmd)
         else:
             print "path exists: ",Source_Dir
             print "assuming the package is already unpacked..."
+        #  #]
 
-        # now use the Make command provided in this package
+        #  #[ find a suitable fortran and c compiler to use
+        self.custom_fc_present = self.__CheckPresence__(self.FortranCompiler)
+        self.g77_present       = self.__CheckPresence__("g77")
+        self.g95_present       = self.__CheckPresence__("g95")
+        self.gfortran_present  = self.__CheckPresence__("gfortran")
+        self.f90_present       = self.__CheckPresence__("f90")
+        self.f77_present       = self.__CheckPresence__("f77")
 
+        self.custom_cc_present = self.__CheckPresence__(self.CCompiler)
+        self.gcc_present       = self.__CheckPresence__("gcc")
+        self.cc_present        = self.__CheckPresence__("cc")
+
+        # switch off (as test)
+        self.g95_present = False
+
+        if (self.verbose):
+            print "custom_fc_present = ",self.custom_fc_present
+            print "f77_present       = ",self.f77_present
+            print "f90_present       = ",self.f90_present
+            print "g77_present       = ",self.g77_present
+            print "g95_present       = ",self.g95_present
+            print "gfortran_present  = ",self.gfortran_present
+            print "custom_cc_present = ",self.custom_cc_present
+            print "gcc_present       = ",self.gcc_present
+            print "cc_present        = ",self.cc_present
+        #  #]
+        
+        #  #[ add the custom LD_LIBRARY_PATH settings
+        
+        # check for the presence of needed libraries
+        # in case the fortran compiler is installed in a user account (like I have myself)
+        # NOTE: this one depends on the BUFR config file to determine the compiler command
+        # so it will not run when run before creation of this config file
+        # However, this solution is probably not very portable anyway, so maybe
+        # it is better to remove it entirely (and replace maybe by a warning in case
+        # the executable fails in the above fortran compilation test)
+        #libpath = self.__check_needed_fc_libraries__()
+
+        libpath = ""
+        if (self.FortranLdLibraryPath != None):
+            libpath = ";".join(s for s in [libpath,self.FortranLdLibraryPath] if (s != ""))
+        if (self.CLdLibraryPath != None):
+            libpath = ";".join(s for s in [libpath,self.CLdLibraryPath] if (s != ""))
+
+        if (libpath != ""):
+            print "Using LD_LIBRARY_PATH setting: ",libpath
+        #  #]
+
+        #  #[ generate a config file for compilation of the BUFR library
+        
         #-----------------------------------------------------------------------------#
         # Possible commands to the make command for the BUFR library, in case you     #
         # wish to use the config files from the ECMWF software package are:           #
@@ -269,82 +340,97 @@ class bufr_interface_ecmwf(bufr_interface):
         #A64=""
         
         # note: usefull free compilers for linux that you can use are:
+        # (at least for these config files are provided in the ECMWF BUFR package)
         # g77      : CNAME="_gnu"
         # g95      : CNAME="_g95"
         # gfortran : CNAME="_gfortran"
 
-        g77_present      = self.__CheckPresence__("g77")
-        g95_present      = self.__CheckPresence__("g95")
-        gfortran_present = self.__CheckPresence__("gfortran")
-        f90_present      = self.__CheckPresence__("f90")
-        f77_present      = self.__CheckPresence__("f77")
+        # Notes on compiler switches:
 
-        gcc_present      = self.__CheckPresence__("gcc")
-        cc_present       = self.__CheckPresence__("cc")
+        # for most compilers you should force the BUFR library to use 4 byte integers
+        # as default integer. Do this by adding the "-i4" option.
+        # This works for most compilers, with gfortran as known exception (that one has
+        # this setting as default and does not have a commandline option to set it)
 
-        if (self.verbose):
-            print "f77_present      = ",f77_present
-            print "f90_present      = ",f90_present
-            print "g77_present      = ",g77_present
-            print "g95_present      = ",g95_present
-            print "gfortran_present = ",gfortran_present
-            print "gcc_present      = ",gcc_present
-            print "cc_present       = ",cc_present
-            
-        # Default compiler switches (e.g. for Portland/ifort).
-        FFLAGS = "-O -Dlinux "
-        CFLAGS = ""
-        # force the BUFR library to use 4 byte integers as default
-        FINTEGERDEFINITION=" -i4"
-        CINTEGERDEFINITION=" -DFOPEN64 "
+        # the c compiler step seems to need the "-DFOPEN64" switch to be set
+        # (at least it is present in most config files in the package) but it is
+        # never used in the source code itself, so I guess it is obsolete.
 
-        # switch off (as test)
-        g95_present = False
-
-        if   (g95_present):
+        if (self.custom_fc_present):
+            FC = self.FortranCompiler
+            # Default compiler switches
+            FFLAGS = "-O -Dlinux"
+            # add any custom flags given by the user
+            if (self.FFlags != None):
+                FFLAGS = FFLAGS + ' ' + self.FFlags
+        elif (self.g95_present):
             FC = "g95"
+            # Default compiler switches
+            FFLAGS = "-O -Dlinux"
+            # additional g95 specific switches
+            FFLAGS = FFLAGS+" -i4"
             FFLAGS = FFLAGS+" -fno-second-underscore"
             FFLAGS = FFLAGS+" -r8"
             FFLAGS = FFLAGS+" -fPIC"
-            CFLAGS = CFLAGS+" -fPIC"
             #CNAME="_g95"
-        elif (gfortran_present):
+        elif (self.gfortran_present):
             FC = "gfortran"
+            # Default compiler switches
+            FFLAGS = "-O -Dlinux"
+            # additional gfortran specific switches
             FFLAGS = FFLAGS+" -fno-second-underscore"
             FFLAGS = FFLAGS+" -fPIC"
-            CFLAGS = CFLAGS+" -fPIC"
             #FINTEGERDEFINITION=" -fdefault-integer-4"
             # an explicit 4-byte default integer options seems not to exists
             # for gfortran, so lets just hope that is the default ...
             FINTEGERDEFINITION=""
             #CNAME="_gfortran"
-        elif (g77_present):
+        elif (self.g77_present):
             FC = "g77"
+            # Default compiler switches
+            FFLAGS = "-O -Dlinux"
+            FFLAGS = FFLAGS+" -i4"
             #CNAME="_gnu"
-        elif (f90_present):
+        elif (self.f90_present):
             # this catches installations that have some commercial fortran
             # installed, which usually are symlinked to the name
             # f90 for convenience
-            FC = "f77"
+            FC = "f90"
+            # Default compiler switches
+            FFLAGS = "-O -Dlinux"
+            FFLAGS = FFLAGS+" -i4"
             #CNAME="_???"
-        elif (f77_present):
+        elif (self.f77_present):
             # this catches installations that have some commercial fortran
             # installed, which usually are symlinked to the name
             # f77 for convenience
             FC = "f77"
+            # Default compiler switches
+            FFLAGS = "-O -Dlinux"
+            FFLAGS = FFLAGS+" -i4"
             #CNAME="_???"
         else:
             print "ERROR in bufr_interface_ecmwf.__install__:"
             print "No suitable fortran compiler found"
             sys.exit(1)
 
-        if   (gcc_present):
+        if (self.custom_cc_present):
+            CC=self.CCompiler
+            CFLAGS = "-fPIC"
+            # add any custom flags given by the user
+            if (self.CFlags != None):
+                CFLAGS = CFLAGS+' '+self.CFlags
+        elif (self.gcc_present):
             CC="gcc"
-        elif (cc_present):
+            # Default compiler switches
+            CFLAGS = "-fPIC"
+        elif (self.cc_present):
             # this catches installations that have some commercial c-compiler
             # installed, which usually are symlinked to the name
             # cc for convenience
             CC="cc"
+            # Default compiler switches
+            CFLAGS = "-fPIC"
         else:
             print "ERROR in bufr_interface_ecmwf.__install__:"
             print "No suitable c compiler found"
@@ -357,9 +443,6 @@ class bufr_interface_ecmwf(bufr_interface):
         AR="ar"
         # a command to generate an index of an archive file
         RL = "/usr/bin/ranlib"
-
-        CFLAGS=CFLAGS+CINTEGERDEFINITION
-        FFLAGS=FFLAGS+FINTEGERDEFINITION
 
         # Unfortunately, the config files supplied with this library seem
         # somewhat outdated and sometimes incorrect, or incompatible with
@@ -412,11 +495,15 @@ class bufr_interface_ecmwf(bufr_interface):
         Source      = FullnameConfigFile
         Destination = os.path.join(self.ecmwf_bufr_lib_dir,"ConfigFile")
         shutil.copyfile(Source,Destination)
+        #  #]
+        
+        #  #[ try to compile little pieces of Fortran and c to test the compilers
+        self.__fortran_compile_test__(FC,FFLAGS,libpath)
+        self.__c_compile_test__(CC,CFLAGS,libpath)
+        #  #]
+        
+        #  #[ now use the Make command provided in this package to build the library
 
-        # check for the presence of needed libraries
-        # in case the fortran compiler is installed in a user account (like I have myself)
-        libpath = self.__check_needed_fc_libraries__()
-    
         # construct the compilation command:
         Cmd = "cd "+Source_Dir+";make ARCH="+ARCH+" CNAME="+CNAME+" R64="+R64+" A64="+A64
 
@@ -425,10 +512,13 @@ class bufr_interface_ecmwf(bufr_interface):
             print "Executing command: ",Cmd
             os.system(Cmd)
             #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+            #self.__RunShellCommand__(Cmd,CatchOutput=False)
         else:
-            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
-    
-        # check the result
+            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
+            self.__RunShellCommand__(Cmd,libpath=libpath,CatchOutput=False)
+        #  #]
+
+        #  #[ check the result
         BufrLibFile = "libbufr.a"
         FullnameBufrLibFile = os.path.join(Source_Dir,BufrLibFile)
         if (os.path.exists(FullnameBufrLibFile)):
@@ -442,7 +532,10 @@ class bufr_interface_ecmwf(bufr_interface):
             print "ERROR in bufr_interface_ecmwf.__install__:"
             print "No libbufr.a file seems generated."
             sys.exit(1)
+        #  #]
 
+        #  #[ some old notes
+        
         # save the settings for later use
         #self.make_settings = (ARCH,CNAME,R64,A64)
         #self.compilers     = (FC,FFLAGS,CC,CFLAGS)
@@ -459,9 +552,10 @@ class bufr_interface_ecmwf(bufr_interface):
         # So in the __check_needed_fc_libraries__ routine should just
         # read the config file generated above, and not use these
         # settings in self, that might not always be defined.
-
         #  #]
-    def __RunShellCommand__(self,Cmd,libpath=None):
+        
+        #  #]
+    def __RunShellCommand__(self,Cmd,libpath=None,CatchOutput=True):
         #  #[
         # get the list of already defined env settings
         e = os.environ
@@ -475,33 +569,44 @@ class bufr_interface_ecmwf(bufr_interface):
                 
                 
         print "Executing command: ",Cmd
-        SubPr = subprocess.Popen(Cmd,
-                                 shell=True,
-                                 env=e,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+        if (CatchOutput):
+            SubPr = subprocess.Popen(Cmd,
+                                     shell=True,
+                                     env=e,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+            
+            # wait until the child process is done
+            #SubPr.wait() # seems not necessary when catching stdout and stderr
+            
+            lines_stdout = SubPr.stdout.readlines()
+            lines_stderr = SubPr.stderr.readlines()
+            
+            #print "lines_stdout: ",lines_stdout
+            #print "lines_stderr: ",lines_stderr
+            
+            return (lines_stdout,lines_stderr)
 
-        # wait until the child process is done
-        #SubPr.wait() # seems not necessary for our purpose
+        else:
+            SubPr = subprocess.Popen(Cmd, shell=True, env=e)
 
-        lines_stdout = SubPr.stdout.readlines()
-        lines_stderr = SubPr.stderr.readlines()
-        
-        #print "lines_stdout: ",lines_stdout
-        #print "lines_stderr: ",lines_stderr
-
-        return (lines_stdout,lines_stderr)
+            # wait until the child process is done
+            SubPr.wait()
+            return
         #  #]
     def __CheckPresence__(self,command):
         #  #[
         if (self.verbose):
-            print "checking for presence of command: "+command
+            print "checking for presence of command: "+str(command)
         
         result = []
+
+        if (command == None):
+            return False
         
         # get the real command, in case it was an alias
         Cmd = "which "+command
-        (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+        (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,CatchOutput=True)
 
         if (len(lines_stdout)==0):
             # command is not present in default path
@@ -510,8 +615,123 @@ class bufr_interface_ecmwf(bufr_interface):
             # command is present in default path
             return True
         #  #]
-    def __check_needed_fc_libraries__(self):
+    def __fortran_compile_test__(self,FC,FFLAGS,libpath):
         #  #[
+        # Note: for now the flags are not used in these test because these
+        # are specific for generating a shared-object file, and will fail to
+        # generate a simple executable for testing
+
+        FortranTestCode = \
+"""
+program pybufr_test_program
+
+  print *,'Hello pybufr module:'
+  print *,'Fortran compilation seems to work fine ...'
+
+end program pybufr_test_program
+"""
+
+        # generate a testfile with a few lines of Fortran90 code
+        FortranTestExecutable = "pybufr_fortran_test_program"
+        FortranTestFile       = FortranTestExecutable+".F90"
+        fd = open(FortranTestFile,'wt')
+        fd.write(FortranTestCode)
+        fd.close()
+
+        # contruct the compile command
+        Cmd = FC+' -o '+FortranTestExecutable+' '+FortranTestFile
+        
+         # now issue the compile command
+        if (libpath == ""):
+            print "Executing command: ",Cmd
+            os.system(Cmd)
+        else:
+            self.__RunShellCommand__(Cmd,libpath=libpath,CatchOutput=False)
+
+        # now execute the just generated test program to verify if we succeeded
+        Cmd = FortranTestExecutable
+        if (libpath == ""):
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+        else:
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
+
+        expected_output = [' Hello pybufr module:\n',
+                           ' Fortran compilation seems to work fine ...\n']
+        if ( (expected_output[0] not in lines_stdout) or
+             (expected_output[1] not in lines_stdout)   ):
+            print "ERROR: Fortran compilation test failed; something seems very wrong"
+            print "Expected output: ",expected_output
+            print 'actual output stdout = ',lines_stdout
+            print 'actual output stderr = ',lines_stderr
+            sys.exit(1)
+
+        print "Fortran compilation test successfull..."
+
+        # clean up
+        os.remove(FortranTestExecutable)
+        os.remove(FortranTestFile)
+        
+        #  #]
+    def __c_compile_test__(self,CC,CFLAGS,libpath):
+        #  #[
+        # Note: for now the flags are not used in these test because these
+        # are specific for generating a shared-object file, and will fail to
+        # generate a simple executable for testing
+
+        CTestCode = \
+r"""
+#include <stdio.h>
+int main()
+{
+  printf("Hello pybufr module:\n");
+  printf("c compilation seems to work fine ...\n");
+  return 0;
+}
+"""
+
+        # generate a testfile with a few lines of Fortran90 code
+        CTestExecutable = "pybufr_c_test_program"
+        CTestFile       = CTestExecutable+".c"
+        fd = open(CTestFile,'wt')
+        fd.write(CTestCode)
+        fd.close()
+
+        # contruct the compile command
+        Cmd = CC+' -o '+CTestExecutable+' '+CTestFile
+        
+         # now issue the compile command
+        if (libpath == ""):
+            print "Executing command: ",Cmd
+            os.system(Cmd)
+        else:
+            self.__RunShellCommand__(Cmd,libpath=libpath,CatchOutput=False)
+
+        # now execute the just generated test program to verify if we succeeded
+        Cmd = CTestExecutable
+        if (libpath == ""):
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+        else:
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
+
+        expected_output = ['Hello pybufr module:\n',
+                           'c compilation seems to work fine ...\n']
+        if ( (expected_output[0] not in lines_stdout) or
+             (expected_output[1] not in lines_stdout)   ):
+            print "ERROR: c compilation test failed; something seems very wrong"
+            print "Expected output: ",expected_output
+            print 'actual output stdout = ',lines_stdout
+            print 'actual output stderr = ',lines_stderr
+            sys.exit(1)
+
+        print "c compilation test successfull..."
+
+        # clean up
+        os.remove(CTestExecutable)
+        os.remove(CTestFile)
+        sys.exit(1)
+        #  #]
+    def __check_needed_fc_libraries__(self):
+        #  #[ obsolete
         ConfigFile = os.path.join(self.ecmwf_bufr_lib_dir,"ConfigFile")
         lines = open(ConfigFile).readlines()
 
@@ -525,7 +745,7 @@ class bufr_interface_ecmwf(bufr_interface):
             print "Checking library availability for FortranCompiler = ",FortranCompiler
             # get the real command, in case it was an alias
             Cmd = "which "+FortranCompiler
-            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,CatchOutput=True)
             if (len(lines_stdout)==0):
                 # command is not present in default path
                 print "ERROR: gfortran seems not present in the default part"
@@ -575,13 +795,13 @@ class bufr_interface_ecmwf(bufr_interface):
                 (base,head)      = os.path.split(comp_path)
                 if (head=="bin"):
                     Cmd = "find "+os.path.join(base,"libexec")+" | grep f951"
-                    (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+                    (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,CatchOutput=True)
                     # ==> find /home/jos/bin/gcc-trunk/libexec/ | grep f951
                     # on my system this returns:
                     # /home/jos/bin/gcc-trunk/libexec/gcc/x86_64-unknown-linux-gnu/4.4.0/f951
                     f951_cmd = lines_stdout[0].strip()
                     Cmd = "ldd "+f951_cmd
-                    (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+                    (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,CatchOutput=True)
                     #if self.verbose:
                     #    print "lines_stdout:"
                     #    print '[%s]\n'.join(l for l in lines_stdout)
@@ -664,20 +884,20 @@ class bufr_interface_ecmwf(bufr_interface):
         wrapper_module_name = "ecmwfbufr"
         signatures_filename = "signatures.pyf"
 
-        SrcFiles = ["buxdes.F",
-                    "bufren.F",
-                    "bufrex.F",
-                    "btable.F",
-                    "get_name_unit.F",
-                    "bus012.F",
-                    "busel.F",
-                    "buprs0.F",
-                    "buprs1.F",
-                    "buprs2.F",
-                    "buprs3.F",
-                    "buukey.F",
-                    "bupkey.F",
-                    "buprq.F"]
+        #SrcFiles = ["buxdes.F",
+        #            "bufren.F",
+        #            "bufrex.F",
+        #            "btable.F",
+        #            "get_name_unit.F",
+        #            "bus012.F",
+        #            "busel.F",
+        #            "buprs0.F",
+        #            "buprs1.F",
+        #            "buprs2.F",
+        #            "buprs3.F",
+        #            "buukey.F",
+        #            "bupkey.F",
+        #            "buprq.F"]
         #SrcFileList = ' '.join(os.path.join(Source_Dir,"bufrdc",f) for f in SrcFiles)
         # compilation of the wrapper seems to work when I use
         # this selected set of fortran files, but when I try to import the module
@@ -693,7 +913,16 @@ class bufr_interface_ecmwf(bufr_interface):
 
         # check for the presence of needed libraries
         # in case the fortran compiler is installed in a user account (like I have myself)
-        libpath = self.__check_needed_fc_libraries__()
+        #libpath = self.__check_needed_fc_libraries__()
+
+        libpath = ""
+        if (self.FortranLdLibraryPath != None):
+            libpath = ";".join(s for s in [libpath,self.FortranLdLibraryPath] if (s != ""))
+        if (self.CLdLibraryPath != None):
+            libpath = ";".join(s for s in [libpath,self.CLdLibraryPath] if (s != ""))
+
+        if (libpath != ""):
+            print "Using LD_LIBRARY_PATH setting: ",libpath
 
         # call f2py and create a signature file that defines the
         # interfacing to the fortran routines in this library
@@ -705,9 +934,11 @@ class bufr_interface_ecmwf(bufr_interface):
         if (libpath == ""):
             print "Executing command: ",Cmd
             os.system(Cmd)
-            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,CatchOutput=True)
         else:
-            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
+            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath,
+            #                                                       CatchOutput=True)
+            self.__RunShellCommand__(Cmd,libpath=libpath,CatchOutput=False)
     
         # safety check: see if the signatures.pyf file really is created
         signatures_fullfilename = os.path.join(wrapper_build_dir,signatures_filename)
@@ -738,18 +969,26 @@ class bufr_interface_ecmwf(bufr_interface):
 
         # it might be usefull for debugging to include this option: --debug-capi
 
-        Cmd = "f2py  --build-dir "+wrapper_build_dir+\
-              " --fcompiler="+FortranCompiler+\
-              " ./f2py_build/signatures.pyf -L./ -lbufr -c"
+        if (self.FortranCompiler != None):
+            Cmd = "f2py  --build-dir "+wrapper_build_dir+\
+                  " --f90exec="+FortranCompiler+\
+                  " --f90flags='"+FortranCompilerFlags+"'"+\
+                  " --f77flags='"+FortranCompilerFlags+"'"+\
+                  " ./f2py_build/signatures.pyf -L./ -lbufr -c"
+        else:
+            Cmd = "f2py  --build-dir "+wrapper_build_dir+\
+                  " --fcompiler="+FortranCompiler+\
+                  " ./f2py_build/signatures.pyf -L./ -lbufr -c"
               #" --debug-capi "+\
-              #" --f90flags="+FortranCompilerFlags+\
 
         if (libpath == ""):
             print "Executing command: ",Cmd
             os.system(Cmd)
-            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd)
+            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,CatchOutput=False)
         else:
-            (lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath)
+            #(lines_stdout,lines_stderr) = self.__RunShellCommand__(Cmd,libpath=libpath,
+            #                                                       CatchOutput=True)
+            self.__RunShellCommand__(Cmd,libpath=libpath,CatchOutput=False)
             
         # finally, again check for the presence of the wrapper
         # to see if the build was successfull
@@ -764,6 +1003,15 @@ class bufr_interface_ecmwf(bufr_interface):
         #  #]
     def __adapt_f2py_signature_file__(self,signature_file):
         #  #[
+
+        # NOTE: maybe this modification is not needed if I can get the file with the
+        #       parameters included in an other way.
+        #       Looking at the f2py manpage the option -include might do the trick
+        #       but that one is depricated. In stead a usercode section should be used
+        #       but that again means modifying the signature file ...
+        #       Also the --include_paths option might be related.
+        # TODO: sort this out
+        
         #signature_file = "f2py_build/signatures.pyf"
 
         # these values are defined in parameter.F 
@@ -1076,8 +1324,35 @@ class bufrfile:
 if __name__ == "__main__":
         #  #[ test program
         print "Starting test program:"
+
         # instantiate the class, and pass all settings to it
+
+        # tested at my laptop at home with a systemwide gfortran v4.3.2 installed
+        # successfully tested 17-Dec-2009
         BI = bufr_interface_ecmwf(verbose=True)
+
+        # note that the "-O" flag is allways set for each fortran compiler
+        # so no need to specify it to the FFlags parameter.
+        
+        # tested at my laptop at home with a gfortran v4.4.0 installed in a user account
+        # successfully tested 17-Dec-2009
+        #BI = bufr_interface_ecmwf(verbose=True,
+        #                          FortranCompiler="/home/jos/bin/gfortran_personal",
+        #                          FortranLdLibraryPath="/home/jos/bin/gcc-trunk/lib64",
+        #                          FFlags="-fno-second-underscore -fPIC")
+
+        # tested at my laptop at home with a g95 v0.92 (32-bit) installed in a user account
+        # successfully tested 17-Dec-2009
+        #BI = bufr_interface_ecmwf(verbose=True,
+        #                          FortranCompiler="/home/jos/bin/g95_32",
+        #                          FFlags="-fno-second-underscore -fPIC -i4 -r8")
+
+        # tested at my laptop at home with a g95 v0.92 (64-bit) installed in a user account
+        # successfully tested 17-Dec-2009
+        #BI = bufr_interface_ecmwf(verbose=True,
+        #                          FortranCompiler="/home/jos/bin/g95_64",
+        #                          FFlags="-fno-second-underscore -fPIC -i4 -r8")
+        
         #  #[ import additional modules needed for testing
         import struct      # allow converting c datatypes and structs
         import ecmwfbufr   # import the just created wrapper module
