@@ -728,7 +728,6 @@ int main()
         # clean up
         os.remove(CTestExecutable)
         os.remove(CTestFile)
-        sys.exit(1)
         #  #]
     def __check_needed_fc_libraries__(self):
         #  #[ obsolete
@@ -1326,32 +1325,39 @@ if __name__ == "__main__":
         print "Starting test program:"
 
         # instantiate the class, and pass all settings to it
-
-        # tested at my laptop at home with a systemwide gfortran v4.3.2 installed
-        # successfully tested 17-Dec-2009
-        BI = bufr_interface_ecmwf(verbose=True)
-
-        # note that the "-O" flag is allways set for each fortran compiler
-        # so no need to specify it to the FFlags parameter.
+        # (4 different tests defined for this step, with 4 different compilers)
         
-        # tested at my laptop at home with a gfortran v4.4.0 installed in a user account
-        # successfully tested 17-Dec-2009
-        #BI = bufr_interface_ecmwf(verbose=True,
-        #                          FortranCompiler="/home/jos/bin/gfortran_personal",
-        #                          FortranLdLibraryPath="/home/jos/bin/gcc-trunk/lib64",
-        #                          FFlags="-fno-second-underscore -fPIC")
+        #testcase = 1 # test default gfortran
+        #testcase = 2 # test custom gfortran
+        #testcase = 3 # test custom g95-32 bit
+        testcase = 4 # test custom g95-64 bit
 
-        # tested at my laptop at home with a g95 v0.92 (32-bit) installed in a user account
-        # successfully tested 17-Dec-2009
-        #BI = bufr_interface_ecmwf(verbose=True,
-        #                          FortranCompiler="/home/jos/bin/g95_32",
-        #                          FFlags="-fno-second-underscore -fPIC -i4 -r8")
-
-        # tested at my laptop at home with a g95 v0.92 (64-bit) installed in a user account
-        # successfully tested 17-Dec-2009
-        #BI = bufr_interface_ecmwf(verbose=True,
-        #                          FortranCompiler="/home/jos/bin/g95_64",
-        #                          FFlags="-fno-second-underscore -fPIC -i4 -r8")
+        if (testcase == 1):
+            # tested at my laptop at home with a systemwide gfortran v4.3.2 installed
+            # successfully tested 17-Dec-2009
+            BI = bufr_interface_ecmwf(verbose=True)
+        elif (testcase==2):
+            # note that the "-O" flag is allways set for each fortran compiler
+            # so no need to specify it to the FFlags parameter.
+            
+            # tested at my laptop at home with a gfortran v4.4.0 installed in a user account
+            # successfully tested 17-Dec-2009
+            BI = bufr_interface_ecmwf(verbose=True,
+                                      FortranCompiler="/home/jos/bin/gfortran_personal",
+                                      FortranLdLibraryPath="/home/jos/bin/gcc-trunk/lib64",
+                                      FFlags="-fno-second-underscore -fPIC")
+        elif (testcase==3):
+            # tested at my laptop at home with a g95 v0.92 (32-bit) installed in a user account
+            # successfully tested 17-Dec-2009
+            BI = bufr_interface_ecmwf(verbose=True,
+                                      FortranCompiler="/home/jos/bin/g95_32",
+                                      FFlags="-fno-second-underscore -fPIC -i4 -r8")
+        elif (testcase==4):
+            # tested at my laptop at home with a g95 v0.92 (64-bit) installed in a user account
+            # successfully tested 17-Dec-2009
+            BI = bufr_interface_ecmwf(verbose=True,
+                                      FortranCompiler="/home/jos/bin/g95_64",
+                                      FFlags="-fno-second-underscore -fPIC -i4 -r8")
         
         #  #[ import additional modules needed for testing
         import struct      # allow converting c datatypes and structs
