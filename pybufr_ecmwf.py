@@ -49,16 +49,20 @@ class bufr_interface:
 class bufr_interface_ecmwf(bufr_interface):
     #  #[
     def __init__(self,verbose=False,
+                 PreferredFortranCompiler=None,
+                 PreferredCCompiler=None,
                  FortranCompiler=None,FortranLdLibraryPath=None,FFlags=None,
                  CCompiler=None,CLdLibraryPath=None,CFlags=None):
         #  #[
 
-        self.FortranCompiler      = FortranCompiler
-        self.FortranLdLibraryPath = FortranLdLibraryPath
-        self.CCompiler            = CCompiler
-        self.CLdLibraryPath       = CLdLibraryPath
-        self.FFlags               = FFlags
-        self.CFlags               = CFlags
+        self.PreferredFortranCompiler = PreferredFortranCompiler
+        self.PreferredCCompiler       = PreferredCCompiler
+        self.FortranCompiler          = FortranCompiler
+        self.FortranLdLibraryPath     = FortranLdLibraryPath
+        self.CCompiler                = CCompiler
+        self.CLdLibraryPath           = CLdLibraryPath
+        self.FFlags                   = FFlags
+        self.CFlags                   = CFlags
 
         # call the init of the parent class
         bufr_interface.__init__(self,verbose)
@@ -267,30 +271,157 @@ class bufr_interface_ecmwf(bufr_interface):
         #  #]
 
         #  #[ find a suitable fortran and c compiler to use
+        # the first one found will be used, unless a preferred one is specified.
         self.custom_fc_present = self.__CheckPresence__(self.FortranCompiler)
-        self.g77_present       = self.__CheckPresence__("g77")
         self.g95_present       = self.__CheckPresence__("g95")
         self.gfortran_present  = self.__CheckPresence__("gfortran")
+        self.g77_present       = self.__CheckPresence__("g77")
         self.f90_present       = self.__CheckPresence__("f90")
         self.f77_present       = self.__CheckPresence__("f77")
+
+        self.use_custom_fc = False
+        self.use_g95       = False
+        self.use_gfortran  = False
+        self.use_g77       = False
+        self.use_f90       = False
+        self.use_f77       = False
+
+        fortran_compiler_selected = False
+        if (self.PreferredFortranCompiler != None):
+            implementedFortranCompilers = ["custom","g95","gfortran","g77","f90","f77"]
+            if not (self.PreferredFortranCompiler in implementedFortranCompilers):
+                print "Warning: unknown preferred fortran compiler specified."
+                print "valid options are: custom, g95, gfortran, g77, f90, f77"
+                
+            if (self.PreferredFortranCompiler == "custom"):
+                if (self.custom_fc_present):
+                    self.use_custom_fc = True
+                    fortran_compiler_selected = True
+            elif (self.PreferredFortranCompiler == "g95"):
+                if (self.g95_present):
+                    self.use_g95 = True
+                    fortran_compiler_selected = True
+            elif (self.PreferredFortranCompiler == "gfortran"):
+                if (self.gfortran_present):
+                    self.use_gfortran = True
+                    fortran_compiler_selected = True
+            elif (self.PreferredFortranCompiler == "g77"):
+                if (self.g77_present):
+                    self.use_g77 = True
+                    fortran_compiler_selected = True
+            elif (self.PreferredFortranCompiler == "f90"):
+                if (self.f90_present):
+                    self.use_f90 = True
+                    fortran_compiler_selected = True
+            elif (self.PreferredFortranCompiler == "f77"):
+                if (self.f77_present):
+                    self.use_f77 = True
+                    fortran_compiler_selected = True
+            else:
+                print "Warning: this line should never be reached."
+                print "check the list of available fortran compilers, it seems not consistent"
+                print "please report this bug if you encounter it"
+                sys.exit(1)
+                
+            if (not fortran_compiler_selected):
+                print "preferred fortran compiler ["+\
+                      self.PreferredFortranCompiler+"] seems not available..."
+                print "falling back to default fortran compiler"
+
+        if (not fortran_compiler_selected):
+            if (self.custom_fc_present):
+                self.use_custom_fc = True
+                fortran_compiler_selected = True
+            elif (self.g95_present):
+                self.use_g95 = True
+                fortran_compiler_selected = True
+            elif (self.gfortran_present):
+                self.use_gfortran = True
+                fortran_compiler_selected = True
+            elif (self.g77_present):
+                self.use_g77 = True
+                fortran_compiler_selected = True
+            elif (self.f90_present):
+                self.use_f90 = True
+                fortran_compiler_selected = True
+            elif (self.f77_present):
+                self.use_f77 = True
+                fortran_compiler_selected = True
+
+
+        if (not fortran_compiler_selected):
+            print "ERROR: no valid fortran compiler found, installation is not possible"
+            print "Please install a fortran compiler first. Good options are the free GNU compilers"
+            print "gfortran and g95 which may be downloaded free of charge."
+            sys.exit(1)
 
         self.custom_cc_present = self.__CheckPresence__(self.CCompiler)
         self.gcc_present       = self.__CheckPresence__("gcc")
         self.cc_present        = self.__CheckPresence__("cc")
 
-        # switch off (as test)
-        self.g95_present = False
+        self.use_custom_cc = False
+        self.use_gcc       = False
+        self.use_cc        = False
+        
+        c_compiler_selected = False
+        if (self.PreferredCCompiler !=None):
+            implementedCCompilers = ["custom","gcc","cc"]
+            if not (self.PreferredCCompiler in implementedCCompilers):
+                print "Warning: unknown preferred c compiler specified."
+                print "valid options are: custom, gcc, cc"
+
+            if (self.PreferredCCompiler == "custom"):
+                if (self.custom_cc_present):
+                    self.use_custom_cc = True
+                    c_compiler_selected = True
+            elif (self.PreferredCCompiler == "gcc"):
+                if (self.gcc_present):
+                    self.use_gcc = True
+                    c_compiler_selected = True
+            elif (self.PreferredCCompiler == "cc"):
+                if (self.cc_present):
+                    self.use_cc = True
+                    c_compiler_selected = True
+            else:
+                print "Warning: this line should never be reached."
+                print "check the list of available c compilers, it seems not consistent"
+                print "please report this bug if you encounter it"
+                sys.exit(1)
+                
+            if (not c_compiler_selected):
+                print "preferred c compiler ["+\
+                      self.PreferredCCompiler+"] seems not available..."
+                print "falling back to default c compiler"
+
+        if (not c_compiler_selected):
+            if (self.custom_cc_present):
+                self.use_custom_cc = True
+                c_compiler_selected = True
+            elif (self.gcc_present):
+                self.use_gcc = True
+                c_compiler_selected = True
+            elif (self.cc_present):
+                self.use_cc = True
+                c_compiler_selected = True
+
+        if (not c_compiler_selected):
+            print "ERROR: no valid c compiler found, installation is not possible"
+            print "Please install a c compiler first. A good options is the free GNU compiler gcc"
+            print "which may be downloaded free of charge."
+            sys.exit(1)
 
         if (self.verbose):
-            print "custom_fc_present = ",self.custom_fc_present
-            print "f77_present       = ",self.f77_present
-            print "f90_present       = ",self.f90_present
-            print "g77_present       = ",self.g77_present
-            print "g95_present       = ",self.g95_present
-            print "gfortran_present  = ",self.gfortran_present
-            print "custom_cc_present = ",self.custom_cc_present
-            print "gcc_present       = ",self.gcc_present
-            print "cc_present        = ",self.cc_present
+            print "custom_fc_present = ",self.custom_fc_present," use_custom_fc = ",self.use_custom_fc
+            print "g95_present       = ",self.g95_present,      " use_g95       = ",self.use_g95
+            print "gfortran_present  = ",self.gfortran_present, " use_gfortran  = ",self.use_gfortran
+            print "g77_present       = ",self.g77_present,      " use_g77       = ",self.use_g77
+            print "f90_present       = ",self.f90_present,      " use_f90       = ",self.use_f90
+            print "f77_present       = ",self.f77_present,      " use_f77       = ",self.use_f77
+
+            print "custom_cc_present = ",self.custom_cc_present," use_custom_cc = ",self.use_custom_cc
+            print "gcc_present       = ",self.gcc_present,      " use_gcc       = ",self.use_gcc
+            print "cc_present        = ",self.cc_present,       " use_cc        = ",self.use_cc
+            
         #  #]
         
         #  #[ add the custom LD_LIBRARY_PATH settings
@@ -356,14 +487,14 @@ class bufr_interface_ecmwf(bufr_interface):
         # (at least it is present in most config files in the package) but it is
         # never used in the source code itself, so I guess it is obsolete.
 
-        if (self.custom_fc_present):
+        if (self.use_custom_fc):
             FC = self.FortranCompiler
             # Default compiler switches
             FFLAGS = "-O -Dlinux"
             # add any custom flags given by the user
             if (self.FFlags != None):
                 FFLAGS = FFLAGS + ' ' + self.FFlags
-        elif (self.g95_present):
+        elif (self.use_g95):
             FC = "g95"
             # Default compiler switches
             FFLAGS = "-O -Dlinux"
@@ -373,7 +504,7 @@ class bufr_interface_ecmwf(bufr_interface):
             FFLAGS = FFLAGS+" -r8"
             FFLAGS = FFLAGS+" -fPIC"
             #CNAME="_g95"
-        elif (self.gfortran_present):
+        elif (self.use_gfortran):
             FC = "gfortran"
             # Default compiler switches
             FFLAGS = "-O -Dlinux"
@@ -385,13 +516,13 @@ class bufr_interface_ecmwf(bufr_interface):
             # for gfortran, so lets just hope that is the default ...
             FINTEGERDEFINITION=""
             #CNAME="_gfortran"
-        elif (self.g77_present):
+        elif (self.use_g77):
             FC = "g77"
             # Default compiler switches
             FFLAGS = "-O -Dlinux"
             FFLAGS = FFLAGS+" -i4"
             #CNAME="_gnu"
-        elif (self.f90_present):
+        elif (self.use_f90):
             # this catches installations that have some commercial fortran
             # installed, which usually are symlinked to the name
             # f90 for convenience
@@ -400,7 +531,7 @@ class bufr_interface_ecmwf(bufr_interface):
             FFLAGS = "-O -Dlinux"
             FFLAGS = FFLAGS+" -i4"
             #CNAME="_???"
-        elif (self.f77_present):
+        elif (self.use_f77):
             # this catches installations that have some commercial fortran
             # installed, which usually are symlinked to the name
             # f77 for convenience
@@ -414,17 +545,17 @@ class bufr_interface_ecmwf(bufr_interface):
             print "No suitable fortran compiler found"
             sys.exit(1)
 
-        if (self.custom_cc_present):
+        if (self.use_custom_cc):
             CC=self.CCompiler
             CFLAGS = "-fPIC"
             # add any custom flags given by the user
             if (self.CFlags != None):
                 CFLAGS = CFLAGS+' '+self.CFlags
-        elif (self.gcc_present):
+        elif (self.use_gcc):
             CC="gcc"
             # Default compiler switches
             CFLAGS = "-fPIC"
-        elif (self.cc_present):
+        elif (self.use_cc):
             # this catches installations that have some commercial c-compiler
             # installed, which usually are symlinked to the name
             # cc for convenience
@@ -975,7 +1106,15 @@ int main()
                   " --f77flags='"+FortranCompilerFlags+"'"+\
                   " ./f2py_build/signatures.pyf -L./ -lbufr -c"
         else:
+            # note: adding the FortranCompilerFlags manually like this causes some
+            # of them to be included double, but this doesn't hurt, and is the only
+            # way I get the automatic compilation using the g95 compiler going.
+            # TODO: Maybe later I could sort out how to use the python f2py module
+            # in stead of the executable, and clean-up the compiler flags before
+            # starting the tool
             Cmd = "f2py  --build-dir "+wrapper_build_dir+\
+                  " --f90flags='"+FortranCompilerFlags+"'"+\
+                  " --f77flags='"+FortranCompilerFlags+"'"+\
                   " --fcompiler="+FortranCompiler+\
                   " ./f2py_build/signatures.pyf -L./ -lbufr -c"
               #" --debug-capi "+\
@@ -1327,16 +1466,21 @@ if __name__ == "__main__":
         # instantiate the class, and pass all settings to it
         # (4 different tests defined for this step, with 4 different compilers)
         
-        #testcase = 1 # test default gfortran
-        #testcase = 2 # test custom gfortran
-        #testcase = 3 # test custom g95-32 bit
-        testcase = 4 # test custom g95-64 bit
+        #testcase = 1 # test default g95
+        #testcase = 2 # test default gfortran
+        #testcase = 3 # test custom gfortran
+        testcase = 4 # test custom g95-32 bit
+        #testcase = 5 # test custom g95-64 bit
 
         if (testcase == 1):
-            # tested at my laptop at home with a systemwide gfortran v4.3.2 installed
-            # successfully tested 17-Dec-2009
+            # tested at my laptop at home with a g95 v.0.92 (32-bit) in my search PATH
+            # successfully tested 18-Dec-2009
             BI = bufr_interface_ecmwf(verbose=True)
-        elif (testcase==2):
+        elif (testcase == 2):
+            # tested at my laptop at home with a systemwide gfortran v4.3.2 installed
+            # successfully tested 18-Dec-2009
+            BI = bufr_interface_ecmwf(verbose=True,PreferredFortranCompiler='gfortran')
+        elif (testcase==3):
             # note that the "-O" flag is allways set for each fortran compiler
             # so no need to specify it to the FFlags parameter.
             
@@ -1346,13 +1490,13 @@ if __name__ == "__main__":
                                       FortranCompiler="/home/jos/bin/gfortran_personal",
                                       FortranLdLibraryPath="/home/jos/bin/gcc-trunk/lib64",
                                       FFlags="-fno-second-underscore -fPIC")
-        elif (testcase==3):
+        elif (testcase==4):
             # tested at my laptop at home with a g95 v0.92 (32-bit) installed in a user account
             # successfully tested 17-Dec-2009
             BI = bufr_interface_ecmwf(verbose=True,
                                       FortranCompiler="/home/jos/bin/g95_32",
                                       FFlags="-fno-second-underscore -fPIC -i4 -r8")
-        elif (testcase==4):
+        elif (testcase==5):
             # tested at my laptop at home with a g95 v0.92 (64-bit) installed in a user account
             # successfully tested 17-Dec-2009
             BI = bufr_interface_ecmwf(verbose=True,
