@@ -34,9 +34,10 @@ import sys  # system functions
 import re   # regular expression handling
 import glob # allow for filename expansion
 #import gzip # handle gzipped files
-import tarfile # handle tar archives
+import tarfile     # handle tar archives
 import subprocess  # support running additional executables
 import shutil      # portable file copying functions
+import time        # handling of date and time
 #  #]
 
 class bufr_interface:
@@ -52,7 +53,8 @@ class bufr_interface_ecmwf(bufr_interface):
                  PreferredFortranCompiler=None,
                  PreferredCCompiler=None,
                  FortranCompiler=None,FortranLdLibraryPath=None,FFlags=None,
-                 CCompiler=None,CLdLibraryPath=None,CFlags=None):
+                 CCompiler=None,CLdLibraryPath=None,CFlags=None,
+                 Debug_f2py_c_api=False):
         #  #[
 
         self.PreferredFortranCompiler = PreferredFortranCompiler
@@ -87,7 +89,7 @@ class bufr_interface_ecmwf(bufr_interface):
         else:
             print "Entering wrapper generation sequence:"
             (Source_Dir,TarFile_to_Install) = self.__get_source_dir__()
-            self.__generate_python_wrapper__(Source_Dir)
+            self.__generate_python_wrapper__(Source_Dir,Debug_f2py_c_api)
 
         #  #]
     def __download_library__(self):
@@ -1008,7 +1010,7 @@ int main()
 
         return libpath
         #  #]
-    def __generate_python_wrapper__(self,Source_Dir):
+    def __generate_python_wrapper__(self,Source_Dir,Debug_f2py_c_api=False):
         #  #[
         wrapper_build_dir   = "f2py_build"
         wrapper_module_name = "ecmwfbufr"
@@ -1098,9 +1100,13 @@ int main()
         self.__adapt_f2py_signature_file__(signatures_fullfilename)
 
         # it might be usefull for debugging to include this option: --debug-capi
+        debug_f2py_c_api_option = ""
+        if (Debug_f2py_c_api):
+            debug_f2py_c_api_option = " --debug-capi "
 
         if (self.FortranCompiler != None):
             Cmd = "f2py  --build-dir "+wrapper_build_dir+\
+                  debug_f2py_c_api_option+\
                   " --f90exec="+FortranCompiler+\
                   " --f90flags='"+FortranCompilerFlags+"'"+\
                   " --f77flags='"+FortranCompilerFlags+"'"+\
@@ -1113,11 +1119,11 @@ int main()
             # in stead of the executable, and clean-up the compiler flags before
             # starting the tool
             Cmd = "f2py  --build-dir "+wrapper_build_dir+\
+                  debug_f2py_c_api_option+\
                   " --f90flags='"+FortranCompilerFlags+"'"+\
                   " --f77flags='"+FortranCompilerFlags+"'"+\
                   " --fcompiler="+FortranCompiler+\
                   " ./f2py_build/signatures.pyf -L./ -lbufr -c"
-              #" --debug-capi "+\
 
         if (libpath == ""):
             print "Executing command: ",Cmd
@@ -1237,6 +1243,9 @@ int main()
                 #print "to           : ",l
 
             if (l.strip() == "end interface"):
+                # NOTE: the pb interface routines are written in c, so f2py
+                # will not automatically generate their signature. This next
+                # subroutine call explicitely adds these signatures.
                 self.__insert_pb_interface_definition__(fd)
 
             fd.write(l)
@@ -1244,30 +1253,38 @@ int main()
         #  #]
     def __insert_pb_interface_definition__(self,fd):
         #  #[
+        # note:
+        # it seems I am doing something wrong here, since this interface
+        # is not yet functional. When trying to execute ecmwfbufr.pbopen()
+        # I get the not very helpfull error message:
+        #   "SystemError: NULL result without error in PyObject_Call"
+        # Anybody out there who has an idea how this can be solved?
         indentation = 8*' '
         lines_to_add = ["subroutine pbopen(cFileUnit,BufrFileName,mode,bufr_error_flag)",
-                        "   integer*4,     intent(out) :: cFileUnit",
+                        #"   intent(c) pbopen"
+                        #"   intent(c)"
+                        "   integer*4,        intent(out) :: cFileUnit",
                         "   character(len=*), intent(in)  :: BufrFileName",
                         "   character(len=1), intent(in)  :: mode",
-                        "   integer*4,     intent(out) :: bufr_error_flag ",
+                        "   integer*4,        intent(out) :: bufr_error_flag",
                         "end subroutine pbopen",
                         "subroutine pbclose(cFileUnit,bufr_error_flag)",
-                        "   integer*4,     intent(in)  :: cFileUnit",
-                        "   integer*4,     intent(out) :: bufr_error_flag ",
+                        "   integer*4,        intent(inplace) :: cFileUnit",
+                        "   integer*4,        intent(inplace) :: bufr_error_flag ",
                         "end subroutine pbclose",
                         "subroutine pbbufr(cFileUnit,Buffer,BufferSizeBytes,MsgSizeBytes,&",
                         "                  bufr_error_flag)",
-                        "   integer*4,              intent(in)  :: cFileUnit",
-                        "   integer*4,dimension(*), intent(out) :: Buffer",
-                        "   integer*4,              intent(in)  :: BufferSizeBytes",
-                        "   integer*4,              intent(out) :: MsgSizeBytes",
-                        "   integer*4,              intent(out) :: bufr_error_flag ",
+                        "   integer*4,              intent(inplace) :: cFileUnit",
+                        "   integer*4,dimension(*), intent(inplace) :: Buffer",
+                        "   integer*4,              intent(inplace) :: BufferSizeBytes",
+                        "   integer*4,              intent(inplace) :: MsgSizeBytes",
+                        "   integer*4,              intent(inplace) :: bufr_error_flag ",
                         "end subroutine pbbufr",
                         "subroutine pbwrite(cFileUnit,Buffer,MsgSizeBytes,bufr_return_value)",
-                        "   integer*4,              intent(in)  :: cFileUnit",
-                        "   integer*4,dimension(*), intent(in)  :: Buffer",
-                        "   integer*4,              intent(in)  :: MsgSizeBytes",
-                        "   integer*4,              intent(out) :: bufr_return_value",
+                        "   integer*4,              intent(inplace) :: cFileUnit",
+                        "   integer*4,dimension(*), intent(inplace) :: Buffer",
+                        "   integer*4,              intent(inplace) :: MsgSizeBytes",
+                        "   integer*4,              intent(inplace) :: bufr_return_value",
                         "end subroutine pbwrite"]
 
         print "Inserting hardcoded interface to pbbufr routines in signatures file ..."
@@ -1462,20 +1479,19 @@ class bufrfile:
 if __name__ == "__main__":
         #  #[ test program
         print "Starting test program:"
-
-        # instantiate the class, and pass all settings to it
+        #  #[ instantiate the class, pass all settings to it, and build library if needed
         # (4 different tests defined for this step, with 4 different compilers)
         
-        #testcase = 1 # test default g95
+        testcase = 1 # test default g95
         #testcase = 2 # test default gfortran
         #testcase = 3 # test custom gfortran
-        testcase = 4 # test custom g95-32 bit
+        #testcase = 4 # test custom g95-32 bit
         #testcase = 5 # test custom g95-64 bit
 
         if (testcase == 1):
             # tested at my laptop at home with a g95 v.0.92 (32-bit) in my search PATH
             # successfully tested 18-Dec-2009
-            BI = bufr_interface_ecmwf(verbose=True)
+            BI = bufr_interface_ecmwf(verbose=True,Debug_f2py_c_api=True)
         elif (testcase == 2):
             # tested at my laptop at home with a systemwide gfortran v4.3.2 installed
             # successfully tested 18-Dec-2009
@@ -1485,24 +1501,24 @@ if __name__ == "__main__":
             # so no need to specify it to the FFlags parameter.
             
             # tested at my laptop at home with a gfortran v4.4.0 installed in a user account
-            # successfully tested 17-Dec-2009
+            # successfully tested 18-Dec-2009
             BI = bufr_interface_ecmwf(verbose=True,
                                       FortranCompiler="/home/jos/bin/gfortran_personal",
                                       FortranLdLibraryPath="/home/jos/bin/gcc-trunk/lib64",
                                       FFlags="-fno-second-underscore -fPIC")
         elif (testcase==4):
             # tested at my laptop at home with a g95 v0.92 (32-bit) installed in a user account
-            # successfully tested 17-Dec-2009
+            # successfully tested 18-Dec-2009
             BI = bufr_interface_ecmwf(verbose=True,
                                       FortranCompiler="/home/jos/bin/g95_32",
                                       FFlags="-fno-second-underscore -fPIC -i4 -r8")
         elif (testcase==5):
             # tested at my laptop at home with a g95 v0.92 (64-bit) installed in a user account
-            # successfully tested 17-Dec-2009
+            # successfully tested 18-Dec-2009
             BI = bufr_interface_ecmwf(verbose=True,
                                       FortranCompiler="/home/jos/bin/g95_64",
                                       FFlags="-fno-second-underscore -fPIC -i4 -r8")
-        
+        #  #]
         #  #[ import additional modules needed for testing
         import struct      # allow converting c datatypes and structs
         import ecmwfbufr   # import the just created wrapper module
@@ -1524,7 +1540,8 @@ if __name__ == "__main__":
         assert(d == 'D0000000000210000001')
         #  #]
         #  #[ read the binary data
-        fd=open('Testfile.BUFR','rb')
+        InputTestBUFRfile = 'Testfile.BUFR'
+        fd=open(InputTestBUFRfile,'rb')
         data=fd.read()
         len(data)
         
@@ -1534,6 +1551,34 @@ if __name__ == "__main__":
         #print 'data[:4] = ',';'.join(str(data[i]) for i in range(4) if data[i].isalnum())
         #print 'words[:4] = ',words[:4]
         assert(data[:4] == 'BUFR')
+        #  #]
+        #  #[ pbopen/bpbufr/pbclose tests [not yet functional]
+        do_pb_test = False
+        if (do_pb_test):
+            cFileUnit       = 0
+            bufr_error_flag = 0
+            print "InputTestBUFRfile = ["+InputTestBUFRfile+"]"
+            (cFileUnit,bufr_error_flag) = ecmwfbufr.pbopen(InputTestBUFRfile,'R')
+            # ecmwfbufr.pbopen(cFileUnit,InputTestBUFRfile,'R',bufr_error_flag)
+            print "cFileUnit = ",cFileUnit
+            print "bufr_error_flag = ",bufr_error_flag
+            
+            buffer_size_words = 12000
+            buffer_size_bytes = buffer_size_words/4
+            buffer = np.zeros(buffer_size_words,dtype=np.int)
+            MsgSizeBytes = 0
+            bufr_error_flag = 0
+            ecmwfbufr.pbbufr(cFileUnit,buffer,buffer_size_bytes,
+                             MsgSizeBytes,bufr_error_flag)
+            print "MsgSizeBytes = ",MsgSizeBytes
+            print "buffer[0:4] = ",buffer[0:4]
+            print "bufr_error_flag = ",bufr_error_flag
+            
+            bufr_error_flag = 0        
+            ecmwfbufr.pbclose(cFileUnit,bufr_error_flag)
+            print "bufr_error_flag = ",bufr_error_flag
+            
+            sys.exit(1)
         #  #]
         #  #[ define the needed constants
 
@@ -1780,6 +1825,7 @@ if __name__ == "__main__":
         #  #[ reinitialise all arrays
         print '------------------------------'
         print 'reinitialising all arrays...'
+        print '------------------------------'
         ksup   = np.zeros(         9,dtype=np.int)
         ksec0  = np.zeros(         3,dtype=np.int)
         ksec1  = np.zeros(        40,dtype=np.int)
@@ -1797,10 +1843,162 @@ if __name__ == "__main__":
         ktdexp = np.zeros(MAXNREXPDESCR,dtype=np.int)
         kerr   = 0
         #  #]
+        #  #[ handle BUFR tables
+        print '------------------------------'
 
+        # define our own location for storing (symlinks to) the BUFR tables
+        private_BUFR_TABLES_dir = os.path.abspath("./tmp_BUFR_TABLES")
+        if (not os.path.exists(private_BUFR_TABLES_dir)):
+            os.mkdir(private_BUFR_TABLES_dir)
+            
+        # make the needed symlinks
+        (Source_Dir,TarFile_to_Install) = BI.__get_source_dir__()
+        ecmwf_BUFR_TABLES_dir = os.path.join(Source_Dir,"bufrtables/")
+        ecmwf_BUFR_TABLES_dir = os.path.abspath(ecmwf_BUFR_TABLES_dir)
+        needed_B_table    = "B0000000000098015001.TXT"
+        needed_D_table    = "D0000000000098015001.TXT"
+        available_B_table = "B0000000000098013001.TXT"
+        available_D_table = "D0000000000098013001.TXT"
+        
+        # NOTE: the naming scheme used by ECMWF is such, that the table name can
+        #       be derived from elements from sections 0 and 1, which can be
+        #       decoded without loading bufr tables.
+        # TODO: implement this
+        
+        source      = os.path.join(ecmwf_BUFR_TABLES_dir,  available_B_table)
+        destination = os.path.join(private_BUFR_TABLES_dir,needed_B_table)
+        if (not os.path.exists(destination)):
+            os.symlink(source,destination)
+
+        source      = os.path.join(ecmwf_BUFR_TABLES_dir,  available_D_table)
+        destination = os.path.join(private_BUFR_TABLES_dir,needed_D_table)
+        if (not os.path.exists(destination)):
+            os.symlink(source,destination)
+            
+        # make sure the BUFR tables can be found
+        # also, force a slash at the end, otherwise the library fails to find the tables
+        e = os.environ
+        e["BUFR_TABLES"] = private_BUFR_TABLES_dir+os.path.sep
+
+        #  #]
+        #  #[ fill sections 0,1,2 and 3
+
+        BUFR_edition              =   4
+        BUFR_code_centre          =  98 # ECMWF
+        BUFR_obstype              =   3 # sounding
+        BUFR_subtype_L1B          = 251 # L1B
+        BUFR_table_local_version  =   1
+        BUFR_table_master         =   0
+        BUFR_table_master_version =  15
+        BUFR_code_subcentre       =   0 # L2B processing facility
+        BUFR_compression_flag     =   0 #  64=compression/0=no compression
+        
+        (year,month,day,hour,minute,second,
+         weekday,julianday,isdaylightsavingstime) = time.localtime()
+
+        num_subsets = 4
+        
+        # fill section 0
+        ksec0[1-1]= 0
+        ksec0[2-1]= 0
+        ksec0[3-1]= BUFR_edition
+
+        # fill section 1
+        ksec1[ 1-1]=   0                       # length sec1 bytes [filled by the encoder]
+        ksec1[ 2-1]= BUFR_edition              # bufr edition
+        ksec1[ 3-1]= BUFR_code_centre          # originating centre
+        ksec1[ 4-1]=   1                       # update sequence
+        ksec1[ 5-1]=   0                       # (PRESENCE SECT 2) (0/128 = no/yes)
+        ksec1[ 6-1]= BUFR_obstype              # message type 
+        ksec1[ 7-1]= BUFR_subtype_L1B          # subtype
+        ksec1[ 8-1]= BUFR_table_local_version  # version of local table
+        ksec1[ 9-1]= (year-2000)               # Without offset year - 2000
+        ksec1[10-1]= month                     # month
+        ksec1[11-1]= day                       # day
+        ksec1[12-1]= hour                      # hour
+        ksec1[13-1]= minute                    # minute
+        ksec1[14-1]= BUFR_table_master         # master table
+        ksec1[15-1]= BUFR_table_master_version # version of master table
+        ksec1[16-1]= BUFR_code_subcentre       # originating subcentre
+        ksec1[17-1]=   0
+        ksec1[18-1]=   0
+
+        # a test for ksec2 is not yet defined
+
+        # fill section 3
+        ksec3[1-1]= 0
+        ksec3[2-1]= 0
+        ksec3[3-1]= num_subsets                # no of data subsets
+        ksec3[4-1]= BUFR_compression_flag      # compression flag
+        
+        #  #]
+        #  #[ define a descriptor list
+        
+        ktdlen = 6 # length of unexpanded descriptor list
+        ktdlst = np.zeros(ktdlen,dtype=np.int)
+
+        # add descriptor 1
+        DD_D_date_YYYYMMDD = 301011 # date
+        # this defines the sequence:
+        # 004001 ! year
+        # 004002 ! month
+        # 004003 ! day
+
+        
+        
+        # add descriptor 2
+        DD_D_time_HHMM = 301012 # time 
+        # this defines the sequence:
+        # 004004 ! hour 
+        # 004005 ! minute 
+        
+        # add descriptor 3
+        DD_pressure = int('007004',10) # pressure [pa]  
+
+        # WARNING: filling the descriptor variable with 007004 will fail
+        # because python will interpret this as an octal value, and thus
+        # automatically convert 007004 to the decimal value 3588
+
+        # add descriptor 4
+        DD_temperature = int('012001',10) # [dry-bulb] temperature [K]  
+        
+        # add descriptor 5
+        DD_latitude_high_accuracy = int('005001',10) # latitude (high accuracy) [degree] 
+
+        # add descriptor 6
+        DD_longitude_high_accuracy = int('006001',10) # longitude (high accuracy) [degree] 
+
+        ktdlst[0] = DD_D_date_YYYYMMDD
+        ktdlst[1] = DD_D_time_HHMM
+        ktdlst[2] = DD_pressure
+        ktdlst[3] = DD_temperature
+        ktdlst[4] = DD_latitude_high_accuracy
+        ktdlst[5] = DD_longitude_high_accuracy
+
+        #  #]
+        #  #[ call BUXDES
+        # buxdes: expand the descriptor list
+        #         and fill the array ktdexp and the variable ktdexp
+        #         [only usefull when creating a bufr msg with table D entries
+
+        #iprint=0 # default is to be silent
+        iprint=0
+        if (iprint == 1):
+            print "------------------------"
+            print " printing BUFR template "
+            print "------------------------"
+
+        kdata = np.zeros(1,dtype=np.int) # list of replication factors 
+        ecmwfbufr.buxdes(iprint,ksec1,ktdlst,kdata,ktdexl,ktdexp,cnames,cunits,kerr)
+        print "ktdlst = ",ktdlst
+        print "ktdexp = ",ktdexp
+        print "ktdexl = ",ktdexl # this one seems not to be filled ...
+        print "kerr = ",kerr
+        #print "cnames = ",cnames
+        #print "cunits = ",cunits
+        #  #]
+        
         # add test calls to:
-        #   buxdes: expand the descriptor list
-        #    [only usefull when creating a bufr msg with table D entries
         #   bufren: encode a bufr message
         #   bupkey: pack ecmwf specific key into section 2
         # and possibly to:
@@ -1811,17 +2009,3 @@ if __name__ == "__main__":
         #
         #  #]
 
-#  #[ some obsolete notes:
-# manually, if I issue this command, it seems to work! this creates the file ./f2py_build/signatures.pyf
-#   f2py --build-dir ./f2py_build -m ecmwfbufr -h signatures.pyf ecmwf_bufr_lib/bufr_000380/bufrdc/*.F
-
-# afterwards I have to adapt the pyf file with my little adapt_signature_file.py script
-# Then for gfortran the following command works fine:
-#   f2py ./f2py_build/signatures.pyf -L./ -lbufr -c
-# now indeed the wrapper shared object file ecmwfbufr.so has been generated.
-
-# Note that on my home machine I have to use:
-#   setenv LD_LIBRARY_PATH /home/jos/bin/gcc-trunk/lib64/
-# since I have gfortran installed in a non-default location
-# (otherwise the linking step needed to create the *.so file fails)
-#  #]
