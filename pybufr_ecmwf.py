@@ -1904,7 +1904,8 @@ if __name__ == "__main__":
         ksec0[3-1]= BUFR_edition
 
         # fill section 1
-        ksec1[ 1-1]=   0                       # length sec1 bytes [filled by the encoder]
+        ksec1[ 1-1]=  22                       # length sec1 bytes [filled by the encoder]
+        # however,a minimum of 22 is obliged here
         ksec1[ 2-1]= BUFR_edition              # bufr edition
         ksec1[ 3-1]= BUFR_code_centre          # originating centre
         ksec1[ 4-1]=   1                       # update sequence
@@ -1982,7 +1983,7 @@ if __name__ == "__main__":
         #         [only usefull when creating a bufr msg with table D entries
 
         #iprint=0 # default is to be silent
-        iprint=0
+        iprint=1
         if (iprint == 1):
             print "------------------------"
             print " printing BUFR template "
@@ -1992,14 +1993,50 @@ if __name__ == "__main__":
         ecmwfbufr.buxdes(iprint,ksec1,ktdlst,kdata,ktdexl,ktdexp,cnames,cunits,kerr)
         print "ktdlst = ",ktdlst
         print "ktdexp = ",ktdexp
-        print "ktdexl = ",ktdexl # this one seems not to be filled ...
+        print "ktdexl = ",ktdexl # this one seems not to be filled ...?
         print "kerr = ",kerr
         #print "cnames = ",cnames
         #print "cunits = ",cunits
+
+        # retrieve the length of the expanded descriptor list
+        exp_descr_list_length = len(np.where(ktdexp>0)[0])
+        print "exp_descr_list_length = ",exp_descr_list_length
+        #  #]
+        #  #[ fill the values array with some dummy varying data
+        num_values = exp_descr_list_length*num_subsets
+        values = np.zeros(num_values,dtype=np.float64) # this is the default
+
+        for subset in range(num_subsets):
+            # note that python starts counting with 0, unlike fortran,
+            # so there is no need to take (subset-1)
+            i=subset*exp_descr_list_length
+
+            values[i]        = 1999 # year
+            i=i+1; values[i] =   12 # month
+            i=i+1; values[i] =   31 # day
+            i=i+1; values[i] =   23 # hour
+            i=i+1; values[i] =   59    -        subset # minute
+            i=i+1; values[i] = 1013.e2 - 100.e2*subset # pressure [pa]
+            i=i+1; values[i] = 273.15  -    10.*subset # temperature [K]
+            i=i+1; values[i] = 51.82   +   0.05*subset # latitude
+            i=i+1; values[i] =  5.25   +    0.1*subset # longitude
+        
+        #  #]
+        #  #[ call BUFREN
+        #   bufren: encode a bufr message
+
+        sizewords = 200
+        kbuff = np.zeros(num_values,dtype=np.int)
+        cvals = np.zeros((num_values,80),dtype=np.character)
+        
+        print "kvals = ",kvals
+        print "cvals = ",cvals
+        ecmwfbufr.bufren(ksec0,ksec1,ksec2,ksec3,ksec4,
+                         ktdlst,kdata,exp_descr_list_length,values,cvals,words,kerr)
+        print "bufren call finished, kerr = ",kerr
         #  #]
         
         # add test calls to:
-        #   bufren: encode a bufr message
         #   bupkey: pack ecmwf specific key into section 2
         # and possibly to:
         #   btable: tries to load a bufr-B table
