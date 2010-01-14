@@ -36,6 +36,16 @@ import subprocess # support running additional executables
 import shutil     # portable file copying functions
 import time       # handling of date and time
 #  #]
+#  #[ exception definitions
+# see: http://docs.python.org/library/exceptions.html
+# for a list of already available exceptions.
+# are:     IOError, EOFError
+class NotYetImplementedError(NotImplementedError): pass
+class ProgrammingError(Exception): pass
+class NetworkError(Exception): pass
+class LibraryBuildError(Exception): pass
+class InterfaceBuildError(Exception): pass
+#  #]
 
 class BUFRInterface:
     #  #[
@@ -111,7 +121,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
         except:
             print "connection failed......"
             print "could not open url: ",url_bufr_page
-            sys.exit(1)
+            raise NetworkError
 
         # Read from the object, storing the page's contents in a list of lines
         lines = f.readlines()
@@ -177,7 +187,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
         except:
             print "connection failed......"
             print "could not open url: ",download_url
-            sys.exit(1)
+            raise NetworkError
         
         tarfiledata = f.read()
         f.close()
@@ -245,7 +255,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
                 print "have to manually create a directory named ecmwf_bufr_lib"
                 print "and place a copy of a recent ECMWF BUFR library tarfile"
                 print "in it before running the pybufr_ecmwf.py command."
-                sys.exit(1)
+                raise NetworkError
 
             cmd = "cd "+self.ecmwf_bufr_lib_dir+";tar zxvf "+tarfile_to_install
             print "Executing command: ",cmd
@@ -277,9 +287,10 @@ class BUFRInterfaceECMWF(BUFRInterface):
                                             "g77","f90","f77"]
             if not (self.preferred_fortran_compiler in
                     implementedfortran_compilers):
-                print "Warning: unknown preferred fortran compiler specified."
+                print "ERROR: unknown preferred fortran compiler specified."
                 print "valid options are: ",\
                       ", ".join(s for s in implementedfortran_compilers)
+                raise NotYetImplementedError
                 
             if (self.preferred_fortran_compiler == "custom"):
                 if (self.custom_fc_present):
@@ -310,13 +321,15 @@ class BUFRInterfaceECMWF(BUFRInterface):
                 print "check the list of available fortran compilers,"
                 print "it seems not consistent."
                 print "Please report this bug if you encounter it"
-                sys.exit(1)
+                print "ERROR in BUFRInterfaceECMWF.install()"
+                raise ProgrammingError
                 
             if (not fortran_compiler_selected):
                 print "preferred fortran compiler ["+\
                       self.preferred_fortran_compiler+"] seems not available..."
                 print "falling back to default fortran compiler"
-
+                raise UserWarning
+            
         if (not fortran_compiler_selected):
             if (self.custom_fc_present):
                 self.use_custom_fc = True
@@ -346,7 +359,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
             print "gfortran and g95 which may be downloaded free of charge."
             print "(see: http://gcc.gnu.org/fortran/  "
             print " and: http://www.g95.org/         )"
-            sys.exit(1)
+            raise EnvironmentError
 
         self.custom_cc_present = self.check_presence(self.c_compiler)
         self.gcc_present       = self.check_presence("gcc")
@@ -360,9 +373,10 @@ class BUFRInterfaceECMWF(BUFRInterface):
         if (self.preferred_c_compiler !=None):
             implementedc_compilers = ["custom","gcc","cc"]
             if not (self.preferred_c_compiler in implementedc_compilers):
-                print "Warning: unknown preferred c compiler specified."
+                print "ERROR: unknown preferred c compiler specified."
                 print "valid options are: ",\
                       ", ".join(s for s in implementedc_compilers)
+                raise NotYetImplementedError
 
             if (self.preferred_c_compiler == "custom"):
                 if (self.custom_cc_present):
@@ -381,7 +395,8 @@ class BUFRInterfaceECMWF(BUFRInterface):
                 print "check the list of available c compilers,"
                 print "it seems not consistent."
                 print "Please report this bug if you encounter it"
-                sys.exit(1)
+                print "ERROR in BUFRInterfaceECMWF.install()"
+                raise ProgrammingError
                 
             if (not c_compiler_selected):
                 print "preferred c compiler ["+\
@@ -405,7 +420,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
             print "A good options is the free GNU compiler gcc"
             print "which may be downloaded free of charge."
             print "(see: http://gcc.gnu.org/ )"
-            sys.exit(1)
+            raise EnvironmentError
 
         if (self.verbose):
             print "custom_fc_present = ",self.custom_fc_present,\
@@ -547,7 +562,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
         else:
             print "ERROR in bufr_interface_ecmwf.install:"
             print "No suitable fortran compiler found"
-            sys.exit(1)
+            raise EnvironmentError
 
         if (self.use_custom_cc):
             cc=self.c_compiler
@@ -569,7 +584,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
         else:
             print "ERROR in bufr_interface_ecmwf.install:"
             print "No suitable c compiler found"
-            sys.exit(1)
+            raise EnvironmentError
 
         # no check implemented on the "ar" and "ranlib" commands yet
         # (easy to add if we woould need it)
@@ -604,7 +619,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
         #    # and if so, symlink to it.
         #    if not os.path.exists(fullname_config_file+".in"):
         #        print "ERROR: config file not found: ",fullname_config_file
-        #        sys.exit(1)
+        #        raise IOError
         #    else:
         #        os.symlink(config_file+".in",fullname_config_file)
 
@@ -668,7 +683,7 @@ class BUFRInterfaceECMWF(BUFRInterface):
         else:
             print "ERROR in bufr_interface_ecmwf.install:"
             print "No libbufr.a file seems generated."
-            sys.exit(1)
+            raise LibraryBuildError
         #  #]
 
         #  #[ some old notes
@@ -805,7 +820,7 @@ end program pybufr_test_program
             print "Expected output: ",expected_output
             print 'actual output stdout = ',lines_stdout
             print 'actual output stderr = ',lines_stderr
-            sys.exit(1)
+            raise EnvironmentError
 
         print "Fortran compilation test successfull..."
 
@@ -865,7 +880,7 @@ int main()
             print "Expected output: ",expected_output
             print 'actual output stdout = ',lines_stdout
             print 'actual output stderr = ',lines_stderr
-            sys.exit(1)
+            raise EnvironmentError
 
         print "c compilation test successfull..."
 
@@ -946,7 +961,7 @@ int main()
         if (not os.path.exists(signatures_fullfilename)):
             print "ERROR: build of python wrapper failed"
             print "the signatures file could not be found"
-            sys.exit(1)
+            raise InterfaceBuildError
 
         # open the config file used for building the ECMWF BUFR library
         config_file = os.path.join(self.ecmwf_bufr_lib_dir,"config_file")
@@ -1017,7 +1032,7 @@ int main()
         else:
             print "ERROR: build of python wrapper failed"
             print "the compilation or linking stage failed"
-            sys.exit(1)
+            raise InterfaceBuildError
 
         #  #]
     def adapt_f2py_signature_file(self,signature_file):
@@ -1341,20 +1356,225 @@ class BUFRMessage:
     #  #]
 class BUFRFile:
     #  #[
-    pass
-    # possible methods:
-    # -set_filename
-    # -get_filename
-    # -set_filemode (r,w)
-    # -get_filemode
-    # -open_file
-    # -close_file
+    def __init__(self):
+        #  #[
+        self.bufr_fd  = None
+        self.filename = None
+        self.filemode = None
+        self.filesize = None
+        self.data = None
+        self.use_native_byte_order = True
+        self.list_of_bufr_pointers = []
+        self.nr_of_bufr_messages = 0
+        #  #]
+    def print_properties(self,prefix="BUFRFile"):
+        #  #[
+        print prefix+": bufr_fd  = ",self.bufr_fd
+        print prefix+": filename = ",self.filename
+        print prefix+": filemode = ",self.filemode
+        print prefix+": filesize = ",self.filesize
+        if (self.data!=None):
+            print prefix+": len(data) = ",len(self.data)
+        else:
+            print prefix+": data = ",self.data
+        print prefix+": use_native_byte_order = ",self.use_native_byte_order
+        print prefix+": list_of_bufr_pointers = ",\
+              self.list_of_bufr_pointers
+        print prefix+": nr_of_bufr_messages = ",self.nr_of_bufr_messages
+        #print prefix+":  = ",self.
+        #  #]
+    def open(self,filename,mode):
+        #  #[
+        self.filename = filename
+        self.filemode = mode
+        
+        # filename should include the path specification as well
+        assert(mode in ['r','w','a'])
+
+        if (mode=='r'):
+            if (os.path.exists(filename)):
+                self.filesize = os.path.getsize(filename)
+            else:
+                print "ERROR in BUFRFile.open():"
+                print "Opening file: ",self.filename," with mode: ",\
+                      self.filemode," failed"
+                print "This file was not found or is not accessible."
+                raise IOError
+        try:
+            self.bufr_fd = open(filename,mode)
+        except:
+            print "ERROR in BUFRFile.open():"
+            print "Opening file: ",self.filename," with mode: ",\
+                  self.filemode," failed"
+            raise IOError
+
+        if (mode=='r'):
+            try:
+                self.data = self.bufr_fd.read()
+            except:
+                print "ERROR in BUFRFile.open():"
+                print "Reading data from file: ",self.filename," with mode: ",\
+                      self.filemode," failed"
+                raise IOError
+
+            # split in separate BUFR messages
+            self.split()
+
+        #  #]
+    def close(self):
+        #  #[
+        # close the file
+        self.bufr_fd.close()
+        # then erase all settings
+        self.__init__()
+        #  #]
+    def split(self):
+        #  #[
+        # Purpose: scans the file for the string "BUFR"
+        # which indicate the start of a new BUFR message,
+        # counts the nr of BUFR messages, and stores file
+        # pointers to the start of each BUFR message.
+
+        # safety catch
+        if (self.filesize == 0):
+            self.nr_of_bufr_messages = 0
+            return
+
+        # note: this very simpple search algorithm might accidently
+        # find the string "7777" in the middle of the data of a BUFR message.
+        # To check on this, make sure the distance between the end of a
+        # message and the start of a message if either 0 or 2 bytes
+        # (this may happen if the file is padded with zeros to contain
+        #  a multiple of 4 bytes)
+        # Do the same check on the end of the file.
+
+        inside_message   = False
+        file_end_reached = False
+        search_pos = 0
+        start_pos  = -1
+        end_pos    = -1
+        txt_start  = "BUFR"
+        txt_end    = "7777"
+        while not file_end_reached:
+
+            if (not inside_message):
+                # try to find a txt_start string
+                start_pos = self.data.find(txt_start,search_pos)
+                print "search_pos = ",search_pos," start_pos = ",start_pos,\
+                      " txt = ",txt_start
+
+                if (start_pos!=-1):
+                    inside_message = True
+
+                    # sanity check, see if distance to the previous BUFR
+                    # message is no more than 4 bytes
+                    if (end_pos != -1):
+                        distance = (start_pos-end_pos)
+                        print "distance = ",distance," bytes"
+                        if (distance > 3):
+                            # this means we have found a false "7777"
+                            # end marker, so ignore the last added msg
+                            # and start looking again
+                            (prev_start_pos,prev_end_pos) = \
+                                           self.list_of_bufr_pointers.pop()
+                            # restore the previous msg start pos
+                            # to allow trying to search again for a correct
+                            # end marker
+                            start_pos = prev_start_pos
+                            print "restored start_pos = ",start_pos
+
+                            # step over the "7777" string to prepare for
+                            #  searching the real end of the message
+                            search_pos = end_pos
+                        else:
+                            # step over the "BUFR" string to prepare for
+                            #  searching the end of the message
+                            search_pos = start_pos+4
+
+
+                else:
+                    # check the distance to the fileend
+                    # This should be no more than 4 bytes.
+                    # If it is larger we have found a false "7777"
+                    # end marker (or the file is corrupted and truncated)
+                    distance = (self.filesize-end_pos)
+                    print "distance to fileend = ",distance," bytes"
+                    if (distance > 3):
+                        # this means we have found a false "7777"
+                        # end marker, so ignore the last added msg
+                        # and start looking again
+                        (prev_start_pos,prev_end_pos) = \
+                                       self.list_of_bufr_pointers.pop()
+                        # restore the previous msg start pos
+                        # to allow trying to search again for a correct
+                        # end marker
+                        start_pos = prev_start_pos
+                        print "restored start_pos = ",start_pos
+                        
+                        # step over the "7777" string to prepare for
+                        #  searching the real end of the message
+                        search_pos = end_pos
+
+                        # file end was not yet reached, keep on looking
+                        file_end_reached=False
+                        inside_message = True
+                    else:
+                        # file end was not really reached
+                        file_end_reached=True
+
+                    
+            if (inside_message and not file_end_reached):
+                # try to find a txt_end string
+                end_pos = self.data.find(txt_end,search_pos)
+                print "search_pos = ",search_pos," end_pos = ",end_pos,\
+                      " txt = ",txt_end
+
+                if (end_pos!=-1):
+                    inside_message = False
+
+                    # point to the end of the four sevens
+                    # (in slice notation, so the bufr msg data
+                    # can be adressed as data[start_pos:end_pos])
+                    end_pos = end_pos+4
+                    
+                    # step over the "7777" string to prepare for searching the
+                    # end of the message
+                    search_pos = end_pos
+
+                    # store the found message
+                    self.list_of_bufr_pointers.append((start_pos,end_pos))
+                else:
+                    file_end_reached=True
+
+        # sanity check
+        
+        #  #]
+
+    # possible additional methods:
     # -get_num_bufr_msgs
     # -read_next_msg
     # -write_msg
-    # -print_file_properties
     # -...
     #  #]
+
+
+# some temporary testcode for the BUFRFile class
+
+# NOTE: this testfile: Testfile3CorruptedMsgs.BUFR
+# hold 3 copies of Testfile.BUFR catted together, and
+# was especially modified using hexedit to have
+# false end markers (7777) halfway the 2nd and 3rd
+# message. These messages are therefore corrupted and
+# decoding them will probably result in garbage, but they
+# are very usefull to test the BUFRFile.split() method.
+
+input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
+BF = BUFRFile()
+BF.print_properties(prefix="BUFRFile (before)")
+BF.open(input_test_bufr_file,'r')
+BF.print_properties(prefix="BUFRFile (after)")
+BF.close()
+sys.exit(0)
 
 if __name__ == "__main__":
         #  #[ test program
@@ -1372,8 +1592,8 @@ if __name__ == "__main__":
             # tested at my laptop at home with a g95 v.0.92 (32-bit)
             # in my search PATH
             # successfully tested 18-Dec-2009
-            BI = BUFRInterfaceECMWF(verbose=True)
-            #BI = BUFRInterfaceECMWF(verbose=True,debug_f2py_c_api=True)
+            #BI = BUFRInterfaceECMWF(verbose=True)
+            BI = BUFRInterfaceECMWF(verbose=True,debug_f2py_c_api=True)
         elif (testcase == 2):
             # tested at my laptop at home with a systemwide
             # gfortran v4.3.2 installed
@@ -1440,7 +1660,7 @@ if __name__ == "__main__":
         assert(data[:4] == 'BUFR')
         #  #]
         #  #[ pbopen/bpbufr/pbclose tests [not yet functional]
-        do_pb_test = False
+        do_pb_test = True # False
         if (do_pb_test):
             c_file_unit       = 0
             bufr_error_flag = 0
@@ -1861,10 +2081,12 @@ if __name__ == "__main__":
         dd_temperature = int('012001',10) # [dry-bulb] temperature [K]  
         
         # add descriptor 5
-        dd_latitude_high_accuracy = int('005001',10) # latitude (high accuracy) [degree] 
+        dd_latitude_high_accuracy = int('005001',10)
+        # latitude (high accuracy) [degree] 
 
         # add descriptor 6
-        dd_longitude_high_accuracy = int('006001',10) # longitude (high accuracy) [degree] 
+        dd_longitude_high_accuracy = int('006001',10)
+        # longitude (high accuracy) [degree] 
 
         ktdlst[0] = dd_d_date_YYYYMMDD
         ktdlst[1] = dd_d_time_HHMM
