@@ -1485,9 +1485,9 @@ if __name__ == "__main__":
         # TODO: read this file from python, in stead of hardcoding the
         #       numbers below and provide them as module parameters for
         #       pybufr_ecmwf.py
-        max_nr_descriptors    =     20 # 300
+        max_nr_descriptors          =     20 # 300
         max_nr_expanded_descriptors =    140 # 160000
-        max_nr_subsets  =    361 # 25
+        max_nr_subsets              =    361 # 25
         
         ktdlen = max_nr_descriptors
         # krdlen = max_nr_delayed_replication_factors
@@ -1501,7 +1501,7 @@ if __name__ == "__main__":
         print '------------------------------'
 
         # define our own location for storing (symlinks to) the BUFR tables
-        private_bufr_tables_dir = os.path.abspath("./tmp_bufr_tables")
+        private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
         if (not os.path.exists(private_bufr_tables_dir)):
             os.mkdir(private_bufr_tables_dir)
             
@@ -1672,7 +1672,7 @@ if __name__ == "__main__":
         # not seem to fill the ktdlen and ktdexl values.
         
         ktdlen = 0
-        ktdlst = np.zeros(max_nr_descriptors,   dtype=np.int)
+        ktdlst = np.zeros(max_nr_descriptors,dtype=np.int)
         ktdexl = 0
         ktdexp = np.zeros(max_nr_expanded_descriptors,dtype=np.int)
         kerr   = 0
@@ -1742,7 +1742,7 @@ if __name__ == "__main__":
         print '------------------------------'
 
         # define our own location for storing (symlinks to) the BUFR tables
-        private_bufr_tables_dir = os.path.abspath("./tmp_bufr_tables")
+        private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
         if (not os.path.exists(private_bufr_tables_dir)):
             os.mkdir(private_bufr_tables_dir)
             

@@ -15,7 +15,8 @@ len(data)
 sizewords=len(data)/4
 words = np.array(struct.unpack("<"+str(sizewords)+"i",data))
 #print 'data[:4] = ',data[:4]
-print 'data[:4] = ',';'.join(str(data[i]) for i in range(4) if data[i].isalnum())
+print 'data[:4] = ',';'.join(str(data[i]) for i in range(4)
+                             if data[i].isalnum())
 print 'words[:4] = ',words[:4]
 #  #]
 #  #[ define the needed constants
@@ -33,51 +34,52 @@ print 'words[:4] = ',words[:4]
 
 # TODO: read this file from python, in stead of hardcoding the numbers below
 
-MAXNRDESCR    =     20 # 300
-MAXNREXPDESCR =    140 # 160000
-MAXNRSUBSETS  =    361 # 25
+max_nr_descriptors          =     20 # 300
+max_nr_expanded_descriptors =    140 # 160000
+max_nr_subsets              =    361 # 25
 
-ktdlen = MAXNRDESCR
-#krdlen = MAXNRDELREPLFACTORS
-kelem  = MAXNREXPDESCR
-kvals  = MAXNREXPDESCR*MAXNRSUBSETS
-#jbufl  = MAXBUFRMSGSIZE
-#jsup   = LENGTHKSUP
+ktdlen = max_nr_descriptors
+# krdlen = max_nr_delayed_replication_factors
+kelem  = max_nr_expanded_descriptors
+kvals  = max_nr_expanded_descriptors*max_nr_subsets
+# jbufl  = max_bufr_msg_size
+# jsup   = length_ksup
 
 #  #]
 #  #[ handle BUFR tables
 
 # define our own location for storing (symlinks to) the BUFR tables
-private_BUFR_TABLES_dir = os.path.abspath("./tmp_BUFR_TABLES")
-if (not os.path.exists(private_BUFR_TABLES_dir)):
-      os.mkdir(private_BUFR_TABLES_dir)
+private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
+if (not os.path.exists(private_bufr_tables_dir)):
+      os.mkdir(private_bufr_tables_dir)
 
 # make the needed symlinks
-ecmwf_BUFR_TABLES_dir = os.path.abspath("ecmwf_bufr_lib/bufr_000380/bufrtables/")
+ecmwf_bufr_tables_dir = \
+           os.path.abspath("ecmwf_bufr_lib/bufr_000380/bufrtables/")
 needed_B_table    = "B0000000000210000001.TXT"
 needed_D_table    = "D0000000000210000001.TXT"
 available_B_table = "B0000000000098013001.TXT"
 available_D_table = "D0000000000098013001.TXT"
 
-# NOTE: the naming scheme used by ECMWF is sucht, that the table name can
+# NOTE: the naming scheme used by ECMWF is such, that the table name can
 #       be derived from elements from sections 0 and 1, which can be
 #       decoded without loading bufr tables.
 # TODO: implement this
 
-source      = os.path.join(ecmwf_BUFR_TABLES_dir,  available_B_table)
-destination = os.path.join(private_BUFR_TABLES_dir,needed_B_table)
+source      = os.path.join(ecmwf_bufr_tables_dir,  available_B_table)
+destination = os.path.join(private_bufr_tables_dir,needed_B_table)
 if (not os.path.exists(destination)):
       os.symlink(source,destination)
 
-source      = os.path.join(ecmwf_BUFR_TABLES_dir,  available_D_table)
-destination = os.path.join(private_BUFR_TABLES_dir,needed_D_table)
+source      = os.path.join(ecmwf_bufr_tables_dir,  available_D_table)
+destination = os.path.join(private_bufr_tables_dir,needed_D_table)
 if (not os.path.exists(destination)):
       os.symlink(source,destination)
 
 # make sure the BUFR tables can be found
 # also, force a slash at the end, otherwise the library fails to find the tables
 e = os.environ
-e["BUFR_TABLES"] = private_BUFR_TABLES_dir+os.path.sep
+e["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
 
 #  #]
 #  #[ call BUS012
@@ -130,7 +132,9 @@ ecmwfbufr.bufrex(words,ksup,ksec0,ksec1,ksec2,ksec3,ksec4,
                  cnames,cunits,values,cvals,kerr)
 # optional parameters: sizewords,kelem,kvals)
 print "returned from: ecmwfbufr.bufrex()"
-print "kerr = ",kerr
+if (kerr != 0):
+    print "kerr = ",kerr
+    sys.exit(1)
 
 #  #]
 #  #[ print a selection of the decoded numbers
@@ -152,8 +156,8 @@ lon = np.zeros(nsubsets)
 for s in range(nsubsets):
       #index_lat = nelements*(s-1)+24
       #index_lon = nelements*(s-1)+25
-      index_lat = MAXNREXPDESCR*(s-1)+24
-      index_lon = MAXNREXPDESCR*(s-1)+25
+      index_lat = max_nr_expanded_descriptors*(s-1)+24
+      index_lon = max_nr_expanded_descriptors*(s-1)+25
       lat[s] = values[index_lat]
       lon[s] = values[index_lon]
       if (30*(s/30)==s):
@@ -173,9 +177,9 @@ print "min/max lon",min(lon),max(lon)
 # not seem to fill the ktdlen and ltdexl values.
 
 ktdlen = 0
-ktdlst = np.zeros(MAXNRDESCR,   dtype=np.int)
+ktdlst = np.zeros(max_nr_descriptors,dtype=np.int)
 ktdexl = 0
-ktdexp = np.zeros(MAXNREXPDESCR,dtype=np.int)
+ktdexp = np.zeros(max_nr_expanded_descriptors,dtype=np.int)
 kerr   = 0
 
 print "calling: ecmwfbufr.busel():"
