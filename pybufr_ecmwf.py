@@ -1546,12 +1546,21 @@ class BUFRFile:
                 else:
                     file_end_reached=True
 
-        # sanity check
-        
+        # count howmany we found
+        self.nr_of_bufr_messages = len(self.list_of_bufr_pointers)
+        #  #]
+    def get_num_bufr_msgs(self):
+        #  #[
+        if (self.bufr_fd== None):
+            print "ERROR: a bufr file first needs to be opened"
+            print "using BUFRFile.open() before you can request the"
+            print "number of BUFR messages in a file .."
+            raise IOError
+
+        return self.nr_of_bufr_messages
         #  #]
 
     # possible additional methods:
-    # -get_num_bufr_msgs
     # -read_next_msg
     # -write_msg
     # -...
@@ -1573,6 +1582,8 @@ BF = BUFRFile()
 BF.print_properties(prefix="BUFRFile (before)")
 BF.open(input_test_bufr_file,'r')
 BF.print_properties(prefix="BUFRFile (after)")
+
+print "This file contains: ",BF.get_num_bufr_msgs()," BUFR messages."
 BF.close()
 sys.exit(0)
 
