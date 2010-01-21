@@ -23,7 +23,9 @@
 # the mercurial revisioning system hosted at google code.
 #
 # Written by: J. de Kloe, KNMI, Initial version 12-Nov-2009    
-# 
+#
+# License: GPL v2.
+#
 #  #]
 #  #[ imported modules
 import os          # operating system functions
@@ -1412,13 +1414,13 @@ class BUFRFile:
                 # in this case, try to find out the amount of BUFR messages
                 # already present in this file, by temporary opening
                 # it in reading mode
-                self.open(filename,'r')
-                count = self.get_num_bufr_msgs()
-                self.close()
+                tmp_BF = BUFRFile()
+                tmp_BF.open(filename,'r')
+                count = tmp_BF.get_num_bufr_msgs()
+                tmp_BF.close()
+                del(tmp_BF)
                 # then store the found number for later use
                 self.nr_of_bufr_messages = count
-                # do this only after the above close call
-                # otherwise it will be reset to None again
                 self.filesize = os.path.getsize(filename)
             else:
                 self.filesize = 0            
@@ -1691,72 +1693,6 @@ class BUFRFile:
         #  #]
     #  #]
 
-
-# some temporary testcode for the BUFRFile class
-do_BUFRfile_test = True
-#do_BUFRfile_test = False
-
-if (do_BUFRfile_test):
-
-    # NOTE: this testfile: Testfile3CorruptedMsgs.BUFR
-    # hold 3 copies of Testfile.BUFR catted together, and
-    # was especially modified using hexedit to have
-    # false end markers (7777) halfway the 2nd and 3rd
-    # message. These messages are therefore corrupted and
-    # decoding them will probably result in garbage, but they
-    # are very usefull to test the BUFRFile.split() method.
-    
-    input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
-    BF = BUFRFile()
-    #BF.print_properties(prefix="BUFRFile (before)")
-    BF.open(input_test_bufr_file,'r')
-    #BF.print_properties(prefix="BUFRFile (after)")
-    n=BF.get_num_bufr_msgs()
-    print "This file contains: ",n," BUFR messages."
-
-    data1=BF.get_next_raw_bufr_msg() # should return proper data
-    data2=BF.get_next_raw_bufr_msg() # should return corrupted data
-    data3=BF.get_next_raw_bufr_msg() # should return corrupted data
-    data4=BF.get_next_raw_bufr_msg() # returns with None
-
-    #for i in range(1,n+1):
-    #    raw_data=BF.get_raw_bufr_msg(i)
-    #    print "msg ",i," got ",len(raw_data)," words"
-    
-    BF.close()
-
-    #def num_diffs(a,b):
-    #    cnt=0
-    #    for (i,val) in enumerate(a):
-    #        if a[i]!=b[i]:
-    #            cnt=cnt+1
-    #    return cnt
-    #
-    #print "data1==data2? ",all(data1==data2),\
-    #      " num diffs: ",num_diffs(data1,data2)
-    #print "data1==data3? ",all(data1==data3),\
-    #      " num diffs: ",num_diffs(data1,data3)
-    #print "data2==data3? ",all(data2==data3),\
-    #      " num diffs: ",num_diffs(data2,data3)
-    #print "data4 = ",data4
-
-    # do a writing test
-    output_test_bufr_file = 'Testfile3Msgs.BUFR'
-    BF1 = BUFRFile()
-    BF1.open(output_test_bufr_file,'w')
-    #BF1.print_properties(prefix="BUFRFile (after)")
-    BF1.write_raw_bufr_msg(data1)
-    BF1.write_raw_bufr_msg(data2)
-    BF1.close()
-
-    BF2 = BUFRFile()
-    BF2.open(output_test_bufr_file,'a')
-    BF2.write_raw_bufr_msg(data3)    
-    #BF2.print_properties(prefix="BUFRFile2 (after)")
-    BF2.close()
-
-    sys.exit(0)
-
 if __name__ == "__main__":
         #  #[ test program
         print "Starting test program:"
@@ -1824,6 +1760,69 @@ if __name__ == "__main__":
         assert(b == 'B0000000000210000001')
         assert(d == 'D0000000000210000001')
         #  #]
+        #  #[ some for the BUFRFile class
+        #do_BUFRfile_test = True
+        do_BUFRfile_test = False
+
+        if (do_BUFRfile_test):
+            
+            # NOTE: this testfile: Testfile3CorruptedMsgs.BUFR
+            # hold 3 copies of Testfile.BUFR catted together, and
+            # was especially modified using hexedit to have
+            # false end markers (7777) halfway the 2nd and 3rd
+            # message. These messages are therefore corrupted and
+            # decoding them will probably result in garbage, but they
+            # are very usefull to test the BUFRFile.split() method.
+            
+            input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
+            BF = BUFRFile()
+            # BF.print_properties(prefix="BUFRFile (before)")
+            BF.open(input_test_bufr_file,'r')
+            # BF.print_properties(prefix="BUFRFile (after)")
+            n=BF.get_num_bufr_msgs()
+            print "This file contains: ",n," BUFR messages."
+
+            data1=BF.get_next_raw_bufr_msg() # should return proper data
+            data2=BF.get_next_raw_bufr_msg() # should return corrupted data
+            data3=BF.get_next_raw_bufr_msg() # should return corrupted data
+            data4=BF.get_next_raw_bufr_msg() # returns with None
+            
+            # for i in range(1,n+1):
+            #    raw_data=BF.get_raw_bufr_msg(i)
+            #    print "msg ",i," got ",len(raw_data)," words"
+            
+            BF.close()
+            
+            # def num_diffs(a,b):
+            #    cnt=0
+            #    for (i,val) in enumerate(a):
+            #        if a[i]!=b[i]:
+            #            cnt=cnt+1
+            #    return cnt
+            #
+            # print "data1==data2? ",all(data1==data2),\
+            #      " num diffs: ",num_diffs(data1,data2)
+            # print "data1==data3? ",all(data1==data3),\
+            #      " num diffs: ",num_diffs(data1,data3)
+            # print "data2==data3? ",all(data2==data3),\
+            #      " num diffs: ",num_diffs(data2,data3)
+            # print "data4 = ",data4
+
+            # do a writing test
+            output_test_bufr_file = 'Testfile3Msgs.BUFR'
+            BF1 = BUFRFile()
+            BF1.open(output_test_bufr_file,'w')
+            # BF1.print_properties(prefix="BUFRFile (after)")
+            BF1.write_raw_bufr_msg(data1)
+            BF1.write_raw_bufr_msg(data2)
+            BF1.close()
+            
+            BF2 = BUFRFile()
+            BF2.open(output_test_bufr_file,'a')
+            BF2.write_raw_bufr_msg(data3)    
+            # BF2.print_properties(prefix="BUFRFile2 (after)")
+            BF2.close()
+            #  #]
         #  #[ read the binary data
         input_test_bufr_file = 'Testfile.BUFR'
         fd=open(input_test_bufr_file,'rb')
