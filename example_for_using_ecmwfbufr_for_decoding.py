@@ -24,14 +24,15 @@ import numpy as np # import numerical capabilities
 from pybufr_ecmwf import BUFRFile, BUFRInterfaceECMWF
 
 print "-"*50
-print "BUFR reading example"
+print "BUFR decoding example"
 print "-"*50
 
 # Note that this step is only added here to build the interface module
 # ecmwfbufr.so. If you already have it compiled and installed
-# you can skip this step. The only other function used from it is get_source_dir()
-# from which the location of the bufr tables is derived. If you are happy
-# to supply this setting manually, it is safe to remove that call as well.
+# you can skip this step. The only other function used from it is
+# get_source_dir() from which the location of the bufr tables is derived.
+# If you are happy to supply this setting manually, it is safe to remove
+# that call as well.
 #
 # instantiate the BUFRInterfaceECMWF class, and build library if needed
 # the different examples illustrate how you can pass your preferred
