@@ -26,15 +26,17 @@
 # 
 #  #]
 #  #[ imported modules
-import os         # operating system functions
-import sys        # system functions
-import re         # regular expression handling
-import glob       # allow for filename expansion
-#import gzip # handle gzipped files [currently not used]
-import tarfile    # handle tar archives
-import subprocess # support running additional executables
-import shutil     # portable file copying functions
-import time       # handling of date and time
+import os          # operating system functions
+import sys         # system functions
+import re          # regular expression handling
+import glob        # allow for filename expansion
+#import gzip        # handle gzipped files [currently not used]
+import tarfile     # handle tar archives
+import subprocess  # support running additional executables
+import shutil      # portable file copying functions
+import time        # handling of date and time
+import numpy as np # import numerical capabilities
+import struct      # allow converting c datatypes and structs
 #  #]
 #  #[ exception definitions
 # see: http://docs.python.org/library/exceptions.html
@@ -1363,9 +1365,9 @@ class BUFRFile:
         self.filemode = None
         self.filesize = None
         self.data = None
-        self.use_native_byte_order = True
         self.list_of_bufr_pointers = []
-        self.nr_of_bufr_messages = 0
+        self.nr_of_bufr_messages   = 0
+        self.last_used_msg         = 0
         #  #]
     def print_properties(self,prefix="BUFRFile"):
         #  #[
@@ -1377,7 +1379,6 @@ class BUFRFile:
             print prefix+": len(data) = ",len(self.data)
         else:
             print prefix+": data = ",self.data
-        print prefix+": use_native_byte_order = ",self.use_native_byte_order
         print prefix+": list_of_bufr_pointers = ",\
               self.list_of_bufr_pointers
         print prefix+": nr_of_bufr_messages = ",self.nr_of_bufr_messages
@@ -1400,6 +1401,7 @@ class BUFRFile:
                       self.filemode," failed"
                 print "This file was not found or is not accessible."
                 raise IOError
+        
         try:
             self.bufr_fd = open(filename,mode)
         except:
@@ -1559,33 +1561,160 @@ class BUFRFile:
 
         return self.nr_of_bufr_messages
         #  #]
+    def get_raw_bufr_msg(self,msg_nr):
+        #  #[
+        # get the raw data for the bufr msg with given nr (start counting at 1)
+        
+        if (self.bufr_fd== None):
+            print "ERROR: a bufr file first needs to be opened"
+            print "using BUFRFile.open() before you can use the raw data .."
+            raise IOError
 
+        # sanity test
+        if (msg_nr>self.nr_of_bufr_messages):
+            print "WARNING: non-existing BUFR message: ",msg_nr
+            print "This file only contains: ",self.nr_of_bufr_messages,\
+                  " BUFR messages"
+            return None
+
+        if (msg_nr<1):
+            print "WARNING: invalid BUFR message number: ",msg_nr
+            print "For this file this number should be between 1 and: ",\
+                  self.nr_of_bufr_messages
+            return None
+
+        self.last_used_msg = msg_nr
+        (start_index,end_index) = self.list_of_bufr_pointers[msg_nr-1]
+
+        size_bytes = (end_index-start_index)
+
+        # +3 because we have to round upwards to make sure all
+        # bytes fit into the array of words (otherwise the last
+        # few might be truncated from the data, which will crash
+        # the struct.unpack() call below)
+        size_words=(size_bytes+3)/4
+        padding_bytes = size_words*4-size_bytes
+        print "size_bytes = ",size_bytes
+        print "size_words = ",size_words
+        print "size_words*4 = ",size_words*4
+        print "padding_bytes = ",padding_bytes
+        # make sure we take the padding bytes along
+        end_index = end_index+padding_bytes
+        
+        raw_data_bytes = self.data[start_index:end_index]
+        print "len(raw_data_bytes) = ",len(raw_data_bytes)
+
+        # assume little endian for now when converting
+        # raw bytes/characters to integers and vice-versa
+        format = "<"+str(size_words)+"i"
+        words = np.array(struct.unpack(format,raw_data_bytes))
+
+        return words
+        #  #]
+    def get_next_raw_bufr_msg(self):
+        #  #[
+        return self.get_raw_bufr_msg(self.last_used_msg+1)
+        #  #]
+    def write_raw_bufr_msg(self,words):
+        #  #[
+        # input data should be an array of words!
+
+
+        size_words=len(words)
+        size_bytes=size_words*4
+        print "size_bytes = ",size_bytes
+        print "size_words = ",size_words
+
+        # convert the words to bytes in a string and write them to file
+
+        # assume little endian for now when converting
+        # raw bytes/characters to integers and vice-versa
+        format = "<i"
+        for (i,w) in enumerate(words):
+            data = struct.pack(format,w)
+            self.bufr_fd.write(data)
+
+            if i==0:
+                print "w=",w
+                print 'data = ',data
+                print 'data[:4] = ',data[:4]
+                print 'data[:4] = ',';'.join(str(data[j])
+                                             for j in range(4) \
+                                             if data[j].isalnum())
+                
+                assert(data[:4] == 'BUFR')
+
+        #  #]
+    
     # possible additional methods:
-    # -read_next_msg
     # -write_msg
     # -...
     #  #]
 
 
 # some temporary testcode for the BUFRFile class
+do_BUFRfile_test = True
+#do_BUFRfile_test = False
 
-# NOTE: this testfile: Testfile3CorruptedMsgs.BUFR
-# hold 3 copies of Testfile.BUFR catted together, and
-# was especially modified using hexedit to have
-# false end markers (7777) halfway the 2nd and 3rd
-# message. These messages are therefore corrupted and
-# decoding them will probably result in garbage, but they
-# are very usefull to test the BUFRFile.split() method.
+if (do_BUFRfile_test):
 
-input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
-BF = BUFRFile()
-BF.print_properties(prefix="BUFRFile (before)")
-BF.open(input_test_bufr_file,'r')
-BF.print_properties(prefix="BUFRFile (after)")
+    # NOTE: this testfile: Testfile3CorruptedMsgs.BUFR
+    # hold 3 copies of Testfile.BUFR catted together, and
+    # was especially modified using hexedit to have
+    # false end markers (7777) halfway the 2nd and 3rd
+    # message. These messages are therefore corrupted and
+    # decoding them will probably result in garbage, but they
+    # are very usefull to test the BUFRFile.split() method.
+    
+    input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
+    BF = BUFRFile()
+    BF.print_properties(prefix="BUFRFile (before)")
+    BF.open(input_test_bufr_file,'r')
+    BF.print_properties(prefix="BUFRFile (after)")
+    n=BF.get_num_bufr_msgs()
+    print "This file contains: ",n," BUFR messages."
 
-print "This file contains: ",BF.get_num_bufr_msgs()," BUFR messages."
-BF.close()
-sys.exit(0)
+    data1=BF.get_next_raw_bufr_msg() # should return proper data
+    data2=BF.get_next_raw_bufr_msg() # should return corrupted data
+    data3=BF.get_next_raw_bufr_msg() # should return corrupted data
+    data4=BF.get_next_raw_bufr_msg() # returns with None
+
+    #for i in range(1,n+1):
+    #    raw_data=BF.get_raw_bufr_msg(i)
+    #    print "msg ",i," got ",len(raw_data)," words"
+    
+    BF.close()
+
+    def num_diffs(a,b):
+        cnt=0
+        for (i,val) in enumerate(a):
+            if a[i]!=b[i]:
+                cnt=cnt+1
+        return cnt
+
+    print "data1==data2? ",all(data1==data2),\
+          " num diffs: ",num_diffs(data1,data2)
+    print "data1==data3? ",all(data1==data3),\
+          " num diffs: ",num_diffs(data1,data3)
+    print "data2==data3? ",all(data2==data3),\
+          " num diffs: ",num_diffs(data2,data3)
+    print "data4 = ",data4
+
+    # do a writing test
+    output_test_bufr_file = 'Testfile3Msgs.BUFR'
+    BF1 = BUFRFile()
+    BF1.open(output_test_bufr_file,'w')
+    BF1.print_properties(prefix="BUFRFile (after)")
+    BF1.write_raw_bufr_msg(data1)
+    BF1.write_raw_bufr_msg(data2)
+    BF1.close()
+
+    BF2 = BUFRFile()
+    BF2.open(output_test_bufr_file,'a')
+    BF2.write_raw_bufr_msg(data3)    
+    BF2.close()
+
+    sys.exit(0)
 
 if __name__ == "__main__":
         #  #[ test program
@@ -1603,8 +1732,8 @@ if __name__ == "__main__":
             # tested at my laptop at home with a g95 v.0.92 (32-bit)
             # in my search PATH
             # successfully tested 18-Dec-2009
-            #BI = BUFRInterfaceECMWF(verbose=True)
-            BI = BUFRInterfaceECMWF(verbose=True,debug_f2py_c_api=True)
+            BI = BUFRInterfaceECMWF(verbose=True)
+            #BI = BUFRInterfaceECMWF(verbose=True,debug_f2py_c_api=True)
         elif (testcase == 2):
             # tested at my laptop at home with a systemwide
             # gfortran v4.3.2 installed
@@ -1637,9 +1766,7 @@ if __name__ == "__main__":
                      fortran_flags="-fno-second-underscore -fPIC -i4 -r8")
         #  #]
         #  #[ import additional modules needed for testing
-        import struct      # allow converting c datatypes and structs
         import ecmwfbufr   # import the just created wrapper module
-        import numpy as np # import numerical capabilities
         #  #]
         #  #[ test of bufr file handling
         center               = 210 # = ksec1( 3)
@@ -1670,8 +1797,16 @@ if __name__ == "__main__":
         #print 'words[:4] = ',words[:4]
         assert(data[:4] == 'BUFR')
         #  #]
+        #  #[ read the binary data using the BUFRFile class
+        input_test_bufr_file = 'Testfile.BUFR'
+        BF = BUFRFile()
+        BF.open(input_test_bufr_file,'r')
+        words=BF.get_next_raw_bufr_msg()
+        BF.close()
+        #  #]
         #  #[ pbopen/bpbufr/pbclose tests [not yet functional]
-        do_pb_test = True # False
+        #do_pb_test = True
+        do_pb_test = False
         if (do_pb_test):
             c_file_unit       = 0
             bufr_error_flag = 0

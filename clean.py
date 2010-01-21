@@ -38,6 +38,8 @@ bufr_files_to_delete =["libbufr.a",
                        "ecmwf_bufr_lib/ConfigFile"]
 f2py_files_to_delete = ["ecmwfbufr.so"]
 
+test_files_to_delete = ["Testfile3Msgs.BUFR"]
+
 files_to_delete = []
 if ((arg=='all') or (arg=='bufr')):
     files_to_delete.extend(bufr_files_to_delete)
@@ -45,6 +47,7 @@ if ((arg=='all') or (arg=='f2py')):
     files_to_delete.extend(f2py_files_to_delete)
 
 files_to_delete.extend(backup_files_to_delete)
+files_to_delete.extend(test_files_to_delete)
 
 for d in dirs_to_delete:
     if (os.path.exists(d)):
