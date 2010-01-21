@@ -1358,16 +1358,17 @@ class BUFRMessage:
     #  #]
 class BUFRFile:
     #  #[
-    def __init__(self):
+    def __init__(self,verbose=False):
         #  #[
-        self.bufr_fd  = None
+        self.bufr_fd = None
         self.filename = None
         self.filemode = None
         self.filesize = None
         self.data = None
         self.list_of_bufr_pointers = []
-        self.nr_of_bufr_messages   = 0
-        self.last_used_msg         = 0
+        self.nr_of_bufr_messages = 0
+        self.last_used_msg = 0
+        self.verbose = verbose
         #  #]
     def print_properties(self,prefix="BUFRFile"):
         #  #[
@@ -1401,7 +1402,27 @@ class BUFRFile:
                       self.filemode," failed"
                 print "This file was not found or is not accessible."
                 raise IOError
-        
+        elif (mode=='w'):
+            self.filesize = 0
+        elif (mode=='a'):
+            # when appending it is allowed to have a non-existing
+            # file, in which case one will be generated, so test for
+            # this condition
+            if (os.path.exists(filename)):
+                # in this case, try to find out the amount of BUFR messages
+                # already present in this file, by temporary opening
+                # it in reading mode
+                self.open(filename,'r')
+                count = self.get_num_bufr_msgs()
+                self.close()
+                # then store the found number for later use
+                self.nr_of_bufr_messages = count
+                # do this only after the above close call
+                # otherwise it will be reset to None again
+                self.filesize = os.path.getsize(filename)
+            else:
+                self.filesize = 0            
+
         try:
             self.bufr_fd = open(filename,mode)
         except:
@@ -1462,8 +1483,10 @@ class BUFRFile:
             if (not inside_message):
                 # try to find a txt_start string
                 start_pos = self.data.find(txt_start,search_pos)
-                print "search_pos = ",search_pos," start_pos = ",start_pos,\
-                      " txt = ",txt_start
+                if (self.verbose):
+                    print "search_pos = ",search_pos,\
+                          " start_pos = ",start_pos,\
+                          " txt = ",txt_start
 
                 if (start_pos!=-1):
                     inside_message = True
@@ -1472,7 +1495,8 @@ class BUFRFile:
                     # message is no more than 4 bytes
                     if (end_pos != -1):
                         distance = (start_pos-end_pos)
-                        print "distance = ",distance," bytes"
+                        if (self.verbose):
+                            print "distance = ",distance," bytes"
                         if (distance > 3):
                             # this means we have found a false "7777"
                             # end marker, so ignore the last added msg
@@ -1483,7 +1507,8 @@ class BUFRFile:
                             # to allow trying to search again for a correct
                             # end marker
                             start_pos = prev_start_pos
-                            print "restored start_pos = ",start_pos
+                            if (self.verbose):
+                                print "restored start_pos = ",start_pos
 
                             # step over the "7777" string to prepare for
                             #  searching the real end of the message
@@ -1500,7 +1525,8 @@ class BUFRFile:
                     # If it is larger we have found a false "7777"
                     # end marker (or the file is corrupted and truncated)
                     distance = (self.filesize-end_pos)
-                    print "distance to fileend = ",distance," bytes"
+                    if (self.verbose):
+                        print "distance to fileend = ",distance," bytes"
                     if (distance > 3):
                         # this means we have found a false "7777"
                         # end marker, so ignore the last added msg
@@ -1511,7 +1537,8 @@ class BUFRFile:
                         # to allow trying to search again for a correct
                         # end marker
                         start_pos = prev_start_pos
-                        print "restored start_pos = ",start_pos
+                        if (self.verbose):
+                            print "restored start_pos = ",start_pos
                         
                         # step over the "7777" string to prepare for
                         #  searching the real end of the message
@@ -1528,8 +1555,10 @@ class BUFRFile:
             if (inside_message and not file_end_reached):
                 # try to find a txt_end string
                 end_pos = self.data.find(txt_end,search_pos)
-                print "search_pos = ",search_pos," end_pos = ",end_pos,\
-                      " txt = ",txt_end
+                if (self.verbose):
+                    print "search_pos = ",search_pos,\
+                          " end_pos = ",end_pos,\
+                          " txt = ",txt_end
 
                 if (end_pos!=-1):
                     inside_message = False
@@ -1594,15 +1623,19 @@ class BUFRFile:
         # the struct.unpack() call below)
         size_words=(size_bytes+3)/4
         padding_bytes = size_words*4-size_bytes
-        print "size_bytes = ",size_bytes
-        print "size_words = ",size_words
-        print "size_words*4 = ",size_words*4
-        print "padding_bytes = ",padding_bytes
+
+        if (self.verbose):
+            print "size_bytes = ",size_bytes
+            print "size_words = ",size_words
+            print "size_words*4 = ",size_words*4
+            print "padding_bytes = ",padding_bytes
+            
         # make sure we take the padding bytes along
         end_index = end_index+padding_bytes
         
         raw_data_bytes = self.data[start_index:end_index]
-        print "len(raw_data_bytes) = ",len(raw_data_bytes)
+        if (self.verbose):
+            print "len(raw_data_bytes) = ",len(raw_data_bytes)
 
         # assume little endian for now when converting
         # raw bytes/characters to integers and vice-versa
@@ -1618,15 +1651,23 @@ class BUFRFile:
     def write_raw_bufr_msg(self,words):
         #  #[
         # input data should be an array of words!
-
-
         size_words=len(words)
         size_bytes=size_words*4
-        print "size_bytes = ",size_bytes
-        print "size_words = ",size_words
+        if (self.verbose):
+            print "size_bytes = ",size_bytes
+            print "size_words = ",size_words
 
         # convert the words to bytes in a string and write them to file
 
+        # question: is this conversion really needed, or could I also just
+        # directly write the data as words?
+        # Answer: yes this really is needed! If the words are just written
+        # as such, python converts them to long integers and writes
+        # 8 bytes for each word in stead of 4 !!!!!
+        # activate the next 2 lines to test this:
+        #self.bufr_fd.write(words)
+        #return
+        
         # assume little endian for now when converting
         # raw bytes/characters to integers and vice-versa
         format = "<i"
@@ -1635,20 +1676,19 @@ class BUFRFile:
             self.bufr_fd.write(data)
 
             if i==0:
-                print "w=",w
-                print 'data = ',data
-                print 'data[:4] = ',data[:4]
-                print 'data[:4] = ',';'.join(str(data[j])
-                                             for j in range(4) \
-                                             if data[j].isalnum())
-                
+                if (self.verbose):
+                    print "w=",w
+                    print 'data = ',data
+                    print 'data[:4] = ',data[:4]
+                    print 'data[:4] = ',';'.join(str(data[j])
+                                                 for j in range(4) \
+                                                 if data[j].isalnum())
+                # safety check
                 assert(data[:4] == 'BUFR')
 
+        self.nr_of_bufr_messages = self.nr_of_bufr_messages + 1
+        self.filesize = self.filesize + size_bytes
         #  #]
-    
-    # possible additional methods:
-    # -write_msg
-    # -...
     #  #]
 
 
@@ -1668,9 +1708,9 @@ if (do_BUFRfile_test):
     
     input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
     BF = BUFRFile()
-    BF.print_properties(prefix="BUFRFile (before)")
+    #BF.print_properties(prefix="BUFRFile (before)")
     BF.open(input_test_bufr_file,'r')
-    BF.print_properties(prefix="BUFRFile (after)")
+    #BF.print_properties(prefix="BUFRFile (after)")
     n=BF.get_num_bufr_msgs()
     print "This file contains: ",n," BUFR messages."
 
@@ -1685,26 +1725,26 @@ if (do_BUFRfile_test):
     
     BF.close()
 
-    def num_diffs(a,b):
-        cnt=0
-        for (i,val) in enumerate(a):
-            if a[i]!=b[i]:
-                cnt=cnt+1
-        return cnt
-
-    print "data1==data2? ",all(data1==data2),\
-          " num diffs: ",num_diffs(data1,data2)
-    print "data1==data3? ",all(data1==data3),\
-          " num diffs: ",num_diffs(data1,data3)
-    print "data2==data3? ",all(data2==data3),\
-          " num diffs: ",num_diffs(data2,data3)
-    print "data4 = ",data4
+    #def num_diffs(a,b):
+    #    cnt=0
+    #    for (i,val) in enumerate(a):
+    #        if a[i]!=b[i]:
+    #            cnt=cnt+1
+    #    return cnt
+    #
+    #print "data1==data2? ",all(data1==data2),\
+    #      " num diffs: ",num_diffs(data1,data2)
+    #print "data1==data3? ",all(data1==data3),\
+    #      " num diffs: ",num_diffs(data1,data3)
+    #print "data2==data3? ",all(data2==data3),\
+    #      " num diffs: ",num_diffs(data2,data3)
+    #print "data4 = ",data4
 
     # do a writing test
     output_test_bufr_file = 'Testfile3Msgs.BUFR'
     BF1 = BUFRFile()
     BF1.open(output_test_bufr_file,'w')
-    BF1.print_properties(prefix="BUFRFile (after)")
+    #BF1.print_properties(prefix="BUFRFile (after)")
     BF1.write_raw_bufr_msg(data1)
     BF1.write_raw_bufr_msg(data2)
     BF1.close()
@@ -1712,6 +1752,7 @@ if (do_BUFRfile_test):
     BF2 = BUFRFile()
     BF2.open(output_test_bufr_file,'a')
     BF2.write_raw_bufr_msg(data3)    
+    #BF2.print_properties(prefix="BUFRFile2 (after)")
     BF2.close()
 
     sys.exit(0)
