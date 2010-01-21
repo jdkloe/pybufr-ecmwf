@@ -1387,8 +1387,12 @@ class BUFRFile:
         print prefix+": nr_of_bufr_messages = ",self.nr_of_bufr_messages
         #print prefix+":  = ",self.
         #  #]
-    def open(self,filename,mode):
+    def open(self,filename,mode,silent=False):
         #  #[
+        # note: the silent switch is only intended to suppress
+        # warning and error messages during unit testing.
+        # During normal use it should never be set to True.
+        
         self.filename = filename
         self.filemode = mode
         
@@ -1399,10 +1403,11 @@ class BUFRFile:
             if (os.path.exists(filename)):
                 self.filesize = os.path.getsize(filename)
             else:
-                print "ERROR in BUFRFile.open():"
-                print "Opening file: ",self.filename," with mode: ",\
-                      self.filemode," failed"
-                print "This file was not found or is not accessible."
+                if (not silent):
+                    print "ERROR in BUFRFile.open():"
+                    print "Opening file: ",self.filename," with mode: ",\
+                          self.filemode," failed"
+                    print "This file was not found or is not accessible."
                 raise IOError
         elif (mode=='w'):
             self.filesize = 0
@@ -1419,27 +1424,36 @@ class BUFRFile:
                 count = tmp_BF.get_num_bufr_msgs()
                 tmp_BF.close()
                 del(tmp_BF)
+
                 # then store the found number for later use
                 self.nr_of_bufr_messages = count
                 self.filesize = os.path.getsize(filename)
+
+                if (count>0):
+                    if (self.filesize>0):
+                        print "WARNING: appending to non-zero file, but could"
+                        print "not find any BUFR messages in it. Maybe you are"
+                        print "appending to a non-BUFR file??"
             else:
                 self.filesize = 0            
 
         try:
             self.bufr_fd = open(filename,mode)
         except:
-            print "ERROR in BUFRFile.open():"
-            print "Opening file: ",self.filename," with mode: ",\
-                  self.filemode," failed"
+            if (not silent):
+                print "ERROR in BUFRFile.open():"
+                print "Opening file: ",self.filename," with mode: ",\
+                      self.filemode," failed"
             raise IOError
 
         if (mode=='r'):
             try:
                 self.data = self.bufr_fd.read()
             except:
-                print "ERROR in BUFRFile.open():"
-                print "Reading data from file: ",self.filename," with mode: ",\
-                      self.filemode," failed"
+                if (not silent):
+                    print "ERROR in BUFRFile.open():"
+                    print "Reading data from file: ",self.filename,\
+                          " with mode: ",self.filemode," failed"
                 raise IOError
 
             # split in separate BUFR messages
@@ -1743,8 +1757,109 @@ if __name__ == "__main__":
                      fortran_flags="-fno-second-underscore -fPIC -i4 -r8")
         #  #]
         #  #[ import additional modules needed for testing
-        import ecmwfbufr   # import the just created wrapper module
+        import ecmwfbufr # import the just created wrapper module
+        import unittest  # import the unittest functionality
         #  #]
+
+        class CheckBUFRFile(unittest.TestCase):
+            #  #[ 1 tests
+            # note: tests MUST have a name starting with "test"
+            #       otherwise the unittest module will not use them
+            #
+            # common settings for the following tests
+            input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
+            def test_init(self):
+                #  #[
+                BF1 = BUFRFile(verbose=True)
+                self.assertEqual(BF1.bufr_fd,None)
+                self.assertEqual(BF1.filename,None)
+                self.assertEqual(BF1.filemode,None)
+                self.assertEqual(BF1.filesize,None)
+                self.assertEqual(BF1.data,None)
+                self.assertEqual(BF1.list_of_bufr_pointers,[])
+                self.assertEqual(BF1.nr_of_bufr_messages,0)
+                self.assertEqual(BF1.last_used_msg,0)
+                self.assertEqual(BF1.verbose,True)
+                BF2 = BUFRFile(verbose=False)
+                self.assertEqual(BF2.verbose,False)
+                #  #]
+            def test_open(self):
+                #  #[
+                BF1 = BUFRFile(verbose=False)
+
+                # check behaviour when mode is missing
+                self.assertRaises(TypeError,
+                                  BF1.open,self.input_test_bufr_file)
+
+                # check behaviour when mode is invalid
+                self.assertRaises(AssertionError,
+                                  BF1.open,self.input_test_bufr_file,'q')
+
+                # check behaviour when filename is not a string
+                self.assertRaises(TypeError,BF1.open,123,'r')
+
+                # check behaviour when file does not exist
+                self.assertRaises(IOError,BF1.open,'dummy','r',silent=True)
+
+                # check behaviour when reading a file without proper permission
+                testfile = "tmp_testfile.read.BUFR"
+                if (os.path.exists(testfile)):
+                    # force the file to be readwrite
+                    os.chmod(testfile,0666)
+                    os.remove(testfile)
+                # create a small dummy fle
+                fd = open(testfile,'wt')
+                fd.write('dummy data')
+                fd.close()
+                # force the file to be unaccessible
+                os.chmod(testfile,0000)
+                # do the test
+                self.assertRaises(IOError,BF1.open,testfile,'r',silent=True)
+                # cleanup
+                if (os.path.exists(testfile)):
+                    # force the file to be readwrite
+                    os.chmod(testfile,0666)
+                    os.remove(testfile)
+                    
+                # check behaviour when writing to file without proper permission
+                testfile = "tmp_testfile.write.BUFR"
+                if (os.path.exists(testfile)):
+                    # force the file to be readwrite
+                    os.chmod(testfile,0666)
+                    os.remove(testfile)
+                # create a small dummy fle
+                fd = open(testfile,'wt')
+                fd.write('dummy data')
+                fd.close()
+                # force the file to be readonly
+                os.chmod(testfile,0444)
+                # do the test
+                self.assertRaises(IOError,BF1.open,testfile,'w',silent=True)
+                # cleanup
+                if (os.path.exists(testfile)):
+                    # force the file to be readwrite
+                    os.chmod(testfile,0666)
+                    os.remove(testfile)                
+                #  #]
+            def test_close(self):
+                #  #[
+                BF1 = BUFRFile(verbose=False)
+                BF1.open(self.input_test_bufr_file,'r')
+                BF1.close()
+
+                # check that a second close fails
+                self.assertRaises(AttributeError,BF1.close)
+                #  #]
+            #  #]
+
+        # this just runs all tests
+        print "Running unit tests:"
+        unittest.main()
+        sys.exit(0)
+
+        # todo: turn all the testcode below either into unittests
+        #       or into little example programs, or both ...
+        
         #  #[ test of bufr file handling
         center               = 210 # = ksec1( 3)
         subcenter            =   0 # = ksec1(16)
