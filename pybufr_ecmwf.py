@@ -1823,20 +1823,6 @@ if __name__ == "__main__":
             # BF2.print_properties(prefix="BUFRFile2 (after)")
             BF2.close()
             #  #]
-        #  #[ read the binary data
-        input_test_bufr_file = 'Testfile.BUFR'
-        fd=open(input_test_bufr_file,'rb')
-        data=fd.read()
-        len(data)
-        
-        sizewords=len(data)/4
-        words = np.array(struct.unpack("<"+str(sizewords)+"i",data))
-        #print 'data[:4] = ',data[:4]
-        #print 'data[:4] = ',';'.join(str(data[i])
-        #                             for i in range(4) if data[i].isalnum())
-        #print 'words[:4] = ',words[:4]
-        assert(data[:4] == 'BUFR')
-        #  #]
         #  #[ read the binary data using the BUFRFile class
         input_test_bufr_file = 'Testfile.BUFR'
         BF = BUFRFile()

@@ -11,6 +11,9 @@
 #
 # License: GPL v2.
 
+# import os functionality
+import os
+
 # import the python file defining the BUFRFile class
 from pybufr_ecmwf import BUFRFile
 
@@ -71,6 +74,10 @@ print "-"*50
 
 # define the output test filename
 output_test_bufr_file = 'Testfile3Msgs.BUFR'
+
+# make sure no file with this name exists
+if (os.path.exists(output_test_bufr_file)):
+    os.remove(output_test_bufr_file)
 
 # get an instance of the BUFRFile class
 BF1 = BUFRFile()
