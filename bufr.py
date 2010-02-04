@@ -97,6 +97,28 @@ class Descriptor(Singleton):
               "data_width: ["+str(self.data_width)+"] "
         return txt
         #  #]
+
+# todo: look-up the possibilities in the documentation
+class ModifiedDescriptor(Descriptor):
+    def __init__():
+        pass
+    #  ==>descriptor
+    #  ==>modification command
+
+# todo: look-up the possibilities in the documentation
+class ModificationCommand(Descriptor):
+    def __init__():
+        pass
+    #  ==>descriptor
+    #  ==>modification command
+
+    # todo: look-up the possibilities in the documentation
+class SpecialCommand(Descriptor):
+    def __init__():
+        pass
+    #  ==>descriptor
+    #  ==>modification command
+
 class Replicator(Descriptor):
     pass
     #  ==>replication-count
@@ -109,15 +131,55 @@ class DelayedReplicator(Descriptor):
     #  ==>list-of-descriptor-objects = []
 
 class CompositeDescriptor(Descriptor): #[table D entry]
-    pass
-    #  ==>descriptor code
-    #  ==>list-of-descriptor-objects = []
+    def __init__(self,reference,descriptor_list,comment):
+        #  #[
+        self.reference = reference
+        self.descriptor_list = descriptor_list
+        self.comment = comment
+        #  #]
 
 class BufrTable:
     def __init__(self):
         #  #[
-        self.table_B = {} # dict of desciptor-objects
-        self.table_D = {} # dict of composite-descriptor-objects
+        self.table_B   = {} # dict of desciptor-objects
+        self.table_D   = {} # dict of composite-descriptor-objects
+        self.specials  = {} # dict of specials
+        self.modifiers = {} # dict of modifiers
+        #  #]
+    def get_descr_object(self,reference):
+        #  #[
+        if self.table_B.has_key(reference):
+            return self.table_B[reference]
+        if self.table_D.has_key(reference):
+            return self.table_D[reference]
+        # get 1st digit
+        f=int(reference/100000.)
+        if f==1:
+            # this is a special code
+            if self.specials.has_key(reference):
+                return self.specials[reference]
+            else:
+                # this is a new special, store for now as if it where
+                # a normal Descriptor
+                # TODO: change this to an instance of SpecialCommand
+                print "adding special: ",reference
+                special = Descriptor(reference,"special","n.a.",0,0,0)
+                self.specials[reference] = special
+                return special
+        if f==2:
+            # this is a modifier
+            if self.modifiers.has_key(reference):
+                return self.modifiers[reference]
+            else:
+                # this is a new modifier, store for now as if it where
+                # a normal Descriptor
+                # TODO: change this to an instance of ModificationCommand
+                print "adding modifier: ",modifier
+                modifier = Descriptor(reference,"modifier","n.a.",0,0,0)
+                self.modifiers[reference] = modifier
+                return modifier
+            
+        return None
         #  #]
     def load(self,file):
         #  #[
@@ -228,10 +290,127 @@ class BufrTable:
     def load_D_table(self,file):
         #  #[
         print "loading D table from file: ",file
-        print "not yet implemented"
-        #nr_of_ignored_problematic_entries = 0
-        #for (i,line) in enumerate(open(file,'rt')):
-        #    l=line.replace('\r','').replace('\n','')
+
+        # known problem:
+        # the code stops with an error if a D-table entry is used before
+        # it is defined, even if it is defined lateron in the same D-table
+
+        nr_of_ignored_problematic_entries = 0
+        for (i,line) in enumerate(open(file,'rt')):
+            l=line.replace('\r','').replace('\n','')
+            print "considering line ["+l+"]"
+            parts = l[:18].split()
+            start_line = False
+            continuation_line = False
+            if (len(parts)==3):
+                start_line = True
+            elif (len(parts)==1):
+                continuation_line = True
+            else:
+                nr_of_ignored_problematic_entries += 1
+                print "ERROR: unexpected format in table D file..."
+                print "linecount: ",i
+                print "line: ["+l+"]"
+                print "first 17 characters should hold either 1 or 3 integer"
+                print "numbers, but in stead it holds: ",len(parts)," parts"
+                print "You could report this to the creator of this table "+\
+                      "since this should never happen."
+                print "Ignoring this entry ....."
+
+            if start_line:
+                print "is a start line"
+                reference     = int(parts[0],10)
+                count          = int(parts[1])
+                ref_reference = int(parts[2],10)
+                comment        = ''
+                descriptor_list = []
+                continuation_line_count = 0
+                if len(l)>18:
+                    comment = l[18:]
+
+                # get object for ref_reference
+                descr = self.get_descr_object(ref_reference)
+                if (descr==None):
+                    print "ERROR: unexpected format in table D file..."
+                    print "linecount: ",i
+                    print "line: ["+l+"]"
+                    print "This D-table entry refers to a descriptor or"
+                    print "D-table entry that was not yet defined in table B or D."
+                    print "You could report this to the creator of this table "+\
+                          "since this should never happen."
+                    print "Ignoring this entry ....."
+                else:
+                    # add this object to the list
+                    print "adding descriptor with ref: ",ref_reference
+                    descriptor_list.append(descr)
+                
+            if continuation_line:
+                print "is a continuation line"
+                continuation_line_count += 1
+                ref_reference = int(parts[0],10)
+                extra_comment  = ''
+                if len(l)>18:
+                    # todo: check if the ref_reference is maybe a table-D
+                    # entry without comment, and add the comment there in stead
+                    extra_comment = l[18:]
+                    print "WARNING: ignoring extra comment on continuation line: "
+                    print "line: ["+l+"]"
+
+                # get object for ref_reference
+                descr = self.get_descr_object(ref_reference)
+                if (descr==None):
+                    print "ERROR: unexpected format in table D file..."
+                    print "linecount: ",i
+                    print "line: ["+l+"]"
+                    print "This D-table entry refers to a descriptor or"
+                    print "D-table entry that was not yet defined in table B or D."
+                    print "You could report this to the creator of this table "+\
+                          "since this should never happen."
+                    print "Ignoring this entry ....."
+                else:
+                    # add this object to the list
+                    print "adding descriptor with ref: ",ref_reference
+                    descriptor_list.append(descr)
+
+                if (continuation_line_count==count-1):
+                    # ok, this was the last continuation line so store the result.
+                    # first a safety check
+                    if len(descriptor_list)==count:
+                        print "************************storing result"
+                        D_descr = CompositeDescriptor(reference,descriptor_list,
+                                                      comment)
+                        if not self.table_D.has_key(reference):
+                            # print "adding descr. key ",reference
+                            self.table_D[reference] = D_descr
+                        else:
+                            print "ERROR: multiple descriptors with identical reference"
+                            print "number found. This should never happen !!!"
+                            print "problematic descriptor is: ",D_descr
+                            print "Ignoring this entry ....."
+                            nr_of_ignored_problematic_entries += 1
+
+                    else:
+                        print "ERROR: unexpected format in table D file..."
+                        print "linecount: ",i
+                        print "line: ["+l+"]"
+                        print "This D-table entry defines more descriptors than"
+                        print "specified in the start line."
+                        print "This most likely is a programming error"
+                        print "in the bufr.py code."
+                        print "Please report this problem, together with"
+                        print "a copy of the bufr table you tried to read."
+                        raise IOError
+                    
+                if (continuation_line_count>count-1):
+                    print "ERROR: unexpected format in table D file..."
+                    print "linecount: ",i
+                    print "line: ["+l+"]"
+                    print "This D-table has more continuation lines than"
+                    print "specified in the start line."
+                    print "You could report this to the creator of this "+\
+                          "table since this should never happen."
+                    print "Ignoring this entry ....."
+
         #  #]
 
     #  possible additional methods:
