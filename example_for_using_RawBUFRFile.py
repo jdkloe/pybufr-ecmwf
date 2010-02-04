@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # This is a small example program intended to demonstrate
-# how the BUFRFile class defined in the pybufr_ecmwf.py
+# how the RawBUFRFile class defined in the pybufr_ecmwf.py
 # module may be used.
 
 # For details on the revision history, refer to the log-notes in
@@ -14,8 +14,8 @@
 # import os functionality
 import os
 
-# import the python file defining the BUFRFile class
-from pybufr_ecmwf import BUFRFile
+# import the python file defining the RawBUFRFile class
+from pybufr_ecmwf import RawBUFRFile
 
 # this one is not needed here
 #import ecmwfbufr
@@ -30,13 +30,13 @@ print "-"*50
 # false end markers (7777) halfway the 2nd and 3rd
 # message. These messages are therefore corrupted and
 # decoding them will probably result in garbage, but they
-# are very usefull to test the BUFRFile.split() method.
+# are very usefull to test the RawBUFRFile.split() method.
 
 # define the input test filename
 input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
 
-# get an instance of the BUFRFile class
-BF = BUFRFile()
+# get an instance of the RawBUFRFile class
+BF = RawBUFRFile()
 
 # open the test file for reading, count nr of BUFR messages in it
 # and store its content in memory, together with
@@ -44,7 +44,7 @@ BF = BUFRFile()
 BF.open(input_test_bufr_file,'r')
 
 # print the internal data of the class instance
-BF.print_properties(prefix="BUFRFile (openen for reading)")
+BF.print_properties(prefix="RawBUFRFile (opened for reading)")
 
 # print the number of BUFR messages in the file
 n=BF.get_num_bufr_msgs()
@@ -79,8 +79,8 @@ output_test_bufr_file = 'Testfile3Msgs.BUFR'
 if (os.path.exists(output_test_bufr_file)):
     os.remove(output_test_bufr_file)
 
-# get an instance of the BUFRFile class
-BF1 = BUFRFile()
+# get an instance of the RawBUFRFile class
+BF1 = RawBUFRFile()
 
 # open the test file for writing
 BF1.open(output_test_bufr_file,'w')
@@ -90,7 +90,7 @@ BF1.write_raw_bufr_msg(data1)
 BF1.write_raw_bufr_msg(data2)
 
 # print the internal data of the class instance
-BF1.print_properties(prefix="BUFRFile (opened for writing)")
+BF1.print_properties(prefix="RawBUFRFile (opened for writing)")
 
 # close the file
 BF1.close()
@@ -98,8 +98,8 @@ BF1.close()
 # delete the class instance
 del(BF1)
 
-# get another instance of the BUFRFile class
-BF2 = BUFRFile()
+# get another instance of the RawBUFRFile class
+BF2 = RawBUFRFile()
 
 # open the test file for appending
 BF2.open(output_test_bufr_file,'a')
@@ -108,7 +108,7 @@ BF2.open(output_test_bufr_file,'a')
 BF2.write_raw_bufr_msg(data3)    
 
 # print the internal data of the class instance
-BF2.print_properties(prefix="BUFRFile2 (opened for appending)")
+BF2.print_properties(prefix="RawBUFRFile2 (opened for appending)")
 
 # close the file
 BF2.close()

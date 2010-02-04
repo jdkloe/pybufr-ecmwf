@@ -21,8 +21,11 @@ import sys         # system functions
 import numpy as np # import numerical capabilities
 import time        # handling of date and time
 
-# import the BUFRFile class to load the encode raw BUFR data
-from pybufr_ecmwf import BUFRFile, BUFRInterfaceECMWF
+# import the RawBUFRFile class to write the encoded raw BUFR data
+from pybufr_ecmwf import RawBUFRFile
+# import the BUFRInterfaceECMWF interface needed only to allow
+# compilation of the ECMWF BUFR library
+from pybufr_ecmwf import BUFRInterfaceECMWF
 
 print "-"*50
 print "BUFR encoding example"

@@ -20,8 +20,8 @@ import os          # operating system functions
 import sys         # system functions
 import numpy as np # import numerical capabilities
 
-# import the BUFRFile class to load the encode raw BUFR data
-from pybufr_ecmwf import BUFRFile, BUFRInterfaceECMWF
+# import the RawBUFRFile class to load the encoded raw BUFR data
+from pybufr_ecmwf import RawBUFRFile, BUFRInterfaceECMWF
 
 print "-"*50
 print "BUFR decoding example"
@@ -58,7 +58,7 @@ import ecmwfbufr
 
 # read the binary data using the BUFRFile class
 input_test_bufr_file = 'Testfile.BUFR'
-BF = BUFRFile()
+BF = RawBUFRFile()
 BF.open(input_test_bufr_file,'r')
 words=BF.get_next_raw_bufr_msg()
 BF.close()

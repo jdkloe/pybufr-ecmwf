@@ -11,6 +11,17 @@
 #
 # License: GPL v2.
 
+# KNOWN PROBLEM:
+# on my 64-bit linux machine this code fails, and gives the following error:
+# ...
+# input_test_bufr_file = [Testfile3CorruptedMsgs.BUFR]
+# calling: ecmwfbufr.pbopen()
+# Traceback (most recent call last):
+#   File ".//example_for_using_pb_routines.py", line 67, in <module>
+#     (c_file_unit,bufr_error_flag) = ecmwfbufr.pbopen(input_test_bufr_file,'R')
+# SystemError: NULL result without error in PyObject_Call
+
+
 import os          # import os functionality
 import numpy as np # import numerical capabilities
 

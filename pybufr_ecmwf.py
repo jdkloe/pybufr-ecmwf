@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 #  #[ documentation
+#
 # This module implements a python interface around the BUFR library provided by
 # ECMWF to allow reading and writing the WMO BUFR file standard.
 # For now, this is only a reference implementatio intended to demonstrate how
@@ -16,13 +17,10 @@
 #   (see http://www.emacswiki.org/emacs/FoldingMode for more details)
 # Please do not remove them.
 #
-# This module was written by: Jos de Kloe, KNMI, and may be redistributed
-# for now under the terms of the GPL v.2.
-#
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 12-Nov-2009    
+# Written by: J. de Kloe, KNMI (www.knmi.nl), Initial version 12-Nov-2009    
 #
 # License: GPL v2.
 #
@@ -51,14 +49,7 @@ class LibraryBuildError(Exception): pass
 class InterfaceBuildError(Exception): pass
 #  #]
 
-class BUFRInterface:
-    #  #[
-    # could contain common code for bufr_interface_ecmwf
-    # and the bufr module written by Guilherme Castelao
-    def __init__(self,verbose=False):
-        self.verbose = verbose
-    #  #]
-class BUFRInterfaceECMWF(BUFRInterface):
+class BUFRInterfaceECMWF:
     #  #[
     def __init__(self,verbose=False,
                  preferred_fortran_compiler=None,
@@ -81,11 +72,10 @@ class BUFRInterfaceECMWF(BUFRInterface):
         self.fortran_flags              = fortran_flags
         self.c_flags                    = c_flags
 
-        # call the init of the parent class
-        BUFRInterface.__init__(self,verbose)
-        # for now, this is equivalent to:
-        #self.verbose = verbose
+        # save the verbose setting
+        self.verbose = verbose
 
+        # save the location to be used for installing the ECMWF BUFR library
         self.ecmwf_bufr_lib_dir  = "./ecmwf_bufr_lib"
 
         # check for the presence of the library
@@ -1342,23 +1332,7 @@ int main()
         return (name_table_b,name_table_d)
         #  #]
     #  #]
-class BUFRMessage:
-    #  #[
-    pass
-    # possible methods:
-    # -add_descriptor
-    # -expand_descriptorList
-    # -encode
-    # -decode
-    # -print_sections_012
-    # -get_descriptor_properties
-    # -fill_one_real_value
-    # -fill_one_string_value
-    # -get_one_real_value
-    # -get_one_string_value
-    # -...
-    #  #]
-class BUFRFile:
+class RawBUFRFile:
     #  #[
     def __init__(self,verbose=False):
         #  #[
@@ -1419,7 +1393,7 @@ class BUFRFile:
                 # in this case, try to find out the amount of BUFR messages
                 # already present in this file, by temporary opening
                 # it in reading mode
-                tmp_BF = BUFRFile()
+                tmp_BF = RawBUFRFile()
                 tmp_BF.open(filename,'r')
                 count = tmp_BF.get_num_bufr_msgs()
                 tmp_BF.close()
@@ -1761,7 +1735,7 @@ if __name__ == "__main__":
         import unittest  # import the unittest functionality
         #  #]
 
-        class CheckBUFRFile(unittest.TestCase):
+        class CheckRawBUFRFile(unittest.TestCase):
             #  #[ 1 tests
             # note: tests MUST have a name starting with "test"
             #       otherwise the unittest module will not use them
@@ -1770,7 +1744,7 @@ if __name__ == "__main__":
             input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
             def test_init(self):
                 #  #[
-                BF1 = BUFRFile(verbose=True)
+                BF1 = RawBUFRFile(verbose=True)
                 self.assertEqual(BF1.bufr_fd,None)
                 self.assertEqual(BF1.filename,None)
                 self.assertEqual(BF1.filemode,None)
@@ -1780,12 +1754,12 @@ if __name__ == "__main__":
                 self.assertEqual(BF1.nr_of_bufr_messages,0)
                 self.assertEqual(BF1.last_used_msg,0)
                 self.assertEqual(BF1.verbose,True)
-                BF2 = BUFRFile(verbose=False)
+                BF2 = RawBUFRFile(verbose=False)
                 self.assertEqual(BF2.verbose,False)
                 #  #]
             def test_open(self):
                 #  #[
-                BF1 = BUFRFile(verbose=False)
+                BF1 = RawBUFRFile(verbose=False)
 
                 # check behaviour when mode is missing
                 self.assertRaises(TypeError,
@@ -1843,7 +1817,7 @@ if __name__ == "__main__":
                 #  #]
             def test_close(self):
                 #  #[
-                BF1 = BUFRFile(verbose=False)
+                BF1 = RawBUFRFile(verbose=False)
                 BF1.open(self.input_test_bufr_file,'r')
                 BF1.close()
 
@@ -1875,11 +1849,11 @@ if __name__ == "__main__":
         assert(b == 'B0000000000210000001')
         assert(d == 'D0000000000210000001')
         #  #]
-        #  #[ some for the BUFRFile class
+        #  #[ some for the RawBUFRFile class
         #do_BUFRfile_test = True
-        do_BUFRfile_test = False
+        do_RawBUFRfile_test = False
 
-        if (do_BUFRfile_test):
+        if (do_RawBUFRfile_test):
             
             # NOTE: this testfile: Testfile3CorruptedMsgs.BUFR
             # hold 3 copies of Testfile.BUFR catted together, and
@@ -1887,13 +1861,13 @@ if __name__ == "__main__":
             # false end markers (7777) halfway the 2nd and 3rd
             # message. These messages are therefore corrupted and
             # decoding them will probably result in garbage, but they
-            # are very usefull to test the BUFRFile.split() method.
+            # are very usefull to test the RawBUFRFile.split() method.
             
             input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
-            BF = BUFRFile()
-            # BF.print_properties(prefix="BUFRFile (before)")
+            BF = RawBUFRFile()
+            # BF.print_properties(prefix="RawBUFRFile (before)")
             BF.open(input_test_bufr_file,'r')
-            # BF.print_properties(prefix="BUFRFile (after)")
+            # BF.print_properties(prefix="RawBUFRFile (after)")
             n=BF.get_num_bufr_msgs()
             print "This file contains: ",n," BUFR messages."
 
@@ -1925,22 +1899,22 @@ if __name__ == "__main__":
 
             # do a writing test
             output_test_bufr_file = 'Testfile3Msgs.BUFR'
-            BF1 = BUFRFile()
+            BF1 = RawBUFRFile()
             BF1.open(output_test_bufr_file,'w')
-            # BF1.print_properties(prefix="BUFRFile (after)")
+            # BF1.print_properties(prefix="RawBUFRFile (after)")
             BF1.write_raw_bufr_msg(data1)
             BF1.write_raw_bufr_msg(data2)
             BF1.close()
             
-            BF2 = BUFRFile()
+            BF2 = RawBUFRFile()
             BF2.open(output_test_bufr_file,'a')
             BF2.write_raw_bufr_msg(data3)    
-            # BF2.print_properties(prefix="BUFRFile2 (after)")
+            # BF2.print_properties(prefix="RawBUFRFile2 (after)")
             BF2.close()
             #  #]
-        #  #[ read the binary data using the BUFRFile class
+        #  #[ read the binary data using the RawBUFRFile class
         input_test_bufr_file = 'Testfile.BUFR'
-        BF = BUFRFile()
+        BF = RawBUFRFile()
         BF.open(input_test_bufr_file,'r')
         words=BF.get_next_raw_bufr_msg()
         BF.close()
