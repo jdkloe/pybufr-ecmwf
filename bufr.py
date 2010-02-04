@@ -25,7 +25,58 @@ import os
 from pybufr_ecmwf import RawBUFRFile
 #  #]
 
-class Descriptor:
+class Singleton(object):
+    # this Singleton class is a modified version of the one
+    # used by Guido van Rossum in his examples in his paper
+    # "Unifying types and classes in Python 2.2", see:
+    # http://www.python.org/download/releases/2.2.3/descrintro/
+    # Its purpose is to have only one instance for each different
+    # Descriptor reference number. If another instance is created with
+    # the same reference number, this will actually just be a pointer
+    # to the already existing instance, and not a totally new instance.
+    # This way a huge amount of memory can be saved for large
+    # BUFR templates/messages.
+    def __new__(cls, *args, **kwds):
+        #  #[
+        #print "class Singleton: calling __new__"    
+        if len(args)>0:
+            # use the first arg, in case of Descriptors this is the
+            # reference number, as key in the instance dict
+            val = args[0]
+        else:
+            # note: since this __new__ is called with the same arguments
+            # as the cls.__init__ method, use the name init in this message
+            # to make more clear to the user where the problem is.
+            print "ERROR: at least one arg expected in init function !"
+            raise AttributeError
+        
+        # the next line returns None if __instance_dict__ does not yet exist
+        id = cls.__dict__.get("__instance_dict__")
+        if id is None:
+            # create a new dict to hold the instances of this class
+            # to allow only one instance for each int val used in init.
+            # NOTE THAT THIS WILL BE A CLASS VARIABLE
+            # NOT AN INSTANCE VARIABLE
+            # so all instances of this class will use the same dict
+            cls.__instance_dict__ = id = {}
+
+        if id.has_key(val):
+            # ok, we already had an instance for this value, so return
+            # a pointer to it
+            return id[val]
+
+        # no instance yet exists for this value, so create a new one
+        cls.__instance_dict__[val] = instance = object.__new__(cls)
+        instance.init(*args, **kwds)
+        return instance
+    #  #]
+    def init(self, *args, **kwds):
+    #  #[
+        #print "class Singleton: calling init"
+        pass
+    #  #]
+
+class Descriptor(Singleton):
     def __init__(self,reference,name,unit,unit_scale,
                  unit_reference,data_width):
         #  #[
