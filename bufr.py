@@ -21,18 +21,31 @@
 # License: GPL v2.
 #  #]
 #  #[ imported modules
+import os
 from pybufr_ecmwf import RawBUFRFile
 #  #]
 
 class Descriptor:
-    pass
-    #  ==>descriptor-code (table reference)
-    #  ==>descriptive text (element name)
-    #  ==>unit text (element unit)
-    #  ==>offset (reference value)
-    #  ==>num bits (data width)
-    #  ==>etc.
-
+    def __init__(self,reference,name,unit,unit_scale,
+                 unit_reference,data_width):
+        #  #[
+        self.reference      = reference      # descriptor code
+        self.name           = name           # descriptive text
+        self.unit           = unit           # unit text
+        self.unit_scale     = unit_scale     # multiplicative factor of 10
+        self.unit_reference = unit_reference # offset
+        self.data_width     = data_width     # number of bits for storage
+        #  #]
+    def __str__(self):
+        #  #[
+        txt = "reference: ["+str(self.reference)+"] "+\
+              "name: ["+self.name+"] "+\
+              "unit: ["+self.unit+"] "+\
+              "unit_scale: ["+str(self.unit_scale)+"] "+\
+              "unit_reference: ["+str(self.unit_reference)+"] "+\
+              "data_width: ["+str(self.data_width)+"] "
+        return txt
+        #  #]
 class Replicator(Descriptor):
     pass
     #  ==>replication-count
@@ -50,11 +63,127 @@ class CompositeDescriptor(Descriptor): #[table D entry]
     #  ==>list-of-descriptor-objects = []
 
 class BufrTable:
-    pass
-    #  ==>table-B = [list of desciptor-objects]
-    #  ==>table-D = [list of composite-descriptor-objects]
-    #  methods:
-    #  ==>read-tables
+    def __init__(self):
+        #  #[
+        self.table_B = {} # dict of desciptor-objects
+        self.table_D = {} # dict of composite-descriptor-objects
+        #  #]
+    def load(self,file):
+        #  #[
+
+        #print "inspecting file: ",file
+        #maxlen=0
+        #for line in open(file,'rt'):
+        #    l=line.replace('\r','').replace('\n','')
+        #    if len(l)>maxlen:
+        #        maxlen = len(l)
+        #print "longest line is: ",maxlen
+
+        (path,base) = os.path.split(file)
+        if base[0].upper()== 'B':
+            self.load_B_table(file)
+        elif base[0].upper()== 'D':
+            self.load_D_table(file)
+        else:
+            print "ERROR: don;t know what table this is"
+            print "(path,base) = ",(path,base)
+            raise IOError
+        #  #]
+    def load_B_table(self,file):
+        #  #[
+        print "loading B table from file: ",file
+        nr_of_ignored_problematic_entries = 0
+        for (i,line) in enumerate(open(file,'rt')):
+            success = True
+            l=line.replace('\r','').replace('\n','')
+            # example of the expected format (156 chars per line):
+            # " 005001 LATITUDE (HIGH ACCURACY)                                         DEGREE                     5     -9000000  25 DEGREE                    5         7"
+            if len(l)>=118:
+                txt_reference       = l[0:8] # 8 characters
+                txt_name            = l[8:73] # 64 characters
+                txt_unit            = l[73:98] # 24 characters
+                txt_unit_scale      = l[98:102] # 4 characters
+                txt_unit_reference  = l[102:115] # 14 characters
+                txt_data_width      = l[115:118] # 4 characters
+                # sometimes additional info seems present, but
+                # I don't know yet the definition used for that
+                txt_additional_info = ''
+                if len(l)>118:
+                    txt_additional_info = l[118:]
+            else:
+                success = False
+                nr_of_ignored_problematic_entries += 1
+                print "ERROR: unexpected format in table B file..."
+                print "linecount: ",i
+                print "line: ["+l+"]"
+                print "Line is too short, it should hold at least 118 characters"
+                print "but seems to have only: ",len(l)," characters."
+                #print "txt_reference       = ["+l[0:8]+"]"
+                #print "txt_name            = ["+l[8:73]+"]"
+                #print "txt_unit            = ["+l[73:98]+"]"
+                #print "txt_unit_scale      = ["+l[98:102]+"]"
+                #print "txt_unit_reference  = ["+l[102:115]+"]"
+                #print "txt_data_width      = ["+l[115:118]+"]"
+                print "You could report this to the creator of this table "+\
+                      "since this should never happen."
+                print "Ignoring this entry ....."
+
+            if (success):
+                try:
+                    reference = int(txt_reference,10)
+                    unit_scale = int(txt_unit_scale)
+                    unit_reference = int(txt_unit_reference)
+                    data_width = int(txt_data_width)
+                    
+                    # remove excess spaces from the string before storing
+                    name = txt_name.strip()
+                    unit = txt_unit.strip()
+                    
+                except:
+                    success = False
+                    nr_of_ignored_problematic_entries += 1
+                    print "ERROR: unexpected format in table B file..."
+                    print "Could not convert one of the numeric fields to integer."
+                    print "txt_reference       = ["+txt_reference+"]"
+                    print "txt_unit_scale      = ["+txt_unit_scale+"]"
+                    print "txt_unit_reference  = ["+txt_unit_reference+"]"
+                    print "txt_data_width      = ["+txt_data_width+"]"
+                    print "Ignoring this entry ....."
+
+            if (success):
+                # add descriptor object to the list
+                b_descr = Descriptor(reference,name,unit,
+                                     unit_scale,unit_reference,data_width)
+                if not self.table_B.has_key(reference):
+                    #print "adding descr. key ",reference
+                    self.table_B[reference] = b_descr
+                else:
+                    print "ERROR: multiple descriptors with identical reference"
+                    print "number found. This should never happen !!!"
+                    print "problematic descriptor is: ",b_descr
+                    print "Ignoring this entry ....."
+                    nr_of_ignored_problematic_entries += 1
+
+        print "-------------"
+        if (nr_of_ignored_problematic_entries>0):
+            print "nr_of_ignored_problematic_entries = ",\
+                  nr_of_ignored_problematic_entries
+        print "Loaded: ",len(self.table_B)," table B entries"
+        print "-------------"
+        print "self.table_B[006001] = ",self.table_B[int('006001',10)]
+        print "-------------"
+
+        #  #]
+    def load_D_table(self,file):
+        #  #[
+        print "loading D table from file: ",file
+        print "not yet implemented"
+        #nr_of_ignored_problematic_entries = 0
+        #for (i,line) in enumerate(open(file,'rt')):
+        #    l=line.replace('\r','').replace('\n','')
+        #  #]
+
+    #  possible additional methods:
     #  ==>write-tables
 
 class DataValue:
@@ -91,3 +220,10 @@ class BUFRFile(RawBUFRFile):
     #  ==>some meta data
     #  ==>list-of-bufr-msgs = []
      
+if __name__ == "__main__":
+        #  #[ test program
+        print "Starting test program:"
+        BT = BufrTable()
+        BT.load("tmp_BUFR_TABLES/B0000000000098015001.TXT")
+        BT.load("tmp_BUFR_TABLES/D0000000000098015001.TXT")
+        #  #]
