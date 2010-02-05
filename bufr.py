@@ -63,8 +63,11 @@ class Singleton(object):
 
         if id.has_key(val):
             # ok, we already had an instance for this value, so return
-            # a pointer to it
-            return id[val]
+            # a pointer to it, but first check if the init parameters
+            # are identical
+            instance = id[val]
+            instance.checkinit(*args, **kwds)
+            return instance
 
         # no instance yet exists for this value, so create a new one
         cls.__instance_dict__[val] = instance = object.__new__(cls)
@@ -98,35 +101,102 @@ class Descriptor(Singleton):
               "data_width: ["+str(self.data_width)+"] "
         return txt
         #  #]
-
+    def checkinit(self,reference,name,unit,unit_scale,
+                  unit_reference,data_width):
+        #  #[
+        assert(self.reference      == reference)
+        assert(self.name           == name)
+        assert(self.unit           == unit)
+        assert(self.unit_scale     == unit_scale)
+        assert(self.unit_reference == unit_reference)
+        assert(self.data_width     == data_width)
+        #  #]
+        
 # todo: look-up the possibilities in the documentation
 class ModifiedDescriptor(Descriptor):
-    def __init__():
+    def __init__(self):
+        pass
+    def checkinit(self):
         pass
     #  ==>descriptor
     #  ==>modification command
 
 # todo: look-up the possibilities in the documentation
 class ModificationCommand(Descriptor):
-    def __init__():
+    def __init__(self):
+        pass
+    def checkinit(self):
         pass
     #  ==>descriptor
     #  ==>modification command
+
+    # Modification commands are:
+    # (see:BUFR reference manual, by Milan Dragosavac, 2007, p.20)
+    # 201yyy change data width
+    # 202yyy change scale
+    # 203yyy change reference value
+    # 204yyy add associated field
+    # 205yyy signify character
+    # 206yyy signify data width
+    # 207yyy increase scale, ref.val. and data width
+    # 208yyy change with of CCITTIA5 field
+    # 209yyy IEEE floating point representation
+    # 221yyy data not present
+
+    # (see:BUFR reference manual, by Milan Dragosavac, 1984, p.67-71)
+    # 222000 quality information
+    # 223000 substituted values operator
+    # 223255 substituted value marker operator
+    # 224000 first order statistical values follow
+    # 224255 first order statistical values marker operator
+    # 225000 difference statistical values follow
+    # 225255 difference statistical values marker operator
+    # 232000 replaced/retained values follow
+    # 232255 replaced/retained values marker operator
+    # 235000 cancel backward data reference
+    # 236000 define backward reference bit map
+    # 237000 use defined bit map
+    # 237255 cancel 237000
+    
+    # (see:BUFR reference manual, by Milan Dragosavac, 2007, p.21)
+    # 241yyy define event
+    # 241255 cancel 241yyy
+    # 242yyy define conditioning event
+    # 242255 cancel 242yyy
+    # 243yyy categorical forecast values follow
+    # 243255 cancel 243yyy
 
     # todo: look-up the possibilities in the documentation
 class SpecialCommand(Descriptor):
-    def __init__():
+    def __init__(self):
+        pass
+    def checkinit(self):
         pass
     #  ==>descriptor
     #  ==>modification command
 
+    # the commands described by a reference like 1xxyyy
+    # are replication commands, defined like this:
+    #def get_replication_code(num_descriptors,num_repeats):
+    #    repl_factor = 100000 + num_descriptors*1000 + num_repeats
+    #    # for example replicating 2 descriptors 25 times will be encoded as: 102025
+    #    # for delayed replication, set num_repeats to 0
+    #    # then add the Delayed_Descr_Repl_Factor after this code
+    #    return repl_factor
+
 class Replicator(Descriptor):
-    pass
+    def __init__(self):
+        pass
+    def checkinit(self):
+        pass
     #  ==>replication-count
     #  ==>list-of-descriptor-objects = []
 
 class DelayedReplicator(Descriptor):
-    pass
+    def __init__(self):
+        pass
+    def checkinit(self):
+        pass
     #  ==>maximum-replication-count = 4
     #  ==>actual-replication-count-list ] [1,2,3,4]
     #  ==>list-of-descriptor-objects = []
@@ -145,6 +215,12 @@ class CompositeDescriptor(Descriptor): #[table D entry]
               ";".join(str(d.reference) for d in self.descriptor_list)
         return txt
         #  #]
+    def checkinit(self,reference,descriptor_list,comment):
+        #  #[
+        assert(self.reference       == reference)
+        assert(self.descriptor_list == descriptor_list)
+        assert(self.comment         == comment)
+        #  #]
 
 class BufrTable:
     def __init__(self):
@@ -162,6 +238,8 @@ class BufrTable:
             return self.table_D[reference]
         # get 1st digit
         f=int(reference/100000.)
+        # note: the cases f==0 should already be part of table_B
+        # and the cases f==3 should already be part of table_D
         if f==1:
             # this is a special code
             if self.specials.has_key(reference):
@@ -295,7 +373,7 @@ class BufrTable:
         print "-------------"
 
         #  #]
-    def decode_blocks(self):
+    def decode_blocks(self,report_unhandled=False):
         #  #[ decode table D blocks of lines
         handled_blocks = 0
         for bl in self.list_of_D_entry_lineblocks:
@@ -316,13 +394,14 @@ class BufrTable:
                     # get object for ref_reference
                     descr = self.get_descr_object(ref_reference)
                     if (descr==None):
-                        print "---"
-                        print "This D-table entry refers to a descriptor or"
-                        print "D-table entry that was not yet defined in table B or D."
-                        print "entry reference is: ",reference
-                        print "problematic reference is:",ref_reference
-                        print "postponing processing of this one"
                         postpone = True
+                        if report_unhandled:
+                            print "---"
+                            print "This D-table entry refers to a descriptor or"
+                            print "D-table entry that was not yet defined in table B or D."
+                            print "entry reference is: ",reference
+                            print "problematic reference is:",ref_reference
+                            print "postponing processing of this one"
                     else:
                         # add this object to the list
                         #print "adding descriptor with ref: ",ref_reference
@@ -341,13 +420,14 @@ class BufrTable:
                     # get object for ref_reference
                     descr = self.get_descr_object(ref_reference)
                     if (descr==None):
-                        print "---"
-                        print "This D-table entry refers to a descriptor or"
-                        print "D-table entry that was not yet defined in table B or D."
-                        print "entry reference is: ",reference
-                        print "problematic reference is:",ref_reference
-                        print "postponing processing of this one"
                         postpone = True
+                        if report_unhandled:
+                            print "---"
+                            print "This D-table entry refers to a descriptor or"
+                            print "D-table entry that was not yet defined in table B or D."
+                            print "entry reference is: ",reference
+                            print "problematic reference is:",ref_reference
+                            print "postponing processing of this one"
                     else:
                         # add this object to the list
                         #print "adding descriptor with ref: ",ref_reference
@@ -455,7 +535,14 @@ class BufrTable:
 
         print "remaining blocks: ",remaining_blocks
         print "decoded blocks:   ",handled_blocks
-        #print self.list_of_D_entry_lineblocks
+        if remaining_blocks>0:
+            print "---------------------------------------------------"
+            print "Reporting problematic blocks:"
+            print "---------------------------------------------------"
+            (handled_blocks,remaining_blocks) = \
+                           self.decode_blocks(report_unhandled=True)
+            print "---------------------------------------------------"
+
 
         print "test stop"
         sys.exit(0)
