@@ -19,10 +19,13 @@ if (not arg in allowed_args):
     print "Allowed arguments are: ",', '.join(a for a in allowed_args)
     sys.exit(1)
 
-bufr_dirs_to_delete = ["ecmwf_bufr_lib/bufr_000380",
-                       "ecmwf_bufr_lib/bufr_000371",
-                       "ecmwf_bufr_lib/bufr_000381",
-                       "tmp_BUFR_TABLES"]
+bufr_dirs_to_delete = glob.glob("ecmwf_bufr_lib/bufr_000*")
+bufr_dirs_to_delete.append("tmp_BUFR_TABLES")
+
+# keep the tarballs to prevently pointless re-downloading
+not_to_delete = glob.glob("ecmwf_bufr_lib/bufr_000*.gz")
+for f in not_to_delete:
+    bufr_dirs_to_delete.remove(f)
 
 f2py_dirs_to_delete = ["f2py_build"]
 
@@ -34,6 +37,7 @@ if ((arg=='all') or (arg=='f2py')):
 
 backup_files_to_delete = glob.glob("*~")
 bufr_files_to_delete =["libbufr.a",
+                       "ecmwf_bufrtables",
                        "ecmwfbufr.so",
                        "ecmwf_bufr_lib/ConfigFile"]
 f2py_files_to_delete = ["ecmwfbufr.so"]
@@ -51,8 +55,9 @@ files_to_delete.extend(test_files_to_delete)
 
 for d in dirs_to_delete:
     if (os.path.exists(d)):
-        print "deleting dir: ",d
-        os.system(r"\rm -rf "+d)
+        if (os.path.isdir(d)):
+            print "deleting dir: ",d
+            os.system(r"\rm -rf "+d)
     # this only works if the dirs are empty!
     #os.removedirs(d)
 

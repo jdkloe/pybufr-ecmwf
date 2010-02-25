@@ -27,6 +27,7 @@ from pybufr_ecmwf import RawBUFRFile
 #  #]
 
 class Singleton(object):
+    #  #[ explanation
     # this Singleton class is a modified version of the one
     # used by Guido van Rossum in his examples in his paper
     # "Unifying types and classes in Python 2.2", see:
@@ -37,6 +38,7 @@ class Singleton(object):
     # to the already existing instance, and not a totally new instance.
     # This way a huge amount of memory can be saved for large
     # BUFR templates/messages.
+    #  #]
     def __new__(cls, *args, **kwds):
         #  #[
         #print "class Singleton: calling __new__"    

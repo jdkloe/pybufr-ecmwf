@@ -34,10 +34,7 @@ print "-"*50
 
 # Note that this step is only added here to build the interface module
 # ecmwfbufr.so. If you already have it compiled and installed
-# you can skip this step. The only other function used from it is
-# get_source_dir() from which the location of the bufr tables is derived.
-# If you are happy to supply this setting manually, it is safe to remove
-# that call as well.
+# you can skip this step. 
 #
 # instantiate the BUFRInterfaceECMWF class, and build library if needed
 # the different examples illustrate how you can pass your preferred
@@ -103,8 +100,7 @@ if (not os.path.exists(private_bufr_tables_dir)):
     os.mkdir(private_bufr_tables_dir)
     
 # make the needed symlinks
-(source_dir,tarfile_to_install) = BI.get_source_dir()
-ecmwf_bufr_tables_dir = os.path.join(source_dir,"bufrtables/")
+ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
 ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
 needed_B_table    = "B0000000000098015001.TXT"
 needed_D_table    = "D0000000000098015001.TXT"

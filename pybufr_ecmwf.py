@@ -688,6 +688,11 @@ class InstallBUFRInterfaceECMWF:
                 os.remove(bufr_lib_file)
             # make a symlink in a more convenient location
             os.symlink(fullname_bufr_lib_file,bufr_lib_file)
+            # make a symlink to the directory holding the provided
+            # BUFR tables, to more convenient (constant) name
+            fullname_table_dir = os.path.join(source_dir,"bufrtables")
+            table_dir = "ecmwf_bufrtables"
+            os.symlink(fullname_table_dir,table_dir)
         else:
             print "ERROR in bufr_interface_ecmwf.install:"
             print "No libbufr.a file seems generated."
@@ -1371,37 +1376,6 @@ class BUFRInterfaceECMWF:
         
         return (name_table_b,name_table_d)
         #  #]
-    def get_source_dir(self):
-        #  #[
-        # save the location to be used for installing the ECMWF BUFR library
-        ecmwf_bufr_lib_dir  = "./ecmwf_bufr_lib"
-        list_of_bufr_tarfiles = glob.glob(os.path.join(ecmwf_bufr_lib_dir,
-                                                       "*.tar.gz"))
-
-        # safety catch
-        if (len(list_of_bufr_tarfiles)==0):
-            return (None,None)
-
-        # sort in reverse alphabetical order to get the newest one on top
-        list_of_bufr_tarfiles.sort(reverse=True)
-
-        (path,tarfile_to_install) = os.path.split(list_of_bufr_tarfiles[0])
-        
-        # find out the actual name of the library source directory
-        # after unpacking. Use the tarfile module and look inside:
-        tarfile_obj = tarfile.open(list_of_bufr_tarfiles[0],'r:gz')
-        names = tarfile_obj.getnames()
-        #print "names[0:5] = ",names[0:5]
-        # this library holds everything in a single subdirectory named something
-        # like bufr_000380, so I guess it is safe to assume that the first name
-        # in the archive will be the name of this directory.
-        bufr_dir = names[0]
-        tarfile_obj.close()
-
-        source_dir = os.path.join(ecmwf_bufr_lib_dir,bufr_dir)
-
-        return (source_dir,tarfile_to_install)
-        #  #]
     #  #]
 class RawBUFRFile:
     #  #[
@@ -1806,83 +1780,6 @@ if __name__ == "__main__":
         import unittest  # import the unittest functionality
         #  #]
 
-        #  #[ handle BUFR tables [should this be part of the install step?]
-        print '------------------------------'
-
-        # define our own location for storing (symlinks to) the BUFR tables
-        private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
-        if (not os.path.exists(private_bufr_tables_dir)):
-            os.mkdir(private_bufr_tables_dir)
-            
-        # make the needed symlinks
-        (source_dir,tarfile_to_install) = BI.get_source_dir()
-        ecmwf_bufr_tables_dir = os.path.join(source_dir,"bufrtables/")
-        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
-        needed_B_table    = "B0000000000210000001.TXT"
-        needed_D_table    = "D0000000000210000001.TXT"
-        available_B_table = "B0000000000098013001.TXT"
-        available_D_table = "D0000000000098013001.TXT"
-        
-        # NOTE: the naming scheme used by ECMWF is such, that the table name can
-        #       be derived from elements from sections 0 and 1, which can be
-        #       decoded without loading bufr tables.
-        # TODO: implement this
-        
-        source      = os.path.join(ecmwf_bufr_tables_dir,  available_B_table)
-        destination = os.path.join(private_bufr_tables_dir,needed_B_table)
-        if (not os.path.exists(destination)):
-            os.symlink(source,destination)
-
-        source      = os.path.join(ecmwf_bufr_tables_dir,  available_D_table)
-        destination = os.path.join(private_bufr_tables_dir,needed_D_table)
-        if (not os.path.exists(destination)):
-            os.symlink(source,destination)
-            
-        # make sure the BUFR tables can be found
-        # also, force a slash at the end, otherwise the library fails
-        # to find the tables
-        e = os.environ
-        e["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
-
-        #  #]
-        #  #[ handle BUFR tables [dito]
-        print '------------------------------'
-
-        # define our own location for storing (symlinks to) the BUFR tables
-        private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
-        if (not os.path.exists(private_bufr_tables_dir)):
-            os.mkdir(private_bufr_tables_dir)
-            
-        # make the needed symlinks
-        (source_dir,tarfile_to_install) = BI.get_source_dir()
-        ecmwf_bufr_tables_dir = os.path.join(source_dir,"bufrtables/")
-        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
-        needed_B_table    = "B0000000000098015001.TXT"
-        needed_D_table    = "D0000000000098015001.TXT"
-        available_B_table = "B0000000000098013001.TXT"
-        available_D_table = "D0000000000098013001.TXT"
-        
-        # NOTE: the naming scheme used by ECMWF is such, that the table name can
-        #       be derived from elements from sections 0 and 1, which can be
-        #       decoded without loading bufr tables.
-        # TODO: implement this
-        
-        source      = os.path.join(ecmwf_bufr_tables_dir,  available_B_table)
-        destination = os.path.join(private_bufr_tables_dir,needed_B_table)
-        if (not os.path.exists(destination)):
-            os.symlink(source,destination)
-
-        source      = os.path.join(ecmwf_bufr_tables_dir,  available_D_table)
-        destination = os.path.join(private_bufr_tables_dir,needed_D_table)
-        if (not os.path.exists(destination)):
-            os.symlink(source,destination)
-            
-        # make sure the BUFR tables can be found
-        # also, force a slash at the end, otherwise the library fails to find the tables
-        e = os.environ
-        e["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
-
-        #  #]
 
         class CheckRawBUFRFile(unittest.TestCase):
             #  #[ 1 tests
@@ -1979,6 +1876,81 @@ if __name__ == "__main__":
         print "Running unit tests:"
         unittest.main()
         sys.exit(0)
+
+        #  #[ handle BUFR tables [should this be part of the install step?]
+        print '------------------------------'
+
+        # define our own location for storing (symlinks to) the BUFR tables
+        private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
+        if (not os.path.exists(private_bufr_tables_dir)):
+            os.mkdir(private_bufr_tables_dir)
+            
+        # make the needed symlinks
+        ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
+        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+        needed_B_table    = "B0000000000210000001.TXT"
+        needed_D_table    = "D0000000000210000001.TXT"
+        available_B_table = "B0000000000098013001.TXT"
+        available_D_table = "D0000000000098013001.TXT"
+        
+        # NOTE: the naming scheme used by ECMWF is such, that the table name can
+        #       be derived from elements from sections 0 and 1, which can be
+        #       decoded without loading bufr tables.
+        # TODO: implement this
+        
+        source      = os.path.join(ecmwf_bufr_tables_dir,  available_B_table)
+        destination = os.path.join(private_bufr_tables_dir,needed_B_table)
+        if (not os.path.exists(destination)):
+            os.symlink(source,destination)
+
+        source      = os.path.join(ecmwf_bufr_tables_dir,  available_D_table)
+        destination = os.path.join(private_bufr_tables_dir,needed_D_table)
+        if (not os.path.exists(destination)):
+            os.symlink(source,destination)
+            
+        # make sure the BUFR tables can be found
+        # also, force a slash at the end, otherwise the library fails
+        # to find the tables
+        e = os.environ
+        e["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
+
+        #  #]
+        #  #[ handle BUFR tables [dito]
+
+        # define our own location for storing (symlinks to) the BUFR tables
+        private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
+        if (not os.path.exists(private_bufr_tables_dir)):
+            os.mkdir(private_bufr_tables_dir)
+            
+        # make the needed symlinks
+        ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
+        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+        needed_B_table    = "B0000000000098015001.TXT"
+        needed_D_table    = "D0000000000098015001.TXT"
+        available_B_table = "B0000000000098013001.TXT"
+        available_D_table = "D0000000000098013001.TXT"
+        
+        # NOTE: the naming scheme used by ECMWF is such, that the table name can
+        #       be derived from elements from sections 0 and 1, which can be
+        #       decoded without loading bufr tables.
+        # TODO: implement this
+        
+        source      = os.path.join(ecmwf_bufr_tables_dir,  available_B_table)
+        destination = os.path.join(private_bufr_tables_dir,needed_B_table)
+        if (not os.path.exists(destination)):
+            os.symlink(source,destination)
+
+        source      = os.path.join(ecmwf_bufr_tables_dir,  available_D_table)
+        destination = os.path.join(private_bufr_tables_dir,needed_D_table)
+        if (not os.path.exists(destination)):
+            os.symlink(source,destination)
+            
+        # make sure the BUFR tables can be found
+        # also, force a slash at the end, otherwise the library fails to find the tables
+        e = os.environ
+        e["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
+
+        #  #]
 
         # todo: turn all the testcode below either into unittests
         #       or into little example programs, or both ...
