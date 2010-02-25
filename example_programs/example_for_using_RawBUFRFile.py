@@ -11,14 +11,12 @@
 #
 # License: GPL v2.
 
-# import os functionality
-import os
+import os          # operating system functions
+import sys         # system functions
 
 # import the python file defining the RawBUFRFile class
+sys.path.append("../") 
 from pybufr_ecmwf import RawBUFRFile
-
-# this one is not needed here
-#import ecmwfbufr
 
 print "-"*50
 print "reading example"
@@ -33,7 +31,7 @@ print "-"*50
 # are very usefull to test the RawBUFRFile.split() method.
 
 # define the input test filename
-input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
+input_test_bufr_file = '../testdata/Testfile3CorruptedMsgs.BUFR'
 
 # get an instance of the RawBUFRFile class
 BF = RawBUFRFile()

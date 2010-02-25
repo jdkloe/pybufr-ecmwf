@@ -21,6 +21,7 @@ if (not arg in allowed_args):
 
 bufr_dirs_to_delete = glob.glob("pybufr_ecmwf/ecmwf_bufr_lib/bufr_000*")
 bufr_dirs_to_delete.append("pybufr_ecmwf/tmp_BUFR_TABLES")
+bufr_dirs_to_delete.append("example_programs/tmp_BUFR_TABLES")
 
 # keep the tarballs to prevently pointless re-downloading
 not_to_delete = glob.glob("pybufr_ecmwf/ecmwf_bufr_lib/bufr_000*.gz")
@@ -42,10 +43,11 @@ pyc_files_to_delete2 = glob.glob("*/*.pyc")
 bufr_files_to_delete =["pybufr_ecmwf/libbufr.a",
                        "pybufr_ecmwf/ecmwf_bufrtables",
                        "pybufr_ecmwf/ecmwfbufr.so",
-                       "pybufr_ecmwf/ecmwf_bufr_lib/ConfigFile"]
+                       "pybufr_ecmwf/ecmwf_bufr_lib/config_file"]
 f2py_files_to_delete = ["pybufr_ecmwf/ecmwfbufr.so"]
 
-test_files_to_delete = ["Testfile3Msgs.BUFR"]
+test_files_to_delete = glob.glob("*/Testfile3Msgs.BUFR")
+actual_files_to_delete = glob.glob("expected_test_outputs/*.actual_std*")
 
 files_to_delete = []
 if ((arg=='all') or (arg=='bufr')):
@@ -58,6 +60,7 @@ files_to_delete.extend(pyc_files_to_delete2)
 files_to_delete.extend(backup_files_to_delete1)
 files_to_delete.extend(backup_files_to_delete2)
 files_to_delete.extend(test_files_to_delete)
+files_to_delete.extend(actual_files_to_delete)
 
 for d in dirs_to_delete:
     if (os.path.exists(d)):

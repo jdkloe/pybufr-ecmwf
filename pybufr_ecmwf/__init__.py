@@ -17,12 +17,23 @@ from bufr import *
 # For my own use, instantiate the class to trigger the build here:
 
 import os
+
+# these lines are temporarily here to auto-build the module when I test
+# them. As soon as I have the setup.py script working they will be removed.
 cwd = os.getcwd()
 if __name__ != "__main__":
-    print "changing dir to: ",__name__
-    os.chdir(__name__)
+    try:
+        builddir = __name__
+        print "changing dir to: ",builddir
+        os.chdir(builddir)
+    except:
+        builddir = os.path.join('..',__name__)
+        print "changing dir to: ",builddir
+        os.chdir(builddir)
+        
 BI = BUFRInterfaceECMWF(verbose=True)
 del(BI)
 os.chdir(cwd)
 
-from ecmwfbufr import *
+import ecmwfbufr
+
