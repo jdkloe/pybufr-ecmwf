@@ -11,6 +11,10 @@ syntax: regexp
 # ignore the exacs backup files
 .~$
 
+# ignore the generated stderr/stdout actual files
+expected_test_outputs/.*.actual_stdout$
+expected_test_outputs/.*.actual_stderr$
+
 # Ignore these generated files:
 Testfile3Msgs.BUFR
 

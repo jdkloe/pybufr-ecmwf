@@ -6,8 +6,7 @@
 # Note that the building of this wrapper is defined in the
 # BUFRInterfaceECMWF class defined in the pybufr_ecmwf.py
 # but apart from that, no methods from that class will be
-# used in this example (except for get_source_dir() as which is
-# easily replaced by a hardcoded path as explained below).
+# used in this example.
 #
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.

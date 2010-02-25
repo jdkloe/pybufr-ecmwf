@@ -2123,69 +2123,6 @@ if __name__ == "__main__":
         # todo: turn all the testcode below either into unittests
         #       or into little example programs, or both ...
         
-        #  #[ some for the RawBUFRFile class
-        #do_BUFRfile_test = True
-        do_RawBUFRfile_test = False
-
-        if (do_RawBUFRfile_test):
-            
-            # NOTE: this testfile: Testfile3CorruptedMsgs.BUFR
-            # hold 3 copies of Testfile.BUFR catted together, and
-            # was especially modified using hexedit to have
-            # false end markers (7777) halfway the 2nd and 3rd
-            # message. These messages are therefore corrupted and
-            # decoding them will probably result in garbage, but they
-            # are very usefull to test the RawBUFRFile.split() method.
-            
-            input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
-            BF = RawBUFRFile()
-            # BF.print_properties(prefix="RawBUFRFile (before)")
-            BF.open(input_test_bufr_file,'r')
-            # BF.print_properties(prefix="RawBUFRFile (after)")
-            n=BF.get_num_bufr_msgs()
-            print "This file contains: ",n," BUFR messages."
-
-            data1=BF.get_next_raw_bufr_msg() # should return proper data
-            data2=BF.get_next_raw_bufr_msg() # should return corrupted data
-            data3=BF.get_next_raw_bufr_msg() # should return corrupted data
-            data4=BF.get_next_raw_bufr_msg() # returns with None
-            
-            # for i in range(1,n+1):
-            #    raw_data=BF.get_raw_bufr_msg(i)
-            #    print "msg ",i," got ",len(raw_data)," words"
-            
-            BF.close()
-            
-            # def num_diffs(a,b):
-            #    cnt=0
-            #    for (i,val) in enumerate(a):
-            #        if a[i]!=b[i]:
-            #            cnt=cnt+1
-            #    return cnt
-            #
-            # print "data1==data2? ",all(data1==data2),\
-            #      " num diffs: ",num_diffs(data1,data2)
-            # print "data1==data3? ",all(data1==data3),\
-            #      " num diffs: ",num_diffs(data1,data3)
-            # print "data2==data3? ",all(data2==data3),\
-            #      " num diffs: ",num_diffs(data2,data3)
-            # print "data4 = ",data4
-
-            # do a writing test
-            output_test_bufr_file = 'Testfile3Msgs.BUFR'
-            BF1 = RawBUFRFile()
-            BF1.open(output_test_bufr_file,'w')
-            # BF1.print_properties(prefix="RawBUFRFile (after)")
-            BF1.write_raw_bufr_msg(data1)
-            BF1.write_raw_bufr_msg(data2)
-            BF1.close()
-            
-            BF2 = RawBUFRFile()
-            BF2.open(output_test_bufr_file,'a')
-            BF2.write_raw_bufr_msg(data3)    
-            # BF2.print_properties(prefix="RawBUFRFile2 (after)")
-            BF2.close()
-            #  #]
         #  #[ read the binary data using the RawBUFRFile class
         input_test_bufr_file = 'Testfile.BUFR'
         BF = RawBUFRFile()
@@ -2193,37 +2130,7 @@ if __name__ == "__main__":
         words=BF.get_next_raw_bufr_msg()
         BF.close()
         #  #]
-        #  #[ pbopen/bpbufr/pbclose tests [not yet functional]
-        #do_pb_test = True
-        do_pb_test = False
-        if (do_pb_test):
-            c_file_unit       = 0
-            bufr_error_flag = 0
-            print "input_test_bufr_file = ["+input_test_bufr_file+"]"
-            (c_file_unit,bufr_error_flag) = \
-                           ecmwfbufr.pbopen(input_test_bufr_file,'R')
-            # ecmwfbufr.pbopen(c_file_unit,input_test_bufr_file,
-            #                  'R',bufr_error_flag)
-            print "c_file_unit = ",c_file_unit
-            print "bufr_error_flag = ",bufr_error_flag
-            
-            buffer_size_words = 12000
-            buffer_size_bytes = buffer_size_words/4
-            buffer = np.zeros(buffer_size_words,dtype=np.int)
-            msg_size_bytes = 0
-            bufr_error_flag = 0
-            ecmwfbufr.pbbufr(c_file_unit,buffer,buffer_size_bytes,
-                             msg_size_bytes,bufr_error_flag)
-            print "msg_size_bytes = ",msg_size_bytes
-            print "buffer[0:4] = ",buffer[0:4]
-            print "bufr_error_flag = ",bufr_error_flag
-            
-            bufr_error_flag = 0        
-            ecmwfbufr.pbclose(c_file_unit,bufr_error_flag)
-            print "bufr_error_flag = ",bufr_error_flag
-            
-            sys.exit(1)
-        #  #]
+
         #  #[ define the needed constants
 
         # note: this block of constant parameters defining all array sizes

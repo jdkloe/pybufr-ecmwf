@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 
 # This is a small example program intended to demonstrate
-# how the raw wrapper interface to the ECMWF BUFR library may be
+# how the wrapper interface to the ECMWF BUFR library may be
 # used for decoding a BUFR message.
-# Note that the building of this wrapper is defined in the
-# BUFRInterfaceECMWF class defined in the pybufr_ecmwf.py
-# but apart from that, no methods from that class will be
-# used in this example (except for get_source_dir() as which is
-# easily replaced by a hardcoded path as explained below).
 #
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 21-Jan-2010    
+# Written by: J. de Kloe, KNMI, Initial version 25-Feb-2010    
 #
 # License: GPL v2.
 
@@ -21,7 +16,15 @@ import sys         # system functions
 import numpy as np # import numerical capabilities
 
 # import the RawBUFRFile class to load the encoded raw BUFR data
-from pybufr_ecmwf import RawBUFRFile, BUFRInterfaceECMWF
+from pybufr_ecmwf import RawBUFRFile
+
+# import BUFRInterfaceECMWF which contains the actual BUFR wrapper interface
+from pybufr_ecmwf import BUFRInterfaceECMWF
+
+print "to be implemented"
+# for now, this is just a copy of example_for_using_ecmwfbufr_for_decoding.py
+
+sys.exit(0)
 
 print "-"*50
 print "BUFR decoding example"
