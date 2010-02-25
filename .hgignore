@@ -14,10 +14,11 @@ syntax: regexp
 # Ignore these generated files:
 Testfile3Msgs.BUFR
 
-# Build directories
+# generated and build directories to ignore:
 ecmwf_bufr_lib
 f2py_build
 tmp_BUFR_TABLES
+ecmwf_bufrtables
 
 #syntx: glob
 #

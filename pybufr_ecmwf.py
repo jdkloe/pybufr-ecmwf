@@ -52,6 +52,131 @@ class InterfaceBuildError(Exception): pass
 # TODO: add a setup.py file that calls this install step,
 # in stead of calling it from BUFRInterfaceECMWF
 
+#  #[ some helper subroutines
+def run_shell_command(cmd,libpath=None,catch_output=True):
+    #  #[
+    # get the list of already defined env settings
+    e = os.environ
+    if (libpath):
+        # add the additional env setting
+        envname = "LD_LIBRARY_PATH"
+        if (e.has_key(envname)):
+            e[envname] = e[envname] + ";" + libpath
+        else:
+            e[envname] = libpath
+            
+            
+    print "Executing command: ",cmd
+    if (catch_output):
+        subpr = subprocess.Popen(cmd,
+                                 shell=True,
+                                 env=e,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+        
+        # wait until the child process is done
+        # subpr.wait() # seems not necessary when catching stdout and stderr
+            
+        lines_stdout = subpr.stdout.readlines()
+        lines_stderr = subpr.stderr.readlines()
+        
+        #print "lines_stdout: ",lines_stdout
+        #print "lines_stderr: ",lines_stderr
+        
+        return (lines_stdout,lines_stderr)
+    
+    else:
+        subpr = subprocess.Popen(cmd, shell=True, env=e)
+        
+        # wait until the child process is done
+        subpr.wait()
+        return
+    #  #]
+def call_cmd_and_verify_output(cmd):
+    #  #[
+    # assume at first that all will work as planned
+    success = True
+    
+    #print "__name__ = ",__name__
+    #print "__file__ = ",__file__
+    #print "self.__class__.__name__ = ",self.__class__.__name__
+    #print "func_filename = ",sys._getframe().f_code.co_filename
+    #print "func_name = ",sys._getframe().f_code.co_name
+    #print "dir(frame) = ",dir(sys._getframe())
+    #print "dir(f_code) = ",dir(sys._getframe().f_code)
+    #print "0:callers name = ",sys._getframe(0).f_code.co_name
+    #
+    #print "2:callers name = ",sys._getframe(2).f_code.co_name
+    #sys.exit(1)
+    # see: http://code.activestate.com/recipes/66062/
+    # for more examples on using sys._getframe()
+
+    # determine the name of the calling function
+    name_of_calling_function = sys._getframe(1).f_code.co_name
+    print "1:callers name = ",name_of_calling_function
+
+    # determine the name of the class that defines the calling function
+    classname_of_calling_function = \
+                 sys._getframe(1).f_locals['self'].__class__.__name__
+    print "classname_of_calling_function = ",\
+          classname_of_calling_function
+
+    # construct filenames for the actual and expected outputs
+    exp_dir = "expected_test_outputs"
+    basename = os.path.join(exp_dir,
+                            classname_of_calling_function+"."+\
+                            name_of_calling_function)
+    actual_stdout   = basename+".actual_stdout"
+    actual_stderr   = basename+".actual_stderr"
+    expected_stdout = basename+".expected_stdout"
+    expected_stderr = basename+".expected_stderr"
+
+    # execute the test and catch all output
+    (lines_stdout,lines_stderr) = run_shell_command(cmd,catch_output=True)
+
+    # write the actual outputs to file
+    fd=open(actual_stdout,'wt')
+    fd.writelines(lines_stdout)
+    fd.close()
+    fd=open(actual_stderr,'wt')
+    fd.writelines(lines_stderr)
+    fd.close()
+    
+    # try to read the expected outputs
+    try:
+        expected_lines_stdout = open(expected_stdout,'rt').readlines()
+        expected_lines_stderr = open(expected_stderr,'rt').readlines()
+    
+        # compare the actual and expected outputs
+        if not (lines_stdout==expected_lines_stdout):
+            print "stdout differs from what was expected!!!"
+            print "look at the diff of files: ",expected_stdout
+            print "and: ",actual_stdout
+            print "to find out what happended ..."
+            success=False
+            
+        if not (lines_stderr==expected_lines_stderr):
+            print "stderr differs from what was expected!!!"
+            print "look at the diff of files: ",expected_stderr
+            print "and: ",actual_stderr
+            print "to find out what happended ..."
+            success=False
+    except:
+        print "ERROR: expected output not found; probably because"
+        print "you just defined a new unittest case."
+        print "Missing filenames:"
+        if not os.path.exists(expected_stdout):
+            print "expected_stdout: ",expected_stdout
+            print "(actual output available in: ",actual_stdout,")"
+        if not os.path.exists(expected_stderr):
+            print "expected_stderr: ",expected_stderr
+            print "(actual output available in: ",actual_stderr,")"
+        success=False
+        
+    return success
+    #  #]
+#  #]
+
 class InstallBUFRInterfaceECMWF:
     #  #[
     """
@@ -720,45 +845,6 @@ class InstallBUFRInterfaceECMWF:
         #  #]
         
         #  #]
-    def run_shell_command(self,cmd,libpath=None,catch_output=True):
-        #  #[
-        # get the list of already defined env settings
-        e = os.environ
-        if (libpath):
-            # add the additional env setting
-            envname = "LD_LIBRARY_PATH"
-            if (e.has_key(envname)):
-                e[envname] = e[envname] + ";" + libpath
-            else:
-                e[envname] = libpath
-                
-                
-        print "Executing command: ",cmd
-        if (catch_output):
-            subpr = subprocess.Popen(cmd,
-                                     shell=True,
-                                     env=e,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
-            
-            # wait until the child process is done
-            #subpr.wait() # seems not necessary when catching stdout and stderr
-            
-            lines_stdout = subpr.stdout.readlines()
-            lines_stderr = subpr.stderr.readlines()
-            
-            #print "lines_stdout: ",lines_stdout
-            #print "lines_stderr: ",lines_stderr
-            
-            return (lines_stdout,lines_stderr)
-
-        else:
-            subpr = subprocess.Popen(cmd, shell=True, env=e)
-
-            # wait until the child process is done
-            subpr.wait()
-            return
-        #  #]
     def check_presence(self,command):
         #  #[
         if (self.verbose):
@@ -771,8 +857,7 @@ class InstallBUFRInterfaceECMWF:
         
         # get the real command, in case it was an alias
         cmd = "which "+command
-        (lines_stdout,lines_stderr) = \
-                    self.run_shell_command(cmd,catch_output=True)
+        (lines_stdout,lines_stderr) = run_shell_command(cmd,catch_output=True)
 
         if (len(lines_stdout)==0):
             # command is not present in default path
@@ -814,15 +899,14 @@ end program pybufr_test_program
             print "Executing command: ",cmd
             os.system(cmd)
         else:
-            self.run_shell_command(cmd,libpath=libpath,catch_output=False)
+            run_shell_command(cmd,libpath=libpath,catch_output=False)
 
         # now execute the just generated test program to verify if we succeeded
         cmd = fortran_test_executable
         if (libpath == ""):
-            (lines_stdout,lines_stderr) = self.run_shell_command(cmd)
+            (lines_stdout,lines_stderr) = run_shell_command(cmd)
         else:
-            (lines_stdout,lines_stderr) = \
-                          self.run_shell_command(cmd,libpath=libpath)
+            (lines_stdout,lines_stderr) = run_shell_command(cmd,libpath=libpath)
 
         expected_output = [' Hello pybufr module:\n',
                            ' Fortran compilation seems to work fine ...\n']
@@ -875,15 +959,14 @@ int main()
             print "Executing command: ",cmd
             os.system(cmd)
         else:
-            self.run_shell_command(cmd,libpath=libpath,catch_output=False)
+            run_shell_command(cmd,libpath=libpath,catch_output=False)
 
         # now execute the just generated test program to verify if we succeeded
         cmd = c_test_executable
         if (libpath == ""):
-            (lines_stdout,lines_stderr) = self.run_shell_command(cmd)
+            (lines_stdout,lines_stderr) = run_shell_command(cmd)
         else:
-            (lines_stdout,lines_stderr) = \
-                          self.run_shell_command(cmd,libpath=libpath)
+            (lines_stdout,lines_stderr) = run_shell_command(cmd,libpath=libpath)
 
         expected_output = ['Hello pybufr module:\n',
                            'c compilation seems to work fine ...\n']
@@ -961,12 +1044,12 @@ int main()
             print "Executing command: ",cmd
             os.system(cmd)
             #(lines_stdout,lines_stderr) = \
-            #       self.run_shell_command(cmd,catch_output=True)
+            #       run_shell_command(cmd,catch_output=True)
         else:
             #(lines_stdout,lines_stderr) = \
-            #       self.run_shell_command(cmd,libpath=libpath,
+            #       run_shell_command(cmd,libpath=libpath,
             #                              catch_output=True)
-            self.run_shell_command(cmd,libpath=libpath,catch_output=False)
+            run_shell_command(cmd,libpath=libpath,catch_output=False)
     
         # safety check: see if the signatures.pyf file really is created
         signatures_fullfilename = os.path.join(wrapper_build_dir,
@@ -1030,12 +1113,12 @@ int main()
             print "Executing command: ",cmd
             os.system(cmd)
             #(lines_stdout,lines_stderr) = \
-            #       self.run_shell_command(cmd,catch_output=False)
+            #       run_shell_command(cmd,catch_output=False)
         else:
             #(lines_stdout,lines_stderr) = \
-            #       self.run_shell_command(cmd,libpath=libpath,
+            #       run_shell_command(cmd,libpath=libpath,
             #                              catch_output=True)
-            self.run_shell_command(cmd,libpath=libpath,catch_output=False)
+            run_shell_command(cmd,libpath=libpath,catch_output=False)
             
         # finally, again check for the presence of the wrapper
         # to see if the build was successfull
@@ -1243,8 +1326,7 @@ class BUFRInterfaceECMWF:
         conv_medium    =  2
         conv_long      =  3
 
-        (source_dir,tarfile_to_install) = self.get_source_dir()
-        ecmwf_bufr_tables_dir = os.path.join(source_dir,"bufrtables/")
+        ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
 
         #-------------------------------------------------------------
         # see which BUFR tables naming convention is used (short/long)
@@ -1253,17 +1335,17 @@ class BUFRInterfaceECMWF:
 
         testfile = os.path.join(ecmwf_bufr_tables_dir,testfile_short)
         if (os.path.exists(testfile)):
-            print "Using short BUFRtables naming convention ..."
+            #print "Using short BUFRtables naming convention ..."
             bufrtable_naming_convention = conv_short
 
         testfile = os.path.join(ecmwf_bufr_tables_dir,testfile_medium)
         if (os.path.exists(testfile)):
-            print "Using medium length BUFRtables naming convention ..."
+            #print "Using medium length BUFRtables naming convention ..."
             bufrtable_naming_convention = conv_medium
 
         testfile = os.path.join(ecmwf_bufr_tables_dir,testfile_long)
         if (os.path.exists(testfile)):
-            print "Using long BUFRtables naming convention ..."
+            #print "Using long BUFRtables naming convention ..."
             bufrtable_naming_convention = conv_long
 
         if (bufrtable_naming_convention == conv_undefined):
@@ -1440,6 +1522,7 @@ class RawBUFRFile:
                 # it in reading mode
                 tmp_BF = RawBUFRFile()
                 tmp_BF.open(filename,'r')
+                #tmp_BF.print_properties(prefix="tmp_BF (opened for reading)")
                 count = tmp_BF.get_num_bufr_msgs()
                 tmp_BF.close()
                 del(tmp_BF)
@@ -1448,7 +1531,7 @@ class RawBUFRFile:
                 self.nr_of_bufr_messages = count
                 self.filesize = os.path.getsize(filename)
 
-                if (count>0):
+                if (count==0):
                     if (self.filesize>0):
                         print "WARNING: appending to non-zero file, but could"
                         print "not find any BUFR messages in it. Maybe you are"
@@ -1779,10 +1862,56 @@ if __name__ == "__main__":
         import ecmwfbufr # import the just created wrapper module
         import unittest  # import the unittest functionality
         #  #]
+        
+        class CheckBUFRInterfaceECMWF(unittest.TestCase):
+            #  #[ 2 tests
+            # note: tests MUST have a name starting with "test"
+            #       otherwise the unittest module will not use them
+            def test_init(self):
+                #  #[
+                # just instantiate the class
+                # since this was done already above, before starting the
+                # sequence of unit tests, and since we omit the verbose
+                # option, this should be silent
+                BI = BUFRInterfaceECMWF()
 
+                # check its type
+                b1 = isinstance(BI,BUFRInterfaceECMWF)
+                self.assertEqual(b1,True)
+                b2 = isinstance(BI,int)
+                self.assertEqual(b2,False)
 
+                # check that a call with a non-defined keyword fails
+                self.assertRaises(TypeError,
+                                  BUFRInterfaceECMWF,dummy=42)
+
+                # todo: implement this (if this turns out to be important)
+                # the module does no typechecking (yet) on its
+                # inputs, so this one is not yet functional
+                #self.assertRaises(TypeError,
+                #                  BUFRInterfaceECMWF,verbose=42)
+
+                #  #]
+            def test_get_expected_ecmwf_bufr_table_names(self):
+                #  #[
+                center               = 210 # = ksec1( 3)
+                subcenter            =   0 # = ksec1(16)
+                local_version        =   1 # = ksec1( 8)
+                master_table_version =   0 # = ksec1(15)
+                edition_number       =   3 # =  ksec0( 3)
+                master_table_number  =   0 # = ksec1(14)
+                (b,d) = BI.get_expected_ecmwf_bufr_table_names(center,subcenter,
+                                             local_version,master_table_version,
+                                             edition_number,master_table_number)
+                #print "tabel name B: ",b
+                #print "tabel name D: ",d
+                self.assertEqual(b,'B0000000000210000001')
+                self.assertEqual(d,'D0000000000210000001')
+                #  #]
+            #  #]
+            
         class CheckRawBUFRFile(unittest.TestCase):
-            #  #[ 1 tests
+            #  #[ 3 tests
             # note: tests MUST have a name starting with "test"
             #       otherwise the unittest module will not use them
             #
@@ -1870,6 +1999,13 @@ if __name__ == "__main__":
                 # check that a second close fails
                 self.assertRaises(AttributeError,BF1.close)
                 #  #]
+            def test_run_example(self):
+                #  #[
+                # run the provided example code and verify the output
+                cmd = "example_for_using_RawBUFRFile.py"
+                success = call_cmd_and_verify_output(cmd)
+                self.assertEqual(success,True)                
+                #  #]
             #  #]
 
         # this just runs all tests
@@ -1955,21 +2091,6 @@ if __name__ == "__main__":
         # todo: turn all the testcode below either into unittests
         #       or into little example programs, or both ...
         
-        #  #[ test of bufr file handling
-        center               = 210 # = ksec1( 3)
-        subcenter            =   0 # = ksec1(16)
-        local_version        =   1 # = ksec1( 8)
-        master_table_version =   0 # = ksec1(15)
-        edition_number       =   3 # =  ksec0( 3)
-        master_table_number  =   0 # = ksec1(14)
-        (b,d) = BI.get_expected_ecmwf_bufr_table_names(center,subcenter,
-                                      local_version,master_table_version,
-                                      edition_number,master_table_number)
-        print "tabel name B: ",b
-        print "tabel name D: ",d
-        assert(b == 'B0000000000210000001')
-        assert(d == 'D0000000000210000001')
-        #  #]
         #  #[ some for the RawBUFRFile class
         #do_BUFRfile_test = True
         do_RawBUFRfile_test = False
