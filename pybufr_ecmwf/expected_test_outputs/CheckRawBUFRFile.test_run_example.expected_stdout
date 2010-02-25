@@ -1,9 +1,7 @@
-changing dir to:  pybufr_ecmwf
-changing dir to:  ../pybufr_ecmwf
 --------------------------------------------------
 reading example
 --------------------------------------------------
-RawBUFRFile (opened for reading): filename =  ../testdata/Testfile3CorruptedMsgs.BUFR
+RawBUFRFile (opened for reading): filename =  testdata/Testfile3CorruptedMsgs.BUFR
 RawBUFRFile (opened for reading): filemode =  r
 RawBUFRFile (opened for reading): filesize =  19800
 RawBUFRFile (opened for reading): len(data) =  19800

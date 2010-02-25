@@ -17,8 +17,12 @@ expected_test_outputs/.*.actual_stderr$
 
 # Ignore these generated files:
 Testfile3Msgs.BUFR
+.*/Testfile3Msgs.BUFR
+.*/.*/Testfile3Msgs.BUFR
+MANIFEST
 
 # generated and build directories to ignore:
+dist
 ecmwf_bufr_lib
 f2py_build
 tmp_BUFR_TABLES

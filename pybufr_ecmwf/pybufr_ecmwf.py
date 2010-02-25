@@ -123,7 +123,7 @@ def call_cmd_and_verify_output(cmd):
     #print "classname_of_calling_function = ",classname_of_calling_function
 
     # construct filenames for the actual and expected outputs
-    exp_dir = "../expected_test_outputs"
+    exp_dir = "expected_test_outputs"
     basename = os.path.join(exp_dir,
                             classname_of_calling_function+"."+\
                             name_of_calling_function)
@@ -1857,7 +1857,8 @@ if __name__ == "__main__":
                      fortran_compiler="/home/jos/bin/g95_32",
                      fortran_flags="-fno-second-underscore -fPIC -i4 -r8")
         elif (testcase==5):
-            # tested at my laptop at home with a g95 v0.92 (64-bit) installed in a user account
+            # tested at my laptop at home with a g95 v0.92 (64-bit)
+            # installed in a user account
             # successfully tested 18-Dec-2009
             BI = BUFRInterfaceECMWF(verbose=True,
                      fortran_compiler="/home/jos/bin/g95_64",
@@ -1872,7 +1873,7 @@ if __name__ == "__main__":
             #  #[ 3 tests
             # note: tests MUST have a name starting with "test"
             #       otherwise the unittest module will not use them
-            example_programs_dir = "../example_programs/"
+            example_programs_dir = "example_programs/"
             def test_run_decoding_example(self):
                 #  #[
                 # run the provided example code and verify the output
@@ -1952,7 +1953,7 @@ if __name__ == "__main__":
             #       otherwise the unittest module will not use them
             #
             # common settings for the following tests
-            input_test_bufr_file = '../testdata/Testfile3CorruptedMsgs.BUFR'
+            input_test_bufr_file = 'testdata/Testfile3CorruptedMsgs.BUFR'
             def test_init(self):
                 #  #[
                 BF1 = RawBUFRFile(verbose=True)
@@ -2038,7 +2039,7 @@ if __name__ == "__main__":
             def test_run_example(self):
                 #  #[
                 # run the provided example code and verify the output
-                cmd = "../example_programs/example_for_using_RawBUFRFile.py"
+                cmd = "example_programs/example_for_using_RawBUFRFile.py"
                 success = call_cmd_and_verify_output(cmd)
                 self.assertEqual(success,True)                
                 #  #]

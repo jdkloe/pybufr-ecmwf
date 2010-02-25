@@ -16,7 +16,10 @@ import sys         # system functions
 import numpy as np # import numerical capabilities
 
 # import the RawBUFRFile class to load the encoded raw BUFR data
-sys.path.append("../") 
+if os.path.isdir("../pybufr_ecmwf"):
+    sys.path.append("../")
+else:
+    sys.path.append("../../")
 from pybufr_ecmwf import RawBUFRFile, BUFRInterfaceECMWF
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
@@ -26,7 +29,13 @@ print "BUFR decoding example"
 print "-"*50
 
 # read the binary data using the BUFRFile class
-input_test_bufr_file = '../testdata/Testfile.BUFR'
+# make sure it finds the testfile from the main module dir
+# and from within the example_programs dir
+if os.path.exists('testdata'):
+    input_test_bufr_file = 'testdata/Testfile.BUFR'
+else:
+    input_test_bufr_file = '../testdata/Testfile.BUFR'
+    
 BF = RawBUFRFile()
 BF.open(input_test_bufr_file,'r')
 words=BF.get_next_raw_bufr_msg()
@@ -53,7 +62,10 @@ if (not os.path.exists(private_bufr_tables_dir)):
     os.mkdir(private_bufr_tables_dir)
     
 # make the needed symlinks
-ecmwf_bufr_tables_dir = "../pybufr_ecmwf/ecmwf_bufrtables"
+if os.path.exists("ecmwf_bufrtables"):
+    ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
+else:
+    ecmwf_bufr_tables_dir = "../ecmwf_bufrtables"
 ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
 needed_B_table    = "B0000000000210000001.TXT"
 needed_D_table    = "D0000000000210000001.TXT"

@@ -27,7 +27,11 @@ import sys         # system functions
 import numpy as np # import numerical capabilities
 
 # import the python file defining the BUFRInterfaceECMWF class
-sys.path.append("../") 
+if os.path.isdir("../pybufr_ecmwf"):
+    sys.path.append("../")
+else:
+    sys.path.append("../../")
+
 from pybufr_ecmwf import BUFRInterfaceECMWF
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr

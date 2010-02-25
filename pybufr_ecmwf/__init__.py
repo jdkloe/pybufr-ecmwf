@@ -24,13 +24,15 @@ cwd = os.getcwd()
 if __name__ != "__main__":
     try:
         builddir = __name__
-        print "changing dir to: ",builddir
         os.chdir(builddir)
     except:
-        builddir = os.path.join('..',__name__)
-        print "changing dir to: ",builddir
-        os.chdir(builddir)
-        
+        try:
+            builddir = os.path.join('..',__name__)
+            os.chdir(builddir)
+        except:
+            builddir = os.path.join('..','..',__name__)
+            os.chdir(builddir)
+            
 BI = BUFRInterfaceECMWF(verbose=True)
 del(BI)
 os.chdir(cwd)

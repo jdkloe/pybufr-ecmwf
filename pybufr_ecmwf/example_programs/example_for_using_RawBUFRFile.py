@@ -15,7 +15,11 @@ import os          # operating system functions
 import sys         # system functions
 
 # import the python file defining the RawBUFRFile class
-sys.path.append("../") 
+if os.path.isdir("../pybufr_ecmwf"):
+    sys.path.append("../")
+else:
+    sys.path.append("../../")
+
 from pybufr_ecmwf import RawBUFRFile
 
 print "-"*50
@@ -31,7 +35,10 @@ print "-"*50
 # are very usefull to test the RawBUFRFile.split() method.
 
 # define the input test filename
-input_test_bufr_file = '../testdata/Testfile3CorruptedMsgs.BUFR'
+if os.path.exists('testdata'):
+    input_test_bufr_file = 'testdata/Testfile3CorruptedMsgs.BUFR'
+else:
+    input_test_bufr_file = '../testdata/Testfile3CorruptedMsgs.BUFR'
 
 # get an instance of the RawBUFRFile class
 BF = RawBUFRFile()
