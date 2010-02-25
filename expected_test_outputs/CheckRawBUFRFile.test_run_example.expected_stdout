@@ -1,7 +1,6 @@
 --------------------------------------------------
 reading example
 --------------------------------------------------
-RawBUFRFile (opened for reading): bufr_fd  =  <open file 'Testfile3CorruptedMsgs.BUFR', mode 'r' at 0x2411360>
 RawBUFRFile (opened for reading): filename =  Testfile3CorruptedMsgs.BUFR
 RawBUFRFile (opened for reading): filemode =  r
 RawBUFRFile (opened for reading): filesize =  19800
@@ -18,14 +17,12 @@ msg  3  got  1650  words
 --------------------------------------------------
 writing example
 --------------------------------------------------
-RawBUFRFile (opened for writing): bufr_fd  =  <open file 'Testfile3Msgs.BUFR', mode 'w' at 0x2411360>
 RawBUFRFile (opened for writing): filename =  Testfile3Msgs.BUFR
 RawBUFRFile (opened for writing): filemode =  w
 RawBUFRFile (opened for writing): filesize =  13200
 RawBUFRFile (opened for writing): data =  None
 RawBUFRFile (opened for writing): list_of_bufr_pointers =  []
 RawBUFRFile (opened for writing): nr_of_bufr_messages =  2
-RawBUFRFile2 (opened for appending): bufr_fd  =  <open file 'Testfile3Msgs.BUFR', mode 'a' at 0x2411360>
 RawBUFRFile2 (opened for appending): filename =  Testfile3Msgs.BUFR
 RawBUFRFile2 (opened for appending): filemode =  a
 RawBUFRFile2 (opened for appending): filesize =  19800

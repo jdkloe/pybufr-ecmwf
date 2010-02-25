@@ -1,0 +1,135 @@
+--------------------------------------------------
+BUFR decoding example
+--------------------------------------------------
+------------------------------
+calling: ecmwfbufr.bus012():
+ksup =  [ 16   1   4   0   0 361   0   0   3]
+------------------------------
+printing content of section 0:
+sec0 :  [4 0 0]
+------------------------------
+printing content of section 1:
+sec1 :  [ 18   0 210   0   0  12   8   1  98  12  16  22  25   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0]
+------------------------------
+length of sec2:  0
+skipping section 2 [since it seems unused]
+------------------------------
+calling: ecmwfbufr.bufrex():
+------------------------------
+Decoded BUFR message:
+ksup :  [  16    1    4    2   44  361    0 6598    3]
+sec0 :  [4 0 0]
+sec1 :  [ 18   0 210   0   0  12   8   1  98  12  16  22  25   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0]
+sec2 :  [0 0 0 ..., 0 0 0]
+sec3 :  [ 10   0 361 192]
+sec4 :  [6562    0]
+cnames [cunits] : 
+[000]:SATELLITE IDENTIFIER                                             [CODE TABLE 1007         ]
+[001]:SOFTWARE IDENTIFICATION (SEE NOTE 2)                             [NUMERIC                 ]
+[002]:IDENTIFICATION OF ORIGINATING/GENERATING CENTRE                  [CODE TABLE 1033         ]
+[003]:IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTRE              [CODE TABLE 1034         ]
+[004]:DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**               [DEGREE TRUE             ]
+[005]:YEAR                                                             [YEAR                    ]
+[006]:MONTH                                                            [MONTH                   ]
+[007]:DAY                                                              [DAY                     ]
+[008]:HOUR                                                             [HOUR                    ]
+[009]:MINUTE                                                           [MINUTE                  ]
+[010]:SECOND                                                           [SECOND                  ]
+[011]:IN DIRECTION OF 0 DEGREES LONGITUDE, DISTANCE FROM THE EARTH'S C [M                       ]
+[012]:IN DIRECTION 90 DEGREES EAST, DISTANCE FROM THE EARTH'S CENTRE   [M                       ]
+[013]:IN DIRECTION OF THE NORTH POLE, DISTANCE FROM THE EARTH'S CENTRE [M                       ]
+[014]:ABSOLUTE PLATFORM VELOCITY - FIRST COMPONENT (SEE NOTE 6)        [M/S                     ]
+[015]:ABSOLUTE PLATFORM VELOCITY - SECOND COMPONENT (SEE NOTE 6)       [M/S                     ]
+[016]:ABSOLUTE PLATFORM VELOCITY - THIRD COMPONENT (SEE NOTE 6)        [M/S                     ]
+[017]:SATELLITE INSTRUMENT DATA USED IN PROCESSING                     [FLAG TABLE 2021         ]
+[018]:YEAR                                                             [YEAR                    ]
+[019]:MONTH                                                            [MONTH                   ]
+[020]:DAY                                                              [DAY                     ]
+[021]:HOUR                                                             [HOUR                    ]
+[022]:MINUTE                                                           [MINUTE                  ]
+[023]:SECOND                                                           [SECOND                  ]
+[024]:LATITUDE (COARSE ACCURACY)                                       [DEGREE                  ]
+[025]:LONGITUDE (COARSE ACCURACY)                                      [DEGREE                  ]
+[026]:RADAR INCIDENCE ANGLE                                            [DEGREE                  ]
+[027]:RADAR LOOK ANGLE                                                 [DEGREE                  ]
+[028]:BACKSCATTER                                                      [dB                      ]
+[029]:RADIOMETRIC RESOLUTION (NOISE VALUE)                             [%                       ]
+[030]:MISSING PACKET COUNTER                                           [NUMERIC                 ]
+[031]:RADAR INCIDENCE ANGLE                                            [DEGREE                  ]
+[032]:RADAR LOOK ANGLE                                                 [DEGREE                  ]
+[033]:BACKSCATTER                                                      [dB                      ]
+[034]:RADIOMETRIC RESOLUTION (NOISE VALUE)                             [%                       ]
+[035]:MISSING PACKET COUNTER                                           [NUMERIC                 ]
+[036]:RADAR INCIDENCE ANGLE                                            [DEGREE                  ]
+[037]:RADAR LOOK ANGLE                                                 [DEGREE                  ]
+[038]:BACKSCATTER                                                      [dB                      ]
+[039]:RADIOMETRIC RESOLUTION (NOISE VALUE)                             [%                       ]
+[040]:MISSING PACKET COUNTER                                           [NUMERIC                 ]
+[041]:WIND SPEED AT 10 M                                               [M/S                     ]
+[042]:WIND DIRECTION AT 10 M                                           [DEGREE TRUE             ]
+[043]:WIND PRODUCT CONFIDENCE DATA                                     [FLAG TABLE 21067        ]
+values :  [   2.  803.  210. ...,    0.    0.    0.]
+values[:20] :  2.0;803.0;210.0;1.0;348.0;1998.0;12.0;16.0;22.0;26.0;36.49;7164713.6;106558.26;15.73201;7377.06752;8.0;1998.0;12.0;
+s= 0 lat =  1.26  lon =  6.8
+min/max lat 0.0 1.26
+min/max lon 0.0 6.8
+s= 30 lat =  -2.91  lon =  5.89
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 60 lat =  -2.86  lon =  4.03
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 90 lat =  -2.1  lon =  6.39
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 120 lat =  -2.05  lon =  4.54
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 150 lat =  -1.28  lon =  6.9
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 180 lat =  -1.23  lon =  5.05
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 210 lat =  -1.18  lon =  3.19
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 240 lat =  -0.42  lon =  5.56
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 270 lat =  -0.36  lon =  3.7
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 300 lat =  0.4  lon =  6.07
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 330 lat =  0.45  lon =  4.21
+min/max lat -3.63 1.26
+min/max lon 0.0 7.69
+s= 360 lat =  1.21  lon =  6.58
+min/max lat -3.63 1.26
+min/max lon 2.85 7.69
+------------------------------
+calling: ecmwfbufr.busel():
+busel result:
+ktdlen =  0
+ktdexl =  0
+fixed lengths:
+ktdlen =  1
+ktdexl =  44
+descriptor lists:
+ktdlst =  [312021]
+ktdexp =  [ 1007 25060  1033  1034  1012  4001  4002  4003  4004  4005  4006 27031
+ 28031 10031  1041  1042  1043  2021  4001  4002  4003  4004  4005  4006
+  5002  6002  2111  2112 21062 21063 21065  2111  2112 21062 21063 21065
+  2111  2112 21062 21063 21065 11012 11011 21067]
+------------------------------
+printing content of section 3:
+sec3 :  [ 10   0 361 192]
+--------------------------------------------------
+done
+--------------------------------------------------

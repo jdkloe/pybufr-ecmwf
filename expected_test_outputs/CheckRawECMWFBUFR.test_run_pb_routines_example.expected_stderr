@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "./example_for_using_pb_routines.py", line 78, in <module>
+    (c_file_unit,bufr_error_flag) = ecmwfbufr.pbopen(input_test_bufr_file,'R')
+SystemError: NULL result without error in PyObject_Call

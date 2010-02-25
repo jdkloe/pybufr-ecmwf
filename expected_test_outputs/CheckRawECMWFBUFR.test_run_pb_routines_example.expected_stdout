@@ -1,0 +1,5 @@
+--------------------------------------------------
+pb usage example
+--------------------------------------------------
+input_test_bufr_file = [Testfile3CorruptedMsgs.BUFR]
+calling: ecmwfbufr.pbopen()

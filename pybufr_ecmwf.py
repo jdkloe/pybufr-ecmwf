@@ -53,7 +53,8 @@ class InterfaceBuildError(Exception): pass
 # in stead of calling it from BUFRInterfaceECMWF
 
 #  #[ some helper subroutines
-def run_shell_command(cmd,libpath=None,catch_output=True):
+def run_shell_command(cmd,libpath=None,catch_output=True,
+                      verbose=True):
     #  #[
     # get the list of already defined env settings
     e = os.environ
@@ -65,8 +66,9 @@ def run_shell_command(cmd,libpath=None,catch_output=True):
         else:
             e[envname] = libpath
             
-            
-    print "Executing command: ",cmd
+    if (verbose):
+        print "Executing command: ",cmd
+        
     if (catch_output):
         subpr = subprocess.Popen(cmd,
                                  shell=True,
@@ -113,13 +115,12 @@ def call_cmd_and_verify_output(cmd):
 
     # determine the name of the calling function
     name_of_calling_function = sys._getframe(1).f_code.co_name
-    print "1:callers name = ",name_of_calling_function
+    #print "1:callers name = ",name_of_calling_function
 
     # determine the name of the class that defines the calling function
     classname_of_calling_function = \
                  sys._getframe(1).f_locals['self'].__class__.__name__
-    print "classname_of_calling_function = ",\
-          classname_of_calling_function
+    #print "classname_of_calling_function = ",classname_of_calling_function
 
     # construct filenames for the actual and expected outputs
     exp_dir = "expected_test_outputs"
@@ -132,7 +133,8 @@ def call_cmd_and_verify_output(cmd):
     expected_stderr = basename+".expected_stderr"
 
     # execute the test and catch all output
-    (lines_stdout,lines_stderr) = run_shell_command(cmd,catch_output=True)
+    (lines_stdout,lines_stderr) = run_shell_command(cmd,catch_output=True,
+                                                    verbose=False)
 
     # write the actual outputs to file
     fd=open(actual_stdout,'wt')
@@ -1475,7 +1477,10 @@ class RawBUFRFile:
         #  #]
     def print_properties(self,prefix="BUFRFile"):
         #  #[
-        print prefix+": bufr_fd  = ",self.bufr_fd
+        # this one causes trouble with the unittesting since it gives
+        # different addresses each time, and is not so very interesting
+        # to print, so leave it out for now
+        #print prefix+": bufr_fd  = ",self.bufr_fd
         print prefix+": filename = ",self.filename
         print prefix+": filemode = ",self.filemode
         print prefix+": filesize = ",self.filesize
@@ -1862,7 +1867,34 @@ if __name__ == "__main__":
         import ecmwfbufr # import the just created wrapper module
         import unittest  # import the unittest functionality
         #  #]
-        
+
+        class CheckRawECMWFBUFR(unittest.TestCase):
+            #  #[ 3 tests
+            # note: tests MUST have a name starting with "test"
+            #       otherwise the unittest module will not use them
+            def test_run_decoding_example(self):
+                #  #[
+                # run the provided example code and verify the output
+                cmd = "example_for_using_ecmwfbufr_for_decoding.py"
+                success = call_cmd_and_verify_output(cmd)
+                self.assertEqual(success,True)                
+                #  #]
+            def test_run_encoding_example(self):
+                #  #[
+                # run the provided example code and verify the output
+                cmd = "example_for_using_ecmwfbufr_for_encoding.py"
+                success = call_cmd_and_verify_output(cmd)
+                self.assertEqual(success,True)                
+                #  #]
+            def test_run_pb_routines_example(self):
+                #  #[
+                # run the provided example code and verify the output
+                cmd = "example_for_using_pb_routines.py"
+                success = call_cmd_and_verify_output(cmd)
+                self.assertEqual(success,True)                
+                #  #]
+            #  #]
+
         class CheckBUFRInterfaceECMWF(unittest.TestCase):
             #  #[ 2 tests
             # note: tests MUST have a name starting with "test"
@@ -1911,7 +1943,7 @@ if __name__ == "__main__":
             #  #]
             
         class CheckRawBUFRFile(unittest.TestCase):
-            #  #[ 3 tests
+            #  #[ 4 tests
             # note: tests MUST have a name starting with "test"
             #       otherwise the unittest module will not use them
             #
