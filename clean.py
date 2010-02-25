@@ -21,7 +21,7 @@ if (not arg in allowed_args):
 
 bufr_dirs_to_delete = glob.glob("pybufr_ecmwf/ecmwf_bufr_lib/bufr_000*")
 bufr_dirs_to_delete.append("pybufr_ecmwf/tmp_BUFR_TABLES")
-bufr_dirs_to_delete.append("example_programs/tmp_BUFR_TABLES")
+bufr_dirs_to_delete.append("pybufr_ecmwf/example_programs/tmp_BUFR_TABLES")
 
 # keep the tarballs to prevently pointless re-downloading
 not_to_delete = glob.glob("pybufr_ecmwf/ecmwf_bufr_lib/bufr_000*.gz")
@@ -29,12 +29,14 @@ for f in not_to_delete:
     bufr_dirs_to_delete.remove(f)
 
 f2py_dirs_to_delete = ["pybufr_ecmwf/f2py_build"]
+setup_dirs_to_delete = ["dist"]
 
 dirs_to_delete = []
 if ((arg=='all') or (arg=='bufr')):
     dirs_to_delete.extend(bufr_dirs_to_delete)
 if ((arg=='all') or (arg=='f2py')):
     dirs_to_delete.extend(f2py_dirs_to_delete)
+dirs_to_delete.extend(setup_dirs_to_delete)
 
 backup_files_to_delete1 = glob.glob("*~")
 backup_files_to_delete2 = glob.glob("*/*~")
@@ -46,8 +48,10 @@ bufr_files_to_delete =["pybufr_ecmwf/libbufr.a",
                        "pybufr_ecmwf/ecmwf_bufr_lib/config_file"]
 f2py_files_to_delete = ["pybufr_ecmwf/ecmwfbufr.so"]
 
-test_files_to_delete = glob.glob("*/Testfile3Msgs.BUFR")
-actual_files_to_delete = glob.glob("expected_test_outputs/*.actual_std*")
+test_files_to_delete1 = glob.glob("*/Testfile3Msgs.BUFR")
+test_files_to_delete2 = glob.glob("*/*/Testfile3Msgs.BUFR")
+actual_files_to_delete = glob.glob("pybufr_ecmwf/expected_test_outputs/*.actual_std*")
+setup_files_to_delete = ["MANIFEST"]
 
 files_to_delete = []
 if ((arg=='all') or (arg=='bufr')):
@@ -59,8 +63,10 @@ files_to_delete.extend(pyc_files_to_delete1)
 files_to_delete.extend(pyc_files_to_delete2)
 files_to_delete.extend(backup_files_to_delete1)
 files_to_delete.extend(backup_files_to_delete2)
-files_to_delete.extend(test_files_to_delete)
+files_to_delete.extend(test_files_to_delete1)
+files_to_delete.extend(test_files_to_delete2)
 files_to_delete.extend(actual_files_to_delete)
+files_to_delete.extend(setup_files_to_delete)
 
 for d in dirs_to_delete:
     if (os.path.exists(d)):
