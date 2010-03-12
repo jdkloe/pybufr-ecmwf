@@ -446,13 +446,16 @@ class BufrTable:
                 except:
                     success = False
                     nr_of_ignored_problematic_entries += 1
-                    print "ERROR: unexpected format in table B file..."
-                    print "Could not convert one of the numeric fields to integer."
-                    print "txt_reference       = ["+txt_reference+"]"
-                    print "txt_unit_scale      = ["+txt_unit_scale+"]"
-                    print "txt_unit_reference  = ["+txt_unit_reference+"]"
-                    print "txt_data_width      = ["+txt_data_width+"]"
-                    print "Ignoring this entry ....."
+                    if (txt_name.strip()=="RESERVED"):
+                        print "Ignoring a reserved entry: "+txt_reference
+                    else:
+                        print "ERROR: unexpected format in table B file..."
+                        print "Could not convert one of the numeric fields to integer."
+                        print "txt_reference       = ["+txt_reference+"]"
+                        print "txt_unit_scale      = ["+txt_unit_scale+"]"
+                        print "txt_unit_reference  = ["+txt_unit_reference+"]"
+                        print "txt_data_width      = ["+txt_data_width+"]"
+                        print "Ignoring this entry ....."
 
             if (success):
                 # add descriptor object to the list
@@ -478,7 +481,7 @@ class BufrTable:
         #print "-------------"
 
         #  #]
-    def add_ref_to_descr_list(self,descriptor_list,reference,ref_reference,
+    def add_ref_to_descr_list(self,descriptor_list,reference,ref_reference,line_nr,
                               postpone,report_unhandled):
         #  #[
         # get object for ref_reference
@@ -488,11 +491,9 @@ class BufrTable:
             postpone = True
             if report_unhandled:
                 print "---"
-                print "This D-table entry refers to a descriptor or"
-                print "D-table entry that was not yet defined in table B or D."
-                print "entry reference is: ",reference
-                print "problematic reference is:",ref_reference
-                print "postponing processing of this one"
+                print "descriptor ",ref_reference," is never defined but is used by"
+                print "D-table entry ",reference," (line ",line_nr,")"
+                #print "postponing processing of this one"
         else:
             # add this object to the list
             #print "adding descriptor with ref: ",ref_reference
@@ -534,7 +535,7 @@ class BufrTable:
                 #print descriptor_list,reference,\
                 #      ref_reference, postpone,report_unhandled
                 postpone = self.add_ref_to_descr_list(descriptor_list,reference,
-                                                      ref_reference,
+                                                      ref_reference,i,
                                                       postpone,report_unhandled)
             if (not postpone):
                 # all continuation lines have been processed so store the result.
@@ -555,6 +556,7 @@ class BufrTable:
                         print "Ignoring this entry for now....."
                 else:
                     print "ERROR: unexpected format in table D file..."
+                    print "problematic descriptor is: ",reference
                     print "linecount: ",i
                     print "line: ["+l+"]"
                     print "This D-table entry defines more descriptors than"
@@ -643,6 +645,11 @@ class BufrTable:
             if continuation_line:
                 #print "is a continuation line"
                 this_lineblock.append((i,l))
+
+        # save the last block as well
+        if (this_lineblock != None):
+            # save the final block in the list
+            self.list_of_D_entry_lineblocks.append(this_lineblock)
 
         self.num_D_blocks = len(self.list_of_D_entry_lineblocks)
         #  #]
