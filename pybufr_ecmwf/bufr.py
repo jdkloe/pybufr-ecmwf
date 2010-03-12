@@ -23,7 +23,8 @@
 #  #[ imported modules
 import os
 import sys
-from pybufr_ecmwf import RawBUFRFile
+import glob
+from pybufr_ecmwf import RawBUFRFile, ProgrammingError
 #  #]
 
 class Singleton(object):
@@ -225,12 +226,41 @@ class CompositeDescriptor(Descriptor): #[table D entry]
         #  #]
 
 class BufrTable:
-    def __init__(self):
+    def __init__(self,
+                 autolink_tablesdir="tmp_BUFR_TABLES",
+                 tables_dir=None):
         #  #[
         self.table_B   = {} # dict of desciptor-objects
         self.table_D   = {} # dict of composite-descriptor-objects
         self.specials  = {} # dict of specials
         self.modifiers = {} # dict of modifiers
+
+        self.autolink_tables=True
+        if (tables_dir):
+            # dont use autolinking if the user provided a tables dir
+            self.autolink_tables=False
+
+        # if self.autolink_tables is True, 
+        # try to automatically make symbolic links to
+        # BUFR tables provided by the ECMWF library for any new
+        # BUFR table name that is requested by the decoder/encoder
+        # in this directory
+        self.autolink_tablesdir=autolink_tablesdir
+        
+        if (self.autolink_tablesdir):
+            self.set_bufr_tables_dir(self.autolink_tablesdir)
+        else:
+            self.set_bufr_tables_dir(tables_dir)
+        #  #]
+    def set_bufr_tables_dir(self,tables_dir):
+        #  #[
+        self.tables_dir = tables_dir
+        
+        # make sure the BUFR tables can be found
+        # also, force a slash at the end, otherwise the library fails
+        # to find the tables
+        e = os.environ
+        e["BUFR_TABLES"] = self.tables_dir+os.path.sep
         #  #]
     def get_descr_object(self,reference):
         #  #[
@@ -272,6 +302,20 @@ class BufrTable:
     def load(self,file):
         #  #[
 
+        # first see if the user specified a valid full path/file combination
+        # and use it if it exists
+        if os.path.exists(file):
+            tablefile=file
+        else:
+            # if it does not exist, try to find it in the tables_dir
+            tablefile= os.path.join(self.tables_dir,file)
+            if not os.path.exists(tablefile):
+                # if still not found, see if autolinking is on
+                if (self.autolink_tables):
+                    # if so, try to automatically get a symlink 
+                    print "autolinking table file: ",file
+                    self.autolinkbufrtablefile(file)
+                
         #print "inspecting file: ",file
         #maxlen=0
         #for line in open(file,'rt'):
@@ -280,15 +324,52 @@ class BufrTable:
         #        maxlen = len(l)
         #print "longest line is: ",maxlen
 
-        (path,base) = os.path.split(file)
+        (path,base) = os.path.split(tablefile)
         if base[0].upper()== 'B':
-            self.load_B_table(file)
+            self.load_B_table(tablefile)
         elif base[0].upper()== 'D':
-            self.load_D_table(file)
+            self.load_D_table(tablefile)
         else:
             print "ERROR: don;t know what table this is"
             print "(path,base) = ",(path,base)
             raise IOError
+        #  #]
+    def autolinkbufrtablefile(self,file):
+        #  #[
+        if not self.autolink_tables:
+            print "programming error in autolinkbufrtablefile!!!"
+            raise ProgrammingError
+        
+        # define our own location for storing (symlinks to) the BUFR tables
+        if (not os.path.exists(self.tables_dir)):
+            os.mkdir(self.tables_dir)
+    
+        # make the needed symlinks
+        if os.path.exists("ecmwf_bufrtables"):
+            ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
+        else:
+            ecmwf_bufr_tables_dir = "../ecmwf_bufrtables"
+            
+        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+        tables_dir = os.path.abspath(self.tables_dir)
+
+        # algorithm: try the list B or D files one by one,
+        # and remove a character from the name in every step.
+        # Then try to find a match using glob. This should give
+        # the filename that most closely matches the required one,
+        pattern=file
+        while (len(pattern)>1):
+            pattern=pattern[:-1]
+            print "trying pattern: ",os.path.join(ecmwf_bufr_tables_dir,pattern)
+            matches = glob.glob(os.path.join(ecmwf_bufr_tables_dir,pattern)+'*')
+            if len(matches)>0:
+                source      = matches[0]
+                destination = os.path.join(self.tables_dir,file)
+                if (not os.path.exists(destination)):
+                    print "making symlink from ",source,\
+                          " to ",destination
+                    os.symlink(source,destination)
+                break
         #  #]
     def load_B_table(self,file):
         #  #[
@@ -590,7 +671,9 @@ class BUFRFile(RawBUFRFile):
 if __name__ == "__main__":
         #  #[ test program
         print "Starting test program:"
-        BT = BufrTable()
-        BT.load("tmp_BUFR_TABLES/B0000000000098015001.TXT")
-        BT.load("tmp_BUFR_TABLES/D0000000000098015001.TXT")
+        BT = BufrTable(autolink_tablesdir="tmp_BUFR_TABLES")
+        # load BUFR tables using the automatically linked
+        # tables defined on the lines above
+        BT.load("B0000000000098015001.TXT")
+        BT.load("D0000000000098015001.TXT")
         #  #]

@@ -9,13 +9,33 @@ from distutils.core import setup #, Extension
 #  out how to do this properly from this setup.py script)
 import pybufr_ecmwf
 
+descr="a python interface around the ECMWF-BUFR library."
+long_descr="""a python interface around the Fortran90 ECMWF-BUFR library
+constructed using the f2py interface generation tool.
+For now only the equivalent subroutines to the ones in the ECMWF-BUFR
+library are made available to python. In a next stage the plan is to
+create also a more object-oriented/pythonic interface.
+Building the interface is still a bit rough, and my require some
+editing to choose the correct fortran and c-compiler.
+Examples can be found in the file pybufr_ecmwf/pybufr_ecmwf.py
+directly after the line: Starting test program:
+"""
+
+#Ext=Extension('ecmwfbufr',[''])
+
 setup(name='pybufr-ecmwf',
       version='0.1',
       description='Python wrapper around the ECMWF BUFR library',
+      long_description=long_descr,
       author='Jos de Kloe',
       author_email='josdekloe@gmail.com',
       url='http://code.google.com/p/pybufr-ecmwf/',
+      platforms=["POSIX"],
+      license="GPLv2",
       packages=['pybufr_ecmwf'],
+      scripts=['clean.py',
+               'pybufr_ecmwf/example_programs/example_for_using_ecmwfbufr_for_decoding.py'],
+      package_data={'pybufr_ecmwf':['ecmwf_bufrtables/*.TXT','testdata/*.BUFR']}
       )
 #packages = ['pybufr-ecmwf'])
 #,
