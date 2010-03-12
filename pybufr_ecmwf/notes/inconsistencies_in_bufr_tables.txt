@@ -1,0 +1,291 @@
+BUFR version: bufr_000383.tar.gz
+downloaded 25-Feb-2010
+compiled 12-3-2010 by J. de Kloe by using the bufr.py script from revision 9f82d3382788
+----------
+
+file: B0000000000000014000.TXT
+
+line 264 and 265 seem truncated and are missing the data_width field
+(descriptors 002200 and 002201)
+
+file: B0000000000098013001.TXT
+
+line 258 and 259 seem truncated and are missing the data_width field
+(descriptors 002200 and 002201)
+
+file: B0000000000098014001.TXT
+
+line 264 and 265 seem truncated and are missing the data_width field
+(descriptors 002200 and 002201)
+
+file: B0000000000254011001.TXT
+
+descriptors 03301 and 03304 do not follow the required formatting
+but have only the text "RESERVED".
+I don't know whether this is allowed according to the documentation.
+
+file: D0000000000000014000.TXT
+
+descriptor: 307059 (Full METAR/SPECI) is defined twice
+on lines 1551 and 1619
+
+descriptor 305001 is never defined but is used by
+==>descriptor 305003 (line 1192)
+
+descriptor 301029 is never defined but is used by
+==>descriptor 305007 (line 1203)
+==>descriptor 305009 (line 1211)
+==>descriptor 305011 (line 1217)
+==>descriptor 301018 (line 1223)
+
+descriptor 305010 is never defined but is used by
+==>descriptor 305011 (line 1217)
+
+descriptor 305016 is never defined but is used by
+==>descriptor 305018 (line 1223)
+
+descriptor 305017 is never defined but is used by
+==>descriptor 305018 (line 1223)
+
+descriptor 301089 is never defined but is used by
+==>descriptor 307091 (line 1885)
+==>descriptor 307092 (line 1951)
+
+descriptor 025050 is never defined but is used by
+==>descriptor 310055 (line 3075)
+
+descriptor 006029 is never defined but is used by
+==>descriptor 310060 (line 3083) (twice)
+
+descriptor 014044 is never defined but is used by
+==>descriptor 310060 (line 3083)
+
+descriptor 055003 is never defined but is used by
+==>descriptor 312204 (line 3878)
+
+descriptor 033191 is never defined but is used by
+==>descriptor 312207 (line 3890)
+
+descriptor 022191 is never defined but is used by
+==>descriptor 312209 (line 3910)
+
+file: D0000000000098000000.txt
+
+descriptor 313031 is never defined but is used by
+==>descriptor 313032 (line 668)
+
+descriptor 025015 is never defined but is used by
+==>descriptor 321007 (line 751)
+
+file: D0000000000098002001.txt
+
+descriptor 312018 refers to itself ! (line 691)
+
+descriptor 033191 is never defined but is used by
+==>descriptor 312207 (line 743)
+
+descriptor 022191 is never defined but is used by
+==>descriptor 312209 (line 763)
+
+descriptor 025015 is never defined but is used by
+==>descriptor 311007 (line 883)
+
+file: D0000000000098006000.TXT
+
+descriptor 55003 is never defined but is used by
+==>descriptor 312204 (line 1619)
+
+descriptor 033191 is never defined but is used by
+==>descriptor 312207 (line 1631)
+
+descriptor 022191 is never defined but is used by
+==>descriptor 312209 (line 1651)
+
+file: D0000000000098006001.TXT
+
+descriptor  001018  is never defined but is used by
+==>descriptor  301029  (line 55)
+==>descriptor  301030  (line 58)
+
+descriptor  012075  is never defined but is used by
+==>descriptor  304033  (line 615)
+
+descriptor  012076  is never defined but is used by
+==>descriptor  304033  (line 615)
+
+descriptor  012130  is never defined but is used by
+==>descriptor  307063  (line 850)
+
+one of the references of descriptor 304033 is invalid but it is used by:
+==>descriptor 310015 (line 1170)
+==>descriptor 310016 (line 1183)
+==>descriptor 310023 (line 1216)
+==>descriptor 310024 (line 1233)
+
+descriptor  025050  is never defined but is used by
+==>descriptor  310055  (line 1311)
+
+descriptor  021070  is never defined but is used by
+==>descriptor  312027  (line 1531)
+
+descriptor  033191  is never defined but is used by
+==>descriptor  312207  (line 1655)
+
+descriptor  022191  is never defined but is used by
+==>descriptor  312209  (line 1675)
+
+descriptor  021091  is never defined but is used by
+==>descriptor  321023  (line 2023)
+==>descriptor  321025  (line 2039)
+
+descriptor  021092  is never defined but is used by
+==>descriptor  321025  (line 2039)
+
+descriptor  025092  is never defined but is used by
+==>descriptor  321025  (line 2039)
+
+descriptor  025091  is never defined but is used by
+==>descriptor  321026  (line 2059)
+
+file: D0000000000098013001.TXT
+
+descriptor  305001  is never defined but is used by
+==>descriptor  305003  (line 1209)
+
+descriptor  301029  is never defined but is used by
+==>descriptor  305007  (line 1220)
+==>descriptor  305009  (line 1228)
+==>descriptor  305011  (line 1234)
+==>descriptor  305018  (line 1240)
+
+descriptor  305010  is never defined but is used by
+==>descriptor  305011  (line 1234)
+
+descriptor  305016  is never defined but is used by
+==>descriptor  305018  (line 1240)
+
+descriptor  305017  is never defined but is used by
+==>descriptor  305018  (line 1240)
+
+descriptor  025050  is never defined but is used by
+==>descriptor  310055  (line 3098)
+
+descriptor  055003  is never defined but is used by
+==>descriptor  312204  (line 3848)
+
+descriptor  033191  is never defined but is used by
+==>descriptor  312207  (line 3860)
+
+descriptor  022191  is never defined but is used by
+==>descriptor  312209  (line 3880)
+
+file: D0000000000098014001.TXT
+
+descriptor: 307059 (Full METAR/SPECI) is defined twice
+on lines 1551 and 1619
+
+descriptor  305001  is never defined but is used by
+==>descriptor  305003  (line 1192)
+
+descriptor  301029  is never defined but is used by
+==>descriptor  305007  (line 1203)
+==>descriptor  305009  (line 1211)
+==>descriptor  305011  (line 1217)
+==>descriptor  305018  (line 1223)
+
+descriptor  305010  is never defined but is used by
+==>descriptor  305011  (line 1217)
+
+descriptor  305016  is never defined but is used by
+==>descriptor  305018  (line 1223)
+
+descriptor  305017  is never defined but is used by
+==>descriptor  305018  (line 1223)
+
+descriptor  301089  is never defined but is used by
+==>descriptor  307091  (line 1885)
+==>descriptor  307091  (line 1951)
+
+descriptor  025050  is never defined but is used by
+==>descriptor  310055  (line 3075)
+
+descriptor  006029  is never defined but is used by
+==>descriptor  310060  (line 3083) (twice)
+
+descriptor  014044  is never defined but is used by
+==>descriptor  310060  (line 3083)
+
+descriptor  055003  is never defined but is used by
+==>descriptor  312204  (line 3878)
+
+descriptor  033191  is never defined but is used by
+==>descriptor  312207  (line 3890)
+
+descriptor  022191  is never defined but is used by
+==>descriptor  312209  (line 3910)
+
+file: D0000000000254011001.TXT
+
+descriptor 310026 on line 1467 is supposed to have 80 descriptors
+but in fact it has 82 descriptors defined
+
+descriptor  305001  is never defined but is used by
+==>descriptor  305003  (line 792)
+
+descriptor  301029  is never defined but is used by
+==>descriptor  305007  (line 803)
+==>descriptor  305009  (line 811)
+==>descriptor  305011  (line 817)
+==>descriptor  305018  (line 823)
+
+descriptor  305010  is never defined but is used by
+==>descriptor  305011  (line 817)
+
+descriptor  305016  is never defined but is used by
+==>descriptor  305018  (line 823)
+
+descriptor  305017  is never defined but is used by
+==>descriptor  305018  (line 823)
+
+descriptor  301070  is never defined but is used by
+==>descriptor  307041  (line 1038)
+==>descriptor  307042  (line 1045)
+
+descriptor  301074  is never defined but is used by
+==>descriptor  307043  (line 1054)
+
+descriptor  301075  is never defined but is used by
+==>descriptor  309040  (line 1182)
+==>descriptor  309042  (line 1185)
+
+descriptor  301076  is never defined but is used by
+==>descriptor  309040  (line 1182)
+==>descriptor  309042  (line 1185)
+
+descriptor  307042  is never defined but is used by
+==>descriptor  309042  (line 1184)
+
+descriptor  025050  is never defined but is used by
+==>descriptor  310055  (line 1628)
+==>descriptor  350208  (line 3071)
+
+descriptor  025110  is never defined but is used by
+==>descriptor  312051  (line 2234)
+==>descriptor  312053  (line 2259)
+
+descriptor  025105  is never defined but is used by
+==>descriptor  312051  (line 2234)
+==>descriptor  312053  (line 2259)
+
+descriptor  025106  is never defined but is used by
+==>descriptor  312051  (line 2234)
+==>descriptor  312053  (line 2259)
+
+descriptor  055003  is never defined but is used by
+==>descriptor  312204  (line 2450)
+
+descriptor  033191  is never defined but is used by
+==>descriptor  312207  (line 2462)
+
+descriptor  022191  is never defined but is used by
+==>descriptor  312209  (line 2482)
