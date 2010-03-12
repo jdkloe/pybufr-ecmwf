@@ -40,6 +40,7 @@ class Singleton(object):
     # This way a huge amount of memory can be saved for large
     # BUFR templates/messages.
     #  #]
+    #  #[
     def __new__(cls, *args, **kwds):
         #  #[
         #print "class Singleton: calling __new__"    
@@ -74,16 +75,18 @@ class Singleton(object):
 
         # no instance yet exists for this value, so create a new one
         cls.__instance_dict__[val] = instance = object.__new__(cls)
-        instance.init(*args, **kwds)
+        #instance.init(*args, **kwds)
         return instance
     #  #]
-    def init(self, *args, **kwds):
-    #  #[
+    #def init(self, *args, **kwds):
+        #  #[
         #print "class Singleton: calling init"
-        pass
+        #pass
+        #  #]
     #  #]
 
 class Descriptor(Singleton):
+    #  #[
     def __init__(self,reference,name,unit,unit_scale,
                  unit_reference,data_width):
         #  #[
@@ -114,18 +117,22 @@ class Descriptor(Singleton):
         assert(self.unit_reference == unit_reference)
         assert(self.data_width     == data_width)
         #  #]
-        
+    #  #]
+
 # todo: look-up the possibilities in the documentation
 class ModifiedDescriptor(Descriptor):
+    #  #[
     def __init__(self):
         pass
     def checkinit(self):
         pass
     #  ==>descriptor
     #  ==>modification command
-
+    #  #]
+    
 # todo: look-up the possibilities in the documentation
 class ModificationCommand(Descriptor):
+    #  #[
     def __init__(self):
         pass
     def checkinit(self):
@@ -168,9 +175,11 @@ class ModificationCommand(Descriptor):
     # 242255 cancel 242yyy
     # 243yyy categorical forecast values follow
     # 243255 cancel 243yyy
+    #  #]
 
-    # todo: look-up the possibilities in the documentation
+# todo: look-up the possibilities in the documentation
 class SpecialCommand(Descriptor):
+    #  #[
     def __init__(self):
         pass
     def checkinit(self):
@@ -186,16 +195,20 @@ class SpecialCommand(Descriptor):
     #    # for delayed replication, set num_repeats to 0
     #    # then add the Delayed_Descr_Repl_Factor after this code
     #    return repl_factor
+    #  #]
 
 class Replicator(Descriptor):
+    #  #[
     def __init__(self):
         pass
     def checkinit(self):
         pass
     #  ==>replication-count
     #  ==>list-of-descriptor-objects = []
+    #  #]
 
 class DelayedReplicator(Descriptor):
+    #  #[
     def __init__(self):
         pass
     def checkinit(self):
@@ -203,8 +216,10 @@ class DelayedReplicator(Descriptor):
     #  ==>maximum-replication-count = 4
     #  ==>actual-replication-count-list ] [1,2,3,4]
     #  ==>list-of-descriptor-objects = []
+    #  #]
 
 class CompositeDescriptor(Descriptor): #[table D entry]
+    #  #[
     def __init__(self,reference,descriptor_list,comment):
         #  #[
         self.reference = reference
@@ -224,8 +239,10 @@ class CompositeDescriptor(Descriptor): #[table D entry]
         assert(self.descriptor_list == descriptor_list)
         assert(self.comment         == comment)
         #  #]
+    #  #]
 
 class BufrTable:
+    #  #[
     def __init__(self,
                  autolink_tablesdir="tmp_BUFR_TABLES",
                  tables_dir=None):
@@ -360,8 +377,10 @@ class BufrTable:
         pattern=file
         while (len(pattern)>1):
             pattern=pattern[:-1]
-            print "trying pattern: ",os.path.join(ecmwf_bufr_tables_dir,pattern)
+            print "trying pattern: ",os.path.join(ecmwf_bufr_tables_dir,pattern)+'*'
             matches = glob.glob(os.path.join(ecmwf_bufr_tables_dir,pattern)+'*')
+            print "matches = ",matches
+            print "len(matches) = ",len(matches)
             if len(matches)>0:
                 source      = matches[0]
                 destination = os.path.join(self.tables_dir,file)
@@ -370,6 +389,9 @@ class BufrTable:
                           " to ",destination
                     os.symlink(source,destination)
                 break
+
+        #print "test stop"
+        #sys.exit(1)
         #  #]
     def load_B_table(self,file):
         #  #[
@@ -452,16 +474,40 @@ class BufrTable:
                   nr_of_ignored_problematic_entries
         print "Loaded: ",len(self.table_B)," table B entries"
         print "-------------"
-        print "self.table_B[006001] = ",self.table_B[int('006001',10)]
-        print "-------------"
+        #print "self.table_B[006001] = ",self.table_B[int('006001',10)]
+        #print "-------------"
 
+        #  #]
+    def add_ref_to_descr_list(self,descriptor_list,reference,ref_reference,
+                              postpone,report_unhandled):
+        #  #[
+        # get object for ref_reference
+        #print "trying descriptor ",ref_reference
+        descr = self.get_descr_object(ref_reference)
+        if (descr==None):
+            postpone = True
+            if report_unhandled:
+                print "---"
+                print "This D-table entry refers to a descriptor or"
+                print "D-table entry that was not yet defined in table B or D."
+                print "entry reference is: ",reference
+                print "problematic reference is:",ref_reference
+                print "postponing processing of this one"
+        else:
+            # add this object to the list
+            #print "adding descriptor with ref: ",ref_reference
+            descriptor_list.append(descr)
+
+        return postpone
         #  #]
     def decode_blocks(self,report_unhandled=False):
         #  #[ decode table D blocks of lines
         handled_blocks = 0
+        list_of_handled_blocks = []
         for bl in self.list_of_D_entry_lineblocks:
+            #print "bl=",bl
             for (j,(i,l)) in enumerate(bl):
-                #print "considering line ["+l+"]"
+                #print j,"considering line ["+l+"]"
                 parts = l[:18].split()
                 if j==0: # startline
                     #print "is a start line"
@@ -473,22 +519,6 @@ class BufrTable:
                     descriptor_list = []
                     if len(l)>18:
                         comment = l[18:]
-
-                    # get object for ref_reference
-                    descr = self.get_descr_object(ref_reference)
-                    if (descr==None):
-                        postpone = True
-                        if report_unhandled:
-                            print "---"
-                            print "This D-table entry refers to a descriptor or"
-                            print "D-table entry that was not yet defined in table B or D."
-                            print "entry reference is: ",reference
-                            print "problematic reference is:",ref_reference
-                            print "postponing processing of this one"
-                    else:
-                        # add this object to the list
-                        #print "adding descriptor with ref: ",ref_reference
-                        descriptor_list.append(descr)
                 else: # continuation_line:
                     #print "is a continuation line"
                     ref_reference = int(parts[0],10)
@@ -497,34 +527,24 @@ class BufrTable:
                         # todo: check if the ref_reference is maybe a table-D
                         # entry without comment, and add the comment there in stead
                         extra_comment = l[18:]
-                        print "WARNING: ignoring extra comment on continuation line: "
-                        print "line: ["+l+"]"
+                        if not (extra_comment.strip()==""):
+                            print "WARNING: ignoring extra comment on continuation line: "
+                            print "line: ["+l+"]"
                         
-                    # get object for ref_reference
-                    descr = self.get_descr_object(ref_reference)
-                    if (descr==None):
-                        postpone = True
-                        if report_unhandled:
-                            print "---"
-                            print "This D-table entry refers to a descriptor or"
-                            print "D-table entry that was not yet defined in table B or D."
-                            print "entry reference is: ",reference
-                            print "problematic reference is:",ref_reference
-                            print "postponing processing of this one"
-                    else:
-                        # add this object to the list
-                        #print "adding descriptor with ref: ",ref_reference
-                        descriptor_list.append(descr)
-
+                #print descriptor_list,reference,\
+                #      ref_reference, postpone,report_unhandled
+                postpone = self.add_ref_to_descr_list(descriptor_list,reference,
+                                                      ref_reference,
+                                                      postpone,report_unhandled)
             if (not postpone):
                 # all continuation lines have been processed so store the result.
                 # first a safety check
                 if len(descriptor_list)==count:
-                    print "************************storing result"
+                    #print "************************storing result"
                     D_descr = CompositeDescriptor(reference,descriptor_list,
                                                   comment)
                     if not self.table_D.has_key(reference):
-                        # print "adding descr. key ",reference
+                        #print "adding descr. key ",reference
                         self.table_D[reference] = D_descr
                     else:
                         print "ERROR: multiple table D descriptors with identical reference"
@@ -539,16 +559,36 @@ class BufrTable:
                     print "line: ["+l+"]"
                     print "This D-table entry defines more descriptors than"
                     print "specified in the start line."
-                    print "This most likely is a programming error"
-                    print "in the bufr.py code."
                     print "Please report this problem, together with"
                     print "a copy of the bufr table you tried to read."
-                    raise IOError
-                    
-                # remove this block
-                self.list_of_D_entry_lineblocks.remove(bl)
+                    print "len(descriptor_list) = ",len(descriptor_list)
+                    print "count = ",count
+                    if len(descriptor_list)<count:
+                        raise IOError
+                    else:
+                        print "ignoring excess descriptors for now..."
+                        #print "************************storing result"
+                        D_descr = CompositeDescriptor(reference,descriptor_list,
+                                                      comment)
+                        if not self.table_D.has_key(reference):
+                            #print "adding descr. key ",reference
+                            self.table_D[reference] = D_descr
+                        else:
+                            print "ERROR: multiple table D descriptors with identical reference"
+                            print "number found. This should never happen !!!"
+                            print "problematic descriptor is: ",D_descr
+                            print "Please report this problem, together with"
+                            print "a copy of the bufr table you tried to read."
+                            print "Ignoring this entry for now....."
+                        
+                # mark this block as done
+                list_of_handled_blocks.append(bl)
                 # count successfully handled blocks
                 handled_blocks += 1
+
+        # remove the processed blocks
+        for bl in list_of_handled_blocks:
+            self.list_of_D_entry_lineblocks.remove(bl)
 
         remaining_blocks = len(self.list_of_D_entry_lineblocks)
                 
@@ -603,6 +643,8 @@ class BufrTable:
             if continuation_line:
                 #print "is a continuation line"
                 this_lineblock.append((i,l))
+
+        self.num_D_blocks = len(self.list_of_D_entry_lineblocks)
         #  #]
 
         print "*********************"
@@ -626,6 +668,15 @@ class BufrTable:
                            self.decode_blocks(report_unhandled=True)
             print "---------------------------------------------------"
 
+        print "self.num_D_blocks = ",self.num_D_blocks
+        print "remaining_blocks = ",remaining_blocks
+
+        if (self.num_D_blocks==remaining_blocks):
+            print "ERROR: it seems you forgot to load the B-table before trying"
+            print "to load the D-table. It is required to load the corresponding B-table"
+            print "first, because it is needed to apply consistency checking on the"
+            print "D-table during the read process."
+            raise ProgrammingError
 
         print "test stop"
         sys.exit(0)
@@ -633,14 +684,18 @@ class BufrTable:
 
     #  possible additional methods:
     #  ==>write-tables
-
+    #  #]
+    
 class DataValue:
+    #  #[
     pass
     #  ==>value or string-value
     #  ==>already filled or not?
     #  ==>pointer to the associated descriptor object
+    #  #]
 
 class BUFRMessage: # [moved here from pybufr_ecmwf.py]
+    #  #[
     pass
     #  ==>properties-list = [sec0,sec1,sec2,sec3 data]
     #  ==>list-of-descriptor-objects = []
@@ -659,21 +714,32 @@ class BUFRMessage: # [moved here from pybufr_ecmwf.py]
     # -get_one_real_value
     # -get_one_string_value
     # -...
-
+    #  #]
 
 class BUFRFile(RawBUFRFile):
+    #  #[
     pass
     # bufr-file [can reuse much functionality from what I have now in the
     #            RawBUFRFile class in pybufr_ecmwf.py]
     #  ==>some meta data
     #  ==>list-of-bufr-msgs = []
-     
+    #  #]
+
 if __name__ == "__main__":
         #  #[ test program
         print "Starting test program:"
         BT = BufrTable(autolink_tablesdir="tmp_BUFR_TABLES")
         # load BUFR tables using the automatically linked
         # tables defined on the lines above
-        BT.load("B0000000000098015001.TXT")
-        BT.load("D0000000000098015001.TXT")
+
+        #table_code = "0000000000000014000"
+        #table_code = "0000000000098000000"
+        #table_code = "0000000000098002001"
+        #table_code = "0000000000098006000"
+        #table_code = "0000000000098006001"
+        #table_code = "0000000000098013001"
+        #table_code = "0000000000098014001"
+        table_code = "0000000000254011001"
+        BT.load("B"+table_code+".TXT")
+        BT.load("D"+table_code+".TXT")
         #  #]
