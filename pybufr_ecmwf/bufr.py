@@ -739,14 +739,54 @@ if __name__ == "__main__":
         # load BUFR tables using the automatically linked
         # tables defined on the lines above
 
-        #table_code = "0000000000000014000"
-        #table_code = "0000000000098000000"
-        #table_code = "0000000000098002001"
-        #table_code = "0000000000098006000"
-        #table_code = "0000000000098006001"
-        #table_code = "0000000000098013001"
-        #table_code = "0000000000098014001"
-        table_code = "0000000000254011001"
-        BT.load("B"+table_code+".TXT")
-        BT.load("D"+table_code+".TXT")
+        # test the available bufr tables
+        table_codes = ["0000000000000014000","0000000000098000000",
+                       "0000000000098002001","0000000000098006000",
+                       "0000000000098006001","0000000000098013001",
+                       "0000000000098014001","0000000000254011001"]
+        for table_code in table_codes:
+            BT.load("B"+table_code+".TXT")
+            BT.load("D"+table_code+".TXT")
+
+        # this is how I the BUFR module interfacing should look like
+
+        # get a msg instance
+        bm = BUFRMessage()
+        # all sections should be filled with sensoble defaults but ofcourse
+        # the user should be able to change all of them
+        # also the user should be able to insert a bufr table name to be
+        # used, in contrast with the ECMWF method of using the metadata
+        # to construct the BUFR table name. In that case the symbolic link
+        # to the constructed BUFR table name should be rerouted to the name
+        # provided by the user, to trick the ECMWF library in using it.
+
+        # built the template
+        #bm.add_descriptor()
+        #bm.add_descriptor()
+        #bm.add_descriptor()
+
+        # expand any D-table entries
+        #bm.expand_descriptor_list()
+
+        #ns=361
+        #bm.set_num_subsets(ns)
+        #for ss in range(ns):
+        #    bm.set_fill_index_to_start_subset(ss)
+        #    bm.fill_one_element(val,descr_code,descr_text)
+        #    bm.fill_one_element(val,descr_code,descr_text)
+        #    bm.fill_one_element(val,descr_code,descr_text)
+
+        #bf=BUFRFile()
+        #bf.open(file='',mode='w')
+        #bf.write(bm) # this should automatically do the encoding
+        #bf.close()
+
+        # further ideas:
+        # -allow generation of a custom minimal BUFR table
+        #  holding only the entries needed to decode/encode the
+        #  current BUFR message
+        # -add methods to compose a BUFR table from scratch
+        #  and/or modify it (add, delete, save, load)
+        #
         #  #]
+
