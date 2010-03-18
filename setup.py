@@ -7,6 +7,9 @@
 import os
 import sys
 from distutils.core import setup, Extension
+# import build_ext using a different name,
+# to allow subclassing it
+from distutils.command.build_ext import build_ext as _build_ext
 
 # patch distutils if it can't cope with the "classifiers" or
 # "download_url" keywords
@@ -16,12 +19,52 @@ if version < '2.2.3':
     DistributionMetadata.classifiers = None
     DistributionMetadata.download_url = None
 
-# for now, this import triggers the build of the ecmwfbufr.so
-# shared-object file needed by this module
-# (an ugly hack, I know, it will be cleaned as soon as I have figured
-#  out how to do this properly from this setup.py script)
-import pybufr_ecmwf
+class build_ext(_build_ext):
+    """Specialized Python extension builder."""
+    # implement whatever needs to be different...
+    # see the original build_ext.py in:
+    #    /usr/lib64/python2.6/distutils/command/build_ext.py
+    # see also the instructions in:
+    #    http://docs.python.org/distutils/extending.html
 
+    user_options = _build_ext.user_options
+    user_options.append(("preferred-fortran-compiler",None,
+                         "name of fortran compiler to be used"))
+    user_options.append(("preferred-c-compiler",None,
+                         "name of c compiler to be used"))
+
+    def initialize_options(self):
+        # initialise the additional options 
+        self.preferred_fortran_compiler = None
+        self.preferred_c_compiler = None
+        _build_ext.initialize_options(self)
+
+    def finalize_options (self):
+        # this copies the user_options from the build
+        # to the build_ext class, so I'll have to modify
+        # the build class as well to allow new options
+        self.set_undefined_options('build',
+                                   ('preferred_fortran_compiler', 'preferred_fortran_compiler'),
+                                   ('preferred_c_compiler', 'preferred_c_compiler'),
+                                   )
+        _build_ext.finalize_options(self)
+        
+    def run(self):
+        # call the run command of the default build_py
+        # (actually I dont know how to build fortran this way,
+        #  so I'll use my own build script here in stead
+        #_build_ext.run(self)
+
+        # for now, this import triggers the build of the ecmwfbufr.so
+        # shared-object file needed by this module
+        import pybufr_ecmwf
+
+        print "self.user_options = ",self.user_options
+        print "self.preferred_fortran_compiler = ",\
+              self.preferred_fortran_compiler
+        print "self.preferred_c_compiler = ",\
+              self.preferred_c_compiler
+        
 descr="a python interface around the ECMWF-BUFR library."
 long_descr="""a python interface around the Fortran90 ECMWF-BUFR library
 constructed using the f2py interface generation tool.
@@ -44,7 +87,8 @@ cl = ["Development Status :: Alpha",
 
 Ext=Extension('pybufr_ecmwf.ecmwfbufr',[])
 
-setup(name='pybufr-ecmwf',
+setup(cmdclass={'build_ext': build_ext},
+      name='pybufr-ecmwf',
       version='0.1',
       description='Python wrapper around the ECMWF BUFR library',
       long_description=long_descr,
@@ -63,13 +107,28 @@ setup(name='pybufr-ecmwf',
 # (see: http://docs.python.org/distutils/introduction.html)
 # possible uses of this setup script:
 
-# create a source distribution tar file:
+# see: http://docs.python.org/distutils/sourcedist.html
+# for more details on sdist commands.
+
+# create a source distribution tar file: [works]
 # ==>python setup.py sdist
 # this creates a tarfile:  dist/pybufr-ecmwf-0.1.tar.gz
 # and a MANIFEST file with a listing of all included files
 
-# compile the extension module pybufr_ecmwf/ecmwfbufr.so like this:
+# compile only the extension module pybufr_ecmwf/ecmwfbufr.so: [works]
 # ==>python setup.py build_ext
+
+# only recreate the MANIFEST file [works]
+# python setup.py sdist --manifest-only
+
+# see: http://docs.python.org/distutils/builtdist.html
+# for more details on bdist commands.
+
+# creation of a binary distribution tgz file: [works]
+# ==>python setup.py bdist
+
+# creation of an rpm file: [works]
+# ==>python setup.py bdist_rpm
 
 # build by an end user
 # ==>python setup.py build
@@ -77,8 +136,3 @@ setup(name='pybufr-ecmwf',
 # installation by an end-user
 # ==>python setup.py install
 
-# creation of an rpm file
-# ==>python setup.py bdist_rpm
-# NOTE: this actually seems to work already!
-# it does create rpm's that do contain the correct python files
-# and builds the needed ecmwfbufr.so files, and packs that one as well ...
