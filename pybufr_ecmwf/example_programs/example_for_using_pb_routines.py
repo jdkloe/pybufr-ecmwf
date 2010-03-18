@@ -49,7 +49,10 @@ print "-"*50
 # are very usefull to test the BUFRFile.split() method.
 
 # define the input test filename
-input_test_bufr_file = 'Testfile3CorruptedMsgs.BUFR'
+if os.path.exists('testdata'):
+    input_test_bufr_file = 'testdata/Testfile3CorruptedMsgs.BUFR'
+else:
+    input_test_bufr_file = '../testdata/Testfile3CorruptedMsgs.BUFR'
 
 # pbopen test
 
