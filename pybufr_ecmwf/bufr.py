@@ -24,7 +24,8 @@
 import os
 import sys
 import glob
-from pybufr_ecmwf import RawBUFRFile, ProgrammingError
+from pybufr_ecmwf import RawBUFRFile
+from pybufr_ecmwf import ProgrammingError, NotYetImplementedError
 #  #]
 
 class Singleton(object):
@@ -120,25 +121,105 @@ class Descriptor(Singleton):
     #  #]
 
 # todo: look-up the possibilities in the documentation
-class ModifiedDescriptor(Descriptor):
+class ModifiedDescriptor():
     #  #[
-    def __init__(self):
-        pass
-    def checkinit(self):
-        pass
-    #  ==>descriptor
-    #  ==>modification command
+    # note: this cannot be subclassed from Descriptor, since the whole
+    # point of modified descriptors is that you can have several with
+    # the same descriptor code but with different properties.
+    # Since Descriptor is itself a subclass of Singleton this would not
+    # be possible, so just copy all items defined by the descriptor
+    # to allow easy modification
+    def __init__(self,descriptor):
+        #  #[
+        self.descriptor = descriptor
+        self.list_of_modifications = []
+
+        # these properties are copied from the input descriptor,
+        # unless they are changed by a modification
+        self.reference      = descriptor.reference  # descriptor code
+        self.name           = descriptor.name       # descriptive text
+        self.unit           = descriptor.unit       # unit text
+        self.unit_scale     = descriptor.unit_scale # multiplicative factor of 10
+        self.unit_reference = descriptor.unit_reference # offset
+        self.data_width     = descriptor.data_width # number of bits for storage
+        #  #]        
+    def add_modification(self,modification):
+        #  #[
+        assert(isinstance(modification,ModificationCommand))
+        self.list_of_modifications.append(modification)
+        # todo: depending on the type of midification
+        #       change the instance variables
+        #  #]
     #  #]
     
 # todo: look-up the possibilities in the documentation
 class ModificationCommand(Descriptor):
     #  #[
-    def __init__(self):
-        pass
-    def checkinit(self):
-        pass
-    #  ==>descriptor
-    #  ==>modification command
+    def __init__(self,reference):
+        #  #[
+        self.reference      = reference      # descriptor code
+        # TODO: add more state variables depending on the type
+        # of modification
+
+        # extract xxyyy from the 2xxyyy format of the descriptor
+        reference_text = "%6.6i" % reference
+        self.xx =reference_text[1:3]
+        self.yyy=reference_text[3:]
+        #  #]
+    def __str__(self):
+        #  #[
+        txt = "modification command reference: ["+str(self.reference)+"] "
+        return txt
+        #  #]
+    def checkinit(self,reference):
+        #  #[
+        assert(self.reference      == reference)
+        #  #]
+    def is_modification_start(self):
+        #  #[
+        if self.xx=="01" or self.xx=="07":
+            if self.yyy!="000":
+                return True
+            else:
+                return False
+        print "ERROR: handling this modification is not fully implemented yet:"
+        print self
+        raise NotYetImplementedError
+        #  #]
+    def is_modification_end(self):
+        #  #[
+        if self.xx=="01" or self.xx=="07":
+            if self.yyy=="000":
+                return True
+            else:
+                return False
+        print "ERROR: handling this modification is not fully implemented yet:"
+        print self
+        raise NotYetImplementedError
+        #  #]
+    def check_matches(self,d):
+        #  #[
+        #print "end modification: ",str(self)
+        #print "seems to match modification: ",str(d)
+        # check whether a clear command mathches a change command
+        if self.xx=="01" or self.xx=="07":
+            if ((self.yyy=="000" and d.yyy!="000") or
+                (d.yyy=="000" and self.yyy!="000")   ):
+                if self.xx==d.xx:
+                    return True
+                else:
+                    return False
+            else:
+                print "ERROR: modification start-and-end do not match !"
+                print "problem in check_matches."
+                print "end modification: ",str(self)
+                print "seems to match modification: ",str(d)
+                raise IOError
+        else:
+            print "ERROR: handling this modification is not fully implemented yet:"
+            print self
+            raise NotYetImplementedError
+        #  #]
 
     # Modification commands are:
     # (see:BUFR reference manual, by Milan Dragosavac, 2007, p.20)
@@ -149,6 +230,7 @@ class ModificationCommand(Descriptor):
     # 205yyy signify character
     # 206yyy signify data width
     # 207yyy increase scale, ref.val. and data width
+    # 207000 cancel change
     # 208yyy change with of CCITTIA5 field
     # 209yyy IEEE floating point representation
     # 221yyy data not present
@@ -180,18 +262,30 @@ class ModificationCommand(Descriptor):
 # todo: look-up the possibilities in the documentation
 class SpecialCommand(Descriptor):
     #  #[
-    def __init__(self):
-        pass
-    def checkinit(self):
-        pass
+    def __init__(self,reference):
+        #  #[
+        self.reference      = reference      # descriptor code
+        # TODO: add more state variables depending on the type
+        # of special
+        #  #]
+    def __str__(self):
+        #  #[
+        txt = "special command reference: ["+str(self.reference)+"] "
+        return txt
+        #  #]
+    def checkinit(self,reference):
+        #  #[
+        assert(self.reference      == reference)
+        #  #]
     #  ==>descriptor
-    #  ==>modification command
+    #  ==>special command
 
     # the commands described by a reference like 1xxyyy
     # are replication commands, defined like this:
     #def get_replication_code(num_descriptors,num_repeats):
     #    repl_factor = 100000 + num_descriptors*1000 + num_repeats
-    #    # for example replicating 2 descriptors 25 times will be encoded as: 102025
+    #    # for example replicating 2 descriptors 25 times will be
+    #    # encoded as: 102025
     #    # for delayed replication, set num_repeats to 0
     #    # then add the Delayed_Descr_Repl_Factor after this code
     #    return repl_factor
@@ -294,11 +388,9 @@ class BufrTable:
             if self.specials.has_key(reference):
                 return self.specials[reference]
             else:
-                # this is a new special, store for now as if it where
-                # a normal Descriptor
-                # TODO: change this to an instance of SpecialCommand
+                # this is a new special
                 print "adding special: ",reference
-                special = Descriptor(reference,"special","n.a.",0,0,0)
+                special = SpecialCommand(reference)
                 self.specials[reference] = special
                 return special
         if f==2:
@@ -306,11 +398,9 @@ class BufrTable:
             if self.modifiers.has_key(reference):
                 return self.modifiers[reference]
             else:
-                # this is a new modifier, store for now as if it where
-                # a normal Descriptor
-                # TODO: change this to an instance of ModificationCommand
+                # this is a new modifier
                 print "adding modifier: ",reference
-                modifier = Descriptor(reference,"modifier","n.a.",0,0,0)
+                modifier = ModificationCommand(reference)
                 self.modifiers[reference] = modifier
                 return modifier
             
@@ -685,10 +775,66 @@ class BufrTable:
             print "D-table during the read process."
             raise ProgrammingError
 
-        print "test stop"
-        sys.exit(0)
+        #print "test stop"
+        #sys.exit(0)
         #  #]
+    def apply_special_commands(self):
+        #  #[
+        # application of special commands (i.e. replications) is
+        # done by calling the buxdes subroutine in the ECMWF library
+        # so for now I won't implement this in python
+        pass
+        #  #]
+    def apply_modification_commands(self,descr_list):
+        #  #[
+        # register each modification with all the descriptors that
+        # it applies to. This is needed to allow calculation of the
+        # allowed range of the value of the descriptor, which is something
+        # I would like to be able to check from within python
+        # (because the errors thrown by the ECMWF BUFR library can be rather
+        # difficult to decipher, and usually won't point you to the mistake
+        # that you probably made in your own program).
 
+        # input: an expanded descriptor list
+
+        # output: a new descriptor list, with descriptors that need to be
+        # modified replaced by their corresponding ModifiedDescriptor
+        # instance, which should hold pointers to the original descriptor
+        # and to all modifications applied to it
+
+        mod_descr_list = []
+        current_modifications = []
+        for d in descr_list:
+            if isinstance(d,ModificationCommand):
+                if d.is_modification_start():
+                    current_modifications.append(d)
+                elif d.is_modification_end():
+                    removed_d = current_modifications.pop()
+                    d.check_matches(removed_d)
+                else:
+                    print "Problem in apply_modification_commands."
+                    print "Modifier not recognised as start or end command."
+                    print "This should never happen !"
+                    raise ProgrammingError
+            elif isinstance(d,SpecialCommand):
+                print "Problem in apply_modification_commands."
+                print "The current descriptor list still seems to contain"
+                print "replication commands, so it is not yet expanded!!!"
+                print "The input to apply_modification_commands() should be"
+                print "an expanded descriptor list..."
+                raise ProgrammingError
+            else:
+                if len(current_modifications)>0:
+                    mod_descr = ModifiedDescriptor(d)
+                    print "current_modifications:"
+                    print ";".join(str(m) for m in current_modifications)
+                    for m in current_modifications:
+                        mod_descr.add_modification(m)
+                    mod_descr_list.append(mod_descr)
+                else:
+                    mod_descr_list.append(d)
+        return mod_descr_list
+        #  #]
     #  possible additional methods:
     #  ==>write-tables
     #  #]
@@ -740,19 +886,39 @@ if __name__ == "__main__":
         # tables defined on the lines above
 
         # test the available bufr tables
-        table_codes = ["0000000000000014000","0000000000098000000",
-                       "0000000000098002001","0000000000098006000",
-                       "0000000000098006001","0000000000098013001",
-                       "0000000000098014001","0000000000254011001"]
-        for table_code in table_codes:
-            BT.load("B"+table_code+".TXT")
-            BT.load("D"+table_code+".TXT")
+        #table_codes = ["0000000000000014000","0000000000098000000",
+        #               "0000000000098002001","0000000000098006000",
+        #               "0000000000098006001","0000000000098013001",
+        #               "0000000000098014001","0000000000254011001"]
+        #for table_code in table_codes:
+        #    BT.load("B"+table_code+".TXT")
+        #    BT.load("D"+table_code+".TXT")
+
+        # test application of modification commands:
+        # this is D-descriptor 331004
+
+        # load the ADM-Aeolus L2B-product BUFR table
+        path="alt_bufr_tables"
+        table_code="0000000000098015001"
+        BT.load(os.path.join(path,"B"+table_code+".TXT"))
+        BT.load(os.path.join(path,"D"+table_code+".TXT"))
+
+        codes = ["207001", # = modifier
+                 "005001", # = LATITUDE (HIGH ACCURACY)  [DEGREE]
+                 "006001", # = LONGITUDE (HIGH ACCURACY) [DEGREE]
+                 "207000"] # = end of modifier   
+        descr_list = []
+        for c in codes:
+            descr_list.append(BT.get_descr_object(int(c,10)))
+        print "descr_list = ",descr_list
+        
+        mod_descr_list = BT.apply_modification_commands(descr_list)
 
         # this is how I the BUFR module interfacing should look like
 
         # get a msg instance
         bm = BUFRMessage()
-        # all sections should be filled with sensoble defaults but ofcourse
+        # all sections should be filled with sensible defaults but ofcourse
         # the user should be able to change all of them
         # also the user should be able to insert a bufr table name to be
         # used, in contrast with the ECMWF method of using the metadata

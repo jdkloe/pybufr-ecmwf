@@ -98,7 +98,8 @@ def call_cmd_and_verify_output(cmd):
     #  #[
     # assume at first that all will work as planned
     success = True
-    
+
+    #  #[ some old notes
     #print "__name__ = ",__name__
     #print "__file__ = ",__file__
     #print "self.__class__.__name__ = ",self.__class__.__name__
@@ -112,15 +113,17 @@ def call_cmd_and_verify_output(cmd):
     #sys.exit(1)
     # see: http://code.activestate.com/recipes/66062/
     # for more examples on using sys._getframe()
+    #  #]
+    
+    # determine the full path of the current python interpreter
+    python_interpreter = sys.executable
 
     # determine the name of the calling function
     name_of_calling_function = sys._getframe(1).f_code.co_name
-    #print "1:callers name = ",name_of_calling_function
 
     # determine the name of the class that defines the calling function
     classname_of_calling_function = \
                  sys._getframe(1).f_locals['self'].__class__.__name__
-    #print "classname_of_calling_function = ",classname_of_calling_function
 
     # construct filenames for the actual and expected outputs
     exp_dir = "expected_test_outputs"
@@ -133,7 +136,8 @@ def call_cmd_and_verify_output(cmd):
     expected_stderr = basename+".expected_stderr"
 
     # execute the test and catch all output
-    (lines_stdout,lines_stderr) = run_shell_command(cmd,catch_output=True,
+    (lines_stdout,lines_stderr) = run_shell_command(python_interpreter+' '+cmd,
+                                                    catch_output=True,
                                                     verbose=False)
 
     # write the actual outputs to file
@@ -1892,6 +1896,15 @@ if __name__ == "__main__":
                 #  #]
             def test_run_pb_routines_example(self):
                 #  #[
+
+                # NOTE: for debugging the pb-routines it is possible
+                # to set the PBIO_PBOPEN environment setting to a value
+                # of 1. From this it is clear that the pbopen code is
+                # executed, and the problem is in the interfacingm which
+                # leads to this error:
+                #
+                # SystemError: NULL result without error in PyObject_Call
+
                 # run the provided example code and verify the output
                 cmd = os.path.join(self.example_programs_dir,
                              "example_for_using_pb_routines.py")
