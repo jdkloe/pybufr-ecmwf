@@ -29,7 +29,7 @@ for f in not_to_delete:
     bufr_dirs_to_delete.remove(f)
 
 f2py_dirs_to_delete = ["pybufr_ecmwf/f2py_build"]
-setup_dirs_to_delete = ["dist"]
+setup_dirs_to_delete = ["build","dist"]
 
 dirs_to_delete = []
 if ((arg=='all') or (arg=='bufr')):

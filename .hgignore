@@ -23,6 +23,7 @@ MANIFEST
 
 # generated and build directories to ignore:
 dist
+build
 ecmwf_bufr_lib
 f2py_build
 tmp_BUFR_TABLES

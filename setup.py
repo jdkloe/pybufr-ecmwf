@@ -1,7 +1,20 @@
 #!/usr/bin/env python
+
+# NOTE: for debugging of this setup.py script
+# set the DISTUTILS_DEBUG environment variable to TRUE
+# (or any other non-empty string)
+
 import os
 import sys
-from distutils.core import setup #, Extension
+from distutils.core import setup, Extension
+
+# patch distutils if it can't cope with the "classifiers" or
+# "download_url" keywords
+from sys import version
+if version < '2.2.3':
+    from distutils.dist import DistributionMetadata
+    DistributionMetadata.classifiers = None
+    DistributionMetadata.download_url = None
 
 # for now, this import triggers the build of the ecmwfbufr.so
 # shared-object file needed by this module
@@ -21,7 +34,15 @@ Examples can be found in the file pybufr_ecmwf/pybufr_ecmwf.py
 directly after the line: Starting test program:
 """
 
-#Ext=Extension('ecmwfbufr',[''])
+# define the list of classifiers
+cl = ["Development Status :: Alpha",
+      "Environment :: Console"
+      "Intended Audience :: Developers"
+      "Intended Audience :: System Administrators"
+      "Operating System :: POSIX",
+      ""]
+
+Ext=Extension('pybufr_ecmwf.ecmwfbufr',[])
 
 setup(name='pybufr-ecmwf',
       version='0.1',
@@ -30,27 +51,34 @@ setup(name='pybufr-ecmwf',
       author='Jos de Kloe',
       author_email='josdekloe@gmail.com',
       url='http://code.google.com/p/pybufr-ecmwf/',
+      download_url="http://code.google.com/p/pybufr-ecmwf/source/checkout",
+      classifiers=cl,
       platforms=["POSIX"],
       license="GPLv2",
       packages=['pybufr_ecmwf'],
-      scripts=['clean.py',
-               'pybufr_ecmwf/example_programs/example_for_using_ecmwfbufr_for_decoding.py'],
-      package_data={'pybufr_ecmwf':['ecmwf_bufrtables/*.TXT','testdata/*.BUFR']}
+      ext_modules=[Ext],
+      requires=["numpy","numpy.f2py","subprocess"],
       )
-#packages = ['pybufr-ecmwf'])
-#,
-#ext_modules = [ ecmwfbufr, ]
-#)
 
 # (see: http://docs.python.org/distutils/introduction.html)
 # possible uses of this setup script:
 
-#create a source distribution tar file:
-#==>python setup.py sdist
+# create a source distribution tar file:
+# ==>python setup.py sdist
 # this creates a tarfile:  dist/pybufr-ecmwf-0.1.tar.gz
 # and a MANIFEST file with a listing of all included files
 
-#installation by an end-user
-#==>python setup.py install
-#creation of an rpm file
-#==>python setup.py bdist_rpm
+# compile the extension module pybufr_ecmwf/ecmwfbufr.so like this:
+# ==>python setup.py build_ext
+
+# build by an end user
+# ==>python setup.py build
+
+# installation by an end-user
+# ==>python setup.py install
+
+# creation of an rpm file
+# ==>python setup.py bdist_rpm
+# NOTE: this actually seems to work already!
+# it does create rpm's that do contain the correct python files
+# and builds the needed ecmwfbufr.so files, and packs that one as well ...

@@ -1,5 +1,8 @@
 include *.txt
+include pybufr_ecmwf/alt_bufr_tables/*.TXT
 include *.py
+# this seems to skip clean.py, no idea why
+recursive-include ./ *.py
 include setup.*
-include pybufr_ecmwf/*.py
-include pybufr_ecmwf/example_programs/*.py
+include pybufr_ecmwf/testdata/*.BUFR
+include pybufr_ecmwf/expected_test_outputs/Check*
