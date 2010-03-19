@@ -20,7 +20,7 @@ if os.path.isdir("../pybufr_ecmwf"):
     sys.path.append("../")
 else:
     sys.path.append("../../")
-from pybufr_ecmwf import RawBUFRFile, BUFRInterfaceECMWF
+from pybufr_ecmwf import RawBUFRFile#, BUFRInterfaceECMWF
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 

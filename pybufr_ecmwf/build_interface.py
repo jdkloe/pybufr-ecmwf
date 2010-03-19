@@ -26,61 +26,11 @@ import os          # operating system functions
 import re          # regular expression handling
 import glob        # allow for filename expansion
 import tarfile     # handle tar archives
-import subprocess  # support running additional executables
 import shutil      # portable file copying functions
-#  #]
-#  #[ exception definitions
-# see: http://docs.python.org/library/exceptions.html
-# for a list of already available exceptions.
-# are:     IOError, EOFError
-class NotYetImplementedError(NotImplementedError): pass
-class ProgrammingError(Exception): pass
-class NetworkError(Exception): pass
-class LibraryBuildError(Exception): pass
-class InterfaceBuildError(Exception): pass
-#  #]
-#  #[ some helper subroutines
-def run_shell_command(cmd,libpath=None,catch_output=True,
-                      verbose=True):
-    #  #[
-    # get the list of already defined env settings
-    e = os.environ
-    if (libpath):
-        # add the additional env setting
-        envname = "LD_LIBRARY_PATH"
-        if (e.has_key(envname)):
-            e[envname] = e[envname] + ";" + libpath
-        else:
-            e[envname] = libpath
-            
-    if (verbose):
-        print "Executing command: ",cmd
-        
-    if (catch_output):
-        subpr = subprocess.Popen(cmd,
-                                 shell=True,
-                                 env=e,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        
-        # wait until the child process is done
-        # subpr.wait() # seems not necessary when catching stdout and stderr
-            
-        lines_stdout = subpr.stdout.readlines()
-        lines_stderr = subpr.stderr.readlines()
-        
-        #print "lines_stdout: ",lines_stdout
-        #print "lines_stderr: ",lines_stderr
-        
-        return (lines_stdout,lines_stderr)
-    
-    else:
-        subpr = subprocess.Popen(cmd, shell=True, env=e)
-        
-        # wait until the child process is done
-        subpr.wait()
-        return
-    #  #]
+# import some home made helper routines
+from helpers import run_shell_command
+from helpers import NotYetImplementedError, ProgrammingError, \
+     NetworkError, LibraryBuildError, InterfaceBuildError
 #  #]
 
 class InstallBUFRInterfaceECMWF:

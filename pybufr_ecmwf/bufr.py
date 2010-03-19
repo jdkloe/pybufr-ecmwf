@@ -25,7 +25,7 @@ import os
 import sys
 import glob
 from pybufr_ecmwf import RawBUFRFile
-from pybufr_ecmwf import ProgrammingError, NotYetImplementedError
+from helpers import ProgrammingError, NotYetImplementedError
 #  #]
 
 class Singleton(object):
