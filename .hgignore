@@ -28,6 +28,7 @@ ecmwf_bufr_lib
 f2py_build
 tmp_BUFR_TABLES
 ecmwf_bufrtables
+old_bufr_libs
 
 #syntx: glob
 #
