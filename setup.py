@@ -8,6 +8,7 @@
 import os
 import sys
 from distutils.core import setup, Extension
+from distutils import log
 # import build and build_ext using a different name,
 # to allow subclassing them
 from distutils.command.build import build as _build
@@ -82,6 +83,10 @@ class build_ext(_build_ext):
     # see also the instructions in:
     #    http://docs.python.org/distutils/extending.html
 
+    # todo: see if I can modify any of the compiler classes
+    # like /usr/lib64/python2.6/distutils/*compiler.py
+    # to handle fortran as well
+
     user_options = _build_ext.user_options
     user_options.append(("preferred-fortran-compiler",None,
                          "name of fortran compiler to be used"))
@@ -144,10 +149,6 @@ class build_ext(_build_ext):
 
         print "python executable: ",sys.executable
 
-        # for now, this import triggers the build of the ecmwfbufr.so
-        # shared-object file needed by this module
-        import pybufr_ecmwf
-
         # test prints
         #print "build_ext: self.user_options = ",self.user_options
         print "build_ext: self.preferred_fortran_compiler = ",\
@@ -166,6 +167,27 @@ class build_ext(_build_ext):
               self.c_ld_library_path
         print "build_ext: self.c_flags = ",\
               self.c_flags
+
+        # this run command in turn runs the build_extension method
+        _build_ext.run(self) 
+        
+    def build_extension(self,ext):
+        fullname = self.get_ext_fullname(ext.name)
+        print "trying to build extension: ",fullname
+        log.info("building '%s' extension", ext.name)
+
+        # for now, this import triggers the build of the ecmwfbufr.so
+        # shared-object file needed by this module
+        import pybufr_ecmwf
+
+        # this does not work properly yet for setup.py bdist
+        # since in that case the pybufr_ecmwf/ecmwfbufr.so
+        # needs to be created below build/lib.linux-i686-2.6/
+        # so inspect the path settings for the build:
+        print "self.build_temp = ",self.build_temp
+
+        print "WARNING: building not yet fully implemented"
+        sys.exit(1)
     #  #]
         
 descr="a python interface around the ECMWF-BUFR library."
