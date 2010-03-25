@@ -30,6 +30,16 @@ class InterfaceBuildError(Exception): pass
 def run_shell_command(cmd,libpath=None,catch_output=True,
                       verbose=True):
     #  #[
+    """ a wrapper routine around subprocess.Popen intended
+    to make it a bit easier to call this functionality.
+    Options:
+    -libpath: add this path to the LD_LIBRARY_PATH environment variable
+     before executing the subprocess
+    -catch_output: if True, this function returns 2 lists of text lines
+     containing the stdout and stderr of the executed subprocess
+    -verbose: give some feedback to the user while executing the
+     code (usefull for debugging)"""
+
     # get the list of already defined env settings
     e = os.environ
     if (libpath):
@@ -71,6 +81,16 @@ def run_shell_command(cmd,libpath=None,catch_output=True,
 
 def call_cmd_and_verify_output(cmd):
     #  #[
+    """ a wrapper around run_shell_command for easier testing.
+    It automatically constructs a name for the test output based
+    on the class and function name from which it was called.
+    Then it executes the test function and redirects the stdout and
+    stderr outputs to files with the just constructed names.
+    Finally it compares the actual test outputs with expected outputs
+    that should be present in the current directory.
+    If the outputs are as expected the function returns True,
+    otherwise False."""
+
     # assume at first that all will work as planned
     success = True
 
@@ -157,3 +177,15 @@ def call_cmd_and_verify_output(cmd):
     return success
     #  #]
 
+def rem_quotes(s):
+    #  #[
+    """ a little helper function to remove quotes from a string."""
+    if s is None:
+        return s
+    elif s[0]=="'" and s[-1]=="'":
+        return s[1:-1]
+    elif s[0]=='"' and s[-1]=='"':
+        return s[1:-1]
+    else:
+        return s
+    #  #]

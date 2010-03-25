@@ -22,13 +22,13 @@
 #  #]
 #  #[ imported modules
 import os          # operating system functions
-#import sys         # system functions
+import sys         # system functions
 import re          # regular expression handling
 import glob        # allow for filename expansion
 import tarfile     # handle tar archives
 import shutil      # portable file copying functions
 # import some home made helper routines
-from helpers import run_shell_command
+from helpers import run_shell_command, rem_quotes
 from helpers import NotYetImplementedError, ProgrammingError, \
      NetworkError, LibraryBuildError, InterfaceBuildError
 #  #]
@@ -51,14 +51,16 @@ class InstallBUFRInterfaceECMWF:
                  debug_f2py_c_api=False):
         #  #[
 
-        self.preferred_fortran_compiler = preferred_fortran_compiler
-        self.preferred_c_compiler       = preferred_c_compiler
-        self.fortran_compiler           = fortran_compiler
-        self.fortran_ld_library_path    = fortran_ld_library_path
-        self.c_compiler                 = c_compiler
-        self.c_ld_library_path          = c_ld_library_path
-        self.fortran_flags              = fortran_flags
-        self.c_flags                    = c_flags
+        # first remove any quotes that may be around the strings
+        # (this may happen if the user uses quotes in the setup.cfg file)
+        self.preferred_fortran_compiler = rem_quotes(preferred_fortran_compiler)
+        self.preferred_c_compiler       = rem_quotes(preferred_c_compiler)
+        self.fortran_compiler           = rem_quotes(fortran_compiler)
+        self.fortran_ld_library_path    = rem_quotes(fortran_ld_library_path)
+        self.c_compiler                 = rem_quotes(c_compiler)
+        self.c_ld_library_path          = rem_quotes(c_ld_library_path)
+        self.fortran_flags              = rem_quotes(fortran_flags)
+        self.c_flags                    = rem_quotes(c_flags)
         self.debug_f2py_c_api           = debug_f2py_c_api
 
         # save the verbose setting
@@ -75,23 +77,77 @@ class InstallBUFRInterfaceECMWF:
         #  #]
     def build(self):
         #  #[
+
+        bufr_was_build = False
+        wrapper_was_build = False
         
         # check for the presence of the library
         if (os.path.exists(self.bufr_lib_file)):
-            pass
-            #print "library seems present"
+            print "BUFR library seems present"
         else:
             print "Entering installation sequence:"
             self.install()
-
+            print "compilation of BUFR library finished"
+            bufr_was_build = True
+            
         if (os.path.exists(self.wrapper_name)):
-            #print "python wrapper seems already present"
-            return
+            print "python wrapper seems present"
         else:
             print "Entering wrapper generation sequence:"
             (source_dir,tarfile_to_install) = self.get_source_dir()
             self.generate_python_wrapper(source_dir)
+            print "compilation of library wrapper finished"
+            wrapper_was_build = True
+        
+        if ((not bufr_was_build) and (not wrapper_was_build)):
+            print "\nNothing to do\n"+\
+                  "Execute the clean.py tool if you wish to start again "+\
+                  "from scratch."
 
+        #  #]
+    def find_copy_of_library(self):
+        #  #[
+        # note1: especially during testing of the build stage,
+        # it is usefull to be able to just take an already downloaded
+        # copy of this library, in stead of re-downloading it each time.
+        # This will also give the user the possibility to insert his
+        # preferred version of the library before initiating the build
+
+        # note2: the build script in pybufr_ecmwf/ searches for the tarfile
+        # of the bufr library in directory ecmwf_bufr_lib/
+        # However, duriong the setup-build stage the code is run
+        # from within a dir like: build/lib.linux-x86_64-2.6/pybufr_ecmwf/
+        # so:
+        # ==>walk upward the directory path untill we find a file
+        # called setup.py
+        # ==>then search in pybufr_ecmwf/ecmwf_bufr_lib/ for a copy
+
+        cwd=os.getcwd()
+        absdirname = os.path.abspath(cwd)
+        while absdirname != "/":
+            (base,dir) = os.path.split(absdirname)
+            absdirname = base
+            files = os.listdir(absdirname)
+            if "setup.cfg" in files:
+                ecmwf_bufr_lib_dir  = os.path.join(absdirname,"pybufr_ecmwf",
+                                                   "ecmwf_bufr_lib")
+                list_of_bufr_tarfiles = glob.glob(os.path.join(ecmwf_bufr_lib_dir,
+                                                       "*.tar.gz"))
+
+                # make sure the destination dir exists and step to it
+                if not os.path.exists(self.ecmwf_bufr_lib_dir):
+                    os.makedirs(self.ecmwf_bufr_lib_dir)
+
+                os.chdir(self.ecmwf_bufr_lib_dir)
+
+                #print "list_of_bufr_tarfiles=",list_of_bufr_tarfiles
+                for f in list_of_bufr_tarfiles:
+                    (bd,bf) = os.path.split(f)
+                    print "making symlink from [%s] to [%s]" % (f,bf)
+                    os.symlink(f,bf)
+                break # exit the while loop
+            
+        os.chdir(cwd)
         #  #]
     def download_library(self):
         #  #[
@@ -99,7 +155,8 @@ class InstallBUFRInterfaceECMWF:
                             "software/download/bufr.html"
         url_ecmwf_website = "http://www.ecmwf.int/"
 
-        os.makedirs(self.ecmwf_bufr_lib_dir)
+        if not os.path.exists(self.ecmwf_bufr_lib_dir):
+            os.makedirs(self.ecmwf_bufr_lib_dir)
 
         import urllib
 
@@ -165,8 +222,8 @@ class InstallBUFRInterfaceECMWF:
 
         # report the result
         if (self.verbose):
-            print "Most recent library version seems to be: ",
-            most_recent_bufr_tarfile_name
+            print "Most recent library version seems to be: ",\
+                  most_recent_bufr_tarfile_name
         download_url = url_ecmwf_website+most_recent_bufr_lib_url
 
         if (self.verbose):
@@ -196,10 +253,6 @@ class InstallBUFRInterfaceECMWF:
     def get_source_dir(self):
         #  #[
 
-        # NOTE: this one is copied for now into BUFRInterfaceECMWF
-        # since I need it there as well.
-        # TODO: solve this in a more elegant way.
-        
         # save the location to be used for installing the ECMWF BUFR library
         ecmwf_bufr_lib_dir  = "./ecmwf_bufr_lib"
         list_of_bufr_tarfiles = glob.glob(os.path.join(ecmwf_bufr_lib_dir,
@@ -237,6 +290,11 @@ class InstallBUFRInterfaceECMWF:
 
         #  #[ download and unpack the ECMWF BUFR library tar file
         (source_dir,tarfile_to_install) = self.get_source_dir()
+        if (source_dir == None):
+            self.find_copy_of_library()
+            # retry (maybe we already had downloaded a copy in a different
+            # location, in which case downloading in not needed)
+            (source_dir,tarfile_to_install) = self.get_source_dir()
         if (source_dir == None):
             self.download_library()
             # retry (hopefully we have a copy of the tarfile now)
@@ -284,7 +342,8 @@ class InstallBUFRInterfaceECMWF:
                                             "g77","f90","f77"]
             if not (self.preferred_fortran_compiler in
                     implementedfortran_compilers):
-                print "ERROR: unknown preferred fortran compiler specified."
+                print "ERROR: unknown preferred fortran compiler specified:",\
+                      self.preferred_fortran_compiler
                 print "valid options are: ",\
                       ", ".join(s for s in implementedfortran_compilers)
                 raise NotYetImplementedError
@@ -370,7 +429,8 @@ class InstallBUFRInterfaceECMWF:
         if (self.preferred_c_compiler !=None):
             implementedc_compilers = ["custom","gcc","cc"]
             if not (self.preferred_c_compiler in implementedc_compilers):
-                print "ERROR: unknown preferred c compiler specified."
+                print "ERROR: unknown preferred c compiler specified.",\
+                      self.preferred_c_compiler
                 print "valid options are: ",\
                       ", ".join(s for s in implementedc_compilers)
                 raise NotYetImplementedError
@@ -1146,7 +1206,7 @@ int main()
     #  #]
 
 if __name__ == "__main__":
-    print "Building ecmwfbufr.so interface:"
+    print "Building ecmwfbufr.so interface:\n"
     #  #[ define how to build the library and interface
     
     # instantiate the class, and build library if needed

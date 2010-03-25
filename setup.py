@@ -9,6 +9,10 @@ import os
 import sys
 from distutils.core import setup, Extension
 from distutils import log
+from distutils.errors import *
+# see: /usr/lib64/python2.6/distutils/errors.py
+# for all available error classes
+
 # import build and build_ext using a different name,
 # to allow subclassing them
 from distutils.command.build import build as _build
@@ -22,6 +26,13 @@ if version < '2.2.3':
     DistributionMetadata.classifiers = None
     DistributionMetadata.download_url = None
 #  #]
+
+# an alternative might be to use a setup version that seems present
+# in the numpy module, see:
+# http://www2-pcmdi.llnl.gov/cdat/tutorials/f2py-wrapping-fortran-code/part-4-packaging-all-this-into-something-that-can-be-distributed-very-advanced
+# and http://www.scipy.org/Documentation/numpy_distutils
+# the import would then be
+# from numpy.distutils.core import setup, Extension
 
 # modify the build class to allow some custom commandline
 # and setup.cfg options to the build stage
@@ -173,20 +184,62 @@ class build_ext(_build_ext):
         
     def build_extension(self,ext):
         fullname = self.get_ext_fullname(ext.name)
-        print "trying to build extension: ",fullname
+        #print "trying to build extension: ",fullname
         log.info("building '%s' extension", ext.name)
 
-        # for now, this import triggers the build of the ecmwfbufr.so
-        # shared-object file needed by this module
-        import pybufr_ecmwf
+        #print "ext.sources = ",ext.sources
 
         # this does not work properly yet for setup.py bdist
         # since in that case the pybufr_ecmwf/ecmwfbufr.so
         # needs to be created below build/lib.linux-i686-2.6/
         # so inspect the path settings for the build:
-        print "self.build_temp = ",self.build_temp
 
-        print "WARNING: building not yet fully implemented"
+        build_dir = os.path.join(self.build_lib,"pybufr_ecmwf")
+        build_dir = os.path.abspath(build_dir)
+        #print "self.build_lib = ",self.build_lib
+        print "initiating build in dir: ",build_dir
+        
+        #if os.path.isdir(build_dir):
+        #    sys.path.append(build_dir)
+        if os.path.isdir(build_dir):
+            sys.path.append(build_dir)
+        else:
+            raise DistutilsSetupError , \
+                  ("could not find directory in which the module should"
+                   "be build. Something seems wrong in setup.py."
+                   "Please report this to the developer of this module.")
+
+        # this enters the automatic build system, which is what I don't
+        # want at the moment, since it seems not to handle fortran
+        #_build_ext.build_extension(self,ext)
+
+        cwd=os.getcwd()
+        os.chdir(build_dir)
+
+        #print "TESTJOS: sys.path = ",sys.path
+        #print "TESTJOS: cwd = ",os.getcwd()
+        
+        from build_interface import InstallBUFRInterfaceECMWF
+
+        # run the build method from the InstallBUFRInterfaceECMWF class
+        # defined in the custom build script, to build the extension module
+        BI = InstallBUFRInterfaceECMWF(verbose=True,
+                                       preferred_fortran_compiler=self.preferred_fortran_compiler,
+                                       preferred_c_compiler=self.preferred_c_compiler,
+                                       fortran_compiler=self.fortran_compiler,
+                                       fortran_ld_library_path=self.fortran_ld_library_path,
+                                       fortran_flags=self.fortran_flags,
+                                       c_compiler=self.c_compiler,
+                                       c_ld_library_path=self.c_ld_library_path,
+                                       c_flags=self.c_flags,
+                                       debug_f2py_c_api=False)
+        
+        # Build ecmwfbufr.so interface
+        BI.build()   
+        
+        os.chdir(cwd)
+
+        print "self.distribution.dist_files = ",self.distribution.dist_files
         sys.exit(1)
     #  #]
         
@@ -210,7 +263,10 @@ cl = ["Development Status :: Alpha",
       "Operating System :: POSIX"
       ]
 
-Ext=Extension('pybufr_ecmwf.ecmwfbufr',[])
+# passing a python file to do the build does not work, it gives this error:
+# error: unknown file type '.py' (from 'pybufr_ecmwf/build_interface.py')
+Ext=Extension('pybufr_ecmwf.ecmwfbufr',["pybufr_ecmwf/build_interface.py"])
+#Ext=Extension('pybufr_ecmwf.ecmwfbufr',[])
 
 setup(cmdclass={'build': build,
                 'build_ext': build_ext},
