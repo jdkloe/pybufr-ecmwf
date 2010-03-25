@@ -16,13 +16,36 @@ import sys         # system functions
 import numpy as np # import numerical capabilities
 
 # import the RawBUFRFile class to load the encoded raw BUFR data
-if os.path.isdir("../pybufr_ecmwf"):
-    sys.path.append("../")
-else:
-    sys.path.append("../../")
+module_found = False
+module_name = "pybufr_ecmwf"
+for p in sys.path:
+    if os.path.isdir(p):
+        if module_name in os.listdir(p):
+            module_found = True
+            print "module "+module_name+" found in path: "+p
+            break
+
+# make sure if we execute from within the source package, to let that
+# version have preference over a system wide module installation with the
+# same name, by having its path in front.
+p=".."
+if os.path.isdir(os.path.join(p,module_name)):
+    sys.path.insert(0,p)
+    print "module "+module_name+" found in path: "+p
+
+p="../.."
+if os.path.isdir(os.path.join(p,module_name)):
+    sys.path.insert(0,p)
+    print "module "+module_name+" found in path: "+p
+
+print "sys.path = ",sys.path
+
 from pybufr_ecmwf import RawBUFRFile#, BUFRInterfaceECMWF
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
+
+import pybufr_ecmwf
+print "pybufr_ecmwf.__path__ = ",pybufr_ecmwf.__path__
 
 print "-"*50
 print "BUFR decoding example"
@@ -62,10 +85,13 @@ if (not os.path.exists(private_bufr_tables_dir)):
     os.mkdir(private_bufr_tables_dir)
     
 # make the needed symlinks
-if os.path.exists("ecmwf_bufrtables"):
-    ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
-else:
-    ecmwf_bufr_tables_dir = "../ecmwf_bufrtables"
+
+ecmwf_bufr_tables_dir = os.path.join(pybufr_ecmwf.__path__[0],
+                                     "ecmwf_bufrtables")
+if not os.path.exists(ecmwf_bufr_tables_dir):
+    print "Error: could not find BUFR tables directory"
+    raise IOError
+
 ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
 needed_B_table    = "B0000000000210000001.TXT"
 needed_D_table    = "D0000000000210000001.TXT"

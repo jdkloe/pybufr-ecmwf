@@ -7,6 +7,7 @@ dirs_glob_patterns = ["pybufr_ecmwf/ecmwf_bufr_lib/bufr_000*",
                       "ecmwf_bufr_lib/bufr_000*"]
 dirs_to_delete = ["pybufr_ecmwf/example_programs/tmp_BUFR_TABLES",
                   "pybufr_ecmwf/tmp_BUFR_TABLES", "tmp_BUFR_TABLES",
+                  "ecmwf_bufrtables", "pybufr_ecmwf/ecmwf_bufrtables",
                   "pybufr_ecmwf/f2py_build","build","dist"]
 
 # delete these files
@@ -14,8 +15,7 @@ file_glob_patterns = ["*~","*/*~","*/*/*~","*.pyc","*/*.pyc",
                       "*/Testfile3Msgs.BUFR", "*/*/Testfile3Msgs.BUFR",
                       "pybufr_ecmwf/expected_test_outputs/*.actual_std*"]
 files_to_delete = ["pybufr_ecmwf/libbufr.a", "libbufr.a","MANIFEST",
-                   "pybufr_ecmwf/ecmwf_bufrtables","ecmwfbufr.so",
-                   "ecmwf_bufrtables", "pybufr_ecmwf/ecmwfbufr.so",
+                   "pybufr_ecmwf/ecmwfbufr.so","ecmwfbufr.so",
                    "ecmwfbufr.so", "pybufr_ecmwf/ecmwf_bufr_lib/config_file",
                    "ecmwf_bufr_lib/config_file", "pybufr_ecmwf/ecmwfbufr.so"]
 

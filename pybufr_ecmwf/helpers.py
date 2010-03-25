@@ -15,6 +15,7 @@
 import os          # operating system functions
 import sys         # system functions
 import subprocess  # support running additional executables
+import stat        # handling of file stat data
 #  #]
 #  #[ exception definitions
 # see: http://docs.python.org/library/exceptions.html
@@ -188,4 +189,19 @@ def rem_quotes(s):
         return s[1:-1]
     else:
         return s
+    #  #]
+
+def ensure_permissions(file,mode):
+    #  #[ ensure permissions for "world"
+    """ a little routine to ensure the permissions for the
+        given file are as expected """
+    st=os.stat(file)
+    current_mode=stat.S_IMODE(st.st_mode)
+    if mode=='r':
+        new_mode = current_mode | int("444",8)
+    if mode=='w':
+        new_mode = current_mode | int("222",8)
+    if mode=='x':
+        new_mode = current_mode | int("111",8)
+    os.chmod(file,new_mode)
     #  #]

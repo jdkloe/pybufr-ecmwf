@@ -28,7 +28,7 @@ import glob        # allow for filename expansion
 import tarfile     # handle tar archives
 import shutil      # portable file copying functions
 # import some home made helper routines
-from helpers import run_shell_command, rem_quotes
+from helpers import run_shell_command, rem_quotes, ensure_permissions
 from helpers import NotYetImplementedError, ProgrammingError, \
      NetworkError, LibraryBuildError, InterfaceBuildError
 #  #]
@@ -756,6 +756,7 @@ class InstallBUFRInterfaceECMWF:
 
             # move to a more convenient location
             shutil.move(fullname_bufr_lib_file,self.bufr_lib_file)
+            ensure_permissions(self.bufr_lib_file,'r')
         else:
             print "ERROR in bufr_interface_ecmwf.install:"
             print "No libbufr.a file seems generated."
@@ -766,7 +767,7 @@ class InstallBUFRInterfaceECMWF:
         fullname_table_dir = os.path.join(source_dir,"bufrtables")
         table_dir = "ecmwf_bufrtables"
         shutil.move(fullname_table_dir,table_dir)
-
+        
         # remove some excess files from the bufr tables directory
         # that we don't need any more (symlinks, tools)
         files = os.listdir(table_dir)
@@ -774,10 +775,13 @@ class InstallBUFRInterfaceECMWF:
             fullname = os.path.join(table_dir,f)
             if os.path.islink(fullname):
                 os.unlink(fullname)
-            (base,ext) = os.path.splitext(f)
-            if not ext.upper()==".TXT":
-                os.remove(fullname)
-        
+            else:
+                (base,ext) = os.path.splitext(f)
+                if not ext.upper()==".TXT":
+                    os.remove(fullname)
+                else:
+                    ensure_permissions(fullname,'r')
+
         #  #]
 
         #  #[ some old notes
