@@ -74,6 +74,9 @@ class InstallBUFRInterfaceECMWF:
         self.bufr_lib_file = "libbufr.a"
         self.wrapper_name = "ecmwfbufr.so"
 
+        self.wrapper_build_dir   = "f2py_build"
+        self.wrapper_module_name = "ecmwfbufr"
+
         #  #]
     def build(self):
         #  #[
@@ -105,15 +108,32 @@ class InstallBUFRInterfaceECMWF:
                   "from scratch."
 
         #  #]
+    def clean(self):
+        #  #[
+        # this is a bit of a dirty hack.
+        # It removes the subdir ecmwf_bufr_lib and everything below
+        # to prevent it to be included in the binary/rpm distributions
+        # There should be a nicer way to do this, but I have not
+        # yet found it ...
+
+        dirs_to_remove = [self.ecmwf_bufr_lib_dir,
+                          self.wrapper_build_dir]
+
+        for d in dirs_to_remove:
+            if os.path.exists(d):
+                cmd = r'\rm -rf '+d
+                print "executing command: ",cmd
+                os.system(cmd)
+        #  #]
     def find_copy_of_library(self):
         #  #[
-        # note1: especially during testing of the build stage,
+        # note 1: especially during testing of the build stage,
         # it is usefull to be able to just take an already downloaded
         # copy of this library, in stead of re-downloading it each time.
         # This will also give the user the possibility to insert his
         # preferred version of the library before initiating the build
 
-        # note2: the build script in pybufr_ecmwf/ searches for the tarfile
+        # note 2: the build script in pybufr_ecmwf/ searches for the tarfile
         # of the bufr library in directory ecmwf_bufr_lib/
         # However, duriong the setup-build stage the code is run
         # from within a dir like: build/lib.linux-x86_64-2.6/pybufr_ecmwf/
@@ -134,18 +154,19 @@ class InstallBUFRInterfaceECMWF:
                 list_of_bufr_tarfiles = glob.glob(os.path.join(ecmwf_bufr_lib_dir,
                                                        "*.tar.gz"))
 
-                # make sure the destination dir exists and step to it
-                if not os.path.exists(self.ecmwf_bufr_lib_dir):
-                    os.makedirs(self.ecmwf_bufr_lib_dir)
+                if len(list_of_bufr_tarfiles)>0:
+                    # make sure the destination dir exists and step to it
+                    if not os.path.exists(self.ecmwf_bufr_lib_dir):
+                        os.makedirs(self.ecmwf_bufr_lib_dir)
 
-                os.chdir(self.ecmwf_bufr_lib_dir)
+                    os.chdir(self.ecmwf_bufr_lib_dir)
 
-                #print "list_of_bufr_tarfiles=",list_of_bufr_tarfiles
-                for f in list_of_bufr_tarfiles:
-                    (bd,bf) = os.path.split(f)
-                    print "making symlink from [%s] to [%s]" % (f,bf)
-                    os.symlink(f,bf)
-                break # exit the while loop
+                    # print "list_of_bufr_tarfiles=",list_of_bufr_tarfiles
+                    for f in list_of_bufr_tarfiles:
+                        (bd,bf) = os.path.split(f)
+                        print "making symlink from [%s] to [%s]" % (f,bf)
+                        os.symlink(f,bf)
+                    break # exit the while loop
             
         os.chdir(cwd)
         #  #]
@@ -725,24 +746,38 @@ class InstallBUFRInterfaceECMWF:
             run_shell_command(cmd,libpath=libpath,catch_output=False)
         #  #]
 
-        #  #[ check the result
+        #  #[ check the result and move bufr tables and library file
         fullname_bufr_lib_file = os.path.join(source_dir,self.bufr_lib_file)
         if (os.path.exists(fullname_bufr_lib_file)):
             print "Build seems successfull"
-            # remove any old symlink that might be present
+            # remove any old library file that might be present
             if (os.path.exists(self.bufr_lib_file)):
                 os.remove(self.bufr_lib_file)
-            # make a symlink in a more convenient location
-            os.symlink(fullname_bufr_lib_file,self.bufr_lib_file)
-            # make a symlink to the directory holding the provided
-            # BUFR tables, to more convenient (constant) name
-            fullname_table_dir = os.path.join(source_dir,"bufrtables")
-            table_dir = "ecmwf_bufrtables"
-            os.symlink(fullname_table_dir,table_dir)
+
+            # move to a more convenient location
+            shutil.move(fullname_bufr_lib_file,self.bufr_lib_file)
         else:
             print "ERROR in bufr_interface_ecmwf.install:"
             print "No libbufr.a file seems generated."
             raise LibraryBuildError
+
+        # move the directory holding the provided
+        # BUFR tables, to a more convenient location
+        fullname_table_dir = os.path.join(source_dir,"bufrtables")
+        table_dir = "ecmwf_bufrtables"
+        shutil.move(fullname_table_dir,table_dir)
+
+        # remove some excess files from the bufr tables directory
+        # that we don't need any more (symlinks, tools)
+        files = os.listdir(table_dir)
+        for f in files:
+            fullname = os.path.join(table_dir,f)
+            if os.path.islink(fullname):
+                os.unlink(fullname)
+            (base,ext) = os.path.splitext(f)
+            if not ext.upper()==".TXT":
+                os.remove(fullname)
+        
         #  #]
 
         #  #[ some old notes
@@ -907,8 +942,6 @@ int main()
         #  #]
     def generate_python_wrapper(self,source_dir):
         #  #[
-        wrapper_build_dir   = "f2py_build"
-        wrapper_module_name = "ecmwfbufr"
         signatures_filename = "signatures.pyf"
 
         #source_files = ["buxdes.F",
@@ -956,8 +989,8 @@ int main()
 
         # call f2py and create a signature file that defines the
         # interfacing to the fortran routines in this library
-        cmd = "f2py --build-dir "+wrapper_build_dir+\
-              " -m "+wrapper_module_name+\
+        cmd = "f2py --build-dir "+self.wrapper_build_dir+\
+              " -m "+self.wrapper_module_name+\
               " -h "+signatures_filename+\
               " "+source_file_list
 
@@ -973,7 +1006,7 @@ int main()
             run_shell_command(cmd,libpath=libpath,catch_output=False)
     
         # safety check: see if the signatures.pyf file really is created
-        signatures_fullfilename = os.path.join(wrapper_build_dir,
+        signatures_fullfilename = os.path.join(self.wrapper_build_dir,
                                                signatures_filename)
         if (not os.path.exists(signatures_fullfilename)):
             print "ERROR: build of python wrapper failed"
@@ -1009,7 +1042,7 @@ int main()
             debug_f2py_c_api_option = " --debug-capi "
 
         if (self.fortran_compiler != None):
-            cmd = "f2py  --build-dir "+wrapper_build_dir+\
+            cmd = "f2py  --build-dir "+self.wrapper_build_dir+\
                   debug_f2py_c_api_option+\
                   " --f90exec="+fortran_compiler+\
                   " --f90flags='"+fortran_compiler_flags+"'"+\
@@ -1023,7 +1056,7 @@ int main()
             # TODO: Maybe later I could sort out how to use the python f2py
             # module in stead of the executable, and clean-up the compiler
             # flags before starting the tool
-            cmd = "f2py  --build-dir "+wrapper_build_dir+\
+            cmd = "f2py  --build-dir "+self.wrapper_build_dir+\
                   debug_f2py_c_api_option+\
                   " --f90flags='"+fortran_compiler_flags+"'"+\
                   " --f77flags='"+fortran_compiler_flags+"'"+\

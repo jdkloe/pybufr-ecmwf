@@ -60,7 +60,7 @@ class build(_build):
                          "flags to be passed to the c compiler"))
 
     def initialize_options(self):
-        # initialise the additional options 
+        #  #[ initialise the additional options 
         self.preferred_fortran_compiler = None
         self.preferred_c_compiler = None
         self.fortran_compiler = None
@@ -70,8 +70,9 @@ class build(_build):
         self.c_ld_library_path = None
         self.c_flags = None
         _build.initialize_options(self)
-
+        #  #]
     def run(self):
+        #  #[ modified run (for debugging only)
         # some test prints:
         #print "build: self.user_options = ",self.user_options
         #print "build: self.preferred_fortran_compiler = ",\
@@ -81,6 +82,7 @@ class build(_build):
 
         # call the run command of the default build
         _build.run(self)
+        #  #]
     #  #]
 
 # modify the build_ext class to allow some custom commandline
@@ -119,7 +121,7 @@ class build_ext(_build_ext):
                          "flags to be passed to the c compiler"))
 
     def initialize_options(self):
-        # initialise the additional options 
+        #  #[ initialise the additional options 
         self.preferred_fortran_compiler = None
         self.preferred_c_compiler = None
         self.fortran_compiler = None
@@ -129,8 +131,9 @@ class build_ext(_build_ext):
         self.c_ld_library_path = None
         self.c_flags = None
         _build_ext.initialize_options(self)
-
+        #  #]
     def finalize_options (self):
+        #  #[ make settings available
         # this copies the user_options from the build
         # to the build_ext class, so I'll have to modify
         # the build class as well to allow new options
@@ -151,38 +154,38 @@ class build_ext(_build_ext):
                                    ('c_flags','c_flags')
                                    )
         _build_ext.finalize_options(self)
-        
+        #  #]
     def run(self):
-        # call the run command of the default build_ext
+        #  #[ modified run (for debugging only)
         # (actually I dont know how to build fortran this way,
         #  so I'll use my own build script here in stead
         #  _build_ext.run(self)  )
 
-        print "python executable: ",sys.executable
-
         # test prints
+        #print "python executable: ",sys.executable
         #print "build_ext: self.user_options = ",self.user_options
-        print "build_ext: self.preferred_fortran_compiler = ",\
-              self.preferred_fortran_compiler
-        print "build_ext: self.preferred_c_compiler = ",\
-              self.preferred_c_compiler
-        print "build_ext: self.fortran_compiler = ",\
-              self.fortran_compiler
-        print "build_ext: self.fortran_ld_library_path = ",\
-              self.fortran_ld_library_path
-        print "build_ext: self.fortran_flags = ",\
-              self.fortran_flags
-        print "build_ext: self.c_compiler = ",\
-              self.c_compiler
-        print "build_ext: self.c_ld_library_path = ",\
-              self.c_ld_library_path
-        print "build_ext: self.c_flags = ",\
-              self.c_flags
+        #print "build_ext: self.preferred_fortran_compiler = ",\
+        #      self.preferred_fortran_compiler
+        #print "build_ext: self.preferred_c_compiler = ",\
+        #      self.preferred_c_compiler
+        #print "build_ext: self.fortran_compiler = ",\
+        #      self.fortran_compiler
+        #print "build_ext: self.fortran_ld_library_path = ",\
+        #      self.fortran_ld_library_path
+        #print "build_ext: self.fortran_flags = ",\
+        #      self.fortran_flags
+        #print "build_ext: self.c_compiler = ",\
+        #      self.c_compiler
+        #print "build_ext: self.c_ld_library_path = ",\
+        #      self.c_ld_library_path
+        #print "build_ext: self.c_flags = ",\
+        #      self.c_flags
 
         # this run command in turn runs the build_extension method
         _build_ext.run(self) 
-        
+        #  #]
     def build_extension(self,ext):
+        #  #[ the actual build
         fullname = self.get_ext_fullname(ext.name)
         #print "trying to build extension: ",fullname
         log.info("building '%s' extension", ext.name)
@@ -236,13 +239,20 @@ class build_ext(_build_ext):
         
         # Build ecmwfbufr.so interface
         BI.build()   
+
+        # remove all object files to prevent them from ending up
+        # in the binary or rpm distribution packages
+        BI.clean()
         
         os.chdir(cwd)
 
-        print "self.distribution.dist_files = ",self.distribution.dist_files
-        sys.exit(1)
+        #print "self.distribution.dist_files = ",self.distribution.dist_files
+        #print "self.extensions[0].name = ",self.extensions[0].name
+        #print "dir(self.extensions[0]) = ",dir(self.extensions[0])
+        #sys.exit(1)
+        #  #]
     #  #]
-        
+
 descr="a python interface around the ECMWF-BUFR library."
 long_descr="""a python interface around the Fortran90 ECMWF-BUFR library
 constructed using the f2py interface generation tool.
@@ -268,7 +278,7 @@ cl = ["Development Status :: Alpha",
 Ext=Extension('pybufr_ecmwf.ecmwfbufr',["pybufr_ecmwf/build_interface.py"])
 #Ext=Extension('pybufr_ecmwf.ecmwfbufr',[])
 
-setup(cmdclass={'build': build,
+setup(cmdclass={'build'    : build,
                 'build_ext': build_ext},
       name='pybufr-ecmwf',
       version='0.1',
