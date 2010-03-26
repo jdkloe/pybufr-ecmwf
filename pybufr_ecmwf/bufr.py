@@ -121,7 +121,7 @@ class Descriptor(Singleton):
     #  #]
 
 # todo: look-up the possibilities in the documentation
-class ModifiedDescriptor():
+class ModifiedDescriptor:
     #  #[
     # note: this cannot be subclassed from Descriptor, since the whole
     # point of modified descriptors is that you can have several with
