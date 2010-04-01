@@ -47,7 +47,7 @@ for d in dirs_to_delete:
     # this only works if the dirs are empty!
     #os.removedirs(d)
 
-for f in FILES_TO_DELETE:
+for f in files_to_delete:
     if (os.path.exists(f)):
         print "deleting file: ", f
         os.remove(f)
