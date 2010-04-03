@@ -165,11 +165,10 @@ inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
 good-names=i,j,k,ex,Run,_
 
 # Bad variable names which should always be refused, separated by a comma
-bad-names=foo,bar,baz,toto,tutu,tata,hoi,bla,dummy
+bad-names=foo,bar,baz,toto,tutu,tata,hoi,bla,blabla,dummy
 
 # List of builtins function names that should not be used, separated by a comma
 bad-functions=map,filter,apply,input
-
 
 # try to find bugs in the code using type inference
 # 

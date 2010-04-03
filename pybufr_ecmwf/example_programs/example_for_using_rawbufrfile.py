@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-# This is a small example program intended to demonstrate
-# how the RawBUFRFile class defined in the pybufr_ecmwf.py
-# module may be used.
+"""
+This is a small example program intended to demonstrate
+how the RawBUFRFile class defined in the pybufr_ecmwf.py
+module may be used.
+"""
 
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
@@ -46,26 +48,26 @@ BF = RawBUFRFile()
 # open the test file for reading, count nr of BUFR messages in it
 # and store its content in memory, together with
 # an array of pointers to the start and end of each BUFR message
-BF.open(input_test_bufr_file,'r')
+BF.open(input_test_bufr_file, 'r')
 
 # print the internal data of the class instance
-BF.print_properties(prefix="RawBUFRFile (opened for reading)")
+BF.print_properties(prefix = "RawBUFRFile (opened for reading)")
 
 # print the number of BUFR messages in the file
-n=BF.get_num_bufr_msgs()
-print "This file contains: ",n," BUFR messages."
+n = BF.get_num_bufr_msgs()
+print "This file contains: ", n, " BUFR messages."
 
 # sequentially read the raw (undecoded) BUFR messages from the class instance
-data1=BF.get_next_raw_bufr_msg() # should return proper data
-data2=BF.get_next_raw_bufr_msg() # should return corrupted data
-data3=BF.get_next_raw_bufr_msg() # should return corrupted data
+data1 = BF.get_next_raw_bufr_msg() # should return proper data
+data2 = BF.get_next_raw_bufr_msg() # should return corrupted data
+data3 = BF.get_next_raw_bufr_msg() # should return corrupted data
 print "a warning is expected here:"
-data4=BF.get_next_raw_bufr_msg() # returns with None
+data4 = BF.get_next_raw_bufr_msg() # returns with None
 
-for i in range(1,n+1):
+for i in range(1, n+1):
     # read a selected raw BUFR message from the class instance
-    raw_data=BF.get_raw_bufr_msg(i)
-    print "msg ",i," got ",len(raw_data)," words"
+    raw_data = BF.get_raw_bufr_msg(i)
+    print "msg ", i, " got ", len(raw_data), " words"
 
 # close the file
 BF.close()
@@ -88,14 +90,14 @@ if (os.path.exists(output_test_bufr_file)):
 BF1 = RawBUFRFile()
 
 # open the test file for writing
-BF1.open(output_test_bufr_file,'w')
+BF1.open(output_test_bufr_file, 'w')
 
 # write a few raw (encoded) BUFR messages
 BF1.write_raw_bufr_msg(data1)
 BF1.write_raw_bufr_msg(data2)
 
 # print the internal data of the class instance
-BF1.print_properties(prefix="RawBUFRFile (opened for writing)")
+BF1.print_properties(prefix = "RawBUFRFile (opened for writing)")
 
 # close the file
 BF1.close()
@@ -107,13 +109,13 @@ del(BF1)
 BF2 = RawBUFRFile()
 
 # open the test file for appending
-BF2.open(output_test_bufr_file,'a')
+BF2.open(output_test_bufr_file, 'a')
 
 # write a third raw (encoded) BUFR messages
 BF2.write_raw_bufr_msg(data3)    
 
 # print the internal data of the class instance
-BF2.print_properties(prefix="RawBUFRFile2 (opened for appending)")
+BF2.print_properties(prefix = "RawBUFRFile2 (opened for appending)")
 
 # close the file
 BF2.close()
