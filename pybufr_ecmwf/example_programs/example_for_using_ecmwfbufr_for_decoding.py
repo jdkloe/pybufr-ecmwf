@@ -28,24 +28,24 @@ for p in sys.path:
 # make sure if we execute from within the source package, to let that
 # version have preference over a system wide module installation with the
 # same name, by having its path in front.
-p=".."
-if os.path.isdir(os.path.join(p,module_name)):
-    sys.path.insert(0,p)
+p = ".."
+if os.path.isdir(os.path.join(p, module_name)):
+    sys.path.insert(0, p)
     print "module "+module_name+" found in path: "+p
 
-p="../.."
-if os.path.isdir(os.path.join(p,module_name)):
-    sys.path.insert(0,p)
+p = "../.."
+if os.path.isdir(os.path.join(p, module_name)):
+    sys.path.insert(0, p)
     print "module "+module_name+" found in path: "+p
 
-print "sys.path = ",sys.path
+print "sys.path = ", sys.path
 
 from pybufr_ecmwf import RawBUFRFile#, BUFRInterfaceECMWF
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 
 import pybufr_ecmwf
-print "pybufr_ecmwf.__path__ = ",pybufr_ecmwf.__path__
+print "pybufr_ecmwf.__path__ = ", pybufr_ecmwf.__path__
 
 print "-"*50
 print "BUFR decoding example"
@@ -60,8 +60,8 @@ else:
     input_test_bufr_file = '../testdata/Testfile.BUFR'
     
 BF = RawBUFRFile()
-BF.open(input_test_bufr_file,'r')
-words=BF.get_next_raw_bufr_msg()
+BF.open(input_test_bufr_file, 'r')
+words = BF.get_next_raw_bufr_msg()
 BF.close()
 
 # define the needed constants
@@ -98,15 +98,15 @@ needed_D_table    = "D0000000000210000001.TXT"
 available_B_table = "B0000000000098013001.TXT"
 available_D_table = "D0000000000098013001.TXT"
 
-source      = os.path.join(ecmwf_bufr_tables_dir,  available_B_table)
-destination = os.path.join(private_bufr_tables_dir,needed_B_table)
+source      = os.path.join(ecmwf_bufr_tables_dir, available_B_table)
+destination = os.path.join(private_bufr_tables_dir, needed_B_table)
 if (not os.path.exists(destination)):
-    os.symlink(source,destination)
+    os.symlink(source, destination)
     
-source      = os.path.join(ecmwf_bufr_tables_dir,  available_D_table)
-destination = os.path.join(private_bufr_tables_dir,needed_D_table)
+source      = os.path.join(ecmwf_bufr_tables_dir, available_D_table)
+destination = os.path.join(private_bufr_tables_dir, needed_D_table)
 if (not os.path.exists(destination)):
-    os.symlink(source,destination)
+    os.symlink(source, destination)
             
 # make sure the BUFR tables can be found
 # also, force a slash at the end, otherwise the library fails
@@ -114,83 +114,83 @@ if (not os.path.exists(destination)):
 e = os.environ
 e["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
 
-ksup   = np.zeros(         9,dtype=np.int)
-ksec0  = np.zeros(         3,dtype=np.int)
-ksec1  = np.zeros(        40,dtype=np.int)
-ksec2  = np.zeros(      4096,dtype=np.int)
+ksup   = np.zeros(         9, dtype = np.int)
+ksec0  = np.zeros(         3, dtype = np.int)
+ksec1  = np.zeros(        40, dtype = np.int)
+ksec2  = np.zeros(      4096, dtype = np.int)
 kerr   = 0
         
 print "calling: ecmwfbufr.bus012():"
-ecmwfbufr.bus012(words,ksup,ksec0,ksec1,ksec2,kerr)
+ecmwfbufr.bus012(words, ksup, ksec0, ksec1, ksec2, kerr)
 if (kerr != 0):
-    print "kerr = ",kerr
+    print "kerr = ", kerr
     sys.exit(1)
-print 'ksup = ',ksup
+print 'ksup = ', ksup
 print '------------------------------'
 print "printing content of section 0:"
-print "sec0 : ",ksec0
+print "sec0 : ", ksec0
 ecmwfbufr.buprs0(ksec0)
 print '------------------------------'
 print "printing content of section 1:"
-print "sec1 : ",ksec1
+print "sec1 : ", ksec1
 ecmwfbufr.buprs1(ksec1)
-key = np.zeros(52, dtype=np.int)
+key = np.zeros(52, dtype = np.int)
 sec2_len = ksec2[0]
 print '------------------------------'
-print "length of sec2: ",sec2_len
+print "length of sec2: ", sec2_len
 if (sec2_len > 0):
     # buukey expands local ECMWF information from section 2 to the key array
     print '------------------------------'
     print "calling buukey"
-    ecmwfbufr.buukey(ksec1,ksec2,key,ksup,kerr)
-    print "sec2 : ",ksec2
+    ecmwfbufr.buukey(ksec1, ksec2, key, ksup, kerr)
+    print "sec2 : ", ksec2
     print "printing content of section 2:"
-    ecmwfbufr.buprs2(ksup,key)
+    ecmwfbufr.buprs2(ksup, key)
 else:
     print 'skipping section 2 [since it seems unused]'
 
 # these 4 are filled by the BUS012 call above
-# ksup   = np.zeros(         9,dtype=np.int)
-# ksec0  = np.zeros(         3,dtype=np.int)
-# ksec1  = np.zeros(        40,dtype=np.int)
-# ksec2  = np.zeros(      4096,dtype=np.int)
+# ksup   = np.zeros(         9, dtype = np.int)
+# ksec0  = np.zeros(         3, dtype = np.int)
+# ksec1  = np.zeros(        40, dtype = np.int)
+# ksec2  = np.zeros(      4096, dtype = np.int)
         
 print '------------------------------'
-ksec3  = np.zeros(         4,dtype=np.int)
-ksec4  = np.zeros(         2,dtype=np.int)
-cnames = np.zeros((kelem,64),dtype=np.character)
-cunits = np.zeros((kelem,24),dtype=np.character)
-values = np.zeros(     kvals,dtype=np.float64) # this is the default
-cvals  = np.zeros((kvals,80),dtype=np.character)
+ksec3  = np.zeros(          4, dtype = np.int)
+ksec4  = np.zeros(          2, dtype = np.int)
+cnames = np.zeros((kelem, 64), dtype = np.character)
+cunits = np.zeros((kelem, 24), dtype = np.character)
+values = np.zeros(      kvals, dtype = np.float64) # this is the default
+cvals  = np.zeros((kvals, 80), dtype = np.character)
 kerr   = 0
 
 print "calling: ecmwfbufr.bufrex():"
-ecmwfbufr.bufrex(words,ksup,ksec0,ksec1,ksec2,ksec3,ksec4,
-                 cnames,cunits,values,cvals,kerr)
+ecmwfbufr.bufrex(words, ksup, ksec0, ksec1, ksec2, ksec3, ksec4,
+                 cnames, cunits, values, cvals, kerr)
 if (kerr != 0):
-    print "kerr = ",kerr
+    print "kerr = ", kerr
     sys.exit(1)
 
 # print a selection of the decoded numbers
 print '------------------------------'
 print "Decoded BUFR message:"
-print "ksup : ",ksup
-print "sec0 : ",ksec0
-print "sec1 : ",ksec1
-print "sec2 : ",ksec2
-print "sec3 : ",ksec3
-print "sec4 : ",ksec4
+print "ksup : ", ksup
+print "sec0 : ", ksec0
+print "sec1 : ", ksec1
+print "sec2 : ", ksec2
+print "sec3 : ", ksec3
+print "sec4 : ", ksec4
 print "cnames [cunits] : "
-for (i,cn) in enumerate(cnames):
+for (i, cn) in enumerate(cnames):
     cu = cunits[i]
     txtn = ''.join(c for c in cn)
     txtu = ''.join(c for c in cu)
     if (txtn.strip() != ''):
-        print '[%3.3i]:%s [%s]' % (i,txtn,txtu)
+        print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
 
-print "values : ",values
+print "values : ", values
 txt = ''.join(str(v)+';' for v in values[:20] if v>0.)
-print "values[:20] : ",txt
+print "values[:20] : ", txt
         
 nsubsets  = ksec3[2] # 361 # number of subsets in this BUFR message
 nelements = ksup[4] # 44 # size of one expanded subset
@@ -203,10 +203,10 @@ for s in range(nsubsets):
     index_lon = max_nr_expanded_descriptors*(s-1)+25
     lat[s] = values[index_lat]
     lon[s] = values[index_lon]
-    if (30*(s/30)==s):
-        print "s=",s, "lat = ",lat[s]," lon = ",lon[s]
-        print "min/max lat",min(lat),max(lat)
-        print "min/max lon",min(lon),max(lon)
+    if (30*(s/30) == s):
+        print "s = ", s, "lat = ", lat[s], " lon = ", lon[s]
+        print "min/max lat", min(lat), max(lat)
+        print "min/max lon", min(lon), max(lon)
 
 print '------------------------------'
 # busel: fill the descriptor list arrays (only needed for printing)   
@@ -220,9 +220,9 @@ print '------------------------------'
 # not seem to fill the ktdlen and ktdexl values.
 
 ktdlen = 0
-ktdlst = np.zeros(max_nr_descriptors,dtype=np.int)
+ktdlst = np.zeros(max_nr_descriptors, dtype = np.int)
 ktdexl = 0
-ktdexp = np.zeros(max_nr_expanded_descriptors,dtype=np.int)
+ktdexp = np.zeros(max_nr_expanded_descriptors, dtype = np.int)
 kerr   = 0
 
 print "calling: ecmwfbufr.busel():"
@@ -232,12 +232,12 @@ ecmwfbufr.busel(ktdlen, # actual number of data descriptors
                 ktdexp, # list of expanded data descriptors
                 kerr)   # error  message
 if (kerr != 0):
-    print "kerr = ",kerr
+    print "kerr = ", kerr
     sys.exit(1)
 
 print 'busel result:'
-print "ktdlen = ",ktdlen
-print "ktdexl = ",ktdexl
+print "ktdlen = ", ktdlen
+print "ktdexl = ", ktdexl
 
 selection1 = np.where(ktdlst > 0)
 ktdlen = len(selection1[0])
@@ -245,17 +245,17 @@ selection2 = np.where(ktdexp > 0)
 ktdexl = len(selection2[0])
 
 print 'fixed lengths:'
-print "ktdlen = ",ktdlen
-print "ktdexl = ",ktdexl
+print "ktdlen = ", ktdlen
+print "ktdexl = ", ktdexl
 
 print 'descriptor lists:'
-print "ktdlst = ",ktdlst[:ktdlen]
-print "ktdexp = ",ktdexp[:ktdexl]
+print "ktdlst = ", ktdlst[:ktdlen]
+print "ktdexp = ", ktdexp[:ktdexl]
 
 print '------------------------------'
 print "printing content of section 3:"
-print "sec3 : ",ksec3
-ecmwfbufr.buprs3(ksec3,ktdlst,ktdexp,cnames)
+print "sec3 : ", ksec3
+ecmwfbufr.buprs3(ksec3, ktdlst, ktdexp, cnames)
 
 print "-"*50
 print "done"
