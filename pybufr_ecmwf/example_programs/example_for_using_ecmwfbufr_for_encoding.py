@@ -30,8 +30,8 @@ from pybufr_ecmwf import ecmwfbufr
 
 def encoding_example():
     """
-    wrap the example in a function to circumvent the pyling
-    convention of requirinf capitals for constants in the global
+    wrap the example in a function to circumvent the pylint
+    convention of requiring capitals for constants in the global
     scope (since most of these variables are not constants at all))
     """
     print "-"*50
@@ -275,22 +275,38 @@ def encoding_example():
         # note that python starts counting with 0, unlike fortran,
         # so there is no need to take (subset-1)
         i = subset*exp_descr_list_length
-        
-        values[i]        = 1999 # year
-        i = i+1; values[i] =   12 # month
-        i = i+1; values[i] =   31 # day
-        i = i+1; values[i] =   23 # hour
-        i = i+1; values[i] =   59    -        subset # minute
-        i = i+1; values[i] = 2 # delayed replication factor
+        values[i] = 1999 # year
+
+        i = i+1
+        values[i] =   12 # month
+
+        i = i+1
+        values[i] =   31 # day
+
+        i = i+1
+        values[i] =   23 # hour
+
+        i = i+1
+        values[i] =   59    -        subset # minute
+
+        i = i+1
+        values[i] = 2 # delayed replication factor
         # this delayed replication factor determines the actual number
         # of values to be stored for this particular subset
         # even if it is less then the number given in kdata above !
         for repl in range(2):
-            i = i+1; values[i] = 1013.e2 - 100.e2*subset+i+repl # pressure [pa]
-            i = i+1; values[i] = 273.15  -    10.*subset+i+repl # temperature [K]
+            i = i+1
+            values[i] = 1013.e2 - 100.e2*subset+i+repl # pressure [pa]
+
+            i = i+1
+            values[i] = 273.15  -    10.*subset+i+repl # temperature [K]
+
         for repl in range(3):
-            i = i+1; values[i] = 51.82   +   0.05*subset+i+repl # latitude
-            i = i+1; values[i] =  5.25   +    0.1*subset+i+repl # longitude
+            i = i+1
+            values[i] = 51.82   +   0.05*subset+i+repl # latitude
+
+            i = i+1
+            values[i] =  5.25   +    0.1*subset+i+repl # longitude
      
     # call BUFREN
     #   bufren: encode a bufr message

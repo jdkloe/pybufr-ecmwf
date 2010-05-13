@@ -44,18 +44,25 @@ EX_FILES = ['example_for_using_bufrinterface_ecmwf_for_decoding.py',
             'example_for_using_rawbufrfile.py',
             'verify_bufr_tables.py']
 
-result = []
-result.append(check('checking module: ', 'pybufr_ecmwf'))
-result.append(check('checking script: ', 'clean.py'))
-result.append(check('checking script: ', 'setup.py'))
-result.append(check('checking script: ', 'pylint/run_pylint.py'))
-for ex_file in EX_FILES:
-    result.append(check('checking script: ',
-                        os.path.join(EX_PROGR_PATH, ex_file)))
+def check_all_py_files():
+    """
+    a function to find all python code in this project, and run
+    the pylint checker on it.
+    """
+    result = []
+    result.append(check('checking module: ', 'pybufr_ecmwf'))
+    result.append(check('checking script: ', 'clean.py'))
+    result.append(check('checking script: ', 'setup.py'))
+    result.append(check('checking script: ', 'pylint/run_pylint.py'))
+    for ex_file in EX_FILES:
+        result.append(check('checking script: ',
+                            os.path.join(EX_PROGR_PATH, ex_file)))
 
-num_not_ok = sum(result)
-num_ok     = len(result)-num_not_ok
+    num_not_ok = sum(result)
+    num_ok     = len(result)-num_not_ok
+    
+    print "done; nr of modules/scripts checked: ", len(result)
+    print "number of well validated modules/scripts: ", num_ok
+    print "number of problematic    modules/scripts: ", num_not_ok
 
-print "done; nr of modules/scripts checked: ",len(result)
-print "number of well validated modules/scripts: ",num_ok
-print "number of problematic    modules/scripts: ",num_not_ok
+check_all_py_files()
