@@ -6,6 +6,7 @@ generated during building and testing.
 (mostly usefull for re-testing over and over again during development)
 """
 
+from __future__ import print_function
 import os, glob #, sys
 
 # delete these dirs
@@ -42,17 +43,17 @@ for pattern in FILE_GLOB_PATTERNS:
 for d in dirs_to_delete:
     if (os.path.exists(d)):
         if (os.path.isdir(d)):
-            print "deleting dir: ", d
+            print("deleting dir: ", d)
             os.system(r"\rm -rf "+d)
     # this only works if the dirs are empty!
     #os.removedirs(d)
 
 for f in files_to_delete:
     if (os.path.exists(f)):
-        print "deleting file: ", f
+        print("deleting file: ", f)
         os.remove(f)
     if (os.path.islink(f)):
-        print "deleting symlink: ", f
+        print("deleting symlink: ", f)
         os.remove(f)
 
-print "done"
+print("done")
