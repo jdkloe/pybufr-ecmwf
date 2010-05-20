@@ -30,7 +30,10 @@ import time        # handling of date and time
 import numpy as np # import numerical capabilities
 import struct      # allow converting c datatypes and structs
 # import some home made helper routines
-from helpers import call_cmd_and_verify_output
+from helpers import call_cmd_and_verify_output, EcmwfBufrLibError
+
+# import the raw wrapper interface to the ECMWF BUFR library
+import ecmwfbufr
 
 #  #]
 
@@ -40,8 +43,17 @@ class BUFRInterfaceECMWF:
     a class of wrapper and helper functions to allow easier use of the
     raw ECMWF BUFR interface wrapper
     """
+    size_ksup  =    9
+    size_ksec0 =    3
+    size_ksec1 =   40
+    size_ksec2 = 4096
+    
     def __init__(self):
-        pass
+        self.ksup   = np.zeros(self.size_ksup,  dtype = np.int)
+        self.ksec0  = np.zeros(self.size_ksec0, dtype = np.int)
+        self.ksec1  = np.zeros(self.size_ksec1, dtype = np.int)
+        self.ksec2  = np.zeros(self.size_ksec2, dtype = np.int)
+
     def get_expected_ecmwf_bufr_table_names(self, center, subcenter,
                                             LocalVersion, MasterTableVersion,
                                             EditionNumber, MasterTableNumber):
@@ -191,6 +203,22 @@ class BUFRInterfaceECMWF:
         #             ZZ(Y)     - VERSION NUMBER OF LOCAL TABLE USED
         
         return (name_table_b, name_table_d)
+        #  #]
+    def decode_sections_012(self,words):
+        #  #[ wrapper for bus012
+        kerr   = 0
+       
+        print "calling: ecmwfbufr.bus012():"
+        ecmwfbufr.bus012(words, self.ksup,
+                         self.ksec0, self.ksec1, self.ksec2, kerr)
+        if (kerr != 0):
+            raise EcmwfBufrLibError(self.explain_error(kerr,'bus012'))
+        #  #]
+    def explain_error(kerr, subroutine_name):
+        #  #[ explain error codes returned by the bufrlib routines
+        # to be implemented, for now just print the raw code
+        return 'libbufr subroutine '+subroutine_name+\
+               ' reprted error code: kerr = '+str(kerr)
         #  #]
     #  #]
 class RawBUFRFile:

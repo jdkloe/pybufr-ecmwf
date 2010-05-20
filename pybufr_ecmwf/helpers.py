@@ -47,6 +47,10 @@ class InterfaceBuildError(Exception):
     """ an exception to indicate that building the fortran-to-python
     interface has failed """
     pass
+class EcmwfBufrLibError(Exception):
+    """ an exception to indicate that one of the subroutines or functions
+    in the ECMWF bufr library returned with an error """
+    pass
 #  #]
 
 def run_shell_command(cmd, libpath = None, catch_output = True,

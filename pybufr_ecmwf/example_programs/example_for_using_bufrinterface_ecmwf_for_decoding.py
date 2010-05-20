@@ -46,11 +46,8 @@ print "sys.path = ", sys.path
 print "to be implemented"
 # for now, this is just a copy of example_for_using_ecmwfbufr_for_decoding.py
 
-sys.exit(0)
-
+# maybe this import is to be moved into BUFRInterfaceECMWF as well?
 from pybufr_ecmwf import RawBUFRFile#, BUFRInterfaceECMWF
-# import the raw wrapper interface to the ECMWF BUFR library
-from pybufr_ecmwf import ecmwfbufr
 
 import pybufr_ecmwf
 print "pybufr_ecmwf.__path__ = ", pybufr_ecmwf.__path__
@@ -126,19 +123,17 @@ def decoding_example():
     env = os.environ
     env["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
     
-    ksup   = np.zeros(         9, dtype = np.int)
-    ksec0  = np.zeros(         3, dtype = np.int)
-    ksec1  = np.zeros(        40, dtype = np.int)
-    ksec2  = np.zeros(      4096, dtype = np.int)
-    kerr   = 0
+    BI = pybufr_ecmwf.BUFRInterfaceECMWF()
+
+    print "calling: decode_sections_012():"
+    BI.decode_sections_012(words)
     
-    print "calling: ecmwfbufr.bus012():"
-    ecmwfbufr.bus012(words, ksup, ksec0, ksec1, ksec2, kerr)
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
-    print 'ksup = ', ksup
+    print 'ksup = ', BI.ksup
     print '------------------------------'
+
+    # implemented upto this point
+    sys.exit(0)
+
     print "printing content of section 0:"
     print "sec0 : ", ksec0
     ecmwfbufr.buprs0(ksec0)
