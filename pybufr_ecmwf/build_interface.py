@@ -283,7 +283,7 @@ class InstallBUFRInterfaceECMWF:
         download_url = url_ecmwf_website+most_recent_bufr_lib_url
 
         if (self.verbose):
-            print "trying to dowdload: ", most_recent_bufr_tarfile_name
+            print "trying to download: ", most_recent_bufr_tarfile_name
         try:
             # Get a file-like object for this website
             urlf = urllib.urlopen(download_url)

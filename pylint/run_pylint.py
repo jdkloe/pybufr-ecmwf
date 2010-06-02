@@ -26,13 +26,18 @@ def check(msg, pycode):
         # so the except clause seems always to be called when
         # the checking is done
         lint.Run(args)
+
+        # this point is never reached ...
+        print 'this point should not be used'
+        return (-1, pycode)
     except SystemExit as sysexit:
         if (sysexit.args[0] == 0):
             print 'all seems fine'
-            return 0
+            return (0, pycode)
         else:
             print "exception occurred; exit status: ", sysexit.args[0]
-            return 1
+            return (1, pycode)
+        
     #  #]
 
 EX_PROGR_PATH = 'pybufr_ecmwf/example_programs'
@@ -58,11 +63,13 @@ def check_all_py_files():
         result.append(check('checking script: ',
                             os.path.join(EX_PROGR_PATH, ex_file)))
 
-    num_not_ok = sum(result)
-    num_ok     = len(result)-num_not_ok
+    num_not_ok = sum([r[0] for r in result])
+    num_ok     = len(result) - num_not_ok
     
     print "done; nr of modules/scripts checked: ", len(result)
     print "number of well validated modules/scripts: ", num_ok
     print "number of problematic    modules/scripts: ", num_not_ok
+
+    print '\n'.join('status: %2i file %s' % (i, f) for (i, f) in result)
 
 check_all_py_files()
