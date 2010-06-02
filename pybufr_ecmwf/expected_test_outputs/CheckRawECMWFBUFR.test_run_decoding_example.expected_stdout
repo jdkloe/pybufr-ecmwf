@@ -74,43 +74,43 @@ cnames [cunits] :
 [043]:WIND PRODUCT CONFIDENCE DATA                                     [FLAG TABLE 21067        ]
 values :  [   2.  803.  210. ...,    0.    0.    0.]
 values[:20] :  2.0;803.0;210.0;1.0;348.0;1998.0;12.0;16.0;22.0;26.0;36.49;7164713.6;106558.26;15.73201;7377.06752;8.0;1998.0;12.0;
-s= 0 lat =  1.26  lon =  6.8
+subs =  0 lat =  1.26  lon =  6.8
 min/max lat 0.0 1.26
 min/max lon 0.0 6.8
-s= 30 lat =  -2.91  lon =  5.89
+subs =  30 lat =  -2.91  lon =  5.89
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 60 lat =  -2.86  lon =  4.03
+subs =  60 lat =  -2.86  lon =  4.03
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 90 lat =  -2.1  lon =  6.39
+subs =  90 lat =  -2.1  lon =  6.39
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 120 lat =  -2.05  lon =  4.54
+subs =  120 lat =  -2.05  lon =  4.54
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 150 lat =  -1.28  lon =  6.9
+subs =  150 lat =  -1.28  lon =  6.9
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 180 lat =  -1.23  lon =  5.05
+subs =  180 lat =  -1.23  lon =  5.05
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 210 lat =  -1.18  lon =  3.19
+subs =  210 lat =  -1.18  lon =  3.19
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 240 lat =  -0.42  lon =  5.56
+subs =  240 lat =  -0.42  lon =  5.56
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 270 lat =  -0.36  lon =  3.7
+subs =  270 lat =  -0.36  lon =  3.7
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 300 lat =  0.4  lon =  6.07
+subs =  300 lat =  0.4  lon =  6.07
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 330 lat =  0.45  lon =  4.21
+subs =  330 lat =  0.45  lon =  4.21
 min/max lat -3.63 1.26
 min/max lon 0.0 7.69
-s= 360 lat =  1.21  lon =  6.58
+subs =  360 lat =  1.21  lon =  6.58
 min/max lat -3.63 1.26
 min/max lon 2.85 7.69
 ------------------------------

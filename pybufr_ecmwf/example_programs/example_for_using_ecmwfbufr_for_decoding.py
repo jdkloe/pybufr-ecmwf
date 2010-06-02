@@ -23,7 +23,7 @@ for path in sys.path:
     if os.path.isdir(path):
         if module_name in os.listdir(path):
             module_found = True
-            print "module "+module_name+" found in path: "+path
+            #print "module "+module_name+" found in path: "+path
             break
 
 # make sure if we execute from within the source package, to let that
@@ -32,21 +32,21 @@ for path in sys.path:
 path = ".."
 if os.path.isdir(os.path.join(path, module_name)):
     sys.path.insert(0, path)
-    print "module "+module_name+" found in path: "+path
+    #print "module "+module_name+" found in path: "+path
 
 path = "../.."
 if os.path.isdir(os.path.join(path, module_name)):
     sys.path.insert(0, path)
-    print "module "+module_name+" found in path: "+path
+    #print "module "+module_name+" found in path: "+path
 
-print "sys.path = ", sys.path
+#print "sys.path = ", sys.path
 
 from pybufr_ecmwf import RawBUFRFile#, BUFRInterfaceECMWF
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 
 import pybufr_ecmwf
-print "pybufr_ecmwf.__path__ = ", pybufr_ecmwf.__path__
+#print "pybufr_ecmwf.__path__ = ", pybufr_ecmwf.__path__
 
 # decoding_excample
 def decoding_example():

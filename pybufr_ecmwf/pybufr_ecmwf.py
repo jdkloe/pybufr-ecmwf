@@ -768,7 +768,7 @@ if __name__ == "__main__":
         def test_run_example(self):
             #  #[
             # run the provided example code and verify the output
-            cmd = "example_programs/example_for_using_RawBUFRFile.py"
+            cmd = "example_programs/example_for_using_rawbufrfile.py"
             success = call_cmd_and_verify_output(cmd)
             self.assertEqual(success, True)                
             #  #]
