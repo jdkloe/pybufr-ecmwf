@@ -301,18 +301,24 @@ constructed using the f2py interface generation tool.
 For now only the equivalent subroutines to the ones in the ECMWF-BUFR
 library are made available to python. In a next stage the plan is to
 create also a more object-oriented/pythonic interface.
-Building the interface is still a bit rough, and my require some
+Building the interface is still a bit rough, and may require some
 editing to choose the correct fortran and c-compiler.
-Examples can be found in the file pybufr_ecmwf/pybufr_ecmwf.py
-directly after the line: Starting test program:
+For this purpose some dedicated commandline options have been
+added to the setup.py script. Run 'setup.py build --help' to get a
+list of the currently available build options.
 """
 
 # define the list of classifiers
-CL = ["Development Status :: Alpha",
-      "Environment :: Console"
-      "Intended Audience :: Developers"
-      "Intended Audience :: System Administrators"
-      "Operating System :: POSIX"
+CL = ["Development Status :: 3 - Alpha",
+      "Environment :: Console",
+      "Intended Audience :: Science/Research",
+      "License :: OSI Approved :: GNU General Public License (GPL)",
+      "Natural Language :: English",
+      "Operating System :: POSIX",
+      "Programming Language :: Fortran",
+      "Programming Language :: Python :: 2",
+      "Topic :: Scientific/Engineering",
+      "Topic :: Software Development :: Libraries"
       ]
 
 # passing a python file to do the build does not work, it gives this error:
