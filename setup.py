@@ -302,10 +302,11 @@ For now only the equivalent subroutines to the ones in the ECMWF-BUFR
 library are made available to python. In a next stage the plan is to
 create also a more object-oriented/pythonic interface.
 Building the interface is still a bit rough, and may require some
-editing to choose the correct fortran and c-compiler.
-For this purpose some dedicated commandline options have been
-added to the setup.py script. Run 'setup.py build --help' to get a
-list of the currently available build options.
+editing of the setup.cfg file to choose the correct fortran and c-compiler.
+Alternatively some dedicated commandline options have been
+added to the setup.py script to allow changing these settings.
+Run 'setup.py build --help' to get a list of the currently available
+build options.
 """
 
 # define the list of classifiers
