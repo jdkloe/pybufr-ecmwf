@@ -1,1 +1,13 @@
-There have been no releases, so this file is to be written.
+Release 0.1 (10-Jun-2010):
+
+A first rough test version of this module. The f2py wrapper generation and 
+compilation works for me.
+Decoding and encoding of BUFR messages already is possible with this
+version, if you know what you are doing.
+Today I submitted this version to the pypi index, see:
+http://pypi.python.org/pypi/pybufr-ecmwf/0.1
+so hopefully I will get some feedback on the functioning and coding 
+of this module.
+Don't hesitate to contact me if you have any questions or remarks!
+
+Jos de Kloe, 10-Jun-2010.
