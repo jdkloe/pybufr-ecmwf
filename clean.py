@@ -24,7 +24,8 @@ FILE_GLOB_PATTERNS = ["*~", "*/*~", "*/*/*~", "*.pyc", "*/*.pyc",
 FILES_TO_DELETE = ["pybufr_ecmwf/libbufr.a", "libbufr.a", "MANIFEST",
                    "pybufr_ecmwf/ecmwfbufr.so", "ecmwfbufr.so",
                    "ecmwfbufr.so", "pybufr_ecmwf/ecmwf_bufr_lib/config_file",
-                   "ecmwf_bufr_lib/config_file", "pybufr_ecmwf/ecmwfbufr.so"]
+                   "ecmwf_bufr_lib/config_file", "pybufr_ecmwf/ecmwfbufr.so",
+                   "pybufr_ecmwf/ecmwfbufr_parameters.py"]
 
 #pylint: disable-msg=C0103
 dirs_to_delete = []

@@ -22,7 +22,7 @@
 #  #]
 #  #[ imported modules
 import os          # operating system functions
-#import sys         # system functions
+# import sys         # system functions
 import re          # regular expression handling
 import glob        # allow for filename expansion
 import tarfile     # handle tar archives
@@ -774,7 +774,7 @@ class InstallBUFRInterfaceECMWF:
         self.fortran_compile_test(fcmp, fflags, libpath)
         self.c_compile_test(ccmp, cflags, libpath)
         #  #]
-        
+
         #  #[ now use the make command to build the library
 
         # construct the compilation command:
@@ -829,6 +829,98 @@ class InstallBUFRInterfaceECMWF:
 
         #  #]
 
+        #  #[ extract some hardcoded constants for reuse by the python code
+
+        # note: this block of constant parameters defining all array sizes
+        #       in the interfaces to this ecmwf library seems not available
+        #       through the f2py interface
+        #       It is defined in file:
+        #           ecmwf_bufr_lib/bufr_000380/bufrdc/parameter.F
+        #
+        #      PARAMETER(JSUP =   9,JSEC0=   3,JSEC1= 40,JSEC2=4096,JSEC3=   4,
+        #     1          JSEC4=2,JELEM=320000,JSUBS=400,JCVAL=150 ,JBUFL=512000,
+        #     2          JBPW = 32,JTAB =3000,JCTAB=3000,JCTST=9000,JCTEXT=9000,
+        #     3          JWORK=4096000,JKEY=46, JTMAX=10,JTCLAS=64,JTEL=255)
+        
+        # TODO: read this file from python, in stead of hardcoding the
+        #       numbers below and provide them as module parameters for
+        #       pybufr_ecmwf.py
+        #max_nr_descriptors          =  20 # 300
+        #max_nr_expanded_descriptors = 140 # 160000
+        #max_nr_subsets              = 361 # 25
+
+        parameter_file = os.path.join(source_dir,'bufrdc','parameter.F')
+        print 'inspecting parameter_file: ',parameter_file
+        key_val_pairs = []
+        for line in open(parameter_file).readlines():
+            if 'JSUP' in line:
+                items = line[6:].split('(')[1].split(',')
+                key_val_pairs.extend(items)
+            if 'JSEC4' in line:
+                items = line[6:].split(',')
+                key_val_pairs.extend(items)
+            # we explicitely compile using 32 bits integers, so
+            # force the use of JBPW=32
+            if 'JBPW =  32' in line:
+                items = line[6:].split(',')
+                key_val_pairs.extend(items)
+            if 'JWORK' in line:
+                items = line[6:].split(')')[0].split(',')
+                key_val_pairs.extend(items)
+
+        # print 'key_val_pairs: '
+        # print '\n'.join(txt.strip() for txt in key_val_pairs)
+
+        parameter_dict = {}
+        for kv in key_val_pairs:
+            if not (kv.strip()==''):
+                try:
+                    rawkey,rawval = kv.split('=')
+                    key = rawkey.strip() # remove whitespace
+                    val = rawval.strip() # remove whitespace
+                    parameter_dict[key] = int(val)
+                except:
+                    print 'error interpreting: ['+kv+']'
+        print 'parameter_dict = ',parameter_dict
+
+        python_parameter_file = 'ecmwfbufr_parameters.py'
+        print 'creating parameter python file: ',python_parameter_file
+        fd = open(python_parameter_file,'wt')
+
+        # write the retrieved parameter values to a python file
+        for (key,val) in parameter_dict.iteritems():
+            txt = key+' = '+str(val)+'\n'
+            fd.write(txt)
+
+        # add some aliasses with easier names
+        aliasses = ["LENGTH_SECTION_0 = JSEC0",
+                    "LENGTH_SECTION_1 = JSEC1",
+                    "LENGTH_SECTION_2 = JSEC2",
+                    "LENGTH_SECTION_3 = JSEC3",
+                    "LENGTH_SECTION_4 = JSEC4",
+                    "LENGTH_SUPPORT_DATA   = JSUP",
+                    "LENGTH_ECMWF_KEY_DATA = JKEY",
+                    "NUM_BITS_PER_WORD        = JBPW",
+                    "MAX_BUFR_MSG_LENGTH      = JBUFL",
+                    "MAX_NR_TABLE_B_D_ENTRIES = JTAB"
+                    "MAX_NR_TABLE_C_ENTRIES   = JCTAB"
+                    "MAX_NR_OF_EXP_DATA_DESCRIPTORS = JELEM"]
+                    # JSUBS=400 # seems not used
+                    # JCVAL=150 # seems not used
+                    # JCTST=9000 # size of text tables from table C
+                    # JCTEXT=9000 # code table size ?
+                    # JWORK=4096000 # size of data buffer when encoding sec.4
+                    #
+                    # JTMAX=10  ## these 3 define the MTABP tabel dimensions 
+                    # JTEL=255  ## used for storing BUFR tables in memory
+                    # JTCLAS=64 ## 
+
+        for alias in aliasses:
+            fd.write(alias+'\n')
+            
+        fd.close()
+        #  #]
+        
         #  #[ some old notes
         
         # save the settings for later use

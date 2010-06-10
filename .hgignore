@@ -19,6 +19,7 @@ expected_test_outputs/.*.actual_stderr$
 Testfile3Msgs.BUFR
 .*/Testfile3Msgs.BUFR
 .*/.*/Testfile3Msgs.BUFR
+pybufr_ecmwf/ecmwfbufr_parameters.py
 MANIFEST
 
 # generated and build directories to ignore:

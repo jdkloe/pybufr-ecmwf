@@ -214,6 +214,15 @@ class BUFRInterfaceECMWF:
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bus012'))
         #  #]
+
+    # todo: pass these values as optional parameters to the decoder
+    #       and check whether they pass the library maximum or not.
+    #       (and choose sensible defaults if not provided)
+    #max_nr_descriptors          =  20 # 300
+    #max_nr_expanded_descriptors = 140 # 160000 # max is JELEM=320.000
+    #max_nr_subsets              = 361 # 25
+
+
     def explain_error(kerr, subroutine_name):
         #  #[ explain error codes returned by the bufrlib routines
         # to be implemented, for now just print the raw code
@@ -868,23 +877,11 @@ if __name__ == "__main__":
 
     #  #[ define the needed constants
     
-    # note: this block of constant parameters defining all array sizes
-    #       in the interfaces to this ecmwf library seems not available
-    #       through the f2py interface
-    #       It is defined in file:
-    #           ecmwf_bufr_lib/bufr_000380/bufrdc/parameter.F
-    #
-    #      PARAMETER(JSUP =   9,JSEC0=   3,JSEC1= 40,JSEC2=4096,JSEC3=   4,
-    #     1          JSEC4=2,JELEM=320000,JSUBS=400,JCVAL=150 ,JBUFL=512000,
-    #     2          JBPW = 32,JTAB =3000,JCTAB=3000,JCTST=9000,JCTEXT=9000,
-    #     3          JWORK=4096000,JKEY=46, JTMAX=10,JTCLAS=64,JTEL=255)
-    
-    # TODO: read this file from python, in stead of hardcoding the
-    #       numbers below and provide them as module parameters for
-    #       pybufr_ecmwf.py
     max_nr_descriptors          =  20 # 300
-    max_nr_expanded_descriptors = 140 # 160000
+    max_nr_expanded_descriptors = 140 # 160000 # max is JELEM=320.000
     max_nr_subsets              = 361 # 25
+
+    
     
     ktdlen = max_nr_descriptors
     # krdlen = max_nr_delayed_replication_factors
