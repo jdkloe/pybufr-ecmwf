@@ -54,7 +54,9 @@ class BUFRInterfaceECMWF:
         self.ksec1  = np.zeros(self.size_ksec1, dtype = np.int)
         self.ksec2  = np.zeros(self.size_ksec2, dtype = np.int)
 
-    def get_expected_ecmwf_bufr_table_names(self, center, subcenter,
+    def get_expected_ecmwf_bufr_table_names(self,
+                                            ecmwf_bufr_tables_dir,
+                                            center, subcenter,
                                             LocalVersion, MasterTableVersion,
                                             EditionNumber, MasterTableNumber):
         #  #[
@@ -71,8 +73,6 @@ class BUFRInterfaceECMWF:
         conv_short     =  1
         conv_medium    =  2
         conv_long      =  3
-
-        ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
 
         #-------------------------------------------------------------
         # see which BUFR tables naming convention is used (short/long)
@@ -214,6 +214,44 @@ class BUFRInterfaceECMWF:
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bus012'))
         #  #]
+    def setup_tables(self):
+        #  #[
+        print 'insided setup_tables() ...'
+
+        # dont use this! This would need an import of helpers
+        # which in turn imports pybufr_ecmwf so would give a circular
+        # dependency ...
+        #ecmwf_bufr_tables_dir = helpers.get_tables_dir()
+
+        this_path,this_file = os.path.split(__file__)
+        ecmwf_bufr_tables_dir = os.path.join(this_path,"ecmwf_bufrtables")
+        if not os.path.exists(ecmwf_bufr_tables_dir):
+            print "Error: could not find BUFR tables directory"
+            raise IOError
+
+        # make sure the path is absolute, otherwise the ECMWF library
+        # might fail when it attempts to use it ...
+        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+
+        print 'ecmwf_bufr_tables_dir = ',ecmwf_bufr_tables_dir
+
+        EditionNumber      = self.ksec0[3-1]
+
+        center             = self.ksec1[3-1]
+        LocalVersion       = self.ksec1[8-1]
+        MasterTableNumber  = self.ksec1[14-1]
+        MasterTableVersion = self.ksec1[15-1]
+        subcenter          = self.ksec1[16-1]
+
+        (name_table_b, name_table_d) = \
+              self.get_expected_ecmwf_bufr_table_names(
+                       ecmwf_bufr_tables_dir,
+                       center, subcenter,
+                       LocalVersion, MasterTableVersion,
+                       EditionNumber, MasterTableNumber)
+        
+        print '(name_table_b, name_table_d) = ',(name_table_b, name_table_d)
+      #  #]
 
     # todo: pass these values as optional parameters to the decoder
     #       and check whether they pass the library maximum or not.
@@ -586,6 +624,18 @@ class RawBUFRFile:
 if __name__ == "__main__":
     #  #[ test program
     print "Starting test program:"
+
+    # create a symlink to the helpers.py file in the
+    # example_programs directory to allow these example programs to
+    # use the code and BUFR tables in this source package
+    # (only usefull when the package is not yet installed
+    # in a place where python can find it)
+
+    source      = os.path.abspath("./helpers.py")
+    destination = os.path.abspath("./example_programs/helpers.py")
+    if not os.path.islink(destination):
+        if not os.path.exists(destination):
+            os.symlink(source,destination)
     
     #  import additional modules needed for testing
     import ecmwfbufr # import the just created wrapper module
@@ -669,12 +719,31 @@ if __name__ == "__main__":
             edition_number       =   3 # =  ksec0( 3)
             master_table_number  =   0 # = ksec1(14)
             BI = BUFRInterfaceECMWF()
-            (b, d) = BI.get_expected_ecmwf_bufr_table_names(center,
-                                                        subcenter,
-                                                        local_version,
-                                                        master_table_version,
-                                                        edition_number,
-                                                        master_table_number)
+
+            # dont use this! This would need an import of helpers
+            # which in turn imports pybufr_ecmwf so would give a circular
+            # dependency ...
+            # ecmwf_bufr_tables_dir = helpers.get_tables_dir()
+            
+            this_path,this_file = os.path.split(__file__)
+            ecmwf_bufr_tables_dir = os.path.join(this_path,"ecmwf_bufrtables")
+            if not os.path.exists(ecmwf_bufr_tables_dir):
+                print "Error: could not find BUFR tables directory"
+                raise IOError
+            
+            # make sure the path is absolute, otherwise the ECMWF library
+            # might fail when it attempts to use it ...
+            ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+        
+            (b, d) = BI.get_expected_ecmwf_bufr_table_names(
+                            ecmwf_bufr_tables_dir,
+                            center,
+                            subcenter,
+                            local_version,
+                            master_table_version,
+                            edition_number,
+                            master_table_number)
+
             # print "tabel name B: ", b
             # print "tabel name D: ", d
             self.assertEqual(b, 'B0000000000210000001')

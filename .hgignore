@@ -15,11 +15,12 @@ syntax: regexp
 expected_test_outputs/.*.actual_stdout$
 expected_test_outputs/.*.actual_stderr$
 
-# Ignore these generated files:
+# Ignore these generated files and symlinks:
 Testfile3Msgs.BUFR
 .*/Testfile3Msgs.BUFR
 .*/.*/Testfile3Msgs.BUFR
 pybufr_ecmwf/ecmwfbufr_parameters.py
+pybufr_ecmwf/example_programs/helpers.py
 MANIFEST
 
 # generated and build directories to ignore:

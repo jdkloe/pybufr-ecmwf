@@ -919,6 +919,10 @@ class InstallBUFRInterfaceECMWF:
             fd.write(alias+'\n')
             
         fd.close()
+
+        # make sure the file is executable for all
+        ensure_permissions(filename, 'x')
+        
         #  #]
         
         #  #[ some old notes

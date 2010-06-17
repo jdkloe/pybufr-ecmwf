@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-# This is a small example program intended to demonstrate
-# how the raw wrapper interface to the ECMWF BUFR library may be
-# used for encoding a BUFR message.
-# Note that the building of this wrapper is defined in the
-# BUFRInterfaceECMWF class defined in the pybufr_ecmwf.py
-# but apart from that, no methods from that class will be
-# used in this example.
+"""
+This is a small example program intended to demonstrate
+how the pybufr_ecmwf wrapper interface to the ECMWF BUFR library may be
+used for encoding a BUFR message.
+"""
+
 #
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
@@ -20,11 +19,13 @@ import sys         # system functions
 import numpy as np # import numerical capabilities
 import time        # handling of date and time
 
-# import the RawBUFRFile class to write the encoded raw BUFR data
-from pybufr_ecmwf import RawBUFRFile
+# set the python path to find the (maybe not yet installed) module files
+# (not needed if the module is installed in the default location)
+import helpers 
+helpers.set_python_path()
 
-# import BUFRInterfaceECMWF which contains the actual BUFR wrapper interface
-from pybufr_ecmwf import BUFRInterfaceECMWF
+# import BUFR wrapper module
+import pybufr_ecmwf
 
 print "to be implemented"
 # for now, this is just a copy of example_for_using_ecmwfbufr_for_encoding.py
@@ -104,8 +105,7 @@ if (not os.path.exists(private_bufr_tables_dir)):
     os.mkdir(private_bufr_tables_dir)
     
 # make the needed symlinks
-ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
-ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+ecmwf_bufr_tables_dir =  helpers.get_tables_dir()
 needed_B_table    = "B0000000000098015001.TXT"
 needed_D_table    = "D0000000000098015001.TXT"
 available_B_table = "B0000000000098013001.TXT"

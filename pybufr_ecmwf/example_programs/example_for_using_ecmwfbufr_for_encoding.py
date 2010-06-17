@@ -18,15 +18,19 @@ import sys         # system functions
 import numpy as np # import numerical capabilities
 import time        # handling of date and time
 
-# import the RawBUFRFile class to write the encoded raw BUFR data
-if os.path.isdir("../pybufr_ecmwf"):
-    sys.path.append("../")
-else:
-    sys.path.append("../../")
+# set the python path to find the (maybe not yet installed) module files
+# (not needed if the module is installed in the default location)
+import helpers 
+helpers.set_python_path()
 
+# import the RawBUFRFile class to write the encoded raw BUFR data to file
 #from pybufr_ecmwf import RawBUFRFile
+
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
+
+# the module itself is only needed to find the location of the BUFR tables
+import pybufr_ecmwf
 
 def encoding_example():
     """
@@ -80,12 +84,7 @@ def encoding_example():
         os.mkdir(private_bufr_tables_dir)
     
     # make the needed symlinks
-    if os.path.exists("ecmwf_bufrtables"):
-        ecmwf_bufr_tables_dir = "ecmwf_bufrtables"
-    else:
-        ecmwf_bufr_tables_dir = "../ecmwf_bufrtables"
-        
-    ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+    ecmwf_bufr_tables_dir = helpers.get_tables_dir()
     needed_b_table    = "B0000000000098015001.TXT"
     needed_d_table    = "D0000000000098015001.TXT"
     available_b_table = "B0000000000098013001.TXT"

@@ -178,16 +178,14 @@ def call_cmd_and_verify_output(cmd):
         # compare the actual and expected outputs
         if not (lines_stdout == expected_lines_stdout):
             print "stdout differs from what was expected!!!"
-            print "look at the diff of files: ", expected_stdout
-            print "and: ", actual_stdout
-            print "to find out what happended ..."
+            print "to find out what happended execute this diff command:"
+            print "xdiff ", expected_stdout,' ',actual_stdout
             success = False
             
         if not (lines_stderr == expected_lines_stderr):
             print "stderr differs from what was expected!!!"
-            print "look at the diff of files: ", expected_stderr
-            print "and: ", actual_stderr
-            print "to find out what happended ..."
+            print "to find out what happended execute this diff command:"
+            print "xdiff ", expected_stderr,' ',actual_stderr
             success = False
     except IOError:
         print "ERROR: expected output not found; probably because"
@@ -230,4 +228,72 @@ def ensure_permissions(filename, mode):
     if mode == 'x':
         new_mode = current_mode | int("111", 8)
     os.chmod(filename, new_mode)
+    #  #]
+
+def set_python_path():
+    #  #[
+    
+    # make sure if we execute from within the source package, to let that
+    # version have preference over a system wide module installation with the
+    # same name, by having its path in front.
+
+    module_name = "pybufr_ecmwf"
+
+    #module_found = False
+    #for path in sys.path:
+    #    if os.path.isdir(path):
+    #        if module_name in os.listdir(path):
+    #            module_found = True
+    #            # print "module "+module_name+" found in path: "+path
+    #            break
+
+    path = ".."
+    if os.path.isdir(os.path.join(path, module_name)):
+        sys.path.insert(0, path)
+        # print "module "+module_name+" found in path: "+path
+        # print "modified sys.path = ", sys.path
+        return
+    
+    path = "../.."
+    if os.path.isdir(os.path.join(path, module_name)):
+        sys.path.insert(0, path)
+        # print "module "+module_name+" found in path: "+path
+        # print "modified sys.path = ", sys.path
+        return
+
+    #  #]
+
+def get_tables_dir():
+    #  #[
+    """ import the module, inspect its location, and derive
+    from this the location of the BUFR tables that are delivered
+    with the ECMWF BUFR library software
+    """ 
+    import pybufr_ecmwf
+
+    ecmwf_bufr_tables_dir = os.path.join(pybufr_ecmwf.__path__[0],
+                                         "ecmwf_bufrtables")
+    if not os.path.exists(ecmwf_bufr_tables_dir):
+        print "Error: could not find BUFR tables directory"
+        raise IOError
+
+    # make sure the path is absolute, otherwise the ECMWF library
+    # might fail when it attempts to use it ...
+    ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+    return ecmwf_bufr_tables_dir
+    #  #]
+
+def get_testdata_dir():
+    #  #[
+    """ import the module, inspect its location, and derive
+    from this the location of the testdata delivered with this software
+    """ 
+    import pybufr_ecmwf
+
+    testdata_dir = os.path.join(pybufr_ecmwf.__path__[0],"testdata")
+    if not os.path.exists(testdata_dir):
+        print "Error: could not find testdata directory"
+        raise IOError
+
+    return testdata_dir
     #  #]

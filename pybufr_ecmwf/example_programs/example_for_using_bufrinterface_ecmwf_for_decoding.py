@@ -2,55 +2,29 @@
 
 """
 This is a small example program intended to demonstrate
-how the wrapper interface to the ECMWF BUFR library may be
+how the pybufr_ecmwf wrapper interface to the ECMWF BUFR library may be
 used for decoding a BUFR message.
 """
 
-#
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
-#
 # Written by: J. de Kloe, KNMI, Initial version 25-Feb-2010    
 #
 # License: GPL v2.
 
+#  #[ imported modules
 import os          # operating system functions
 import sys         # system functions
 import numpy as np # import numerical capabilities
 
-# import the RawBUFRFile class to load the encoded raw BUFR data
-module_found = False
-module_name = "pybufr_ecmwf"
-for path in sys.path:
-    if os.path.isdir(path):
-        if module_name in os.listdir(path):
-            module_found = True
-            print "module "+module_name+" found in path: "+path
-            break
+# set the python path to find the (maybe not yet installed) module files
+# (not needed if the module is installed in the default location)
+import helpers 
+helpers.set_python_path()
 
-# make sure if we execute from within the source package, to let that
-# version have preference over a system wide module installation with the
-# same name, by having its path in front.
-path = ".."
-if os.path.isdir(os.path.join(path, module_name)):
-    sys.path.insert(0, path)
-    print "module "+module_name+" found in path: "+path
-
-path = "../.."
-if os.path.isdir(os.path.join(path, module_name)):
-    sys.path.insert(0, path)
-    print "module "+module_name+" found in path: "+path
-
-print "sys.path = ", sys.path
-
-print "to be implemented"
-# for now, this is just a copy of example_for_using_ecmwfbufr_for_decoding.py
-
-# maybe this import is to be moved into BUFRInterfaceECMWF as well?
-from pybufr_ecmwf import RawBUFRFile#, BUFRInterfaceECMWF
-
+# import the BUFR wrapper module
 import pybufr_ecmwf
-print "pybufr_ecmwf.__path__ = ", pybufr_ecmwf.__path__
+#  #]
 
 # decoding_excample
 def decoding_example():
@@ -61,14 +35,11 @@ def decoding_example():
     """
 
     # read the binary data using the BUFRFile class
-    # make sure it finds the testfile from the main module dir
-    # and from within the example_programs dir
-    if os.path.exists('testdata'):
-        input_test_bufr_file = 'testdata/Testfile.BUFR'
-    else:
-        input_test_bufr_file = '../testdata/Testfile.BUFR'
-        
-    rbf = RawBUFRFile()
+    testdata_dir = helpers.get_testdata_dir()
+    input_test_bufr_file = os.path.join(testdata_dir,'Testfile.BUFR')
+
+    print 'loading testfile: ',input_test_bufr_file
+    rbf = pybufr_ecmwf.RawBUFRFile()
     rbf.open(input_test_bufr_file, 'r')
     words = rbf.get_next_raw_bufr_msg()
     rbf.close()
@@ -94,14 +65,7 @@ def decoding_example():
         os.mkdir(private_bufr_tables_dir)
     
     # make the needed symlinks
-    
-    ecmwf_bufr_tables_dir = os.path.join(pybufr_ecmwf.__path__[0],
-                                         "ecmwf_bufrtables")
-    if not os.path.exists(ecmwf_bufr_tables_dir):
-        print "Error: could not find BUFR tables directory"
-        raise IOError
-
-    ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+    ecmwf_bufr_tables_dir = helpers.get_tables_dir()
     needed_b_table    = "B0000000000210000001.TXT"
     needed_d_table    = "D0000000000210000001.TXT"
     available_b_table = "B0000000000098013001.TXT"
@@ -127,6 +91,9 @@ def decoding_example():
 
     print "calling: decode_sections_012():"
     BI.decode_sections_012(words)
+
+    print "calling: setup_tables()"
+    BI.setup_tables()
     
     print 'ksup = ', BI.ksup
     print '------------------------------'

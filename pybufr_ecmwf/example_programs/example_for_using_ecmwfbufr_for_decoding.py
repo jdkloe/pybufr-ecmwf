@@ -16,37 +16,19 @@ import os          # operating system functions
 import sys         # system functions
 import numpy as np # import numerical capabilities
 
-# import the RawBUFRFile class to load the encoded raw BUFR data
-module_found = False
-module_name = "pybufr_ecmwf"
-for path in sys.path:
-    if os.path.isdir(path):
-        if module_name in os.listdir(path):
-            module_found = True
-            #print "module "+module_name+" found in path: "+path
-            break
+# set the python path to find the (maybe not yet installed) module files
+# (not needed if the module is installed in the default location)
+import helpers 
+helpers.set_python_path()
 
-# make sure if we execute from within the source package, to let that
-# version have preference over a system wide module installation with the
-# same name, by having its path in front.
-path = ".."
-if os.path.isdir(os.path.join(path, module_name)):
-    sys.path.insert(0, path)
-    #print "module "+module_name+" found in path: "+path
+# import the RawBUFRFile class to load the encoded raw BUFR data from file
+from pybufr_ecmwf import RawBUFRFile
 
-path = "../.."
-if os.path.isdir(os.path.join(path, module_name)):
-    sys.path.insert(0, path)
-    #print "module "+module_name+" found in path: "+path
-
-#print "sys.path = ", sys.path
-
-from pybufr_ecmwf import RawBUFRFile#, BUFRInterfaceECMWF
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 
+# the module itself is only needed to find the location of the BUFR tables
 import pybufr_ecmwf
-#print "pybufr_ecmwf.__path__ = ", pybufr_ecmwf.__path__
 
 # decoding_excample
 def decoding_example():
@@ -91,13 +73,7 @@ def decoding_example():
     
     # make the needed symlinks
     
-    ecmwf_bufr_tables_dir = os.path.join(pybufr_ecmwf.__path__[0],
-                                         "ecmwf_bufrtables")
-    if not os.path.exists(ecmwf_bufr_tables_dir):
-        print "Error: could not find BUFR tables directory"
-        raise IOError
-
-    ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+    ecmwf_bufr_tables_dir = helpers.get_tables_dir()
     needed_b_table    = "B0000000000210000001.TXT"
     needed_d_table    = "D0000000000210000001.TXT"
     available_b_table = "B0000000000098013001.TXT"
