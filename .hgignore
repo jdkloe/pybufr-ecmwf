@@ -31,6 +31,7 @@ f2py_build
 tmp_BUFR_TABLES
 ecmwf_bufrtables
 old_bufr_libs
+tmp_2to3_converted_sources
 
 #syntx: glob
 #

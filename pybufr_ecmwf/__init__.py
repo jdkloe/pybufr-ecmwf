@@ -6,7 +6,9 @@ Author:  J. de Kloe, KNMI
 Created: 04-Feb-2010
 """
 
-from pybufr_ecmwf import *
-import bufr
-import ecmwfbufr
+# explicit imports seem not needed at the moment
+
+# from pybufr_ecmwf import *
+# import bufr
+# import ecmwfbufr
 # import helpers
