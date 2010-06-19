@@ -827,6 +827,41 @@ class InstallBUFRInterfaceECMWF:
                 else:
                     ensure_permissions(fullname, 'r')
 
+        # select the newest set of tables and symlink them
+        # to a default name
+        pattern = os.path.join(table_dir,'B0*098*.TXT')
+        B_tables = glob.glob(pattern)
+        # print 'pattern = ',pattern
+        # print 'B_tables = ',B_tables
+        
+        if len(B_tables)>0:
+            B_tables.sort()
+            # assume the highest numbered table is the most recent one
+            newest_B_table = B_tables[-1]
+            bt_path,bt_file = os.path.split(newest_B_table)
+            bt_base,bt_ext = os.path.splitext(bt_file)
+            newest_table_code = bt_base[1:]
+            ct_file = 'C'+newest_table_code+bt_ext
+            dt_file = 'D'+newest_table_code+bt_ext
+            newest_C_table = os.path.join(table_dir,ct_file)
+            newest_D_table = os.path.join(table_dir,dt_file)
+            
+            default_B_table = os.path.join(table_dir,'B_default.TXT')
+            default_C_table = os.path.join(table_dir,'C_default.TXT')
+            default_D_table = os.path.join(table_dir,'D_default.TXT')
+            
+            # print 'B: newest ',newest_B_table,' default ',default_B_table
+            # print 'C: newest ',newest_C_table,' default ',default_C_table
+            # print 'D: newest ',newest_D_table,' default ',default_D_table
+            
+            os.symlink(os.path.abspath(newest_B_table),
+                       os.path.abspath(default_B_table))
+            os.symlink(os.path.abspath(newest_C_table),
+                       os.path.abspath(default_C_table))
+            os.symlink(os.path.abspath(newest_D_table),
+                       os.path.abspath(default_D_table))
+        else:
+            print 'WARNING: no default table B and D found'
         #  #]
 
         #  #[ extract some hardcoded constants for reuse by the python code
@@ -921,7 +956,7 @@ class InstallBUFRInterfaceECMWF:
         fd.close()
 
         # make sure the file is executable for all
-        ensure_permissions(filename, 'x')
+        ensure_permissions(python_parameter_file, 'x')
         
         #  #]
         

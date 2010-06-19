@@ -214,9 +214,9 @@ class BUFRInterfaceECMWF:
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bus012'))
         #  #]
-    def setup_tables(self):
+    def setup_tables(self,table_B_to_use=None,table_D_to_use=None):
         #  #[
-        print 'insided setup_tables() ...'
+        print 'inside setup_tables() ...'
 
         # dont use this! This would need an import of helpers
         # which in turn imports pybufr_ecmwf so would give a circular
@@ -251,8 +251,40 @@ class BUFRInterfaceECMWF:
                        EditionNumber, MasterTableNumber)
         
         print '(name_table_b, name_table_d) = ',(name_table_b, name_table_d)
-      #  #]
 
+        fullpath_table_b = os.path.join(ecmwf_bufr_tables_dir,name_table_b)
+        fullpath_table_d = os.path.join(ecmwf_bufr_tables_dir,name_table_d)
+        fullpath_default_table_b = os.path.join(ecmwf_bufr_tables_dir,
+                                                'B_default.TXT')
+        fullpath_default_table_d = os.path.join(ecmwf_bufr_tables_dir,
+                                                'D_default.TXT')
+        if (os.path.exists(fullpath_table_b) and
+            os.path.exists(fullpath_table_d)    ):
+            print 'table b and d found'
+            print fullpath_table_b
+            print fullpath_table_d
+        elif (os.path.exists(fullpath_default_table_b) and
+              os.path.exists(fullpath_default_table_d)    ):
+            print 'using default tables'
+            print fullpath_default_table_b
+            print fullpath_default_table_d
+        else:
+            print 'ERROR: no BUFR tables seem available,'
+            print 'please point explicitely to the tables you wish to use'
+            
+        # OK, the trick now is to create a symbolic link in a tmp_BUFR_TABLES
+        # directory from the name expected by the ecmwf bufr library to:
+        #   1) the provided table names (if given) OR
+        #   2) the expected table names (if present in the ECMWF sources) OR
+        #   3) the default tables (and hope they will contain the needed
+        #      descriptors to allow proper decoding or encoding)
+
+        # .... to be implemented ...
+
+        # ...
+        
+        #  #]
+        
     # todo: pass these values as optional parameters to the decoder
     #       and check whether they pass the library maximum or not.
     #       (and choose sensible defaults if not provided)
