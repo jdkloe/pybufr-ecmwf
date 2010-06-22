@@ -56,37 +56,7 @@ def decoding_example():
     # jbufl  = max_bufr_msg_size
     # jsup   = length_ksup
     
-    # handle BUFR tables
     print '------------------------------'
-    
-    # define our own location for storing (symlinks to) the BUFR tables
-    private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
-    if (not os.path.exists(private_bufr_tables_dir)):
-        os.mkdir(private_bufr_tables_dir)
-    
-    # make the needed symlinks
-    ecmwf_bufr_tables_dir = helpers.get_tables_dir()
-    needed_b_table    = "B0000000000210000001.TXT"
-    needed_d_table    = "D0000000000210000001.TXT"
-    available_b_table = "B0000000000098013001.TXT"
-    available_d_table = "D0000000000098013001.TXT"
-    
-    source      = os.path.join(ecmwf_bufr_tables_dir, available_b_table)
-    destination = os.path.join(private_bufr_tables_dir, needed_b_table)
-    if (not os.path.exists(destination)):
-        os.symlink(source, destination)
-    
-    source      = os.path.join(ecmwf_bufr_tables_dir, available_d_table)
-    destination = os.path.join(private_bufr_tables_dir, needed_d_table)
-    if (not os.path.exists(destination)):
-        os.symlink(source, destination)
-            
-    # make sure the BUFR tables can be found
-    # also, force a slash at the end, otherwise the library fails
-    # to find the tables
-    env = os.environ
-    env["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
-    
     BI = pybufr_ecmwf.BUFRInterfaceECMWF()
 
     print "calling: decode_sections_012():"
@@ -94,34 +64,12 @@ def decoding_example():
 
     print "calling: setup_tables()"
     BI.setup_tables()
-    
-    print 'ksup = ', BI.ksup
-    print '------------------------------'
 
+    print "calling: print_sections_012():"
+    BI.print_sections_012()
+    
     # implemented upto this point
     sys.exit(0)
-
-    print "printing content of section 0:"
-    print "sec0 : ", ksec0
-    ecmwfbufr.buprs0(ksec0)
-    print '------------------------------'
-    print "printing content of section 1:"
-    print "sec1 : ", ksec1
-    ecmwfbufr.buprs1(ksec1)
-    key = np.zeros(52, dtype = np.int)
-    sec2_len = ksec2[0]
-    print '------------------------------'
-    print "length of sec2: ", sec2_len
-    if (sec2_len > 0):
-        # buukey expands local ECMWF information from section 2 to the key array
-        print '------------------------------'
-        print "calling buukey"
-        ecmwfbufr.buukey(ksec1, ksec2, key, ksup, kerr)
-        print "sec2 : ", ksec2
-        print "printing content of section 2:"
-        ecmwfbufr.buprs2(ksup, key)
-    else:
-        print 'skipping section 2 [since it seems unused]'
 
     # these 4 are filled by the BUS012 call above
     # ksup   = np.zeros(         9, dtype = np.int)

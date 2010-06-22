@@ -30,7 +30,9 @@ import time        # handling of date and time
 import numpy as np # import numerical capabilities
 import struct      # allow converting c datatypes and structs
 # import some home made helper routines
-from helpers import call_cmd_and_verify_output, EcmwfBufrLibError
+from helpers import call_cmd_and_verify_output
+from helpers import EcmwfBufrLibError
+from helpers import EcmwfBufrTableError
 
 # import the raw wrapper interface to the ECMWF BUFR library
 import ecmwfbufr
@@ -47,12 +49,14 @@ class BUFRInterfaceECMWF:
     size_ksec0 =    3
     size_ksec1 =   40
     size_ksec2 = 4096
+    size_key   = 52
     
     def __init__(self):
         self.ksup   = np.zeros(self.size_ksup,  dtype = np.int)
         self.ksec0  = np.zeros(self.size_ksec0, dtype = np.int)
         self.ksec1  = np.zeros(self.size_ksec1, dtype = np.int)
         self.ksec2  = np.zeros(self.size_ksec2, dtype = np.int)
+        self.key    = np.zeros(self.size_key,   dtype = np.int)
 
     def get_expected_ecmwf_bufr_table_names(self,
                                             ecmwf_bufr_tables_dir,
@@ -142,8 +146,8 @@ class BUFRInterfaceECMWF:
                                            copy_subcenter, copy_center,
                                            MasterTableVersion, LocalVersion)
 
-        name_table_b = 'B'+numeric_part
-        name_table_d = 'D'+numeric_part
+        name_table_b = 'B'+numeric_part+'.TXT'
+        name_table_d = 'D'+numeric_part+'.TXT'
 
         # xx=KSEC1(3)  = kcenter
         # yy=KSEC1(15) = kMasterTableVersion
@@ -243,35 +247,30 @@ class BUFRInterfaceECMWF:
         MasterTableVersion = self.ksec1[15-1]
         subcenter          = self.ksec1[16-1]
 
-        (name_table_b, name_table_d) = \
+        (expected_name_table_b, expected_name_table_d) = \
               self.get_expected_ecmwf_bufr_table_names(
                        ecmwf_bufr_tables_dir,
                        center, subcenter,
                        LocalVersion, MasterTableVersion,
                        EditionNumber, MasterTableNumber)
         
-        print '(name_table_b, name_table_d) = ',(name_table_b, name_table_d)
+        print '(expected_name_table_b, expected_name_table_d) = ',\
+              (expected_name_table_b, expected_name_table_d)
 
-        fullpath_table_b = os.path.join(ecmwf_bufr_tables_dir,name_table_b)
-        fullpath_table_d = os.path.join(ecmwf_bufr_tables_dir,name_table_d)
+        fullpath_table_b = os.path.join(ecmwf_bufr_tables_dir,
+                                        expected_name_table_b)
+        fullpath_table_d = os.path.join(ecmwf_bufr_tables_dir,
+                                        expected_name_table_d)
         fullpath_default_table_b = os.path.join(ecmwf_bufr_tables_dir,
                                                 'B_default.TXT')
         fullpath_default_table_d = os.path.join(ecmwf_bufr_tables_dir,
                                                 'D_default.TXT')
-        if (os.path.exists(fullpath_table_b) and
-            os.path.exists(fullpath_table_d)    ):
-            print 'table b and d found'
-            print fullpath_table_b
-            print fullpath_table_d
-        elif (os.path.exists(fullpath_default_table_b) and
-              os.path.exists(fullpath_default_table_d)    ):
-            print 'using default tables'
-            print fullpath_default_table_b
-            print fullpath_default_table_d
-        else:
-            print 'ERROR: no BUFR tables seem available,'
-            print 'please point explicitely to the tables you wish to use'
-            
+        # print 'Test:'
+        # print fullpath_table_b
+        # print fullpath_table_d
+        # print fullpath_default_table_b
+        # print fullpath_default_table_d
+
         # OK, the trick now is to create a symbolic link in a tmp_BUFR_TABLES
         # directory from the name expected by the ecmwf bufr library to:
         #   1) the provided table names (if given) OR
@@ -279,11 +278,104 @@ class BUFRInterfaceECMWF:
         #   3) the default tables (and hope they will contain the needed
         #      descriptors to allow proper decoding or encoding)
 
-        # .... to be implemented ...
+        # define our own location for storing (symlinks to) the BUFR tables
+        private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
+        if (not os.path.exists(private_bufr_tables_dir)):
+            os.mkdir(private_bufr_tables_dir)
 
-        # ...
+        destination_b = os.path.join(private_bufr_tables_dir,
+                                     expected_name_table_b)
+        destination_d = os.path.join(private_bufr_tables_dir,
+                                     expected_name_table_d)
+
+        if ( (table_B_to_use is not None) and
+             (table_D_to_use is not None)    ):
+            # case 1)
+            # create symbolic links from the provided tables to the
+            # expected names in the private_bufr_tables_dir
+            source_b = table_B_to_use
+            source_d = table_D_to_use
+        else:
+            if (os.path.exists(fullpath_table_b) and
+                os.path.exists(fullpath_table_d)    ):
+                # case 2)
+                # print 'table b and d found'
+                # print fullpath_table_b
+                # print fullpath_table_d
+                source_b = fullpath_table_b
+                source_d = fullpath_table_d
+            elif (os.path.exists(fullpath_default_table_b) and
+                  os.path.exists(fullpath_default_table_d)    ):
+                # case 3)
+                # print 'using default tables'
+                # print fullpath_default_table_b
+                # print fullpath_default_table_d
+                source_b = fullpath_default_table_b
+                source_d = fullpath_default_table_d
+            else:
+                errtxt = 'ERROR: no BUFR tables seem available.'+\
+                         'please point explicitely to the tables '+\
+                         'you wish to use'
+                raise EcmwfBufrTableError(errtxt)
+            
+        print 'Tables names expected by the library:'
+        print destination_b
+        print destination_d
+        print 'Tables to be used:'
+        print source_b
+        print source_d
         
+        # make sure any old symbolic link is removed
+        # (since it may point to an unwanted location)
+        if ( os.path.islink(destination_b) or
+             os.path.exists(destination_b)   ):
+            os.remove(destination_b)
+        if ( os.path.islink(destination_d) or
+             os.path.exists(destination_d)   ):
+            os.remove(destination_d)
+        os.symlink(os.path.abspath(source_b), destination_b)
+        os.symlink(os.path.abspath(source_d), destination_d)
+            
+        # make sure the BUFR tables can be found
+        # also, force a slash at the end, otherwise the library fails
+        # to find the tables (at least this has been the case for many
+        # library versions I worked with)
+        env = os.environ
+        env["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
+    
         #  #]
+    def print_sections_012(self):
+        print 'ksup = ', self.ksup
+        print '------------------------------'
+        
+        print "printing content of section 0:"
+        print "sec0 : ", self.ksec0
+        ecmwfbufr.buprs0(self.ksec0)
+        print '------------------------------'
+        print "printing content of section 1:"
+        print "sec1 : ", self.ksec1
+        ecmwfbufr.buprs1(self.ksec1)
+
+        sec2_len = self.ksec2[0]
+        print '------------------------------'
+        
+        print "length of sec2: ", sec2_len
+        if (sec2_len > 0):
+            # buukey expands local ECMWF information
+            # from section 2 to the key array
+            print '------------------------------'
+            print "calling buukey"
+            ecmwfbufr.buukey(self.ksec1,
+                             self.ksec2,
+                             self.key,
+                             self.ksup,
+                             kerr)
+            print "sec2 : ", self.ksec2
+            print "printing content of section 2:"
+            ecmwfbufr.buprs2(self.ksup,
+                             self.key)
+        else:
+            print 'skipping section 2 [since it seems unused]'
         
     # todo: pass these values as optional parameters to the decoder
     #       and check whether they pass the library maximum or not.

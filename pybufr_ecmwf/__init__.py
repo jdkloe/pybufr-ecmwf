@@ -8,7 +8,14 @@ Created: 04-Feb-2010
 
 # explicit imports seem not needed at the moment
 
-# from pybufr_ecmwf import *
-# import bufr
-# import ecmwfbufr
-# import helpers
+from pybufr_ecmwf import *
+import bufr
+import helpers
+
+# allow this one to fail, because I wish to use the helpers.py functionality
+# from the port_2to3.py script, which may be used before doing the actual
+# build of ecmwfbufr.so
+try:
+    import ecmwfbufr
+except ImportError:
+    pass

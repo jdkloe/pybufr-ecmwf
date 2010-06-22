@@ -51,6 +51,10 @@ class EcmwfBufrLibError(Exception):
     """ an exception to indicate that one of the subroutines or functions
     in the ECMWF bufr library returned with an error """
     pass
+class EcmwfBufrTableError(Exception):
+    """ an exception to indicate that no set of suitable BUFR tables
+    needed for bufr decoding/encoding can be found """
+    pass
 #  #]
 
 def run_shell_command(cmd, libpath = None, catch_output = True,
