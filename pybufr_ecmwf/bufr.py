@@ -27,7 +27,7 @@ by providing several helper classes.
 #  #]
 #  #[ imported modules
 import os
-#import sys
+import sys
 import glob
 from pybufr_ecmwf import RawBUFRFile
 from helpers import ProgrammingError, NotYetImplementedError
@@ -128,12 +128,29 @@ class Descriptor(Singleton):
         differing attributes (which would mean a serious design problem
         in the BUFR files and/or template)
         """
-        assert(self.reference      == reference)
-        assert(self.name           == name)
-        assert(self.unit           == unit)
-        assert(self.unit_scale     == unit_scale)
-        assert(self.unit_reference == unit_reference)
-        assert(self.data_width     == data_width)
+        try:
+            assert(self.reference      == reference)
+            assert(self.name           == name)
+            assert(self.unit           == unit)
+            assert(self.unit_scale     == unit_scale)
+            assert(self.unit_reference == unit_reference)
+            assert(self.data_width     == data_width)
+        except AssertionError as e:
+            print 'checkinit check failed !!!'
+            print
+            print "self.reference      = ",self.reference   ,\
+                  "reference           = ",reference
+            print "self.name           = ",self.name        ,\
+                  "name                = ",name
+            print "self.unit           = ",self.unit        ,\
+                  "unit                = ",unit
+            print "self.unit_scale     = ",self.unit_scale  ,\
+                  "unit_scale          = ",unit_scale
+            print "self.unit_reference = ",self.unit_reference,\
+                  "unit_reference      = ",unit_reference
+            print "self.data_width     = ",self.data_width  ,\
+                  "data_width          = ",data_width
+            raise e
         #  #]
     #  #]
 
@@ -1051,13 +1068,28 @@ if __name__ == "__main__":
     # tables defined on the lines above
     
     # test the available bufr tables
-    #TABLE_CODES = ["0000000000000014000", "0000000000098000000",
-    #               "0000000000098002001", "0000000000098006000",
-    #               "0000000000098006001", "0000000000098013001",
-    #               "0000000000098014001", "0000000000254011001"]
-    #for table_code in TABLE_CODES:
-    #    BT.load("B"+TABLE_CODE+".TXT")
-    #    BT.load("D"+TABLE_CODE+".TXT")
+    TABLE_CODES = [#"0000000000000014000",
+                   "0000000000098000000",
+                   "0000000000098002001", "0000000000098006000",
+                   "0000000000098006001", "0000000000098013001",
+                   "0000000000098014001", "0000000000254011001"]
+    PATH = "ecmwf_bufrtables"
+    for table_code in TABLE_CODES:
+        BT.load(os.path.join(PATH,"B"+table_code+".TXT"))
+        BT.load(os.path.join(PATH,"D"+table_code+".TXT"))
+
+        # to be implemented: BT.unload_tables()
+
+
+        # note: this checking of BUFR tables in a loop currently fails
+        # because the Descriptor class keeps the definitions of the previous
+        # table in memory, and these may differ from table to table ....
+        # (which is correctly reported by checkinit)
+        # therefore an unload method is needed.
+
+        break
+    
+    sys.exit(1)
     
     # test application of modification commands:
     # this is D-descriptor 331004
