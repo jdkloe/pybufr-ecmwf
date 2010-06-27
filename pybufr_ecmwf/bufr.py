@@ -60,8 +60,8 @@ class Singleton(object):
             # note: since this __new__ is called with the same arguments
             # as the cls.__init__ method, use the name init in this message
             # to make more clear to the user where the problem is.
-            print "ERROR: at least one arg expected in init function !"
-            raise AttributeError
+            errtxt = "ERROR: at least one arg expected in init function !"
+            raise AttributeError(errtxt)
         
         # the next line returns None if __instance_dict__ does not yet exist
         idct = cls.__dict__.get("__instance_dict__")
@@ -90,6 +90,16 @@ class Singleton(object):
         #  #[
         #print "class Singleton: calling init"
         #pass
+        #  #]
+    def checkinit(*args, **kwargs):
+        #  #[
+        """
+        classes that inherit from this Singleton class should
+        implement this function to verify that the additional
+        args and kwargs are identical to the one used for an already
+        existing instance of the class.
+        """
+        pass
         #  #]
     #  #]
 
@@ -1006,6 +1016,36 @@ class BufrTable:
                     mod_descr_list.append(d)
         return mod_descr_list
         #  #]
+    def unload_tables(self):
+        #  #[
+        # ok, this works but is not very pretty,
+        # todo: see if this can be added as a function to the Singleton or Descriptor class
+
+        # dicts
+        for b_reference in self.table_b.keys():
+            del(self.table_b[b_reference].__class__.__dict__.get("__instance_dict__")[b_reference])
+            del(self.table_b[b_reference])
+        for d_reference in self.table_d.keys():
+            del(self.table_d[d_reference].__class__.__dict__.get("__instance_dict__")[d_reference])
+            del(self.table_d[d_reference])
+        for s_reference in self.specials.keys():
+            del(self.specials[s_reference].__class__.__dict__.get("__instance_dict__")[s_reference])
+            del(self.specials[s_reference])
+        for m_reference in self.modifiers.keys():
+            del(self.modifiers[m_reference].__class__.__dict__.get("__instance_dict__")[m_reference])
+            del(self.modifiers[m_reference])
+        del(self.list_of_d_entry_lineblocks)
+        self.list_of_d_entry_lineblocks = []
+
+        print 'self.table_b = ',self.table_b
+        print 'self.table_d = ',self.table_d
+        print 'self.specials = ',self.specials
+        print 'self.modifiers = ',self.modifiers
+        print 'self.list_of_d_entry_lineblocks = ',\
+              self.list_of_d_entry_lineblocks
+
+        #sys.exit(1)
+        #  #]
     #  possible additional methods:
     #  ==>write-tables
     #  #]
@@ -1078,18 +1118,7 @@ if __name__ == "__main__":
         BT.load(os.path.join(PATH,"B"+table_code+".TXT"))
         BT.load(os.path.join(PATH,"D"+table_code+".TXT"))
 
-        # to be implemented: BT.unload_tables()
-
-
-        # note: this checking of BUFR tables in a loop currently fails
-        # because the Descriptor class keeps the definitions of the previous
-        # table in memory, and these may differ from table to table ....
-        # (which is correctly reported by checkinit)
-        # therefore an unload method is needed.
-
-        break
-    
-    sys.exit(1)
+        BT.unload_tables()
     
     # test application of modification commands:
     # this is D-descriptor 331004
