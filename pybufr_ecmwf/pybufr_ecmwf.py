@@ -749,18 +749,6 @@ if __name__ == "__main__":
     #  #[ test program
     print "Starting test program:"
 
-    # create a symlink to the helpers.py file in the
-    # example_programs directory to allow these example programs to
-    # use the code and BUFR tables in this source package
-    # (only usefull when the package is not yet installed
-    # in a place where python can find it)
-
-    source      = os.path.abspath("./helpers.py")
-    destination = os.path.abspath("./example_programs/helpers.py")
-    if not os.path.islink(destination):
-        if not os.path.exists(destination):
-            os.symlink(source,destination)
-    
     #  import additional modules needed for testing
     import ecmwfbufr # import the just created wrapper module
     import unittest  # import the unittest functionality
