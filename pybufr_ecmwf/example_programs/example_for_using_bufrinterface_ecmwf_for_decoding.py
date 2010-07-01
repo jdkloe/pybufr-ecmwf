@@ -44,96 +44,68 @@ def decoding_example():
     words = rbf.get_next_raw_bufr_msg()
     rbf.close()
     
-    # define the needed constants
-    max_nr_descriptors          =     20 # 300
-    max_nr_expanded_descriptors =    140 # 160000
-    max_nr_subsets              =    361 # 25
-    
-    ktdlen = max_nr_descriptors
-    # krdlen = max_nr_delayed_replication_factors
-    kelem  = max_nr_expanded_descriptors
-    kvals  = max_nr_expanded_descriptors*max_nr_subsets
-    # jbufl  = max_bufr_msg_size
-    # jsup   = length_ksup
-    
     print '------------------------------'
-    BI = pybufr_ecmwf.BUFRInterfaceECMWF()
+    BI = pybufr_ecmwf.BUFRInterfaceECMWF(words)
 
     print "calling: decode_sections_012():"
-    BI.decode_sections_012(words)
+    BI.decode_sections_012()
 
     print "calling: setup_tables()"
     BI.setup_tables()
 
     print "calling: print_sections_012():"
     BI.print_sections_012()
-    
-    # implemented upto this point
-    sys.exit(0)
 
-    # these 4 are filled by the BUS012 call above
-    # ksup   = np.zeros(         9, dtype = np.int)
-    # ksec0  = np.zeros(         3, dtype = np.int)
-    # ksec1  = np.zeros(        40, dtype = np.int)
-    # ksec2  = np.zeros(      4096, dtype = np.int)
-    
     print '------------------------------'
-    ksec3  = np.zeros(          4, dtype = np.int)
-    ksec4  = np.zeros(          2, dtype = np.int)
-    cnames = np.zeros((kelem, 64), dtype = np.character)
-    cunits = np.zeros((kelem, 24), dtype = np.character)
-    values = np.zeros(      kvals, dtype = np.float64) # this is the default
-    cvals  = np.zeros((kvals, 80), dtype = np.character)
-    kerr   = 0
-    
     print "calling: ecmwfbufr.bufrex():"
-    ecmwfbufr.bufrex(words, ksup, ksec0, ksec1, ksec2, ksec3, ksec4,
-                     cnames, cunits, values, cvals, kerr)
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
-        
+    BI.decode_data()
+
     # print a selection of the decoded numbers
     print '------------------------------'
     print "Decoded BUFR message:"
-    print "ksup : ", ksup
-    print "sec0 : ", ksec0
-    print "sec1 : ", ksec1
-    print "sec2 : ", ksec2
-    print "sec3 : ", ksec3
-    print "sec4 : ", ksec4
-    print "cnames [cunits] : "
-    for (i, cnm) in enumerate(cnames):
-        cun = cunits[i]
-        txtn = ''.join(c for c in cnm)
-        txtu = ''.join(c for c in cun)
-        if (txtn.strip() != ''):
-            print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
+    print "ksup : ", BI.ksup
+    print "sec0 : ", BI.ksec0
+    print "sec1 : ", BI.ksec1
+    print "sec2 : ", BI.ksec2
+    print "sec3 : ", BI.ksec3
+    print "sec4 : ", BI.ksec4
 
-    print "values : ", values
-    txt = ''.join(str(v)+';' for v in values[:20] if v>0.)
+    #print "cnames [cunits] : "
+    #for (i, cnm) in enumerate(BI.cnames):
+    #    cun = BI.cunits[i]
+    #    txtn = ''.join(c for c in cnm)
+    #    txtu = ''.join(c for c in cun)
+    #    if (txtn.strip() != ''):
+    #        print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
+
+    print "values : ", BI.values
+    txt = ''.join(str(v)+';' for v in BI.values[:20] if v>0.)
     print "values[:20] : ", txt
-    
-    nsubsets  = ksec3[2] # 361 # number of subsets in this BUFR message
+
+    nsubsets  = BI.ksec3[2] # 361 # number of subsets in this BUFR message
 
     #not yet used:
-    #nelements = ksup[4] # 44 # size of one expanded subset
+    #nelements = BI.ksup[4] # 44 # size of one expanded subset
     
     lat = np.zeros(nsubsets)
     lon = np.zeros(nsubsets)
     for subs in range(nsubsets):
         # index_lat = nelements*(s-1)+24
         # index_lon = nelements*(s-1)+25
-        index_lat = max_nr_expanded_descriptors*(subs-1)+24
-        index_lon = max_nr_expanded_descriptors*(subs-1)+25
-        lat[subs] = values[index_lat]
-        lon[subs] = values[index_lon]
+        index_lat = BI.max_nr_expanded_descriptors*(subs-1)+24
+        index_lon = BI.max_nr_expanded_descriptors*(subs-1)+25
+        lat[subs] = BI.values[index_lat]
+        lon[subs] = BI.values[index_lon]
         if (30*(subs/30) == subs):
             print "subs = ", subs, "lat = ", lat[subs], " lon = ", lon[subs]
             print "min/max lat", min(lat), max(lat)
             print "min/max lon", min(lon), max(lon)
             
     print '------------------------------'
+
+    # implemented upto this point
+    sys.exit(0)
+
     # busel: fill the descriptor list arrays (only needed for printing)   
     
     # warning: this routine has no inputs, and acts on data stored

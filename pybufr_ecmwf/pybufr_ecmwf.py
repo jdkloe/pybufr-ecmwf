@@ -45,19 +45,89 @@ class BUFRInterfaceECMWF:
     a class of wrapper and helper functions to allow easier use of the
     raw ECMWF BUFR interface wrapper
     """
+    #  #[ local constant parameters
     size_ksup  =    9
     size_ksec0 =    3
     size_ksec1 =   40
     size_ksec2 = 4096
-    size_key   = 52
+    size_key   =   52
+    size_ksec3 =    4
+    size_ksec4 =    2
+    #  #]
+    def __init__(self,encoded_message):
+        #  #[
+        # binary encoded BUFR message data
+        # (usually stored as a 4-byte integer array)
+        self.encoded_message = encoded_message
+
+        # switches
+        self.sections012_decoded = False
+        self.data_decoded        = False
+
+        # todo: pass these values as optional parameters to the decoder
+        #       and check whether they pass the library maximum or not.
+        #       (and choose sensible defaults if not provided)
+
+        # define the needed sizes
+        # (especially the last 2 define the size of the values and cvals
+        #  array and can cause serious memory usage, so maybe later I'll
+        #  add an option to choose the values at runtime)
+        self.max_nr_descriptors          =     20 # 300
+        self.max_nr_expanded_descriptors =    140 # 160000
+        # note: maximum possible value for max_nr_expanded_descriptors
+        # is JELEM=320.000 (as defined in ecmwfbufr_parameters.py), but
+        # using that maximum value is not a very nice idea since it will
+        # cause 24MB per subset of memory to be allocated for the cvals
+        # array, so for a typical ERS2 BUFR message with 361 subsets
+        # this would be 320000.*80*361/1024/1024/1024 = 8.6 GB ....)
+        # Even if this is just virtual memory, it may not allways be
+        # nice to your system to do this...
+        self.max_nr_subsets              =    361 # 25
+        # self.max_nr_delayed_replication_factors = ///
+
+        # copie to names that are more common in the ECMWF software
+        self.ktdlen = self.max_nr_descriptors
+        # self.krdlen = self.max_nr_delayed_replication_factors
+        self.kelem  = self.max_nr_expanded_descriptors
+        self.kvals  = self.max_nr_expanded_descriptors*self.max_nr_subsets
+        # self.jbufl  = self.max_bufr_msg_size
+        # self.jsup   = size_ksup
     
-    def __init__(self):
+        # arrays to hold the meta data
         self.ksup   = np.zeros(self.size_ksup,  dtype = np.int)
         self.ksec0  = np.zeros(self.size_ksec0, dtype = np.int)
         self.ksec1  = np.zeros(self.size_ksec1, dtype = np.int)
         self.ksec2  = np.zeros(self.size_ksec2, dtype = np.int)
         self.key    = np.zeros(self.size_key,   dtype = np.int)
+        self.ksec3  = np.zeros(self.size_ksec3, dtype = np.int)
+        self.ksec4  = np.zeros(self.size_ksec4, dtype = np.int)
 
+        # arrays to hold the descriptors
+        #...
+
+        # arrays to hold the actual numerical and string values
+        self.cnames = np.zeros((self.kelem, 64), dtype = np.character)
+        self.cunits = np.zeros((self.kelem, 24), dtype = np.character)
+        # note: float64 is the default, but it doesn't hurt to make it explicit
+        self.values = np.zeros(      self.kvals, dtype = np.float64)
+        self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
+
+        # define our own location for storing (symlinks to) the BUFR tables
+        self.private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
+        if (not os.path.exists(self.private_bufr_tables_dir)):
+            os.mkdir(self.private_bufr_tables_dir)
+
+
+        # make sure the BUFR tables can be found
+        # also, force a slash at the end, otherwise the library fails
+        # to find the tables (at least this has been the case for many
+        # library versions I worked with)
+        env = os.environ
+        env["BUFR_TABLES"] = self.private_bufr_tables_dir+os.path.sep
+        # the above works just fine for me, no need for this one:
+        #os.putenv("BUFR_TABLES",self.private_bufr_tables_dir+os.path.sep)
+
+        #  #]        
     def get_expected_ecmwf_bufr_table_names(self,
                                             ecmwf_bufr_tables_dir,
                                             center, subcenter,
@@ -208,15 +278,21 @@ class BUFRInterfaceECMWF:
         
         return (name_table_b, name_table_d)
         #  #]
-    def decode_sections_012(self,words):
+    def decode_sections_012(self):
         #  #[ wrapper for bus012
         kerr   = 0
        
         print "calling: ecmwfbufr.bus012():"
-        ecmwfbufr.bus012(words, self.ksup,
-                         self.ksec0, self.ksec1, self.ksec2, kerr)
+        ecmwfbufr.bus012(self.encoded_message, # input
+                         self.ksup,  # output
+                         self.ksec0, # output
+                         self.ksec1, # output
+                         self.ksec2, # output
+                         kerr)       # output
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bus012'))
+
+        self.sections012_decoded = True
         #  #]
     def setup_tables(self,table_B_to_use=None,table_D_to_use=None):
         #  #[
@@ -278,14 +354,14 @@ class BUFRInterfaceECMWF:
         #   3) the default tables (and hope they will contain the needed
         #      descriptors to allow proper decoding or encoding)
 
-        # define our own location for storing (symlinks to) the BUFR tables
-        private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
-        if (not os.path.exists(private_bufr_tables_dir)):
-            os.mkdir(private_bufr_tables_dir)
-
-        destination_b = os.path.join(private_bufr_tables_dir,
+        # note that self.private_bufr_tables_dir  is defined in __init__
+        # now, since this one needs to be set before the bus012 call
+        # (while this setup_tables method will be called after the bus012
+        #  call because it needs some numbers from the sections 0,1,2)
+        
+        destination_b = os.path.join(self.private_bufr_tables_dir,
                                      expected_name_table_b)
-        destination_d = os.path.join(private_bufr_tables_dir,
+        destination_d = os.path.join(self.private_bufr_tables_dir,
                                      expected_name_table_d)
 
         if ( (table_B_to_use is not None) and
@@ -341,10 +417,11 @@ class BUFRInterfaceECMWF:
         # to find the tables (at least this has been the case for many
         # library versions I worked with)
         env = os.environ
-        env["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
+        env["BUFR_TABLES"] = self.private_bufr_tables_dir+os.path.sep
     
         #  #]
     def print_sections_012(self):
+        #  #[
         print 'ksup = ', self.ksup
         print '------------------------------'
         
@@ -376,14 +453,29 @@ class BUFRInterfaceECMWF:
                              self.key)
         else:
             print 'skipping section 2 [since it seems unused]'
-        
-    # todo: pass these values as optional parameters to the decoder
-    #       and check whether they pass the library maximum or not.
-    #       (and choose sensible defaults if not provided)
-    #max_nr_descriptors          =  20 # 300
-    #max_nr_expanded_descriptors = 140 # 160000 # max is JELEM=320.000
-    #max_nr_subsets              = 361 # 25
+        #  #]
+    def decode_data(self):
+        #  #[
+        kerr   = 0
 
+        ecmwfbufr.bufrex(self.encoded_message, # input
+                         self.ksup,   # output
+                         self.ksec0,  # output
+                         self.ksec1,  # output
+                         self.ksec2,  # output
+                         self.ksec3,  # output
+                         self.ksec4,  # output
+                         self.cnames, # not used
+                         self.cunits, # not used
+                         self.values, # output
+                         self.cvals,  # output
+                         kerr)        # output
+        if (kerr != 0):
+            print "kerr = ", kerr
+            sys.exit(1)
+
+        self.data_decoded        = True
+        #  #]
 
     def explain_error(kerr, subroutine_name):
         #  #[ explain error codes returned by the bufrlib routines
@@ -394,6 +486,12 @@ class BUFRInterfaceECMWF:
     #  #]
 class RawBUFRFile:
     #  #[
+    """
+    a class to read and write the binary BUFR messages from and
+    to file. Is is ntended to replace the pbio routines from the ECMWF
+    library which for some obscure reason cannot be interfaced
+    easily to python using the f2py tool.
+    """
     def __init__(self, verbose = False):
         #  #[
         self.bufr_fd  = None
