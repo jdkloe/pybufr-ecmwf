@@ -62,93 +62,60 @@ def decoding_example():
 
     # print a selection of the decoded numbers
     print '------------------------------'
+    print "Metadata for decoded BUFR message:"
+    BI.print_sections_01234_metadata()
+
+    print '------------------------------'
+    print "The list of names and units for the numbers in this BUFR message:"
+    BI.print_names_and_units()
+
+    print '------------------------------'
     print "Decoded BUFR message:"
-    print "ksup : ", BI.ksup
-    print "sec0 : ", BI.ksec0
-    print "sec1 : ", BI.ksec1
-    print "sec2 : ", BI.ksec2
-    print "sec3 : ", BI.ksec3
-    print "sec4 : ", BI.ksec4
 
-    #print "cnames [cunits] : "
-    #for (i, cnm) in enumerate(BI.cnames):
-    #    cun = BI.cunits[i]
-    #    txtn = ''.join(c for c in cnm)
-    #    txtu = ''.join(c for c in cun)
-    #    if (txtn.strip() != ''):
-    #        print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
-
-    print "values : ", BI.values
+    print "values array: ", BI.values
     txt = ''.join(str(v)+';' for v in BI.values[:20] if v>0.)
     print "values[:20] : ", txt
 
-    nsubsets  = BI.ksec3[2] # 361 # number of subsets in this BUFR message
+    nsubsets = BI.get_num_subsets()
+    print "number of subsets in the BUFR message is: ",nsubsets
 
-    #not yet used:
-    #nelements = BI.ksup[4] # 44 # size of one expanded subset
-    
+    nelements = BI.get_num_elements()
+    print "number of elements in each subset is: ",nelements
+
+    lat_array = BI.get_values(24)
+    lon_array = BI.get_values(25)
+
     lat = np.zeros(nsubsets)
     lon = np.zeros(nsubsets)
     for subs in range(nsubsets):
-        # index_lat = nelements*(s-1)+24
-        # index_lon = nelements*(s-1)+25
-        index_lat = BI.max_nr_expanded_descriptors*(subs-1)+24
-        index_lon = BI.max_nr_expanded_descriptors*(subs-1)+25
-        lat[subs] = BI.values[index_lat]
-        lon[subs] = BI.values[index_lon]
         if (30*(subs/30) == subs):
-            print "subs = ", subs, "lat = ", lat[subs], " lon = ", lon[subs]
-            print "min/max lat", min(lat), max(lat)
-            print "min/max lon", min(lon), max(lon)
-            
+            print " lat_array["+str(subs)+"] = "+str(lat_array[subs])+\
+                  " lon_array["+str(subs)+"] = "+str(lon_array[subs])
+
+
+    print '------------------------------'
+    # this is a nice way to verify that you picked the right element from
+    # the BUFR message:
+    print 'latitude  name [unit]: %s [%s]' % BI.get_element_name_and_unit(24)
+    print 'longitude name [unit]: %s [%s]' % BI.get_element_name_and_unit(25)
     print '------------------------------'
 
+    BI.fill_descriptor_list()
+    
+    print 'busel result:'
+    print "ktdlen = ", BI.ktdlen
+    print "ktdexl = ", BI.ktdexl
+
+    descriptor_list          = BI.get_descriptor_list()
+    expanded_discriptor_list = BI.get_expanded_descriptor_list()
+    print "descriptor list: ",descriptor_list
+    print "descriptor list length: ",len(descriptor_list)
+    print "expanded descriptor list: ",expanded_discriptor_list
+    print "expanded descriptor list length: ",len(expanded_discriptor_list)
+    
     # implemented upto this point
     sys.exit(0)
 
-    # busel: fill the descriptor list arrays (only needed for printing)   
-    
-    # warning: this routine has no inputs, and acts on data stored
-    #          during previous library calls
-    # Therefore it only produces correct results when either bus0123
-    # or bufrex have been called previously on the same bufr message.....
-    # However, it is not clear to me why it seems to correctly produce
-    # the descriptor lists (both bare and expanded), but yet it does
-    # not seem to fill the ktdlen and ktdexl values.
-    
-    ktdlen = 0
-    ktdlst = np.zeros(max_nr_descriptors, dtype = np.int)
-    ktdexl = 0
-    ktdexp = np.zeros(max_nr_expanded_descriptors, dtype = np.int)
-    kerr   = 0
-    
-    print "calling: ecmwfbufr.busel():"
-    ecmwfbufr.busel(ktdlen, # actual number of data descriptors
-                    ktdlst, # list of data descriptors
-                    ktdexl, # actual number of expanded data descriptors
-                    ktdexp, # list of expanded data descriptors
-                    kerr)   # error  message
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
-
-    print 'busel result:'
-    print "ktdlen = ", ktdlen
-    print "ktdexl = ", ktdexl
-    
-    selection1 = np.where(ktdlst > 0)
-    ktdlen = len(selection1[0])
-    selection2 = np.where(ktdexp > 0)
-    ktdexl = len(selection2[0])
-    
-    print 'fixed lengths:'
-    print "ktdlen = ", ktdlen
-    print "ktdexl = ", ktdexl
-    
-    print 'descriptor lists:'
-    print "ktdlst = ", ktdlst[:ktdlen]
-    print "ktdexp = ", ktdexp[:ktdexl]
-    
     print '------------------------------'
     print "printing content of section 3:"
     print "sec3 : ", ksec3

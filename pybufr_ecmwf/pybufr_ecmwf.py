@@ -61,9 +61,10 @@ class BUFRInterfaceECMWF:
         self.encoded_message = encoded_message
 
         # switches
-        self.sections012_decoded = False
-        self.data_decoded        = False
-
+        self.sections012_decoded     = False
+        self.data_decoded            = False
+        self.descriptors_list_filled = False
+        
         # todo: pass these values as optional parameters to the decoder
         #       and check whether they pass the library maximum or not.
         #       (and choose sensible defaults if not provided)
@@ -103,7 +104,10 @@ class BUFRInterfaceECMWF:
         self.ksec4  = np.zeros(self.size_ksec4, dtype = np.int)
 
         # arrays to hold the descriptors
-        #...
+        self.ktdlen = 0 # will hold nr of descriptors
+        self.ktdlst = np.zeros(self.max_nr_descriptors, dtype = np.int)
+        self.ktdexl = 0 # will hold nr of expanded descriptors
+        self.ktdexp = np.zeros(self.max_nr_expanded_descriptors, dtype = np.int)
 
         # arrays to hold the actual numerical and string values
         self.cnames = np.zeros((self.kelem, 64), dtype = np.character)
@@ -116,7 +120,6 @@ class BUFRInterfaceECMWF:
         self.private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
         if (not os.path.exists(self.private_bufr_tables_dir)):
             os.mkdir(self.private_bufr_tables_dir)
-
 
         # make sure the BUFR tables can be found
         # also, force a slash at the end, otherwise the library fails
@@ -295,8 +298,12 @@ class BUFRInterfaceECMWF:
         self.sections012_decoded = True
         #  #]
     def setup_tables(self,table_B_to_use=None,table_D_to_use=None):
-        #  #[
-        print 'inside setup_tables() ...'
+        #  #[ routine for easier handling of tables
+        if (not self.sections012_decoded):
+            errtxt = "Sorry, setting up BUFR tables is only possible after "+\
+                     "sections 0,1,2 of a BUFR message have been decoded "+\
+                     "with a call to decode_sections_012"
+            raise EcmwfBufrLibError(errtxt)
 
         # dont use this! This would need an import of helpers
         # which in turn imports pybufr_ecmwf so would give a circular
@@ -313,7 +320,7 @@ class BUFRInterfaceECMWF:
         # might fail when it attempts to use it ...
         ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
 
-        print 'ecmwf_bufr_tables_dir = ',ecmwf_bufr_tables_dir
+        # print 'ecmwf_bufr_tables_dir = ',ecmwf_bufr_tables_dir
 
         EditionNumber      = self.ksec0[3-1]
 
@@ -330,8 +337,8 @@ class BUFRInterfaceECMWF:
                        LocalVersion, MasterTableVersion,
                        EditionNumber, MasterTableNumber)
         
-        print '(expected_name_table_b, expected_name_table_d) = ',\
-              (expected_name_table_b, expected_name_table_d)
+        # print '(expected_name_table_b, expected_name_table_d) = ',\
+        #       (expected_name_table_b, expected_name_table_d)
 
         fullpath_table_b = os.path.join(ecmwf_bufr_tables_dir,
                                         expected_name_table_b)
@@ -421,22 +428,22 @@ class BUFRInterfaceECMWF:
     
         #  #]
     def print_sections_012(self):
-        #  #[
-        print 'ksup = ', self.ksup
+        #  #[ wrapper for buprs0, buprs1, buprs2
+        if (not self.sections012_decoded):
+            errtxt = "Sorry, printing sections 0,1,2 of a BUFR message "+\
+                     "is only possible after "+\
+                     "sections 0,1,2 of a BUFR message have been decoded "+\
+                     "with a call to decode_sections_012"
+            raise EcmwfBufrLibError(errtxt)
+
         print '------------------------------'
-        
         print "printing content of section 0:"
-        print "sec0 : ", self.ksec0
         ecmwfbufr.buprs0(self.ksec0)
         print '------------------------------'
         print "printing content of section 1:"
-        print "sec1 : ", self.ksec1
         ecmwfbufr.buprs1(self.ksec1)
-
-        sec2_len = self.ksec2[0]
         print '------------------------------'
-        
-        print "length of sec2: ", sec2_len
+        sec2_len = self.ksec2[0]        
         if (sec2_len > 0):
             # buukey expands local ECMWF information
             # from section 2 to the key array
@@ -447,7 +454,6 @@ class BUFRInterfaceECMWF:
                              self.key,
                              self.ksup,
                              kerr)
-            print "sec2 : ", self.ksec2
             print "printing content of section 2:"
             ecmwfbufr.buprs2(self.ksup,
                              self.key)
@@ -465,25 +471,181 @@ class BUFRInterfaceECMWF:
                          self.ksec2,  # output
                          self.ksec3,  # output
                          self.ksec4,  # output
-                         self.cnames, # not used
-                         self.cunits, # not used
+                         self.cnames, # output
+                         self.cunits, # output
                          self.values, # output
                          self.cvals,  # output
                          kerr)        # output
         if (kerr != 0):
-            print "kerr = ", kerr
-            sys.exit(1)
+            raise EcmwfBufrLibError(self.explain_error(kerr,'bufrex'))
 
-        self.data_decoded        = True
+        self.data_decoded = True
         #  #]
+    def print_sections_01234_metadata(self):
+        #  #[
+        if (not self.data_decoded):
+            errtxt = "Sorry, printing sections 0,1,2,3,4 of a BUFR message "+\
+                     "is only possible after a BUFR message has been decoded "+\
+                     "with a call to decode_data"
+            raise EcmwfBufrLibError(errtxt)
+        
+        print "ksup : ", self.ksup
+        print "sec0 : ", self.ksec0
+        print "sec1 : ", self.ksec1
+        print "sec2 : ", self.ksec2
+        print "sec3 : ", self.ksec3
+        print "sec4 : ", self.ksec4
+        #  #]
+    def print_names_and_units(self):
+        #  #[
+        if (not self.data_decoded):
+            errtxt = "Sorry, names and units are only available after "+\
+                     "a BUFR message has been decoded with a call to "+\
+                     "decode_data"
+            raise EcmwfBufrLibError(errtxt)
 
+        print "[index] cname [cunit] : "
+        for (i, cnm) in enumerate(self.cnames):
+            cun = self.cunits[i]
+            txtn = ''.join(c for c in cnm)
+            txtu = ''.join(c for c in cun)
+            if (txtn.strip() != ''):
+                print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
+        #  #]
     def explain_error(kerr, subroutine_name):
         #  #[ explain error codes returned by the bufrlib routines
         # to be implemented, for now just print the raw code
         return 'libbufr subroutine '+subroutine_name+\
-               ' reprted error code: kerr = '+str(kerr)
+               ' reported error code: kerr = '+str(kerr)
         #  #]
-    #  #]
+    def get_num_subsets(self):
+        #  #[ return number of subsets in this BUFR message
+        if (not self.sections012_decoded):
+            errtxt = "Sorry, the number of subsets is only available after "+\
+                     "a BUFR message has been decoded with a call to "+\
+                     "decode_sections_012"
+            raise EcmwfBufrLibError(errtxt)
+        return self.ksec3[2]
+        #  #]
+    def get_num_elements(self):
+        #  #[ return expanded number of descriptors in one subset
+        if (not self.sections012_decoded):
+            errtxt = "Sorry, the number of elements is only available after "+\
+                     "a BUFR message has been decoded with a call to "+\
+                     "decode_sections_012"
+            raise EcmwfBufrLibError(errtxt)
+        return self.ksup[4]
+        #  #]
+    def get_values(self,i):
+        #  #[ get the i th number from each subset as an array
+        if (not self.data_decoded):
+            errtxt = "Sorry, retrieving values is only possible after "+\
+                     "a BUFR message has been decoded with a call to "+\
+                     "decode_data"
+            raise EcmwfBufrLibError(errtxt)
+
+        nsubsets  = self.get_num_subsets()
+        nelements = self.get_num_elements()
+        if i>nelements-1:
+            errtxt = "Sorry, this BUFR message has only "+str(nelements)+\
+                     " elements per subset, so requesting index "+\
+                     str(i)+" is not possible (remember the arrays are "+\
+                     "counted starting with 0)"
+            raise EcmwfBufrLibError(errtxt)
+        
+        selection = self.max_nr_expanded_descriptors*\
+                    np.array(range(nsubsets))+i
+
+        values = self.values[selection]
+        return values
+        #  #]
+    def get_element_name_and_unit(self,i):
+        #  #[
+        if (not self.data_decoded):
+            errtxt = "Sorry, names and units are only available after "+\
+                     "a BUFR message has been decoded with a call to "+\
+                     "decode_data"
+            raise EcmwfBufrLibError(errtxt)
+
+        nelements = self.get_num_elements()
+        if i>nelements-1:
+            errtxt = "Sorry, this BUFR message has only "+str(nelements)+\
+                     " elements per subset, so requesting name and unit for "+\
+                     "index "+str(i)+" is not possible "+\
+                     "(remember the arrays are counted starting with 0)"
+            raise EcmwfBufrLibError(errtxt)
+
+        txtn = ''.join(c for c in self.cnames[i])
+        txtu = ''.join(c for c in self.cunits[i])
+
+        return (txtn.strip(),txtu.strip())
+        #  #]
+    def fill_descriptor_list(self):
+        #  #[ fills both the normal and expanded discriptor lists
+
+        if ( (not self.data_decoded) and
+             (not self.sections012_decoded)):
+            errtxt = "Sorry, filling descriptor lists of a BUFR message "+\
+                     "is only possible after a BUFR message has been decoded "+\
+                     "with a call to decode_data or decode_sections_012"
+            raise EcmwfBufrLibError(errtxt)
+
+        # busel: fill the descriptor list arrays (only needed for printing)   
+    
+        # warning: this routine has no inputs, and acts on data stored
+        #          during previous library calls
+        # Therefore it only produces correct results when either bus012
+        # or bufrex have been called previously on the same bufr message.....
+    
+        kerr   = 0
+    
+        print "calling: ecmwfbufr.busel():"
+        ecmwfbufr.busel(self.ktdlen, # actual number of data descriptors
+                        self.ktdlst, # list of data descriptors
+                        self.ktdexl, # actual nr of expanded data descriptors
+                        self.ktdexp, # list of expanded data descriptors
+                        kerr)   # error  message
+        if (kerr != 0):
+            raise EcmwfBufrLibError(self.explain_error(kerr,'bufrex'))
+
+        # It is not clear to me why busel seems to correctly produce
+        # the descriptor lists (both bare and expanded), but yet it does
+        # not seem to fill the ktdlen and ktdexl values.
+        # To fix this the next 4 lines have been added:
+        
+        selection1 = np.where(self.ktdlst > 0)
+        self.ktdlen = len(selection1[0])
+        selection2 = np.where(self.ktdexp > 0)
+        self.ktdexl = len(selection2[0])
+
+        self.descriptors_list_filled = True
+        #  #]
+    def get_descriptor_list(self):
+        #  #[
+        if (not self.descriptors_list_filled):
+            errtxt = "Sorry, retrieving the list of descriptors of a "+\
+                     "BUFR message is only possible after a BUFR message "+\
+                     "has been decoded with a call to decode_data or "+\
+                     "decode_sections_012, and subsequently the lists have "+\
+                     "been filled with a call to fill_descriptor_list"
+            raise EcmwfBufrLibError(errtxt)
+
+        return self.ktdlst[:self.ktdlen]
+        #  #]
+    def get_expanded_descriptor_list(self):
+        #  #[
+        if (not self.descriptors_list_filled):
+            errtxt = "Sorry, retrieving the list of descriptors of a "+\
+                     "BUFR message is only possible after a BUFR message "+\
+                     "has been decoded with a call to decode_data or "+\
+                     "decode_sections_012, and subsequently the lists have "+\
+                     "been filled with a call to fill_descriptor_list"
+            raise EcmwfBufrLibError(errtxt)
+
+        return self.ktdexp[:self.ktdexl]
+        #  #]
+    
+#  #]
 class RawBUFRFile:
     #  #[
     """
