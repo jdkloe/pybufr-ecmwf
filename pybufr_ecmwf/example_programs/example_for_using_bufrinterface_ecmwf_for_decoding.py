@@ -45,10 +45,14 @@ def decoding_example():
     rbf.close()
     
     print '------------------------------'
-    BI = pybufr_ecmwf.BUFRInterfaceECMWF(words)
+    BI = pybufr_ecmwf.BUFRInterfaceECMWF(words,
+                                         max_nr_expanded_descriptors=44)
 
     print "calling: decode_sections_012():"
     BI.decode_sections_012()
+
+    print "Metadata for decoded BUFR message:"
+    BI.print_sections_012_metadata()
 
     print "calling: setup_tables()"
     BI.setup_tables()
@@ -113,14 +117,10 @@ def decoding_example():
     print "expanded descriptor list: ",expanded_discriptor_list
     print "expanded descriptor list length: ",len(expanded_discriptor_list)
     
-    # implemented upto this point
-    sys.exit(0)
-
     print '------------------------------'
     print "printing content of section 3:"
-    print "sec3 : ", ksec3
-    ecmwfbufr.buprs3(ksec3, ktdlst, ktdexp, cnames)
-
+    BI.print_descriptors()
+    
 
 print "-"*50
 print "BUFR decoding example"

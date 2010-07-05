@@ -54,7 +54,8 @@ class BUFRInterfaceECMWF:
     size_ksec3 =    4
     size_ksec4 =    2
     #  #]
-    def __init__(self,encoded_message):
+    def __init__(self,encoded_message,
+                 max_nr_expanded_descriptors=140):
         #  #[
         # binary encoded BUFR message data
         # (usually stored as a 4-byte integer array)
@@ -62,6 +63,7 @@ class BUFRInterfaceECMWF:
 
         # switches
         self.sections012_decoded     = False
+        self.sections0123_decoded    = False
         self.data_decoded            = False
         self.descriptors_list_filled = False
         
@@ -74,7 +76,7 @@ class BUFRInterfaceECMWF:
         #  array and can cause serious memory usage, so maybe later I'll
         #  add an option to choose the values at runtime)
         self.max_nr_descriptors          =     20 # 300
-        self.max_nr_expanded_descriptors =    140 # 160000
+        self.max_nr_expanded_descriptors = max_nr_expanded_descriptors
         # note: maximum possible value for max_nr_expanded_descriptors
         # is JELEM=320.000 (as defined in ecmwfbufr_parameters.py), but
         # using that maximum value is not a very nice idea since it will
@@ -90,6 +92,7 @@ class BUFRInterfaceECMWF:
         self.ktdlen = self.max_nr_descriptors
         # self.krdlen = self.max_nr_delayed_replication_factors
         self.kelem  = self.max_nr_expanded_descriptors
+
         self.kvals  = self.max_nr_expanded_descriptors*self.max_nr_subsets
         # self.jbufl  = self.max_bufr_msg_size
         # self.jsup   = size_ksup
@@ -112,9 +115,13 @@ class BUFRInterfaceECMWF:
         # arrays to hold the actual numerical and string values
         self.cnames = np.zeros((self.kelem, 64), dtype = np.character)
         self.cunits = np.zeros((self.kelem, 24), dtype = np.character)
-        # note: float64 is the default, but it doesn't hurt to make it explicit
-        self.values = np.zeros(      self.kvals, dtype = np.float64)
-        self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
+
+        # note: these next 2 arrays might become very large, especially
+        # the cvals array, so in order to keep them as small as possible
+        # I'll only define and allocate them after the number of subsets
+        # has been retrieved (so just before entering the bufrex routine)
+        self.values = None
+        self.cvals  = None
 
         # define our own location for storing (symlinks to) the BUFR tables
         self.private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
@@ -283,8 +290,12 @@ class BUFRInterfaceECMWF:
         #  #]
     def decode_sections_012(self):
         #  #[ wrapper for bus012
-        kerr   = 0
-       
+
+        # running of this routine yields enough meta-data to enable
+        # figuring out how to name the expected BUFR tables
+        
+        kerr = 0
+
         print "calling: ecmwfbufr.bus012():"
         ecmwfbufr.bus012(self.encoded_message, # input
                          self.ksup,  # output
@@ -296,6 +307,37 @@ class BUFRInterfaceECMWF:
             raise EcmwfBufrLibError(self.explain_error(kerr,'bus012'))
 
         self.sections012_decoded = True
+        #  #]
+    def decode_sections_0123(self):
+        #  #[ wrapper for bus0123
+
+        # running of this routine yields the same as
+        # decode_sections_012, and in addition it fills
+        # ksec3, which contains:
+        #
+        # KSEC3( 1)-- LENGTH OF SECTION 3 (BYTES)
+        # KSEC3( 2)-- RESERVED
+        # KSEC3( 3)-- NUMBER OF SUBSETS
+        # KSEC3( 4)-- FLAG (DATA TYPE,DATA COMPRESSION)
+        #
+        # At the moment it is not really clear to me why
+        # it is usefull to have a routine to do this.
+
+        kerr = 0
+       
+        print "calling: ecmwfbufr.bus012():"
+        ecmwfbufr.bus0123(self.encoded_message, # input
+                          self.ksup,  # output
+                          self.ksec0, # output
+                          self.ksec1, # output
+                          self.ksec2, # output
+                          self.ksec3, # output
+                          kerr)       # output
+        if (kerr != 0):
+            raise EcmwfBufrLibError(self.explain_error(kerr,'bus0123'))
+
+        self.sections012_decoded  = True
+        self.sections0123_decoded = True
         #  #]
     def setup_tables(self,table_B_to_use=None,table_D_to_use=None):
         #  #[ routine for easier handling of tables
@@ -464,6 +506,23 @@ class BUFRInterfaceECMWF:
         #  #[
         kerr   = 0
 
+        if (not self.sections012_decoded):
+            errtxt = "Sorry, in order to allow automatic allocation of the "+\
+                     "values and cvals arrays the number of subsets is "+\
+                     "needed. Therefore the decode_setions012 or "+\
+                     "decode_sections_0123 subroutine needs to be called "+\
+                     "before entering the decode_data subroutine."
+            raise EcmwfBufrLibError(errtxt)
+
+        # calculate the needed size of the values and cvals arrays
+        actual_nr_of_subsets = self.get_num_subsets()
+        self.kvals  = self.max_nr_expanded_descriptors*actual_nr_of_subsets
+
+        # allocate space for decoding
+        # note: float64 is the default, but it doesn't hurt to make it explicit
+        self.values = np.zeros(      self.kvals, dtype = np.float64)
+        self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
+
         ecmwfbufr.bufrex(self.encoded_message, # input
                          self.ksup,   # output
                          self.ksec0,  # output
@@ -479,7 +538,47 @@ class BUFRInterfaceECMWF:
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bufrex'))
 
+        # note: something seems to fail in case self.kvals (also known
+        # as kelem) is too small. bufrex should return with error 25,
+        # but in my tests it seems to return with 0.
+        # Note that this condition may occur if the user gives a wrong
+        # value for max_nr_expanded_descriptors in __init__.
+        # Therefore check to see if sec4 was decoded allright:
+        if self.ksec4[0]==0:
+            errtxt = "Sorry, call to bufrex failed, Maybe you have choosen "+\
+                     "a too small value for max_nr_expanded_descriptors?"
+            raise EcmwfBufrLibError(errtxt)
+        
         self.data_decoded = True
+        #  #]
+    def print_sections_012_metadata(self):
+        #  #[
+        
+        if (not self.sections012_decoded):
+            errtxt = "Sorry, printing sections 0,1,2 of a BUFR message "+\
+                     "is only possible after a BUFR message has been "+\
+                     "partially decoded with a call to decode_sections_012"
+            raise EcmwfBufrLibError(errtxt)
+        
+        print "ksup : ", self.ksup
+        print "sec0 : ", self.ksec0
+        print "sec1 : ", self.ksec1
+        print "sec2 : ", self.ksec2
+        #  #]
+    def print_sections_0123_metadata(self):
+        #  #[
+        
+        if (not self.sections0123_decoded):
+            errtxt = "Sorry, printing sections 0,1,2,3 of a BUFR message "+\
+                     "is only possible after a BUFR message has been "+\
+                     "partially decoded with a call to decode_sections_0123"
+            raise EcmwfBufrLibError(errtxt)
+        
+        print "ksup : ", self.ksup
+        print "sec0 : ", self.ksec0
+        print "sec1 : ", self.ksec1
+        print "sec2 : ", self.ksec2
+        print "sec3 : ", self.ksec3
         #  #]
     def print_sections_01234_metadata(self):
         #  #[
@@ -515,6 +614,12 @@ class BUFRInterfaceECMWF:
     def explain_error(kerr, subroutine_name):
         #  #[ explain error codes returned by the bufrlib routines
         # to be implemented, for now just print the raw code
+
+        # See file: bufrdc/buerr.F for a long list of possible
+        # error conditions that the ECMWF library may return
+        # (just wish it would really return them, since there seem
+        # to be some bugs in the software on this point ...)
+
         return 'libbufr subroutine '+subroutine_name+\
                ' reported error code: kerr = '+str(kerr)
         #  #]
@@ -525,7 +630,10 @@ class BUFRInterfaceECMWF:
                      "a BUFR message has been decoded with a call to "+\
                      "decode_sections_012"
             raise EcmwfBufrLibError(errtxt)
-        return self.ksec3[2]
+        return self.ksup[5]
+        # don't use this one, since that is only available after
+        # decoding section3 ...
+        #return self.ksec3[2]
         #  #]
     def get_num_elements(self):
         #  #[ return expanded number of descriptors in one subset
@@ -644,7 +752,27 @@ class BUFRInterfaceECMWF:
 
         return self.ktdexp[:self.ktdexl]
         #  #]
-    
+    def print_descriptors(self):
+        #  #[
+        if (not self.descriptors_list_filled):
+            errtxt = "Sorry, retrieving the list of descriptors of a "+\
+                     "BUFR message is only possible after a BUFR message "+\
+                     "has been decoded with a call to decode_data or "+\
+                     "decode_sections_012, and subsequently the lists have "+\
+                     "been filled with a call to fill_descriptor_list"
+            raise EcmwfBufrLibError(errtxt)
+
+        # Note: this next call will print self.max_nr_descriptors
+        # descriptors and self.max_nr_expanded_descriptors
+        # extended descriptors, one line for each, including
+        # explanation.
+        # They will also print zeros for all not used elements of
+        # these ktdlst and ktdexp arrays
+        ecmwfbufr.buprs3(self.ksec3,
+                         self.ktdlst,
+                         self.ktdexp,
+                         self.cnames)
+        #  #]        
 #  #]
 class RawBUFRFile:
     #  #[
@@ -1316,203 +1444,7 @@ if __name__ == "__main__":
     BF.close()
     #  #]
 
-    #  #[ define the needed constants
-    
-    max_nr_descriptors          =  20 # 300
-    max_nr_expanded_descriptors = 140 # 160000 # max is JELEM=320.000
-    max_nr_subsets              = 361 # 25
 
-    
-    
-    ktdlen = max_nr_descriptors
-    # krdlen = max_nr_delayed_replication_factors
-    kelem  = max_nr_expanded_descriptors
-    kvals  = max_nr_expanded_descriptors*max_nr_subsets
-    # jbufl  = max_bufr_msg_size
-    # jsup   = length_ksup
-    
-    #  #]
-    #  #[ call BUS012
-    print '------------------------------'
-    ksup   = np.zeros(         9, dtype = np.int)
-    ksec0  = np.zeros(         3, dtype = np.int)
-    ksec1  = np.zeros(        40, dtype = np.int)
-    ksec2  = np.zeros(      4096, dtype = np.int)
-    kerr   = 0
-    
-    print "calling: ecmwfbufr.bus012():"
-    ecmwfbufr.bus012(words, ksup, ksec0, ksec1, ksec2, kerr)
-    # optional parameters: kbufl)
-    print "returned from: ecmwfbufr.bus012()"
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
-    print 'ksup = ', ksup
-    #  #]
-    #  #[ call BUPRS0
-    print '------------------------------'
-    print "printing content of section 0:"
-    print "sec0 : ", ksec0
-    ecmwfbufr.buprs0(ksec0)
-    #  #]
-    #  #[ call BUPRS1
-    print '------------------------------'
-    print "printing content of section 1:"
-    print "sec1 : ", ksec1
-    ecmwfbufr.buprs1(ksec1)
-    #  #]
-    #  #[ call BUUKEY
-    key = np.zeros(52, dtype = np.int)
-    sec2_len = ksec2[0]
-    if (sec2_len > 0):
-        # buukey expands local ECMWF information from section 2
-        # to the key array
-        print '------------------------------'
-        print "calling buukey"
-        ecmwfbufr.buukey(ksec1, ksec2, key, ksup, kerr)
-    #  #]
-    #  #[ call BUPRS2
-    print '------------------------------'
-    print "length of sec2: ", sec2_len
-    if (sec2_len > 0):
-        print "sec2 : ", ksec2
-        print "printing content of section 2:"
-        ecmwfbufr.buprs2(ksup, key)
-    else:
-        print 'skipping section 2 [since it seems unused]'
-    #  #]
-    #  #[ call BUFREX
-    
-    # WARNING: getting this to work is rather tricky
-    # any wrong datatype in these definitions may lead to
-    # the code entering an infinite loop ...
-    # Note that the f2py interface only checks the lengths
-    # of these arrays, not the datatype. It will accept
-    # any type, as long as it is numeric for the non-string items
-    # If you are lucky you will get a MemoryError when you make a mistake
-    # but often this will not be the case, and the code just fails or
-    # produces faulty results without apparant reason.
-    
-    # these 4 are filled by the BUS012 call above
-    # ksup   = np.zeros(         9, dtype = np.int)
-    # ksec0  = np.zeros(         3, dtype = np.int)
-    # ksec1  = np.zeros(        40, dtype = np.int)
-    # ksec2  = np.zeros(      4096, dtype = np.int)
-    
-    print '------------------------------'
-    ksec3  = np.zeros(          4, dtype = np.int)
-    ksec4  = np.zeros(          2, dtype = np.int)
-    cnames = np.zeros((kelem, 64), dtype = np.character)
-    cunits = np.zeros((kelem, 24), dtype = np.character)
-    values = np.zeros(      kvals, dtype = np.float64) # this is the default
-    cvals  = np.zeros((kvals, 80), dtype = np.character)
-    kerr   = 0
-    
-    print "calling: ecmwfbufr.bufrex():"
-    ecmwfbufr.bufrex(words, ksup, ksec0, ksec1, ksec2, ksec3, ksec4,
-                     cnames, cunits, values, cvals, kerr)
-    # optional parameters: sizewords, kelem, kvals)
-    print "returned from: ecmwfbufr.bufrex()"
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
-    #  #]
-    #  #[ print a selection of the decoded numbers
-    print '------------------------------'
-    print "Decoded BUFR message:"
-    print "ksup : ", ksup
-    print "sec0 : ", ksec0
-    print "sec1 : ", ksec1
-    print "sec2 : ", ksec2
-    print "sec3 : ", ksec3
-    print "sec4 : ", ksec4
-    print "cnames [cunits] : "
-    for (i, cn) in enumerate(cnames):
-        cu = cunits[i]
-        txtn = ''.join(c for c in cn)
-        txtu = ''.join(c for c in cu)
-        if (txtn.strip() != ''):
-            print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
-            
-    print "values : ", values
-    txt = ''.join(str(v)+';' for v in values[:20] if v>0.)
-    print "values[:20] : ", txt
-    
-    nsubsets  = ksec3[2] # 361 # number of subsets in this BUFR message
-    nelements = ksup[4] # 44 # size of one expanded subset
-    lat = np.zeros(nsubsets)
-    lon = np.zeros(nsubsets)
-    for s in range(nsubsets):
-        # index_lat = nelements*(s-1)+24
-        # index_lon = nelements*(s-1)+25
-        index_lat = max_nr_expanded_descriptors*(s-1)+24
-        index_lon = max_nr_expanded_descriptors*(s-1)+25
-        lat[s] = values[index_lat]
-        lon[s] = values[index_lon]
-        if (30*(s/30) == s):
-            print "s = ", s, "lat = ", lat[s], " lon = ", lon[s]
-
-    print "min/max lat", min(lat), max(lat)
-    print "min/max lon", min(lon), max(lon)
-    #  #]
-    #  #[ call BUSEL
-    print '------------------------------'
-    # busel: fill the descriptor list arrays (only needed for printing)   
-    
-    # warning: this routine has no inputs, and acts on data stored
-    #          during previous library calls
-    # Therefore it only produces correct results when either bus0123
-    # or bufrex have been called previously on the same bufr message.....
-    # However, it is not clear to me why it seems to correctly produce
-    # the descriptor lists (both bare and expanded), but yet it does
-    # not seem to fill the ktdlen and ktdexl values.
-    
-    ktdlen = 0
-    ktdlst = np.zeros(max_nr_descriptors, dtype = np.int)
-    ktdexl = 0
-    ktdexp = np.zeros(max_nr_expanded_descriptors, dtype = np.int)
-    kerr   = 0
-    
-    print "calling: ecmwfbufr.busel():"
-    ecmwfbufr.busel(ktdlen, # actual number of data descriptors
-                    ktdlst, # list of data descriptors
-                    ktdexl, # actual number of expanded data descriptors
-                    ktdexp, # list of expanded data descriptors
-                    kerr)   # error  message
-    print "returned from: ecmwfbufr.busel()"
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
-        
-    print 'busel result:'
-    print "ktdlen = ", ktdlen
-    print "ktdexl = ", ktdexl
-    
-    selection1 = np.where(ktdlst > 0)
-    #print 'selection1 = ', selection1[0]
-    ktdlen = len(selection1[0])
-    selection2 = np.where(ktdexp > 0)
-    #print 'selection2 = ', selection2[0]
-    ktdexl = len(selection2[0])
-    
-    print 'fixed lengths:'
-    print "ktdlen = ", ktdlen
-    print "ktdexl = ", ktdexl
-    
-    print 'descriptor lists:'
-    print "ktdlst = ", ktdlst[:ktdlen]
-    print "ktdexp = ", ktdexp[:ktdexl]
-    
-    #  #]
-    #  #[ call BUPRS3
-    print '------------------------------'
-    print "printing content of section 3:"
-    print "sec3 : ", ksec3
-    ecmwfbufr.buprs3(ksec3,
-                     ktdlst, # list of data descriptors
-                     ktdexp, # list of expanded data descriptors
-                     cnames) # descriptor names
-    #  #]
     #  #[ reinitialise all arrays
     print '------------------------------'
     print 'reinitialising all arrays...'
