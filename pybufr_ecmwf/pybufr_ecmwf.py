@@ -54,7 +54,8 @@ class BUFRInterfaceECMWF:
     size_ksec3 =    4
     size_ksec4 =    2
     #  #]
-    def __init__(self,encoded_message,
+    def __init__(self,encoded_message=None,
+                 max_nr_descriptors=20,
                  max_nr_expanded_descriptors=140):
         #  #[
         # binary encoded BUFR message data
@@ -75,7 +76,7 @@ class BUFRInterfaceECMWF:
         # (especially the last 2 define the size of the values and cvals
         #  array and can cause serious memory usage, so maybe later I'll
         #  add an option to choose the values at runtime)
-        self.max_nr_descriptors          =     20 # 300
+        self.max_nr_descriptors          = max_nr_descriptors
         self.max_nr_expanded_descriptors = max_nr_expanded_descriptors
         # note: maximum possible value for max_nr_expanded_descriptors
         # is JELEM=320.000 (as defined in ecmwfbufr_parameters.py), but
@@ -85,7 +86,7 @@ class BUFRInterfaceECMWF:
         # this would be 320000.*80*361/1024/1024/1024 = 8.6 GB ....)
         # Even if this is just virtual memory, it may not allways be
         # nice to your system to do this...
-        self.max_nr_subsets              =    361 # 25
+        self.nr_subsets = 361 # 25
         # self.max_nr_delayed_replication_factors = ///
 
         # copie to names that are more common in the ECMWF software
@@ -93,7 +94,10 @@ class BUFRInterfaceECMWF:
         # self.krdlen = self.max_nr_delayed_replication_factors
         self.kelem  = self.max_nr_expanded_descriptors
 
-        self.kvals  = self.max_nr_expanded_descriptors*self.max_nr_subsets
+        # filling this one is delayed in case of decoding
+        # since the nr of subsets is only known after decoding
+        # sections 0 upto 3. 
+        #self.kvals  = self.max_nr_expanded_descriptors*self.max_nr_subsets
         # self.jbufl  = self.max_bufr_msg_size
         # self.jsup   = size_ksup
     
@@ -773,6 +777,77 @@ class BUFRInterfaceECMWF:
                          self.ktdexp,
                          self.cnames)
         #  #]        
+    def fill_sections_0123(self,
+                           bufr_code_centre,
+                           bufr_obstype,
+                           bufr_subtype,
+                           bufr_table_local_version,
+                           bufr_table_master,
+                           bufr_table_master_version,
+                           bufr_code_subcentre,
+                           datetime=None,
+                           bufr_edition=4):
+        #  #[
+        # fill section 0
+        self.ksec0[1-1] = 0 # length of sec0 in bytes
+        #                     [filled by the encoder]
+        self.ksec0[2-1] = 0 # total length of BUFR message in bytes
+        #                     [filled by the encoder]
+        self.ksec0[3-1] = bufr_edition
+
+        # fill section 1
+        self.ksec1[ 1-1]=  22               # length sec1 bytes
+        #                                     [filled by the encoder]
+        # however,a minimum of 22 is obliged here
+        self.ksec1[ 2-1]= bufr_edition      # bufr edition
+        self.ksec1[ 3-1]= bufr_code_centre  # originating centre
+        self.ksec1[ 4-1]=   1               # update sequence number
+        # usually 1, only updated if the same data is re-issued after
+        # reprocessing or so to fix some bug/problem
+        self.ksec1[ 5-1]=   0               # (Flags presence of section 2)
+        #                                     (0/128 = no/yes)
+        self.ksec1[ 6-1]= bufr_obstype              # message type
+        self.ksec1[ 7-1]= bufr_subtype              # subtype
+        self.ksec1[ 8-1]= bufr_table_local_version  # version of local table
+        # (this determines the name of the BUFR table to be used)
+
+        # fill the datetime group. Note that it is not yet clear to me
+        # whether this should refer to the encoding datetime or to the
+        # actual measurement datetime. So allow the use to set the value,
+        # but use the current localtime if not provided.
+        if datetime is not None:
+            (year,month,day,hour,minute,second,
+             weekday,julianday,isdaylightsavingstime) = datetime
+        else:
+            (year,month,day,hour,minute,second,
+             weekday,julianday,isdaylightsavingstime) = time.localtime()
+            
+        self.ksec1[ 9-1]= (year-2000) # Without offset year - 2000
+        self.ksec1[10-1]= month       # month
+        self.ksec1[11-1]= day         # day
+        self.ksec1[12-1]= hour        # hour
+        self.ksec1[13-1]= minute      # minute
+
+        self.ksec1[14-1]= bufr_table_master         # master table
+        # (this determines the name of the BUFR table to be used)
+        self.ksec1[15-1]= bufr_table_master_version # version of master table
+        # (this determines the name of the BUFR table to be used)
+
+        # NOTE on filling items 16,17,18: this is the way to do it in edition 3
+        # TODO: adapt this procedure to edition 4, which requires
+        # filling 2 more datetime groups en the actual latitude
+        # and longitude ranges
+        # See bufrdc/buens1.F for some details.
+
+        # ksec1 items 16 and above are to indicate local centre information
+        self.ksec1[16-1]= bufr_code_subcentre       # originating subcentre
+        # (this determines the name of the BUFR table to be used)
+        self.ksec1[17-1]=   0
+        self.ksec1[18-1]=   0
+
+
+        #  #]
+        
 #  #]
 class RawBUFRFile:
     #  #[
@@ -1149,16 +1224,16 @@ if __name__ == "__main__":
         def test_run_decoding_example(self):
             #  #[
             # run the provided example code and verify the output
-            cmd = os.path.join(self.example_programs_dir,
-                               "example_for_using_ecmwfbufr_for_decoding.py")
+            testprog = "example_for_using_ecmwfbufr_for_decoding.py"
+            cmd = os.path.join(self.example_programs_dir, testprog)
             success = call_cmd_and_verify_output(cmd)
             self.assertEqual(success, True)                
             #  #]
         def test_run_encoding_example(self):
             #  #[
             # run the provided example code and verify the output
-            cmd = os.path.join(self.example_programs_dir,
-                               "example_for_using_ecmwfbufr_for_encoding.py")
+            testprog = "example_for_using_ecmwfbufr_for_encoding.py"
+            cmd = os.path.join(self.example_programs_dir, testprog)
             success = call_cmd_and_verify_output(cmd)
             self.assertEqual(success, True)                
             #  #]
@@ -1174,8 +1249,8 @@ if __name__ == "__main__":
             # SystemError: NULL result without error in PyObject_Call
             
             # run the provided example code and verify the output
-            cmd = os.path.join(self.example_programs_dir,
-                               "example_for_using_pb_routines.py")
+            testprog = "example_for_using_pb_routines.py"
+            cmd = os.path.join(self.example_programs_dir, testprog)
             success = call_cmd_and_verify_output(cmd)
             self.assertEqual(success, True)                
             #  #]
@@ -1185,6 +1260,7 @@ if __name__ == "__main__":
         #  #[ 2 tests
         # note: tests MUST have a name starting with "test"
         #       otherwise the unittest module will not use them
+        example_programs_dir = "example_programs/"
         def test_init(self):
             #  #[
             # just instantiate the class
@@ -1246,9 +1322,28 @@ if __name__ == "__main__":
 
             # print "tabel name B: ", b
             # print "tabel name D: ", d
-            self.assertEqual(b, 'B0000000000210000001')
-            self.assertEqual(d, 'D0000000000210000001')
+            self.assertEqual(b, 'B0000000000210000001.TXT')
+            self.assertEqual(d, 'D0000000000210000001.TXT')
             #  #]
+        def test_run_decoding_example(self):
+            #  #[
+            # run the provided example code and verify the output
+            testprog = "example_for_using_bufrinterface_ecmwf_for_decoding.py"
+            cmd = os.path.join(self.example_programs_dir, testprog)
+                               
+            success = call_cmd_and_verify_output(cmd)
+            self.assertEqual(success, True)                
+            #  #]
+        def test_run_encoding_example(self):
+            #  #[
+            # run the provided example code and verify the output
+            testprog = "example_for_using_bufrinterface_ecmwf_for_encoding.py"
+            cmd = os.path.join(self.example_programs_dir, testprog)
+                               
+            success = call_cmd_and_verify_output(cmd)
+            self.assertEqual(success, True)                
+            #  #]
+
         #  #]
             
     class CheckRawBUFRFile(unittest.TestCase):

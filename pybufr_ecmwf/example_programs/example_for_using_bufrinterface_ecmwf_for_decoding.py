@@ -8,6 +8,7 @@ used for decoding a BUFR message.
 
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
+#
 # Written by: J. de Kloe, KNMI, Initial version 25-Feb-2010    
 #
 # License: GPL v2.
@@ -45,7 +46,7 @@ def decoding_example():
     rbf.close()
     
     print '------------------------------'
-    BI = pybufr_ecmwf.BUFRInterfaceECMWF(words,
+    BI = pybufr_ecmwf.BUFRInterfaceECMWF(encoded_message=words,
                                          max_nr_expanded_descriptors=44)
 
     print "calling: decode_sections_012():"

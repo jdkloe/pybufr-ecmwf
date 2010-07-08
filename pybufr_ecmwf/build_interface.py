@@ -1044,7 +1044,9 @@ end program pybufr_test_program
             run_shell_command(cmd, libpath = libpath, catch_output = False)
 
         # now execute the just generated test program to verify if we succeeded
-        cmd = fortran_test_executable
+        # add a './' to ensure the executable is also found for users that
+        # do not have '.' in their default search path
+        cmd = os.path.join('.',fortran_test_executable)
         if (libpath == ""):
             (lines_stdout, lines_stderr) = run_shell_command(cmd)
         else:
@@ -1104,7 +1106,9 @@ int main()
             run_shell_command(cmd, libpath = libpath, catch_output = False)
 
         # now execute the just generated test program to verify if we succeeded
-        cmd = c_test_executable
+        # add a './' to ensure the executable is also found for users that
+        # do not have '.' in their default search path
+        cmd = os.path.join('.',c_test_executable)
         if (libpath == ""):
             (lines_stdout, lines_stderr) = run_shell_command(cmd)
         else:

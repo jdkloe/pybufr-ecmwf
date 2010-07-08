@@ -94,7 +94,7 @@ def decoding_example():
     # to find the tables
     env = os.environ
     env["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
-    print 'private_bufr_tables_dir+os.path.sep=',private_bufr_tables_dir+os.path.sep
+    # print 'private_bufr_tables_dir+os.path.sep=',private_bufr_tables_dir+os.path.sep
     
     ksup   = np.zeros(         9, dtype = np.int)
     ksec0  = np.zeros(         3, dtype = np.int)
