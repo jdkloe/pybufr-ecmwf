@@ -39,6 +39,68 @@ import ecmwfbufr
 
 #  #]
 
+class BufrTemplate:
+    #  #[
+    """
+    a class of to help create a BUFR template in a more structured way
+    """
+    
+    #  #[ class constants
+    
+    # define the delayed replication code
+    Delayed_Descr_Repl_Factor = int('031001',10)
+
+    #  #]
+    def __init__(self,max_nr_descriptors):
+        #  #[
+        self.max_nr_descriptors = max_nr_descriptors
+        self.unexpanded_descriptor_list = []
+        self.nr_of_delayed_repl_factors = 0
+        self.del_repl_max_nr_of_repeats_list = []
+        #  #]
+    def add_descriptor(self,descriptor):
+        #  #[
+        self.unexpanded_descriptor_list.append(descriptor)
+        #  #]
+    def add_descriptors(self,*descriptors):
+        #  #[
+        nr_of_descriptors = len(descriptors)
+        print 'adding ',nr_of_descriptors,' descriptors'
+        self.unexpanded_descriptor_list.extend(descriptors)
+        #  #]
+    def add_delayed_replicated_descriptors(self,max_nr_of_repeats,*descriptors):
+        #  #[
+        nr_of_descriptors = len(descriptors)
+        print 'adding delayed replication for ',nr_of_descriptors,' descriptors'
+        print 'replicating them at most ',max_nr_of_repeats,' times'
+        repl_code = self.get_replication_code(nr_of_descriptors,0)
+        self.unexpanded_descriptor_list.append(repl_code)
+        self.unexpanded_descriptor_list.append(self.Delayed_Descr_Repl_Factor)
+        self.unexpanded_descriptor_list.extend(descriptors)
+        self.nr_of_delayed_repl_factors = self.nr_of_delayed_repl_factors + 1
+        self.del_repl_max_nr_of_repeats_list.append(max_nr_of_repeats)
+        #  #]
+    def add_replicated_descriptors(self,nr_of_repeats,*descriptors):
+        #  #[
+        nr_of_descriptors = len(descriptors)
+        print 'adding replication for ',nr_of_descriptors,' descriptors'
+        print 'replicating them ',nr_of_repeats,' times'
+        repl_code = self.get_replication_code(nr_of_descriptors,
+                                              nr_of_repeats)
+        self.unexpanded_descriptor_list.append(repl_code)
+        self.unexpanded_descriptor_list.extend(descriptors)
+        #  #]
+    def get_replication_code(self,num_descriptors,num_repeats):
+        #  #[
+	repl_factor = 100000 + num_descriptors*1000 + num_repeats
+	# for example replicating 2 descriptors 25 times will
+        # be encoded as: 102025
+	# for delayed replication, set num_repeats to 0
+	# then add the Delayed_Descr_Repl_Factor after this code
+	return repl_factor
+        #  #]
+    #  #]
+
 class BUFRInterfaceECMWF:
     #  #[
     """
@@ -63,10 +125,12 @@ class BUFRInterfaceECMWF:
         self.encoded_message = encoded_message
 
         # switches
-        self.sections012_decoded     = False
-        self.sections0123_decoded    = False
-        self.data_decoded            = False
-        self.descriptors_list_filled = False
+        self.sections012_decoded      = False
+        self.sections0123_decoded     = False
+        self.data_decoded             = False
+        self.descriptors_list_filled  = False
+        self.bufr_template_registered = False # for encoding only
+        self.data_encoded             = False # for encoding only
         
         # todo: pass these values as optional parameters to the decoder
         #       and check whether they pass the library maximum or not.
@@ -78,6 +142,10 @@ class BUFRInterfaceECMWF:
         #  add an option to choose the values at runtime)
         self.max_nr_descriptors          = max_nr_descriptors
         self.max_nr_expanded_descriptors = max_nr_expanded_descriptors
+        #
+        # note: these maximum constants are only used by the decoder,
+        # and will be redefined during encoding
+        #
         # note: maximum possible value for max_nr_expanded_descriptors
         # is JELEM=320.000 (as defined in ecmwfbufr_parameters.py), but
         # using that maximum value is not a very nice idea since it will
@@ -89,7 +157,7 @@ class BUFRInterfaceECMWF:
         self.nr_subsets = 361 # 25
         # self.max_nr_delayed_replication_factors = ///
 
-        # copie to names that are more common in the ECMWF software
+        # copy to names that are more common in the ECMWF software
         self.ktdlen = self.max_nr_descriptors
         # self.krdlen = self.max_nr_delayed_replication_factors
         self.kelem  = self.max_nr_expanded_descriptors
@@ -116,6 +184,10 @@ class BUFRInterfaceECMWF:
         self.ktdexl = 0 # will hold nr of expanded descriptors
         self.ktdexp = np.zeros(self.max_nr_expanded_descriptors, dtype = np.int)
 
+        # the list of max nr of delayed replications is filled
+        # inside the register_and_expand_descriptors method
+        self.kdata = None
+        
         # arrays to hold the actual numerical and string values
         self.cnames = np.zeros((self.kelem, 64), dtype = np.character)
         self.cunits = np.zeros((self.kelem, 24), dtype = np.character)
@@ -513,7 +585,7 @@ class BUFRInterfaceECMWF:
         if (not self.sections012_decoded):
             errtxt = "Sorry, in order to allow automatic allocation of the "+\
                      "values and cvals arrays the number of subsets is "+\
-                     "needed. Therefore the decode_setions012 or "+\
+                     "needed. Therefore the decode_sections012 or "+\
                      "decode_sections_0123 subroutine needs to be called "+\
                      "before entering the decode_data subroutine."
             raise EcmwfBufrLibError(errtxt)
@@ -785,6 +857,8 @@ class BUFRInterfaceECMWF:
                            bufr_table_master,
                            bufr_table_master_version,
                            bufr_code_subcentre,
+                           num_subsets,
+                           bufr_compression_flag,
                            datetime=None,
                            bufr_edition=4):
         #  #[
@@ -798,6 +872,8 @@ class BUFRInterfaceECMWF:
         # fill section 1
         self.ksec1[ 1-1]=  22               # length sec1 bytes
         #                                     [filled by the encoder]
+        # (note: this may depend on the bufr_edition nr.)
+        
         # however,a minimum of 22 is obliged here
         self.ksec1[ 2-1]= bufr_edition      # bufr edition
         self.ksec1[ 3-1]= bufr_code_centre  # originating centre
@@ -813,7 +889,7 @@ class BUFRInterfaceECMWF:
 
         # fill the datetime group. Note that it is not yet clear to me
         # whether this should refer to the encoding datetime or to the
-        # actual measurement datetime. So allow the use to set the value,
+        # actual measurement datetime. So allow the user to set the value,
         # but use the current localtime if not provided.
         if datetime is not None:
             (year,month,day,hour,minute,second,
@@ -845,10 +921,167 @@ class BUFRInterfaceECMWF:
         self.ksec1[17-1]=   0
         self.ksec1[18-1]=   0
 
+        # a test for filling ksec2 is not yet defined
+    
+        # fill section 3
+        self.ksec3[1-1]= 0
+        self.ksec3[2-1]= 0
+        self.ksec3[3-1]= num_subsets                # no of data subsets
+        self.ksec3[4-1]= bufr_compression_flag      # compression flag
+    
+        self.nr_subsets = num_subsets
+        # decoding is ofcourse not needed when you fill all the ksec
+        # metadata yourself, but flag them as decoded anyway to allow
+        # other routines (like setup_tables) to work correctly.
+        self.sections012_decoded = True
+        self.sections0123_decoded = True
+        #  #]
+    def register_and_expand_descriptors(self,BT):
+        #  #[
 
+        kerr   = 0
+
+        # input: BT must be an instance of the BufrTemplate class
+        # so check this:
+        assert(isinstance(BT,BufrTemplate))
+        
+        # length of unexpanded descriptor list
+        self.ktdlen = len(BT.unexpanded_descriptor_list)
+        # convert the unexpanded descriptor list to a numpy array
+        self.ktdlst = np.array(BT.unexpanded_descriptor_list,dtype=np.int)
+        print "unexpanded nr of descriptors = ",self.ktdlen
+        print "The current list is: ",self.ktdlst
+        
+        # call BUXDES
+        # buxdes: expand the descriptor list
+        #         and fill the array ktdexp and the variable ktdexp
+        #         [only needed when creating a bufr msg with table D entries
+        #          but I'll run ot anyway for now since this usually is
+        #          a cheap operation, so a user should not be bothered by it]
+        
+        # iprint=0 # default is to be silent
+        iprint=1
+        if (iprint == 1):
+            print "------------------------"
+            print " printing BUFR template "
+            print "------------------------"
+
+        # define and fill the list of replication factors
+        self.kdata = np.zeros(self.nr_subsets*
+                              BT.nr_of_delayed_repl_factors,dtype=np.int)
+        i = 0
+        for subset in range(self.nr_subsets):
+            # Warning: just set the whole array to the maximum you wish to have.
+            # Letting this number vary seems not to work with the current
+            # ECMWF library. It will allways just look at the first element
+            # in the kdata array. (or do I misunderstand the BUFR format here?)
+            for max_repeats in BT.del_repl_max_nr_of_repeats_list:
+                self.kdata[i] = max_repeats
+                i += 1
+                
+        print "delayed replication factors: ",self.kdata
+
+        ecmwfbufr.buxdes(iprint,
+                         self.ksec1,
+                         self.ktdlst,
+                         self.kdata,
+                         self.ktdexl,
+                         self.ktdexp,
+                         self.cnames,
+                         self.cunits,
+                         kerr)
+        print "ktdlst = ",self.ktdlst
+        selection = np.where(self.ktdexp>0)
+        print "ktdexp = ",self.ktdexp[selection]
+        # print "ktdexl = ",self.ktdexl # this one seems not to be filled ...?
+        if (kerr != 0):
+            raise EcmwfBufrLibError(self.explain_error(kerr,'buxdes'))
+
+        # It is not clear to me why buxdes seems to correctly produce
+        # the expanded descriptor list, but yet it does
+        # not seem to fill the ktdexl value.
+        # To fix this the next 2 lines have been added:
+        selection2 = np.where(self.ktdexp > 0)
+        self.ktdexl = len(selection2[0])
+
+        # these are filled as well after the call to buxdes
+        # print "cnames = ",self.cnames
+        # print "cunits = ",self.cunits
+
+        self.bufr_template_registered = True
+
+        #  #]        
+    def encode_data(self,values,cvals):
+        #  #[ call bufren to encode a bufr message
+        kerr   = 0
+
+        if (not self.sections012_decoded):
+            errtxt = "Sorry, in order to allow automatic allocation of the "+\
+                     "values and cvals arrays the number of subsets is "+\
+                     "needed. Therefore the fill_sections0123 "+\
+                     "subroutine needs to be called "+\
+                     "before entering the encode_data subroutine."
+            raise EcmwfBufrLibError(errtxt)
+
+        # calculate the needed size of the values and cvals arrays
+        actual_nr_of_subsets = self.get_num_subsets()
+        self.kvals = self.max_nr_expanded_descriptors*actual_nr_of_subsets
+
+        # allocate space for decoding
+        # note: float64 is the default, but it doesn't hurt to make it explicit
+        #self.values = np.zeros(      self.kvals, dtype = np.float64)
+        self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
+
+        # define the output buffer
+        num_bytes = 5000
+        num_words = num_bytes/4
+        words = np.zeros(num_words,dtype=np.int)
+
+        # call BUFREN
+
+        print "values = ",values
+        print "cvals  = ",cvals
+
+        # coding status: currently the next call fails with the error:
+        # unexpected array size: new_size=7040, got array with arr_size=80
+        # Traceback (most recent call last):
+        # File "./example_for_using_bufrinterface_ecmwf_for_encoding.py", line 161, in <module>
+        # encoding_example()
+        # File "./example_for_using_bufrinterface_ecmwf_for_encoding.py", line 154, in encoding_example
+        # BI.encode_data(values,cvals)
+        # File "../../pybufr_ecmwf/pybufr_ecmwf.py", line 1055, in encode_data
+        # kerr)  # output: an error flag
+        # ecmwfbufr.error: failed in converting 10th argument `cvals' of ecmwfbufr.bufren to C/Fortran array
+        #
+        # I still have to figure out why, but it's too late now ...
+        # I need some sleep first ...
+        
+        ecmwfbufr.bufren(self.ksec0, # input
+                         self.ksec1, # input
+                         self.ksec2, # input
+                         self.ksec3, # input
+                         self.ksec4, # input
+                         self.ktdlst, # input: expanded descriptor list
+                         self.kdata,  # input :list of max nr of del. replic.
+                         self.ktdexl, # input: exp_descr_list_length,
+                         values, # input: values to encode
+                         cvals,  # input: strings to encode
+                         words, # output: the encoded message
+                         kerr)  # output: an error flag
+        print "bufren call finished"
+        if (kerr != 0):
+            raise EcmwfBufrLibError(self.explain_error(kerr,'bufren'))
+
+        print "words="
+        print words
+        nw = len(np.where(words>0)[0])
+        print "encoded size: ",nw," words or ",nw*4," bytes"
+
+        self.data_encoded = True
         #  #]
         
 #  #]
+
 class RawBUFRFile:
     #  #[
     """
@@ -1734,5 +1967,5 @@ if __name__ == "__main__":
     #   get_name_unit: get a name and unit string for a given descriptor
     #   buprq: sets some switches that control the bufr library
     #
-    #  #]
 
+    #  #]

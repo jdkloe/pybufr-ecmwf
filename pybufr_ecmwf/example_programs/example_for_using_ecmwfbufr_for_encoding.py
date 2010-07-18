@@ -314,7 +314,7 @@ def encoding_example():
     cvals = np.zeros((num_values, 80), dtype = np.character)
     # define the output buffer
     num_bytes = 5000
-    num_words = 4*num_bytes
+    num_words = num_bytes/4
     words = np.zeros(num_words, dtype = np.int)
     
     print "kvals = ", kvals
