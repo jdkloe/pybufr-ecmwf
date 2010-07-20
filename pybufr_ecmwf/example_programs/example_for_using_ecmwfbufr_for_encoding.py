@@ -317,11 +317,10 @@ def encoding_example():
     num_words = num_bytes/4
     words = np.zeros(num_words, dtype = np.int)
     
-    print "kvals = ", kvals
-    print "cvals = ", cvals
     ecmwfbufr.bufren(ksec0, ksec1, ksec2, ksec3, ksec4,
                      ktdlst, kdata, exp_descr_list_length,
                      values, cvals, words, kerr)
+
     print "bufren call finished"
     if (kerr != 0):
         print "kerr = ", kerr

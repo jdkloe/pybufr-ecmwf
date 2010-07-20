@@ -108,8 +108,8 @@ def encoding_example():
                        dd_d_time_HHMM)     # 1
     
     # delay replication for the next 2 descriptors
-    # allow at most 5 delayed replications
-    BT.add_delayed_replicated_descriptors(5,
+    # allow at most 2 delayed replications
+    BT.add_delayed_replicated_descriptors(2,
                                           dd_pressure,
                                           dd_temperature)
     
@@ -127,7 +127,11 @@ def encoding_example():
     # fill the values array with some dummy varying data
     num_values = exp_descr_list_length*num_subsets
     values = np.zeros(num_values,dtype=np.float64) # this is the default
-    num_cvalues = 1 # just a dummy value
+
+    # note: these two must be identical for now, otherwise the
+    # python to fortran interface breaks down. This also ofcourse is the
+    # cause of the huge memory use of cvals in case num_values is large.
+    num_cvalues = num_values
     cvals  = np.zeros((num_cvalues,80),dtype=np.character)
     
     for subset in range(num_subsets):
@@ -145,11 +149,11 @@ def encoding_example():
 	# of values to be stored for this particular subset
 	# even if it is less then the number given in kdata above !
 	for repl in range(2):
-	    i=i+1; values[i] = 1013.e2 - 100.e2*subset+i # pressure [pa]
-	    i=i+1; values[i] = 273.15  -    10.*subset+i # temperature [K]
+	    i=i+1; values[i] = 1013.e2 - 100.e2*subset+i+repl # pressure [pa]
+	    i=i+1; values[i] = 273.15  -    10.*subset+i+repl # temperature [K]
 	for repl in range(3):
-	    i=i+1; values[i] = 51.82   +   0.05*subset+i # latitude
-	    i=i+1; values[i] =  5.25   +    0.1*subset+i # longitude
+	    i=i+1; values[i] = 51.82   +   0.05*subset+i+repl # latitude
+	    i=i+1; values[i] =  5.25   +    0.1*subset+i+repl # longitude
         
     BI.encode_data(values,cvals)
 

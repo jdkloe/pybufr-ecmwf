@@ -928,7 +928,13 @@ class BUFRInterfaceECMWF:
         self.ksec3[2-1]= 0
         self.ksec3[3-1]= num_subsets                # no of data subsets
         self.ksec3[4-1]= bufr_compression_flag      # compression flag
-    
+
+        # note: filling the ksup array is not really needed for
+        # encoding (it is no input to bufren) but since I use ksup[5]
+        # to retrieve the nr of subsets in get_num_subsets(),
+        # make sure at least that element is filled properly
+        self.ksup[5] = num_subsets
+     
         self.nr_subsets = num_subsets
         # decoding is ofcourse not needed when you fill all the ksec
         # metadata yourself, but flag them as decoded anyway to allow
@@ -1038,24 +1044,6 @@ class BUFRInterfaceECMWF:
         words = np.zeros(num_words,dtype=np.int)
 
         # call BUFREN
-
-        print "values = ",values
-        print "cvals  = ",cvals
-
-        # coding status: currently the next call fails with the error:
-        # unexpected array size: new_size=7040, got array with arr_size=80
-        # Traceback (most recent call last):
-        # File "./example_for_using_bufrinterface_ecmwf_for_encoding.py", line 161, in <module>
-        # encoding_example()
-        # File "./example_for_using_bufrinterface_ecmwf_for_encoding.py", line 154, in encoding_example
-        # BI.encode_data(values,cvals)
-        # File "../../pybufr_ecmwf/pybufr_ecmwf.py", line 1055, in encode_data
-        # kerr)  # output: an error flag
-        # ecmwfbufr.error: failed in converting 10th argument `cvals' of ecmwfbufr.bufren to C/Fortran array
-        #
-        # I still have to figure out why, but it's too late now ...
-        # I need some sleep first ...
-        
         ecmwfbufr.bufren(self.ksec0, # input
                          self.ksec1, # input
                          self.ksec2, # input
