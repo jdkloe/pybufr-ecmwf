@@ -13,12 +13,12 @@ sec1 :  [ 18   0 210   0   0  12   8   1  98  12  16  22  25   0   0   0   0   0
    0   0   0   0]
 sec2 :  [0 0 0 ..., 0 0 0]
 calling: setup_tables()
-Tables names expected by the library:
-/home/jos/werk/pybufr_ecmwf_interface/pybufr_ecmwf_working_copy/pybufr_ecmwf/tmp_BUFR_TABLES/B0000000000210000001.TXT
-/home/jos/werk/pybufr_ecmwf_interface/pybufr_ecmwf_working_copy/pybufr_ecmwf/tmp_BUFR_TABLES/D0000000000210000001.TXT
+Table names expected by the library:
+B0000000000210000001.TXT
+D0000000000210000001.TXT
 Tables to be used:
-/home/jos/werk/pybufr_ecmwf_interface/pybufr_ecmwf_working_copy/pybufr_ecmwf/ecmwf_bufrtables/B_default.TXT
-/home/jos/werk/pybufr_ecmwf_interface/pybufr_ecmwf_working_copy/pybufr_ecmwf/ecmwf_bufrtables/D_default.TXT
+B_default.TXT
+D_default.TXT
 calling: print_sections_012():
 ------------------------------
 printing content of section 0:

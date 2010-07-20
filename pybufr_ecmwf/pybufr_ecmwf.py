@@ -519,12 +519,16 @@ class BUFRInterfaceECMWF:
                          'you wish to use'
                 raise EcmwfBufrTableError(errtxt)
             
-        print 'Tables names expected by the library:'
-        print destination_b
-        print destination_d
+        # full names, containing full path, are not nice to print
+        # in the unit tests since they will differ on different
+        # machines, so print the bare filename only
+        print 'Table names expected by the library:'
+        print os.path.split(destination_b)[1]
+        print os.path.split(destination_d)[1]
+        
         print 'Tables to be used:'
-        print source_b
-        print source_d
+        print os.path.split(source_b)[1]
+        print os.path.split(source_d)[1]
         
         # make sure any old symbolic link is removed
         # (since it may point to an unwanted location)

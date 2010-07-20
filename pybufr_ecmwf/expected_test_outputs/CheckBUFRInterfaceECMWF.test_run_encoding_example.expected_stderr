@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "example_programs/example_for_using_bufrinterface_ecmwf_for_encoding.py", line 234, in <module>
-    encoding_example()
-  File "example_programs/example_for_using_bufrinterface_ecmwf_for_encoding.py", line 70, in encoding_example
-    ksec3[1-1]= 0
-NameError: global name 'ksec3' is not defined
