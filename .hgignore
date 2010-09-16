@@ -22,6 +22,9 @@ Testfile3Msgs.BUFR
 pybufr_ecmwf/ecmwfbufr_parameters.py
 MANIFEST
 
+# ignore the pylint output text files
+pylint_.*.txt$
+
 # generated and build directories to ignore:
 dist
 build

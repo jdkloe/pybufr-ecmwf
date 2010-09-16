@@ -3,9 +3,16 @@
 """ a small script to make it easier for me to run pylint
 on the python code in the pybufr_ecmwf module"""
 
-import sys, os
-from pylint import lint
+import sys, os, glob
 
+try:
+    from pylint import lint
+except ImportError:
+    print "Sorry, importing the pylint module failed"
+    print "probably you don't have pylint installed or your python"
+    print "module path needs to be set properly"
+    sys.exit(1)
+    
 # this commandline option:
 #        '--init-hook=\'import sys;sys.path.append(\"pybufr_ecmwf\")\'',
 # is equivalent to:
@@ -30,7 +37,7 @@ def check(msg, pycode, additional_args):
     script or module directory """
     print msg+pycode
     args = additional_args
-    args.extend(['--rcfile', 'pylint/pylintrc', pycode])
+    args.extend(['--files-output=yes', '--rcfile', 'pylint/pylintrc', pycode])
     try:
         # note: the Run method always ends with a sys.exit() call
         # so the except clause seems always to be called when
@@ -66,14 +73,14 @@ def check_pylint_numpy_handling():
                               additional_args = [])
     if (success == 0):
         use_numpy_checks = True
-        return
+        return use_numpy_checks
     
     (success, pycode) = check('checking script: ',
                               'pylint/pylint_numpy_test.py',
                               additional_args=['--ignored-classes=numpy'])
     if (success == 0):
         use_numpy_checks = False
-        return
+        return use_numpy_checks
 
     # the code should not reach this point
     print "Programming problem in check_pylint_numpy_handling:"
@@ -98,9 +105,14 @@ def check_all_py_files():
     result = []
     #result.append(check('checking module: ', 'pybufr_ecmwf',additional_args))
     result.append(check('checking script: ', 'clean.py', additional_args))
+    result.append(check('checking script: ', 'port_2to3.py', additional_args))
     result.append(check('checking script: ', 'setup.py', additional_args))
     result.append(check('checking script: ', 'pylint/run_pylint.py',
                         additional_args))
+    # note: pylint_numpy_test.py is omitted here on purpose.
+    # it is used inside check_pylint_numpy_handling() defined above.
+    # look into that rouytine for more details.
+    
     for ex_file in EX_FILES:
         result.append(check('checking script: ',
                             os.path.join(EX_PROGR_PATH, ex_file),
@@ -114,6 +126,13 @@ def check_all_py_files():
     print "number of problematic    modules/scripts: ", num_not_ok
 
     print '\n'.join('status: %2i file %s' % (i, f) for (i, f) in result)
+
+    if num_not_ok > 0:
+        print '\nfor more details on the detected errors and warnings, '
+        print 'you can inspect the output files that have been generated'
+        print 'by pylint:'
+        filelist = glob.glob('pylint_*.txt')
+        print '\n'.join(file for file in filelist)
     #  #]
 
 check_all_py_files()

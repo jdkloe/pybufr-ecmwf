@@ -23,6 +23,8 @@ def port_2to3():
 
         if len(lines_stderr)>0:
             print 'sorry, the '+tool_to_check+' tool seems not installed'
+            print 'num lines stderr/stdout = ', \
+                  len(lines_stderr), len(lines_stdout)
             sys.exit(1)
         else:
             print 'tool found: ', tool_to_check

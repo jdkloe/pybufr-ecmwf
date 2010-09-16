@@ -21,7 +21,8 @@ DIRS_TO_DELETE = ["pybufr_ecmwf/example_programs/tmp_BUFR_TABLES",
 # delete these files
 FILE_GLOB_PATTERNS = ["*~", "*/*~", "*/*/*~", "*.pyc", "*/*.pyc",
                       "*/Testfile3Msgs.BUFR", "*/*/Testfile3Msgs.BUFR",
-                      "pybufr_ecmwf/expected_test_outputs/*.actual_std*"]
+                      "pybufr_ecmwf/expected_test_outputs/*.actual_std*",
+                      "pylint_*.txt"]
 FILES_TO_DELETE = ["pybufr_ecmwf/libbufr.a", "libbufr.a", "MANIFEST",
                    "pybufr_ecmwf/ecmwfbufr.so", "ecmwfbufr.so",
                    "ecmwfbufr.so", "pybufr_ecmwf/ecmwf_bufr_lib/config_file",
