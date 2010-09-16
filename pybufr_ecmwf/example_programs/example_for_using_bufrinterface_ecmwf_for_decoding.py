@@ -16,8 +16,8 @@ used for decoding a BUFR message.
 #  #[ imported modules
 
 import os          # operating system functions
-import sys         # system functions
-import numpy as np # import numerical capabilities
+#import sys         # system functions
+#import numpy as np # import numerical capabilities
 
 # set the python path to find the (maybe not yet installed) module files
 # (not needed if the module is installed in the default location)
@@ -30,43 +30,12 @@ import pybufr_ecmwf
 #  #]
 
 # decoding_excample
-def decoding_example():
+def display_results(bufr):
+    #  #[
     """
-    wrap the example in a function to circumvent the pylint
-    convention of requiring capitals for constants in the global
-    scope (since most of these variables are not constants at all))
+    a collation of prints to demonstrate that the message was properly decoded
     """
-
-    # read the binary data using the BUFRFile class
-    testdata_dir = helpers.get_testdata_dir()
-    input_test_bufr_file = os.path.join(testdata_dir, 'Testfile.BUFR')
-
-    print 'loading testfile: ', input_test_bufr_file
-    rbf = pybufr_ecmwf.RawBUFRFile()
-    rbf.open(input_test_bufr_file, 'r')
-    words = rbf.get_next_raw_bufr_msg()
-    rbf.close()
     
-    print '------------------------------'
-    bufr = pybufr_ecmwf.BUFRInterfaceECMWF(encoded_message=words,
-                                           max_nr_expanded_descriptors=44)
-
-    print "calling: decode_sections_012():"
-    bufr.decode_sections_012()
-
-    print "Metadata for decoded BUFR message:"
-    bufr.print_sections_012_metadata()
-
-    print "calling: setup_tables()"
-    bufr.setup_tables()
-
-    print "calling: print_sections_012():"
-    bufr.print_sections_012()
-
-    print '------------------------------'
-    print "calling: ecmwfbufr.bufrex():"
-    bufr.decode_data()
-
     # print a selection of the decoded numbers
     print '------------------------------'
     print "Metadata for decoded BUFR message:"
@@ -121,13 +90,55 @@ def decoding_example():
     print '------------------------------'
     print "printing content of section 3:"
     bufr.print_descriptors()
+    #  #]
+def decoding_example():
+    #  #[
+    """
+    wrap the example in a function to circumvent the pylint
+    convention of requiring capitals for constants in the global
+    scope (since most of these variables are not constants at all))
+    """
+
+    # read the binary data using the BUFRFile class
+    testdata_dir = helpers.get_testdata_dir()
+    filename = 'Testfile.BUFR'
+    input_test_bufr_file = os.path.join(testdata_dir, filename)
+
+    print 'loading testfile: ', filename
+    rbf = pybufr_ecmwf.RawBUFRFile()
+    rbf.open(input_test_bufr_file, 'r')
+    words = rbf.get_next_raw_bufr_msg()
+    rbf.close()
     
+    print '------------------------------'
+    bufr = pybufr_ecmwf.BUFRInterfaceECMWF(encoded_message=words,
+                                           max_nr_expanded_descriptors=44)
+
+    print "calling: decode_sections_012():"
+    bufr.decode_sections_012()
+
+    print "Metadata for decoded BUFR message:"
+    bufr.print_sections_012_metadata()
+
+    print "calling: setup_tables()"
+    bufr.setup_tables()
+
+    print "calling: print_sections_012():"
+    bufr.print_sections_012()
+
+    print '------------------------------'
+    print "calling: ecmwfbufr.bufrex():"
+    bufr.decode_data()
+
+    return bufr
+    #  #]
 
 print "-"*50
 print "BUFR decoding example"
 print "-"*50
 
-decoding_example()
+BUFRMSG = decoding_example()
+display_results(BUFRMSG)
 
 print "-"*50
 print "done"

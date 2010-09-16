@@ -36,12 +36,12 @@ import time        # handling of date and time
 import numpy as np # import numerical capabilities
 
 # import some home made helper routines
-from helpers import EcmwfBufrLibError
-from helpers import EcmwfBufrTableError
+from pybufr_ecmwf.helpers import EcmwfBufrLibError
+from pybufr_ecmwf.helpers import EcmwfBufrTableError
 
 # import the raw wrapper interface to the ECMWF BUFR library
-import ecmwfbufr
-from bufr_template import BufrTemplate
+from pybufr_ecmwf import ecmwfbufr
+from pybufr_ecmwf.bufr_template import BufrTemplate
 
 #  #]
 

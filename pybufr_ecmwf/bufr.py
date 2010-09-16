@@ -27,10 +27,10 @@ by providing several helper classes.
 #  #]
 #  #[ imported modules
 import os
-import sys
+#import sys
 import glob
 from pybufr_ecmwf import RawBUFRFile
-from helpers import ProgrammingError, NotYetImplementedError
+from pybufr_ecmwf.helpers import ProgrammingError, NotYetImplementedError
 #  #]
 
 class Singleton(object):
@@ -148,18 +148,18 @@ class Descriptor(Singleton):
         except AssertionError as e:
             print 'checkinit check failed !!!'
             print
-            print "self.reference      = ",self.reference   ,\
-                  "reference           = ",reference
-            print "self.name           = ",self.name        ,\
-                  "name                = ",name
-            print "self.unit           = ",self.unit        ,\
-                  "unit                = ",unit
-            print "self.unit_scale     = ",self.unit_scale  ,\
-                  "unit_scale          = ",unit_scale
-            print "self.unit_reference = ",self.unit_reference,\
-                  "unit_reference      = ",unit_reference
-            print "self.data_width     = ",self.data_width  ,\
-                  "data_width          = ",data_width
+            print "self.reference      = ", self.reference   , \
+                  "reference           = ", reference
+            print "self.name           = ", self.name        , \
+                  "name                = ", name
+            print "self.unit           = ", self.unit        , \
+                  "unit                = ", unit
+            print "self.unit_scale     = ", self.unit_scale  , \
+                  "unit_scale          = ", unit_scale
+            print "self.unit_reference = ", self.unit_reference, \
+                  "unit_reference      = ", unit_reference
+            print "self.data_width     = ", self.data_width  , \
+                  "data_width          = ", data_width
             raise e
         #  #]
     #  #]
@@ -451,7 +451,7 @@ class BufrTable:
         self.modifiers = {} # dict of modifiers
 
         self.autolink_tables = True
-        if (tables_dir):
+        if (tables_dir is not None):
             # dont use autolinking if the user provided a tables dir
             self.autolink_tables = False
 
@@ -462,7 +462,7 @@ class BufrTable:
         # in this directory
         self.autolink_tablesdir = autolink_tablesdir
         
-        if (self.autolink_tablesdir):
+        if (self.autolink_tables):
             self.set_bufr_tables_dir(self.autolink_tablesdir)
         else:
             self.set_bufr_tables_dir(tables_dir)
@@ -471,9 +471,6 @@ class BufrTable:
         self.list_of_d_entry_lineblocks = []
         self.num_d_blocks = 0
 
-        # place to search for the BUFR tables files
-        self.tables_dir = ''
-        
         #  #]
     def set_bufr_tables_dir(self, tables_dir):
         #  #[
@@ -481,13 +478,15 @@ class BufrTable:
         a method to pass the directory name, in which BUFR tables
         should be available for the current BUFR messages/files
         """
-        self.tables_dir = tables_dir
-        
-        # make sure the BUFR tables can be found
-        # also, force a slash at the end, otherwise the library fails
+
+        # force a slash at the end, otherwise the library fails
         # to find the tables
+        self.tables_dir = os.path.abspath(tables_dir)+os.path.sep
+
+        # make sure the BUFR tables can be found by setting the
+        # needed environment variable
         e = os.environ
-        e["BUFR_TABLES"] = self.tables_dir+os.path.sep
+        e["BUFR_TABLES"] = self.tables_dir
         #  #]
     def get_descr_object(self, reference):
         #  #[
@@ -531,6 +530,14 @@ class BufrTable:
         """
         load a BUFR B or D table from file
         """
+#        e = os.environ
+#        tables_dir = e["BUFR_TABLES"]
+#        if not os.path.exists(os.path.join(tables_dir,bfile)):
+#            print "ERROR: could not find B-table file"
+#            print "Tried to load: ", bfile
+#            print "BUFR_TABLES dir = ", tables_dir
+#            raise IOError
+
 
         # first see if the user specified a valid full path/file combination
         # and use it if it exists
@@ -545,7 +552,7 @@ class BufrTable:
                     # if so, try to automatically get a symlink 
                     print "autolinking table file: ", file
                     self.autolinkbufrtablefile(file)
-                
+
         #print "inspecting file: ", file
         #maxlen = 0
         #for line in open(file, 'rt'):
@@ -862,7 +869,6 @@ class BufrTable:
         """
         load BUFR table D from file
         """
-
         print "loading D table from file: ", dfile
 
         # known problem:
@@ -1018,30 +1024,39 @@ class BufrTable:
         #  #]
     def unload_tables(self):
         #  #[
+        """
+        unload the descriptors for the current BUFR table to
+        allow loading a new table
+        """
         # ok, this works but is not very pretty,
-        # todo: see if this can be added as a function to the Singleton or Descriptor class
+        # todo: see if this can be added as a function to the Singleton
+        # or Descriptor class
 
         # dicts
         for b_reference in self.table_b.keys():
-            del(self.table_b[b_reference].__class__.__dict__.get("__instance_dict__")[b_reference])
+            del(self.table_b[b_reference].__class__.\
+                __dict__.get("__instance_dict__")[b_reference])
             del(self.table_b[b_reference])
         for d_reference in self.table_d.keys():
-            del(self.table_d[d_reference].__class__.__dict__.get("__instance_dict__")[d_reference])
+            del(self.table_d[d_reference].__class__.\
+                __dict__.get("__instance_dict__")[d_reference])
             del(self.table_d[d_reference])
         for s_reference in self.specials.keys():
-            del(self.specials[s_reference].__class__.__dict__.get("__instance_dict__")[s_reference])
+            del(self.specials[s_reference].__class__.\
+                __dict__.get("__instance_dict__")[s_reference])
             del(self.specials[s_reference])
         for m_reference in self.modifiers.keys():
-            del(self.modifiers[m_reference].__class__.__dict__.get("__instance_dict__")[m_reference])
+            del(self.modifiers[m_reference].__class__.\
+                __dict__.get("__instance_dict__")[m_reference])
             del(self.modifiers[m_reference])
         del(self.list_of_d_entry_lineblocks)
         self.list_of_d_entry_lineblocks = []
 
-        print 'self.table_b = ',self.table_b
-        print 'self.table_d = ',self.table_d
-        print 'self.specials = ',self.specials
-        print 'self.modifiers = ',self.modifiers
-        print 'self.list_of_d_entry_lineblocks = ',\
+        print 'self.table_b = ', self.table_b
+        print 'self.table_d = ', self.table_d
+        print 'self.specials = ', self.specials
+        print 'self.modifiers = ', self.modifiers
+        print 'self.list_of_d_entry_lineblocks = ', \
               self.list_of_d_entry_lineblocks
 
         #sys.exit(1)
@@ -1115,8 +1130,8 @@ if __name__ == "__main__":
                    "0000000000098014001", "0000000000254011001"]
     PATH = "ecmwf_bufrtables"
     for table_code in TABLE_CODES:
-        BT.load(os.path.join(PATH,"B"+table_code+".TXT"))
-        BT.load(os.path.join(PATH,"D"+table_code+".TXT"))
+        BT.load(os.path.join(PATH, "B"+table_code+".TXT"))
+        BT.load(os.path.join(PATH, "D"+table_code+".TXT"))
 
         BT.unload_tables()
     

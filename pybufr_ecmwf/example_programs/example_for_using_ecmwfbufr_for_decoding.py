@@ -27,9 +27,6 @@ from pybufr_ecmwf import RawBUFRFile
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 
-# the module itself is only needed to find the location of the BUFR tables
-import pybufr_ecmwf
-
 # decoding_excample
 def decoding_example():
     """

@@ -37,7 +37,8 @@ def check(msg, pycode, additional_args):
     script or module directory """
     print msg+pycode
     args = additional_args
-    args.extend(['--files-output=yes', '--rcfile', 'pylint/pylintrc', pycode])
+    args.extend(['--rcfile', 'pylint/pylintrc', pycode])
+    #args.extend(['--files-output=yes', '--rcfile', 'pylint/pylintrc', pycode])
     try:
         # note: the Run method always ends with a sys.exit() call
         # so the except clause seems always to be called when
@@ -103,7 +104,7 @@ def check_all_py_files():
         additional_args = ['--ignored-classes=numpy']
 
     result = []
-    #result.append(check('checking module: ', 'pybufr_ecmwf',additional_args))
+    result.append(check('checking module: ', 'pybufr_ecmwf', additional_args))
     result.append(check('checking script: ', 'clean.py', additional_args))
     result.append(check('checking script: ', 'port_2to3.py', additional_args))
     result.append(check('checking script: ', 'setup.py', additional_args))

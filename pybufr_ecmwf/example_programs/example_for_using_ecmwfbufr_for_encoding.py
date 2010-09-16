@@ -29,9 +29,6 @@ helpers.set_python_path()
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 
-# the module itself is only needed to find the location of the BUFR tables
-import pybufr_ecmwf
-
 def encoding_example():
     """
     wrap the example in a function to circumvent the pylint

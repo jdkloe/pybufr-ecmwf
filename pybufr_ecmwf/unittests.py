@@ -27,13 +27,15 @@ are planned as well.
 #  #[ imported modules
 import os          # operating system functions
 #import sys         # system functions
-from bufr_interface_ecmwf import BUFRInterfaceECMWF
-from raw_bufr_file import RawBUFRFile
-#import ecmwfbufr # import the wrapper module
 import unittest  # import the unittest functionality
 
 # import some home made helper routines
-from helpers import call_cmd_and_verify_output
+from helpers import call_cmd_and_verify_output, set_python_path
+set_python_path()
+
+from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
+from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
+#import ecmwfbufr # import the wrapper module
 
 #  #]
 

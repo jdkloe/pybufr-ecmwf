@@ -183,13 +183,13 @@ def call_cmd_and_verify_output(cmd):
         if not (lines_stdout == expected_lines_stdout):
             print "stdout differs from what was expected!!!"
             print "to find out what happended execute this diff command:"
-            print "xdiff ",actual_stdout,' ', expected_stdout
+            print "xdiff ", actual_stdout, ' ', expected_stdout
             success = False
             
         if not (lines_stderr == expected_lines_stderr):
             print "stderr differs from what was expected!!!"
             print "to find out what happended execute this diff command:"
-            print "xdiff ",actual_stderr,' ',expected_stderr
+            print "xdiff ", actual_stderr, ' ', expected_stderr
             success = False
     except IOError:
         print "ERROR: expected output not found; probably because"
@@ -269,15 +269,20 @@ def set_python_path():
 
 def get_tables_dir():
     #  #[
-    """ import the module, inspect its location, and derive
+    """ inspect the location of the helpers.py file, and derive
     from this the location of the BUFR tables that are delivered
     with the ECMWF BUFR library software
     """ 
-    import pybufr_ecmwf
+    
+    helpers_path = os.path.split(__file__)[0]
+    path1 = os.path.join(helpers_path, "ecmwf_bufrtables")
+    path2 = os.path.join(helpers_path, '..', "ecmwf_bufrtables")
 
-    ecmwf_bufr_tables_dir = os.path.join(pybufr_ecmwf.__path__[0],
-                                         "ecmwf_bufrtables")
-    if not os.path.exists(ecmwf_bufr_tables_dir):
+    if os.path.exists(path1):
+        ecmwf_bufr_tables_dir = path1
+    elif os.path.exists(path2):
+        ecmwf_bufr_tables_dir = path2
+    else:
         print "Error: could not find BUFR tables directory"
         raise IOError
 
@@ -289,13 +294,19 @@ def get_tables_dir():
 
 def get_testdata_dir():
     #  #[
-    """ import the module, inspect its location, and derive
+    """ inspect the location of this helpers.py file, and derive
     from this the location of the testdata delivered with this software
     """ 
-    import pybufr_ecmwf
 
-    testdata_dir = os.path.join(pybufr_ecmwf.__path__[0],"testdata")
-    if not os.path.exists(testdata_dir):
+    helpers_path = os.path.split(__file__)[0]
+    path1 = os.path.join(helpers_path, "testdata")
+    path2 = os.path.join(helpers_path, '..', "testdata")
+
+    if os.path.exists(path1):
+        testdata_dir = path1
+    elif os.path.exists(path2):
+        testdata_dir = path2
+    else:
         print "Error: could not find testdata directory"
         raise IOError
 

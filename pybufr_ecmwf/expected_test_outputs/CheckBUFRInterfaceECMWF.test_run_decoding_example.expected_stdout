@@ -1,7 +1,7 @@
 --------------------------------------------------
 BUFR decoding example
 --------------------------------------------------
-loading testfile:  ../pybufr_ecmwf/testdata/Testfile.BUFR
+loading testfile:  Testfile.BUFR
 ------------------------------
 calling: decode_sections_012():
 calling: ecmwfbufr.bus012():
