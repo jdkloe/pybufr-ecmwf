@@ -109,9 +109,9 @@ def encoding_example():
     
     # delay replication for the next 2 descriptors
     # allow at most 2 delayed replications
-    template.add_delayed_replicated_descriptors(2,
-                                                DD_PRESSURE,
-                                                DD_TEMPERATURE)
+    template.add_delayed_replic_descriptors(2,
+                                            DD_PRESSURE,
+                                            DD_TEMPERATURE)
     
     # replicate the next 2 descriptors 3 times
     template.add_replicated_descriptors(3,
