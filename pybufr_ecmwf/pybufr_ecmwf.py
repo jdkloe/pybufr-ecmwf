@@ -48,49 +48,51 @@ class BufrTemplate:
     #  #[ class constants
     
     # define the delayed replication code
-    Delayed_Descr_Repl_Factor = int('031001',10)
+    Delayed_Descr_Repl_Factor = int('031001', 10)
 
     #  #]
-    def __init__(self,max_nr_descriptors):
+    def __init__(self, max_nr_descriptors):
         #  #[
         self.max_nr_descriptors = max_nr_descriptors
         self.unexpanded_descriptor_list = []
         self.nr_of_delayed_repl_factors = 0
         self.del_repl_max_nr_of_repeats_list = []
         #  #]
-    def add_descriptor(self,descriptor):
+    def add_descriptor(self, descriptor):
         #  #[
         self.unexpanded_descriptor_list.append(descriptor)
         #  #]
-    def add_descriptors(self,*descriptors):
+    def add_descriptors(self, *descriptors):
         #  #[
         nr_of_descriptors = len(descriptors)
-        print 'adding ',nr_of_descriptors,' descriptors'
+        print 'adding ', nr_of_descriptors, ' descriptors'
         self.unexpanded_descriptor_list.extend(descriptors)
         #  #]
-    def add_delayed_replicated_descriptors(self,max_nr_of_repeats,*descriptors):
+    def add_delayed_replicated_descriptors(self, max_nr_of_repeats,
+                                           *descriptors):
         #  #[
         nr_of_descriptors = len(descriptors)
-        print 'adding delayed replication for ',nr_of_descriptors,' descriptors'
-        print 'replicating them at most ',max_nr_of_repeats,' times'
-        repl_code = self.get_replication_code(nr_of_descriptors,0)
+        print 'adding delayed replication for ', nr_of_descriptors, \
+              ' descriptors'
+        print 'replicating them at most ', max_nr_of_repeats, ' times'
+        repl_code = self.get_replication_code(nr_of_descriptors, 0)
         self.unexpanded_descriptor_list.append(repl_code)
         self.unexpanded_descriptor_list.append(self.Delayed_Descr_Repl_Factor)
         self.unexpanded_descriptor_list.extend(descriptors)
         self.nr_of_delayed_repl_factors = self.nr_of_delayed_repl_factors + 1
         self.del_repl_max_nr_of_repeats_list.append(max_nr_of_repeats)
         #  #]
-    def add_replicated_descriptors(self,nr_of_repeats,*descriptors):
+    def add_replicated_descriptors(self, nr_of_repeats, *descriptors):
         #  #[
         nr_of_descriptors = len(descriptors)
-        print 'adding replication for ',nr_of_descriptors,' descriptors'
-        print 'replicating them ',nr_of_repeats,' times'
+        print 'adding replication for ', nr_of_descriptors, ' descriptors'
+        print 'replicating them ', nr_of_repeats, ' times'
         repl_code = self.get_replication_code(nr_of_descriptors,
                                               nr_of_repeats)
         self.unexpanded_descriptor_list.append(repl_code)
         self.unexpanded_descriptor_list.extend(descriptors)
         #  #]
-    def get_replication_code(self,num_descriptors,num_repeats):
+    def get_replication_code(self, num_descriptors, num_repeats):
         #  #[
 	repl_factor = 100000 + num_descriptors*1000 + num_repeats
 	# for example replicating 2 descriptors 25 times will
@@ -116,10 +118,14 @@ class BUFRInterfaceECMWF:
     size_ksec3 =    4
     size_ksec4 =    2
     #  #]
-    def __init__(self,encoded_message=None,
+    def __init__(self, encoded_message=None,
                  max_nr_descriptors=20,
                  max_nr_expanded_descriptors=140):
         #  #[
+        """
+        initialise all module parameters needed for encoding and decoding
+        BUFR messages
+        """
         # binary encoded BUFR message data
         # (usually stored as a 4-byte integer array)
         self.encoded_message = encoded_message
@@ -220,6 +226,11 @@ class BUFRInterfaceECMWF:
                                             LocalVersion, MasterTableVersion,
                                             EditionNumber, MasterTableNumber):
         #  #[
+        """
+        derive the BUFR table names as expected by the ECMWF software
+        from a number of parameters that should be available in
+        sections 0, 1 and 2.
+        """
         # some local parameters used for detection of the
         # BUFR tables naming convention (short, medium or long)
         testfile_short  = "B0000980000.TXT"
@@ -366,7 +377,9 @@ class BUFRInterfaceECMWF:
         #  #]
     def decode_sections_012(self):
         #  #[ wrapper for bus012
-
+        """
+        decode sections 0, 1 and 2 using bus012
+        """
         # running of this routine yields enough meta-data to enable
         # figuring out how to name the expected BUFR tables
         
@@ -380,12 +393,15 @@ class BUFRInterfaceECMWF:
                          self.ksec2, # output
                          kerr)       # output
         if (kerr != 0):
-            raise EcmwfBufrLibError(self.explain_error(kerr,'bus012'))
+            raise EcmwfBufrLibError(self.explain_error(kerr, 'bus012'))
 
         self.sections012_decoded = True
         #  #]
     def decode_sections_0123(self):
         #  #[ wrapper for bus0123
+        """
+        decode sections 0, 1, 2 and 3 using bus0123
+        """
 
         # running of this routine yields the same as
         # decode_sections_012, and in addition it fills
@@ -410,13 +426,19 @@ class BUFRInterfaceECMWF:
                           self.ksec3, # output
                           kerr)       # output
         if (kerr != 0):
-            raise EcmwfBufrLibError(self.explain_error(kerr,'bus0123'))
+            raise EcmwfBufrLibError(self.explain_error(kerr, 'bus0123'))
 
         self.sections012_decoded  = True
         self.sections0123_decoded = True
         #  #]
-    def setup_tables(self,table_B_to_use=None,table_D_to_use=None):
+    def setup_tables(self, table_B_to_use=None, table_D_to_use=None):
         #  #[ routine for easier handling of tables
+        """
+        helper routine, to enable automatic or manual setting of table names,
+        which in turn are transferred to the ECMWF library using an
+        appropriate environment setting
+        """
+        
         if (not self.sections012_decoded):
             errtxt = "Sorry, setting up BUFR tables is only possible after "+\
                      "sections 0,1,2 of a BUFR message have been decoded "+\
@@ -428,8 +450,8 @@ class BUFRInterfaceECMWF:
         # dependency ...
         #ecmwf_bufr_tables_dir = helpers.get_tables_dir()
 
-        this_path,this_file = os.path.split(__file__)
-        ecmwf_bufr_tables_dir = os.path.join(this_path,"ecmwf_bufrtables")
+        this_path, this_file = os.path.split(__file__)
+        ecmwf_bufr_tables_dir = os.path.join(this_path, "ecmwf_bufrtables")
         if not os.path.exists(ecmwf_bufr_tables_dir):
             print "Error: could not find BUFR tables directory"
             raise IOError
@@ -551,6 +573,10 @@ class BUFRInterfaceECMWF:
         #  #]
     def print_sections_012(self):
         #  #[ wrapper for buprs0, buprs1, buprs2
+        """
+        print content of sections 0, 1 and 2 using buprs0/1/2
+        """
+
         if (not self.sections012_decoded):
             errtxt = "Sorry, printing sections 0,1,2 of a BUFR message "+\
                      "is only possible after "+\
@@ -624,7 +650,7 @@ class BUFRInterfaceECMWF:
         # Note that this condition may occur if the user gives a wrong
         # value for max_nr_expanded_descriptors in __init__.
         # Therefore check to see if sec4 was decoded allright:
-        if self.ksec4[0]==0:
+        if self.ksec4[0] == 0:
             errtxt = "Sorry, call to bufrex failed, Maybe you have choosen "+\
                      "a too small value for max_nr_expanded_descriptors?"
             raise EcmwfBufrLibError(errtxt)
@@ -633,6 +659,9 @@ class BUFRInterfaceECMWF:
         #  #]
     def print_sections_012_metadata(self):
         #  #[
+        """
+        print metadata and content of sections 0, 1 and 2
+        """
         
         if (not self.sections012_decoded):
             errtxt = "Sorry, printing sections 0,1,2 of a BUFR message "+\
@@ -647,6 +676,9 @@ class BUFRInterfaceECMWF:
         #  #]
     def print_sections_0123_metadata(self):
         #  #[
+        """
+        print metadata and content of sections 0, 1, 2 and 3
+        """
         
         if (not self.sections0123_decoded):
             errtxt = "Sorry, printing sections 0,1,2,3 of a BUFR message "+\
@@ -662,6 +694,10 @@ class BUFRInterfaceECMWF:
         #  #]
     def print_sections_01234_metadata(self):
         #  #[
+        """
+        print metadata and content of sections 0, 1, 2 and 3
+        """
+
         if (not self.data_decoded):
             errtxt = "Sorry, printing sections 0,1,2,3,4 of a BUFR message "+\
                      "is only possible after a BUFR message has been decoded "+\
@@ -677,6 +713,10 @@ class BUFRInterfaceECMWF:
         #  #]
     def print_names_and_units(self):
         #  #[
+        """
+        print names and units for the current expanded descriptor list
+        """
+
         if (not self.data_decoded):
             errtxt = "Sorry, names and units are only available after "+\
                      "a BUFR message has been decoded with a call to "+\
@@ -693,6 +733,11 @@ class BUFRInterfaceECMWF:
         #  #]
     def explain_error(kerr, subroutine_name):
         #  #[ explain error codes returned by the bufrlib routines
+        """
+        a helper subroutine to print some helpfull information
+        if one of the library routines returns with an error
+        """
+
         # to be implemented, for now just print the raw code
 
         # See file: bufrdc/buerr.F for a long list of possible
@@ -705,6 +750,11 @@ class BUFRInterfaceECMWF:
         #  #]
     def get_num_subsets(self):
         #  #[ return number of subsets in this BUFR message
+        """
+        a helper function to request the number of subsets for the
+        current BUFR message
+        """
+        
         if (not self.sections012_decoded):
             errtxt = "Sorry, the number of subsets is only available after "+\
                      "a BUFR message has been decoded with a call to "+\
@@ -717,6 +767,11 @@ class BUFRInterfaceECMWF:
         #  #]
     def get_num_elements(self):
         #  #[ return expanded number of descriptors in one subset
+        """
+        a helper function to request the number of elements in each subset
+        for the current BUFR message
+        """
+
         if (not self.sections012_decoded):
             errtxt = "Sorry, the number of elements is only available after "+\
                      "a BUFR message has been decoded with a call to "+\
@@ -724,8 +779,12 @@ class BUFRInterfaceECMWF:
             raise EcmwfBufrLibError(errtxt)
         return self.ksup[4]
         #  #]
-    def get_values(self,i):
+    def get_values(self, i):
         #  #[ get the i th number from each subset as an array
+        """
+        a helper function to request the i th value from each subset
+        for the current BUFR message as an array
+        """
         if (not self.data_decoded):
             errtxt = "Sorry, retrieving values is only possible after "+\
                      "a BUFR message has been decoded with a call to "+\
@@ -734,7 +793,7 @@ class BUFRInterfaceECMWF:
 
         nsubsets  = self.get_num_subsets()
         nelements = self.get_num_elements()
-        if i>nelements-1:
+        if i > nelements-1:
             errtxt = "Sorry, this BUFR message has only "+str(nelements)+\
                      " elements per subset, so requesting index "+\
                      str(i)+" is not possible (remember the arrays are "+\
@@ -747,8 +806,13 @@ class BUFRInterfaceECMWF:
         values = self.values[selection]
         return values
         #  #]
-    def get_element_name_and_unit(self,i):
+    def get_element_name_and_unit(self, i):
         #  #[
+        """
+        a helper routine to request the element name and unit
+        for the given index in the expanded descriptor list of the
+        current BUFR message
+        """
         if (not self.data_decoded):
             errtxt = "Sorry, names and units are only available after "+\
                      "a BUFR message has been decoded with a call to "+\
@@ -766,11 +830,15 @@ class BUFRInterfaceECMWF:
         txtn = ''.join(c for c in self.cnames[i])
         txtu = ''.join(c for c in self.cunits[i])
 
-        return (txtn.strip(),txtu.strip())
+        return (txtn.strip(), txtu.strip())
         #  #]
     def fill_descriptor_list(self):
-        #  #[ fills both the normal and expanded discriptor lists
-
+        #  #[ fills both the normal and expanded descriptor lists
+        """
+        fill the normal and expanded descriptor lists (defines the
+        names and units, which is needed only in case you wish to request
+        and or print these)
+        """
         if ( (not self.data_decoded) and
              (not self.sections012_decoded)):
             errtxt = "Sorry, filling descriptor lists of a BUFR message "+\
@@ -794,7 +862,7 @@ class BUFRInterfaceECMWF:
                         self.ktdexp, # list of expanded data descriptors
                         kerr)   # error  message
         if (kerr != 0):
-            raise EcmwfBufrLibError(self.explain_error(kerr,'bufrex'))
+            raise EcmwfBufrLibError(self.explain_error(kerr, 'bufrex'))
 
         # It is not clear to me why busel seems to correctly produce
         # the descriptor lists (both bare and expanded), but yet it does
@@ -810,6 +878,9 @@ class BUFRInterfaceECMWF:
         #  #]
     def get_descriptor_list(self):
         #  #[
+        """
+        request the raw descriptor list in numeric form
+        """
         if (not self.descriptors_list_filled):
             errtxt = "Sorry, retrieving the list of descriptors of a "+\
                      "BUFR message is only possible after a BUFR message "+\
@@ -822,6 +893,9 @@ class BUFRInterfaceECMWF:
         #  #]
     def get_expanded_descriptor_list(self):
         #  #[
+        """
+        request the expanded descriptor list in numeric form
+        """
         if (not self.descriptors_list_filled):
             errtxt = "Sorry, retrieving the list of descriptors of a "+\
                      "BUFR message is only possible after a BUFR message "+\
@@ -834,6 +908,12 @@ class BUFRInterfaceECMWF:
         #  #]
     def print_descriptors(self):
         #  #[
+        """
+        print the raw and expanded descriptor lists (names and units)
+        using the buprs3 library routine (not that fill_descriptor_list
+        nees to be called first before this will work)
+        """
+
         if (not self.descriptors_list_filled):
             errtxt = "Sorry, retrieving the list of descriptors of a "+\
                      "BUFR message is only possible after a BUFR message "+\
@@ -866,6 +946,12 @@ class BUFRInterfaceECMWF:
                            datetime=None,
                            bufr_edition=4):
         #  #[
+        """
+        helper routine to fill sections 0, 2, 3 and 3 of a BUFR
+        message, using symbolic names to make this easier (and
+        hopefully prevent mistakes)
+        """
+
         # fill section 0
         self.ksec0[1-1] = 0 # length of sec0 in bytes
         #                     [filled by the encoder]
@@ -874,21 +960,21 @@ class BUFRInterfaceECMWF:
         self.ksec0[3-1] = bufr_edition
 
         # fill section 1
-        self.ksec1[ 1-1]=  22               # length sec1 bytes
+        self.ksec1[ 1-1] =  22               # length sec1 bytes
         #                                     [filled by the encoder]
         # (note: this may depend on the bufr_edition nr.)
         
         # however,a minimum of 22 is obliged here
-        self.ksec1[ 2-1]= bufr_edition      # bufr edition
-        self.ksec1[ 3-1]= bufr_code_centre  # originating centre
-        self.ksec1[ 4-1]=   1               # update sequence number
+        self.ksec1[ 2-1] = bufr_edition      # bufr edition
+        self.ksec1[ 3-1] = bufr_code_centre  # originating centre
+        self.ksec1[ 4-1] =   1               # update sequence number
         # usually 1, only updated if the same data is re-issued after
         # reprocessing or so to fix some bug/problem
-        self.ksec1[ 5-1]=   0               # (Flags presence of section 2)
+        self.ksec1[ 5-1] =   0               # (Flags presence of section 2)
         #                                     (0/128 = no/yes)
-        self.ksec1[ 6-1]= bufr_obstype              # message type
-        self.ksec1[ 7-1]= bufr_subtype              # subtype
-        self.ksec1[ 8-1]= bufr_table_local_version  # version of local table
+        self.ksec1[ 6-1] = bufr_obstype              # message type
+        self.ksec1[ 7-1] = bufr_subtype              # subtype
+        self.ksec1[ 8-1] = bufr_table_local_version  # version of local table
         # (this determines the name of the BUFR table to be used)
 
         # fill the datetime group. Note that it is not yet clear to me
@@ -902,15 +988,15 @@ class BUFRInterfaceECMWF:
             (year,month,day,hour,minute,second,
              weekday,julianday,isdaylightsavingstime) = time.localtime()
             
-        self.ksec1[ 9-1]= (year-2000) # Without offset year - 2000
-        self.ksec1[10-1]= month       # month
-        self.ksec1[11-1]= day         # day
-        self.ksec1[12-1]= hour        # hour
-        self.ksec1[13-1]= minute      # minute
+        self.ksec1[ 9-1] = (year-2000) # Without offset year - 2000
+        self.ksec1[10-1] = month       # month
+        self.ksec1[11-1] = day         # day
+        self.ksec1[12-1] = hour        # hour
+        self.ksec1[13-1] = minute      # minute
 
-        self.ksec1[14-1]= bufr_table_master         # master table
+        self.ksec1[14-1] = bufr_table_master         # master table
         # (this determines the name of the BUFR table to be used)
-        self.ksec1[15-1]= bufr_table_master_version # version of master table
+        self.ksec1[15-1] = bufr_table_master_version # version of master table
         # (this determines the name of the BUFR table to be used)
 
         # NOTE on filling items 16,17,18: this is the way to do it in edition 3
@@ -920,18 +1006,18 @@ class BUFRInterfaceECMWF:
         # See bufrdc/buens1.F for some details.
 
         # ksec1 items 16 and above are to indicate local centre information
-        self.ksec1[16-1]= bufr_code_subcentre       # originating subcentre
+        self.ksec1[16-1] = bufr_code_subcentre       # originating subcentre
         # (this determines the name of the BUFR table to be used)
-        self.ksec1[17-1]=   0
-        self.ksec1[18-1]=   0
+        self.ksec1[17-1] =   0
+        self.ksec1[18-1] =   0
 
         # a test for filling ksec2 is not yet defined
     
         # fill section 3
-        self.ksec3[1-1]= 0
-        self.ksec3[2-1]= 0
-        self.ksec3[3-1]= num_subsets                # no of data subsets
-        self.ksec3[4-1]= bufr_compression_flag      # compression flag
+        self.ksec3[1-1] = 0
+        self.ksec3[2-1] = 0
+        self.ksec3[3-1] = num_subsets                # no of data subsets
+        self.ksec3[4-1] = bufr_compression_flag      # compression flag
 
         # note: filling the ksup array is not really needed for
         # encoding (it is no input to bufren) but since I use ksup[5]
@@ -948,7 +1034,12 @@ class BUFRInterfaceECMWF:
         #  #]
     def register_and_expand_descriptors(self,BT):
         #  #[
-
+        """
+        expand the descriptor list, generating the expanded list
+        from the raw list by calling buxdes, with some additional
+        logic to make it easier to use delayed replication in your
+        templates.
+        """
         kerr   = 0
 
         # input: BT must be an instance of the BufrTemplate class
@@ -1023,6 +1114,10 @@ class BUFRInterfaceECMWF:
         #  #]        
     def encode_data(self,values,cvals):
         #  #[ call bufren to encode a bufr message
+        """
+        encode all header sections and the data section to construct
+        the BUFR message in binary/compressed form
+        """
         kerr   = 0
 
         if (not self.sections012_decoded):

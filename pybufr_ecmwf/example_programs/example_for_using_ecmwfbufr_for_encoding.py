@@ -94,7 +94,7 @@ def encoding_example():
     destination = os.path.join(private_bufr_tables_dir, needed_b_table)
     if (not os.path.exists(destination)):
         os.symlink(source, destination)
-	
+        
     source      = os.path.join(ecmwf_bufr_tables_dir, available_d_table)
     destination = os.path.join(private_bufr_tables_dir, needed_d_table)
     if (not os.path.exists(destination)):
@@ -325,7 +325,7 @@ def encoding_example():
     if (kerr != 0):
         print "kerr = ", kerr
         sys.exit(1)
-	
+        
     print "words="
     print words
     numwords = len(np.where(words>0)[0])

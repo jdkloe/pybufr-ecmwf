@@ -14,6 +14,7 @@ used for decoding a BUFR message.
 # License: GPL v2.
 
 #  #[ imported modules
+
 import os          # operating system functions
 import sys         # system functions
 import numpy as np # import numerical capabilities
@@ -25,6 +26,7 @@ helpers.set_python_path()
 
 # import the BUFR wrapper module
 import pybufr_ecmwf
+
 #  #]
 
 # decoding_excample
@@ -37,61 +39,59 @@ def decoding_example():
 
     # read the binary data using the BUFRFile class
     testdata_dir = helpers.get_testdata_dir()
-    input_test_bufr_file = os.path.join(testdata_dir,'Testfile.BUFR')
+    input_test_bufr_file = os.path.join(testdata_dir, 'Testfile.BUFR')
 
-    print 'loading testfile: ',input_test_bufr_file
+    print 'loading testfile: ', input_test_bufr_file
     rbf = pybufr_ecmwf.RawBUFRFile()
     rbf.open(input_test_bufr_file, 'r')
     words = rbf.get_next_raw_bufr_msg()
     rbf.close()
     
     print '------------------------------'
-    BI = pybufr_ecmwf.BUFRInterfaceECMWF(encoded_message=words,
-                                         max_nr_expanded_descriptors=44)
+    bufr = pybufr_ecmwf.bufrInterfaceECMWF(encoded_message=words,
+                                           max_nr_expanded_descriptors=44)
 
     print "calling: decode_sections_012():"
-    BI.decode_sections_012()
+    bufr.decode_sections_012()
 
-    print "Metadata for decoded BUFR message:"
-    BI.print_sections_012_metadata()
+    print "Metadata for decoded bufr message:"
+    bufr.print_sections_012_metadata()
 
     print "calling: setup_tables()"
-    BI.setup_tables()
+    bufr.setup_tables()
 
     print "calling: print_sections_012():"
-    BI.print_sections_012()
+    bufr.print_sections_012()
 
     print '------------------------------'
     print "calling: ecmwfbufr.bufrex():"
-    BI.decode_data()
+    bufr.decode_data()
 
     # print a selection of the decoded numbers
     print '------------------------------'
-    print "Metadata for decoded BUFR message:"
-    BI.print_sections_01234_metadata()
+    print "Metadata for decoded bufr message:"
+    bufr.print_sections_01234_metadata()
 
     print '------------------------------'
-    print "The list of names and units for the numbers in this BUFR message:"
-    BI.print_names_and_units()
+    print "The list of names and units for the numbers in this bufr message:"
+    bufr.print_names_and_units()
 
     print '------------------------------'
-    print "Decoded BUFR message:"
+    print "Decoded bufr message:"
 
-    print "values array: ", BI.values
-    txt = ''.join(str(v)+';' for v in BI.values[:20] if v>0.)
+    print "values array: ", bufr.values
+    txt = ''.join(str(v)+';' for v in bufr.values[:20] if v>0.)
     print "values[:20] : ", txt
 
-    nsubsets = BI.get_num_subsets()
-    print "number of subsets in the BUFR message is: ",nsubsets
+    nsubsets = bufr.get_num_subsets()
+    print "number of subsets in the bufr message is: ", nsubsets
 
-    nelements = BI.get_num_elements()
-    print "number of elements in each subset is: ",nelements
+    nelements = bufr.get_num_elements()
+    print "number of elements in each subset is: ", nelements
 
-    lat_array = BI.get_values(24)
-    lon_array = BI.get_values(25)
+    lat_array = bufr.get_values(24)
+    lon_array = bufr.get_values(25)
 
-    lat = np.zeros(nsubsets)
-    lon = np.zeros(nsubsets)
     for subs in range(nsubsets):
         if (30*(subs/30) == subs):
             print " lat_array["+str(subs)+"] = "+str(lat_array[subs])+\
@@ -100,27 +100,27 @@ def decoding_example():
 
     print '------------------------------'
     # this is a nice way to verify that you picked the right element from
-    # the BUFR message:
-    print 'latitude  name [unit]: %s [%s]' % BI.get_element_name_and_unit(24)
-    print 'longitude name [unit]: %s [%s]' % BI.get_element_name_and_unit(25)
+    # the bufr message:
+    print 'latitude  name [unit]: %s [%s]' % bufr.get_element_name_and_unit(24)
+    print 'longitude name [unit]: %s [%s]' % bufr.get_element_name_and_unit(25)
     print '------------------------------'
 
-    BI.fill_descriptor_list()
+    bufr.fill_descriptor_list()
     
     print 'busel result:'
-    print "ktdlen = ", BI.ktdlen
-    print "ktdexl = ", BI.ktdexl
+    print "ktdlen = ", bufr.ktdlen
+    print "ktdexl = ", bufr.ktdexl
 
-    descriptor_list          = BI.get_descriptor_list()
-    expanded_discriptor_list = BI.get_expanded_descriptor_list()
-    print "descriptor list: ",descriptor_list
-    print "descriptor list length: ",len(descriptor_list)
-    print "expanded descriptor list: ",expanded_discriptor_list
-    print "expanded descriptor list length: ",len(expanded_discriptor_list)
+    descriptor_list          = bufr.get_descriptor_list()
+    expanded_discriptor_list = bufr.get_expanded_descriptor_list()
+    print "descriptor list: ", descriptor_list
+    print "descriptor list length: ", len(descriptor_list)
+    print "expanded descriptor list: ", expanded_discriptor_list
+    print "expanded descriptor list length: ", len(expanded_discriptor_list)
     
     print '------------------------------'
     print "printing content of section 3:"
-    BI.print_descriptors()
+    bufr.print_descriptors()
     
 
 print "-"*50
