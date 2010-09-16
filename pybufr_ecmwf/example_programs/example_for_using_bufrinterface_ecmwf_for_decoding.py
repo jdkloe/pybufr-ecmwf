@@ -48,13 +48,13 @@ def decoding_example():
     rbf.close()
     
     print '------------------------------'
-    bufr = pybufr_ecmwf.bufrInterfaceECMWF(encoded_message=words,
+    bufr = pybufr_ecmwf.BUFRInterfaceECMWF(encoded_message=words,
                                            max_nr_expanded_descriptors=44)
 
     print "calling: decode_sections_012():"
     bufr.decode_sections_012()
 
-    print "Metadata for decoded bufr message:"
+    print "Metadata for decoded BUFR message:"
     bufr.print_sections_012_metadata()
 
     print "calling: setup_tables()"
@@ -69,22 +69,22 @@ def decoding_example():
 
     # print a selection of the decoded numbers
     print '------------------------------'
-    print "Metadata for decoded bufr message:"
+    print "Metadata for decoded BUFR message:"
     bufr.print_sections_01234_metadata()
 
     print '------------------------------'
-    print "The list of names and units for the numbers in this bufr message:"
+    print "The list of names and units for the numbers in this BUFR message:"
     bufr.print_names_and_units()
 
     print '------------------------------'
-    print "Decoded bufr message:"
+    print "Decoded BUFR message:"
 
     print "values array: ", bufr.values
     txt = ''.join(str(v)+';' for v in bufr.values[:20] if v>0.)
     print "values[:20] : ", txt
 
     nsubsets = bufr.get_num_subsets()
-    print "number of subsets in the bufr message is: ", nsubsets
+    print "number of subsets in the BUFR message is: ", nsubsets
 
     nelements = bufr.get_num_elements()
     print "number of elements in each subset is: ", nelements
