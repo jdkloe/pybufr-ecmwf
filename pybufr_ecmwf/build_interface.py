@@ -922,6 +922,19 @@ class InstallBUFRInterfaceECMWF:
         print 'creating parameter python file: ',python_parameter_file
         fd = open(python_parameter_file,'wt')
 
+        # write a simple doc string
+        fd.write('"""')
+        fd.write("""
+This is a little generated file to hold some constant parameters
+defining all array sizes in the interfaces to the ecmwf library.
+These constants are not available through the f2py interface.
+They are defined in file:
+ecmwf_bufr_lib/bufr_000380/bufrdc/parameter.F
+and are extracted from that file and store in this python
+file for convenience
+""")
+        fd.write('"""\n')
+
         # write the retrieved parameter values to a python file
         for (key,val) in parameter_dict.iteritems():
             txt = key+' = '+str(val)+'\n'
@@ -937,8 +950,8 @@ class InstallBUFRInterfaceECMWF:
                     "LENGTH_ECMWF_KEY_DATA = JKEY",
                     "NUM_BITS_PER_WORD        = JBPW",
                     "MAX_BUFR_MSG_LENGTH      = JBUFL",
-                    "MAX_NR_TABLE_B_D_ENTRIES = JTAB"
-                    "MAX_NR_TABLE_C_ENTRIES   = JCTAB"
+                    "MAX_NR_TABLE_B_D_ENTRIES = JTAB",
+                    "MAX_NR_TABLE_C_ENTRIES   = JCTAB",
                     "MAX_NR_OF_EXP_DATA_DESCRIPTORS = JELEM"]
                     # JSUBS=400 # seems not used
                     # JCVAL=150 # seems not used

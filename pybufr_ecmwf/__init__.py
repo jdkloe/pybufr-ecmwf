@@ -6,13 +6,17 @@ Author:  J. de Kloe, KNMI
 Created: 04-Feb-2010
 """
 
-# explicit imports seem not needed at the moment
+#__all__ = ['bufr_template',
+#           'raw_bufr_file',
+#           'bufr_interface_ecmwf',
+#           'bufr',
+#           'helpers']
 
-from bufr_template import *
-from raw_bufr_file import *
-from bufr_interface_ecmwf import *
-import bufr
-import helpers
+from pybufr_ecmwf.bufr_template import *
+from pybufr_ecmwf.raw_bufr_file import *
+from pybufr_ecmwf.bufr_interface_ecmwf import *
+import pybufr_ecmwf.bufr
+import pybufr_ecmwf.helpers
 
 # is this one needed as well?
 #from build_interface import *
@@ -21,6 +25,6 @@ import helpers
 # from the port_2to3.py script, which may be used before doing the actual
 # build of ecmwfbufr.so
 try:
-    import ecmwfbufr
+    import pybufr_ecmwf.ecmwfbufr
 except ImportError:
     pass
