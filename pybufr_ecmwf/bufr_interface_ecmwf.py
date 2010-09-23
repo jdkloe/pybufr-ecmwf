@@ -1107,7 +1107,7 @@ class BUFRInterfaceECMWF:
         print words
 
         nonzero_locations = np.where(words!=0)
-        print 'nonzero_locations = ',nonzero_locations[0]
+        #print 'nonzero_locations = ',nonzero_locations[0]
         nw = nonzero_locations[0][-1] + 1
         print "encoded size: ", nw, " words or ", nw*4, " bytes"
 

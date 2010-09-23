@@ -1,7 +1,7 @@
 --------------------------------------------------
 BUFR decoding example
 --------------------------------------------------
-loading testfile:  Testfile.BUFR
+loading testfile:  example_programs/testdata/Testfile.BUFR
 ------------------------------
 calling: decode_sections_012():
 calling: ecmwfbufr.bus012():
@@ -122,6 +122,7 @@ expanded descriptor list:  [ 1007 25060  1033  1034  1012  4001  4002  4003  400
 expanded descriptor list length:  44
 ------------------------------
 printing content of section 3:
+succesfully decoded data from file:  example_programs/testdata/Testfile.BUFR
 --------------------------------------------------
 done
 --------------------------------------------------

@@ -58,7 +58,7 @@ class EcmwfBufrTableError(Exception):
 #  #]
 
 def run_shell_command(cmd, libpath = None, catch_output = True,
-                      verbose = True):
+                      module_path = './', verbose = True):
     #  #[
     """ a wrapper routine around subprocess.Popen intended
     to make it a bit easier to call this functionality.
@@ -76,14 +76,20 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         # add the additional env setting
         envname = "LD_LIBRARY_PATH"
         if (env.has_key(envname)):
-            env[envname] = env[envname] + ";" + libpath
+            env[envname] = env[envname] + ":" + libpath
         else:
             env[envname] = libpath
+
+    if (env.has_key('PATHONPATH')):
+        env['PYTHONPATH'] = env['PYTHONPATH']+':'+module_path
+    else:
+        env['PYTHONPATH'] = module_path
             
     if (verbose):
         print "Executing command: ", cmd
         
     if (catch_output):
+        # print 'env[PYTHONPATH] = ',env['PYTHONPATH']
         subpr = subprocess.Popen(cmd,
                                  shell  = True,
                                  env    = env,
@@ -151,7 +157,7 @@ def call_cmd_and_verify_output(cmd):
                  sys._getframe(1).f_locals['self'].__class__.__name__
 
     # construct filenames for the actual and expected outputs
-    exp_dir = "expected_test_outputs"
+    exp_dir = "example_programs/expected_test_outputs"
     basename = os.path.join(exp_dir,
                             classname_of_calling_function+"."+\
                             name_of_calling_function)
@@ -163,6 +169,7 @@ def call_cmd_and_verify_output(cmd):
     # execute the test and catch all output
     (lines_stdout, lines_stderr) = run_shell_command(python_interpreter+' '+cmd,
                                                      catch_output = True,
+                                                     module_path = './',
                                                      verbose = False)
 
     # write the actual outputs to file
@@ -292,23 +299,3 @@ def get_tables_dir():
     return ecmwf_bufr_tables_dir
     #  #]
 
-def get_testdata_dir():
-    #  #[
-    """ inspect the location of this helpers.py file, and derive
-    from this the location of the testdata delivered with this software
-    """ 
-
-    helpers_path = os.path.split(__file__)[0]
-    path1 = os.path.join(helpers_path, "testdata")
-    path2 = os.path.join(helpers_path, '..', "testdata")
-
-    if os.path.exists(path1):
-        testdata_dir = path1
-    elif os.path.exists(path2):
-        testdata_dir = path2
-    else:
-        print "Error: could not find testdata directory"
-        raise IOError
-
-    return testdata_dir
-    #  #]

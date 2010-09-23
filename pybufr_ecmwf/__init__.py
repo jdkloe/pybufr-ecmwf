@@ -15,8 +15,8 @@ Created: 04-Feb-2010
 from pybufr_ecmwf.bufr_template import *
 from pybufr_ecmwf.raw_bufr_file import *
 from pybufr_ecmwf.bufr_interface_ecmwf import *
-import pybufr_ecmwf.bufr
-import pybufr_ecmwf.helpers
+from pybufr_ecmwf import bufr
+from pybufr_ecmwf import helpers
 
 # is this one needed as well?
 #from build_interface import *

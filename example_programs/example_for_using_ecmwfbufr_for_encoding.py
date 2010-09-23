@@ -35,10 +35,6 @@ def encoding_example(output_bufr_file):
     convention of requiring capitals for constants in the global
     scope (since most of these variables are not constants at all))
     """
-    print "-"*50
-    print "BUFR encoding example"
-    print "-"*50
-    
     # define the needed constants
     max_nr_descriptors          =     20 # 300
     max_nr_expanded_descriptors =    140 # 160000
@@ -327,7 +323,7 @@ def encoding_example(output_bufr_file):
     print words
 
     nonzero_locations = np.where(words!=0)
-    print 'nonzero_locations = ',nonzero_locations[0]
+    #print 'nonzero_locations = ',nonzero_locations[0]
     
     numwords = nonzero_locations[0][-1] + 1
     print "encoded size: ", numwords, " words or ", numwords*4, " bytes"

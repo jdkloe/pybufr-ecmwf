@@ -1,1 +1,32 @@
-to be written
+The pybufr_ecmwf module provides functionality to read and write files in BUFR format. 
+The API consists of several layers:
+-the raw/bare c API that connects python to the fortran library
+-an intermediate python API around this raw layer
+-[not yet written] a high level API which should allow a pythonic object oriented usage
+
+For examples on its usage you can take a look at the programs in the example_programs directory.
+The run_example_program.sh shell script allows easy testing of all of these programs. 
+All needed test data files are provided in the example_programs/testdata directory.
+
+examples for using the raw/bare API are:
+-example_for_using_ecmwfbufr_for_decoding.py
+-example_for_using_ecmwfbufr_for_encoding.py
+
+examples for using the intermediate python API 
+-example_for_using_bufrinterface_ecmwf_for_decoding.py
+-example_for_using_bufrinterface_ecmwf_for_encoding.py
+
+example for using additional tools:
+
+an example how the pb routines can be used (not portable at the moment, needs more testing!)
+-example_for_using_pb_routines.py
+
+an example how the raw_bufr_file class can be used to replace the pb routines
+-example_for_using_rawbufrfile.py
+
+an example of a tool that can be used to verify the internal consistency of BUFR table files
+-verify_bufr_tables.py
+
+If you have any questions feel free to contact me by email.
+
+Jos de Kloe, 2010.

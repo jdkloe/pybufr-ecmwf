@@ -17,4 +17,8 @@ exp_descr_list_length =  16
 bufren call finished
 words=
 [1380341058   79298560    1441792 ...,          0          0          0]
-encoded size:  32  words or  128  bytes
+encoded size:  47  words or  188  bytes
+succesfully written BUFR encoded data to file:  example_programs/testdata/Testoutputfile2u.BUFR
+--------------------------------------------------
+done
+--------------------------------------------------

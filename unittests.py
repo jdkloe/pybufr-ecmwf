@@ -23,19 +23,20 @@ are planned as well.
 #
 # License: GPL v2.
 #
+# note: the tests in the test classes below MUST have a name starting 
+#       with "test" otherwise the unittest module will not use them
+#
+
 #  #]
 #  #[ imported modules
-import os          # operating system functions
-#import sys         # system functions
+import os, sys      # operating system functions
 import unittest  # import the unittest functionality
 
-# import some home made helper routines
-from helpers import call_cmd_and_verify_output, set_python_path
-set_python_path()
-
+sys.path.append('./')
 from pybufr_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf import RawBUFRFile
 from pybufr_ecmwf import bufr
+from pybufr_ecmwf import helpers
 
 #import ecmwfbufr # import the wrapper module
 
@@ -48,9 +49,15 @@ class CheckRawECMWFBUFR(unittest.TestCase):
     """
     a class to check the ecmwf_bufr_lib interface 
     """
-    # note: tests MUST have a name starting with "test"
-    #       otherwise the unittest module will not use them
-    example_programs_dir = "example_programs/"
+    example_programs_dir   = 'example_programs'
+    testdatadir            = 'example_programs/testdata'
+    testinputfile          = os.path.join(testdatadir,
+                                          'Testfile.BUFR')
+    corruptedtestinputfile = os.path.join(testdatadir,
+                                          'Testfile3CorruptedMsgs.BUFR')
+    testoutputfile2u       = os.path.join(testdatadir,
+                                          'Testoutputfile2u.BUFR')
+
     def test_run_decoding_example(self):
         #  #[
         """
@@ -59,7 +66,8 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "example_for_using_ecmwfbufr_for_decoding.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        success = call_cmd_and_verify_output(cmd)
+        cmd = cmd + ' ' + self.testinputfile
+        success = helpers.call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     def test_run_encoding_example(self):
@@ -70,7 +78,8 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "example_for_using_ecmwfbufr_for_encoding.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        success = call_cmd_and_verify_output(cmd)
+        cmd = cmd + ' ' + self.testoutputfile2u
+        success = helpers.call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     def test_run_pb_routines_example(self):
@@ -90,7 +99,8 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "example_for_using_pb_routines.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        success = call_cmd_and_verify_output(cmd)
+        cmd = cmd + ' ' + self.corruptedtestinputfile
+        success = helpers.call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     #  #]
@@ -100,9 +110,12 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
     """
     a class to check the bufr_interface_ecmwf class
     """
-    # note: tests MUST have a name starting with "test"
-    #       otherwise the unittest module will not use them
-    example_programs_dir = "example_programs/"
+    example_programs_dir   = "example_programs"
+    testdatadir            = 'example_programs/testdata'
+    testinputfile          = os.path.join(testdatadir,
+                                          'Testfile.BUFR')
+    testoutputfile1u       = os.path.join(testdatadir,
+                                          'Testoutputfile1u.BUFR')
     def test_init(self):
         #  #[
         """
@@ -146,20 +159,10 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         master_table_number  =   0 # = ksec1(14)
         bufr = BUFRInterfaceECMWF()
         
-        # dont use this! This would need an import of helpers
-        # which in turn imports pybufr_ecmwf so would give a circular
-        # dependency ...
-        # ecmwf_bufr_tables_dir = helpers.get_tables_dir()
-
-        this_path = os.path.split(__file__)[0]
-        ecmwf_bufr_tables_dir = os.path.join(this_path, "ecmwf_bufrtables")
+        ecmwf_bufr_tables_dir = helpers.get_tables_dir()
         if not os.path.exists(ecmwf_bufr_tables_dir):
             print "Error: could not find BUFR tables directory"
             raise IOError
-        
-        # make sure the path is absolute, otherwise the ECMWF library
-        # might fail when it attempts to use it ...
-        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
         
         (btable, dtable) = \
                  bufr.get_expected_ecmwf_bufr_table_names(ecmwf_bufr_tables_dir,
@@ -184,8 +187,9 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "example_for_using_bufrinterface_ecmwf_for_decoding.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        
-        success = call_cmd_and_verify_output(cmd)
+        cmd = cmd + ' ' + self.testinputfile
+
+        success = helpers.call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     def test_run_encoding_example(self):
@@ -197,8 +201,9 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "example_for_using_bufrinterface_ecmwf_for_encoding.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' ' + self.testoutputfile1u
         
-        success = call_cmd_and_verify_output(cmd)
+        success = helpers.call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
 
@@ -209,11 +214,16 @@ class CheckRawBUFRFile(unittest.TestCase):
     """
     a class to check the raw_bufr_file class
     """
-    # note: tests MUST have a name starting with "test"
-    #       otherwise the unittest module will not use them
-    #
     # common settings for the following tests
-    input_test_bufr_file = 'testdata/Testfile3CorruptedMsgs.BUFR'
+    example_programs_dir   = "example_programs"
+    testdatadir            = 'example_programs/testdata'
+    #testinputfile          = os.path.join(testdatadir,
+    #                                      'Testfile.BUFR')
+    corruptedtestinputfile = os.path.join(testdatadir,
+                                          'Testfile3CorruptedMsgs.BUFR')
+    testoutputfile3u       = os.path.join(testdatadir,
+                                          'Testoutputfile3u.BUFR')
+
     def test_init(self):
         #  #[
         """
@@ -241,11 +251,11 @@ class CheckRawBUFRFile(unittest.TestCase):
         
         # check behaviour when mode is missing
         self.assertRaises(TypeError,
-                          bufrfile.open, self.input_test_bufr_file)
+                          bufrfile.open, self.corruptedtestinputfile)
         
         # check behaviour when mode is invalid
         self.assertRaises(AssertionError,
-                          bufrfile.open, self.input_test_bufr_file, 'q')
+                          bufrfile.open, self.corruptedtestinputfile, 'q')
         
         # check behaviour when filename is not a string
         self.assertRaises(TypeError, bufrfile.open, 123, 'r')
@@ -261,7 +271,7 @@ class CheckRawBUFRFile(unittest.TestCase):
             os.chmod(testfile, 0666)
             os.remove(testfile)
 
-        # create a small dummy fle
+        # create a small dummy file
         fdescr = open(testfile, 'wt')
         fdescr.write('dummy data')
         fdescr.close()
@@ -304,7 +314,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         test opening and closing a BUFR file
         """
         bufrfile = RawBUFRFile(verbose = False)
-        bufrfile.open(self.input_test_bufr_file, 'r')
+        bufrfile.open(self.corruptedtestinputfile, 'r')
         bufrfile.close()
         
         # check that a second close fails
@@ -317,24 +327,24 @@ class CheckRawBUFRFile(unittest.TestCase):
         """
         # run the provided example code and verify the output
         cmd = "example_programs/example_for_using_rawbufrfile.py"
-        success = call_cmd_and_verify_output(cmd)
+        cmd = cmd + ' ' + self.corruptedtestinputfile + \
+              ' ' + self.testoutputfile3u
+        success = helpers.call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     #  #]
 
 class CheckBufr(unittest.TestCase):
     #  #[
-    # note: tests MUST have a name starting with "test"
-    #       otherwise the unittest module will not use them
     def test_singleton(self):
         #  #[
-        a = pybufr_ecmwf.bufr.Singleton(1)
-        b = pybufr_ecmwf.bufr.Singleton(1)
+        a = bufr.Singleton(1)
+        b = bufr.Singleton(1)
         self.assertEqual(a is b,True)
 
         repr_a = repr(a)
         del(a)
-        c = pybufr_ecmwf.bufr.Singleton(1)
+        c = bufr.Singleton(1)
         repr_c = repr(c)
         self.assertEqual(repr_a,repr_c)
         
