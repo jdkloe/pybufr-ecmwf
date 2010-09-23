@@ -27,7 +27,10 @@ FILES_TO_DELETE = ["pybufr_ecmwf/libbufr.a", "libbufr.a", "MANIFEST",
                    "pybufr_ecmwf/ecmwfbufr.so", "ecmwfbufr.so",
                    "ecmwfbufr.so", "pybufr_ecmwf/ecmwf_bufr_lib/config_file",
                    "ecmwf_bufr_lib/config_file", "pybufr_ecmwf/ecmwfbufr.so",
-                   "pybufr_ecmwf/ecmwfbufr_parameters.py"]
+                   "pybufr_ecmwf/ecmwfbufr_parameters.py",
+                   "example_programs/testdata/Testoutputfile1.BUFR",
+                   "example_programs/testdata/Testoutputfile2.BUFR",
+                   "example_programs/testdata/Testoutputfile3.BUFR"]
 
 #pylint: disable-msg=C0103
 dirs_to_delete = []

@@ -14,8 +14,7 @@ used for decoding a BUFR message.
 # License: GPL v2.
 
 #  #[ imported modules
-
-import os          # operating system functions
+import sys  # operating system functions
 
 # import the BUFR wrapper module
 import pybufr_ecmwf
@@ -84,7 +83,7 @@ def display_results(bufr):
     print "printing content of section 3:"
     bufr.print_descriptors()
     #  #]
-def decoding_example():
+def decoding_example(input_bufr_file):
     #  #[
     """
     wrap the example in a function to circumvent the pylint
@@ -93,13 +92,9 @@ def decoding_example():
     """
 
     # read the binary data using the BUFRFile class
-    testdata_dir = pybufr_ecmwf.helpers.get_testdata_dir()
-    filename = 'Testfile.BUFR'
-    input_test_bufr_file = os.path.join(testdata_dir, filename)
-
-    print 'loading testfile: ', filename
+    print 'loading testfile: ', input_bufr_file
     rbf = pybufr_ecmwf.RawBUFRFile()
-    rbf.open(input_test_bufr_file, 'r')
+    rbf.open(input_bufr_file, 'r')
     words = rbf.get_next_raw_bufr_msg()
     rbf.close()
     
@@ -126,13 +121,22 @@ def decoding_example():
     return bufr
     #  #]
 
+#  #[ run the example
+if len(sys.argv)<2:
+    print 'please give a BUFR file as first argument'
+    sys.exit(1)
+    
+input_bufr_file = sys.argv[1]
+
 print "-"*50
 print "BUFR decoding example"
 print "-"*50
 
-BUFRMSG = decoding_example()
+BUFRMSG = decoding_example(input_bufr_file)
 display_results(BUFRMSG)
+print 'succesfully decoded data from file: ',input_bufr_file
 
 print "-"*50
 print "done"
 print "-"*50
+#  #]

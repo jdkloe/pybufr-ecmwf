@@ -13,23 +13,23 @@ used for encoding a BUFR message.
 #
 # License: GPL v2.
 
-import os          # operating system functions
-import sys         # system functions
+#  #[ imported modules
+import os, sys     # operating system functions
 import numpy as np # import numerical capabilities
 import time        # handling of date and time
 
-# set the python path to find the (maybe not yet installed) module files
-# (not needed if the module is installed in the default location)
-import helpers 
-helpers.set_python_path()
+# import some help routines
+from pybufr_ecmwf import helpers 
 
 # import the RawBUFRFile class to write the encoded raw BUFR data to file
-#from pybufr_ecmwf import RawBUFRFile
+from pybufr_ecmwf import RawBUFRFile
 
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
+#  #]
 
-def encoding_example():
+def encoding_example(output_bufr_file):
+    #  #[
     """
     wrap the example in a function to circumvent the pylint
     convention of requiring capitals for constants in the global
@@ -325,8 +325,44 @@ def encoding_example():
         
     print "words="
     print words
-    numwords = len(np.where(words>0)[0])
+
+    nonzero_locations = np.where(words!=0)
+    print 'nonzero_locations = ',nonzero_locations[0]
+    
+    numwords = nonzero_locations[0][-1] + 1
     print "encoded size: ", numwords, " words or ", numwords*4, " bytes"
 
-# run the example
-encoding_example()
+    encoded_message = words[:numwords]
+    
+    # get an instance of the RawBUFRFile class
+    BF1 = RawBUFRFile()
+    # open the file for writing
+    BF1.open(output_bufr_file, 'w')
+    # write the encoded BUFR message
+    BF1.write_raw_bufr_msg(encoded_message)
+    # close the file
+    BF1.close()
+    #  #]
+    
+#  #[ run the example
+if len(sys.argv)<2:
+    print 'please give a BUFR file as first argument'
+    sys.exit(1)
+
+output_bufr_file = sys.argv[1]
+
+# make sure the outputfile does not yet exist
+if (os.path.exists(output_bufr_file)):
+    os.remove(output_bufr_file)
+
+print "-"*50
+print "BUFR encoding example"
+print "-"*50
+
+encoding_example(output_bufr_file)
+print 'succesfully written BUFR encoded data to file: ',output_bufr_file
+
+print "-"*50
+print "done"
+print "-"*50
+#  #]

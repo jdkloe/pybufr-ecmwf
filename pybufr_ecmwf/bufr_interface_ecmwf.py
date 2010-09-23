@@ -68,7 +68,8 @@ class BUFRInterfaceECMWF:
         initialise all module parameters needed for encoding and decoding
         BUFR messages
         """
-        # binary encoded BUFR message data
+        # this array will hold the binary message before decoding from
+        # or after encoding to the raw BUFR format
         # (usually stored as a 4-byte integer array)
         self.encoded_message = encoded_message
 
@@ -1102,11 +1103,16 @@ class BUFRInterfaceECMWF:
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bufren'))
 
-        print "words="
+        print "words = "
         print words
-        nw = len(np.where(words>0)[0])
+
+        nonzero_locations = np.where(words!=0)
+        print 'nonzero_locations = ',nonzero_locations[0]
+        nw = nonzero_locations[0][-1] + 1
         print "encoded size: ", nw, " words or ", nw*4, " bytes"
 
+        self.encoded_message = words[:nw]
+        
         self.data_encoded = True
         #  #]
         

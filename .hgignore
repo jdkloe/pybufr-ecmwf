@@ -8,8 +8,12 @@ syntax: regexp
 \.a$
 \.so$
 
-# ignore the exacs backup files
+# ignore the emacs backup files
 .~$
+
+# ignore the emacs temporary files
+\#.*\#$
+\#.*$
 
 # ignore the generated stderr/stdout actual files
 expected_test_outputs/.*.actual_stdout$
@@ -21,6 +25,7 @@ Testfile3Msgs.BUFR
 .*/.*/Testfile3Msgs.BUFR
 pybufr_ecmwf/ecmwfbufr_parameters.py
 MANIFEST
+example_programs/testdata/Testoutputfile.*.BUFR
 
 # ignore the pylint output text files
 pylint_.*.txt$

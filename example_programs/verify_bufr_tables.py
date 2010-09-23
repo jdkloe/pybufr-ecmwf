@@ -5,15 +5,18 @@ this small example program loads the BUFR B- and D-tables
 and reports any inconsistencies it finds in the table definitions
 """
 
-# import some home made helper routines
-from helpers import call_cmd_and_verify_output, set_python_path
-set_python_path()
-
+import sys
 from pybufr_ecmwf import bufr
 
-TABLE_CODE = "0000000000098000000"
+if len(sys.argv)<3:
+    print 'please give 2 BUFR TABLE files as argument'
+    sys.exit(1)
+
+btable_file = sys.argv[1]
+dtable_file = sys.argv[2]
 
 #BT = bufr.BufrTable(tables_dir="my_BUFR_TABLES")
-BT = bufr.BufrTable(tables_dir="../ecmwf_bufrtables")
-BT.load("B"+TABLE_CODE+".TXT")
-BT.load("D"+TABLE_CODE+".TXT")
+#BT = bufr.BufrTable(tables_dir="../ecmwf_bufrtables")
+BT = bufr.BufrTable()
+BT.load(btable_file)
+BT.load(dtable_file)

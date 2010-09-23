@@ -8,18 +8,15 @@ used for decoding a BUFR message.
 
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
+#
 # Written by: J. de Kloe, KNMI, Initial version 21-Jan-2010    
 #
 # License: GPL v2.
 
+#  #[ imported modules
 import os          # operating system functions
 import sys         # system functions
 import numpy as np # import numerical capabilities
-
-# set the python path to find the (maybe not yet installed) module files
-# (not needed if the module is installed in the default location)
-import helpers 
-helpers.set_python_path()
 
 # import the RawBUFRFile class to load the encoded raw BUFR data from file
 from pybufr_ecmwf import RawBUFRFile
@@ -27,24 +24,20 @@ from pybufr_ecmwf import RawBUFRFile
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 
-# decoding_excample
-def decoding_example():
+# import some help routines
+from pybufr_ecmwf import helpers
+#  #]
+
+def decoding_example(input_bufr_file):
+    #  #[
     """
     wrap the example in a function to circumvent the pylint
     convention of requiring capitals for constants in the global
     scope (since most of these variables are not constants at all))
     """
 
-    # read the binary data using the BUFRFile class
-    # make sure it finds the testfile from the main module dir
-    # and from within the example_programs dir
-    if os.path.exists('testdata'):
-        input_test_bufr_file = 'testdata/Testfile.BUFR'
-    else:
-        input_test_bufr_file = '../testdata/Testfile.BUFR'
-        
     rbf = RawBUFRFile()
-    rbf.open(input_test_bufr_file, 'r')
+    rbf.open(input_bufr_file, 'r')
     words = rbf.get_next_raw_bufr_msg()
     rbf.close()
     
@@ -238,14 +231,23 @@ def decoding_example():
     print "printing content of section 3:"
     print "sec3 : ", ksec3
     ecmwfbufr.buprs3(ksec3, ktdlst, ktdexp, cnames)
+    #  #]
 
+#  #[ run the example
+if len(sys.argv)<2:
+    print 'please give a BUFR file as first argument'
+    sys.exit(1)
+
+input_bufr_file = sys.argv[1]
 
 print "-"*50
 print "BUFR decoding example"
 print "-"*50
 
-decoding_example()
+decoding_example(input_bufr_file)
+print 'succesfully decoded data from file: ',input_bufr_file
 
 print "-"*50
 print "done"
 print "-"*50
+#  #]

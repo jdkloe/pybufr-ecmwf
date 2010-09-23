@@ -23,54 +23,34 @@ SystemError: NULL result without error in PyObject_Call
 #
 # License: GPL v2.
 
+#  #[ imported modules
 import os          # import os functionality
 import sys         # system functions
 import numpy as np # import numerical capabilities
 
-# import the python file defining the BUFRInterfaceECMWF class
-if os.path.isdir("../pybufr_ecmwf"):
-    sys.path.append("../")
-else:
-    sys.path.append("../../")
-
-# this import is currently not used
-# from pybufr_ecmwf import BUFRInterfaceECMWF
-
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
+#  #]
 
-# pbopen test
-def pb_example():
+def pb_example(input_bufr_file):
+    #  #[
     """
     wrap the example in a function to circumvent the pylint
     convention of requiring capitals for constants in the global
     scope (since most of these variables are not constants at all))
     """
 
-    # NOTE: this testfile: Testfile3CorruptedMsgs.BUFR
-    # holds 3 copies of Testfile.BUFR catted together, and
-    # was especially modified using hexedit to have
-    # false end markers (7777) halfway the 2nd and 3rd
-    # message. These messages are therefore corrupted and
-    # decoding them will probably result in garbage, but they
-    # are very usefull to test the BUFRFile.split() method.
-    
-    # define the input test filename
-    if os.path.exists('testdata'):
-        input_test_bufr_file = 'testdata/Testfile3CorruptedMsgs.BUFR'
-    else:
-        input_test_bufr_file = '../testdata/Testfile3CorruptedMsgs.BUFR'
-    
+    # pbopen test
     c_file_unit     = 0
     bufr_error_flag = 0
-    print "input_test_bufr_file = ["+input_test_bufr_file+"]"
+    print "input_bufr_file = ["+input_bufr_file+"]"
     print "calling: ecmwfbufr.pbopen()"
-    (c_file_unit, bufr_error_flag) = ecmwfbufr.pbopen(input_test_bufr_file, 'R')
+    (c_file_unit, bufr_error_flag) = ecmwfbufr.pbopen(input_bufr_file, 'R')
     
     # this will be the call if intent(inplace) is used in the 
     # insert_pb_interface_definition method of BUFRInterfaceECMWF
     # in stead of intent(in) and intent(out):
-    # ecmwfbufr.pbopen(c_file_unit, input_test_bufr_file,
+    # ecmwfbufr.pbopen(c_file_unit, input_bufr_file,
     #                  'R', bufr_error_flag)
     
     print "c_file_unit = ", c_file_unit
@@ -109,13 +89,20 @@ def pb_example():
     print "calling: ecmwfbufr.pbclose()"
     ecmwfbufr.pbclose(c_file_unit, bufr_error_flag)
     print "bufr_error_flag = ", bufr_error_flag
+    #  #]
 
+# run the example
 print "-"*50
 print "pb usage example"
 print "-"*50
 
-# run the example
-pb_example()
+if len(sys.argv)<2:
+    print 'please give a BUFR file as first argument'
+    sys.exit(1)
+
+input_bufr_file = sys.argv[1]
+pb_example(input_bufr_file)
+print 'succesfully read data from file: ',input_bufr_file
 
 print "-"*50
 print "done"
