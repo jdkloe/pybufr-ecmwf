@@ -16,13 +16,6 @@ used for decoding a BUFR message.
 #  #[ imported modules
 
 import os          # operating system functions
-#import sys         # system functions
-#import numpy as np # import numerical capabilities
-
-# set the python path to find the (maybe not yet installed) module files
-# (not needed if the module is installed in the default location)
-import helpers 
-helpers.set_python_path()
 
 # import the BUFR wrapper module
 import pybufr_ecmwf
@@ -100,7 +93,7 @@ def decoding_example():
     """
 
     # read the binary data using the BUFRFile class
-    testdata_dir = helpers.get_testdata_dir()
+    testdata_dir = pybufr_ecmwf.helpers.get_testdata_dir()
     filename = 'Testfile.BUFR'
     input_test_bufr_file = os.path.join(testdata_dir, filename)
 
