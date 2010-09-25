@@ -1,6 +1,6 @@
 Traceback (most recent call last):
-  File "example_programs/example_for_using_pb_routines.py", line 104, in <module>
-    pb_example(input_bufr_file)
-  File "example_programs/example_for_using_pb_routines.py", line 48, in pb_example
+  File "example_programs/example_for_using_pb_routines.py", line 103, in <module>
+    pb_example(INP_BUFR_FILE)
+  File "example_programs/example_for_using_pb_routines.py", line 47, in pb_example
     (c_file_unit, bufr_error_flag) = ecmwfbufr.pbopen(input_bufr_file, 'R')
 SystemError: NULL result without error in PyObject_Call

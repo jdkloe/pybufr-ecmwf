@@ -84,7 +84,8 @@ def decoding_example(input_bufr_file):
     # to find the tables
     env = os.environ
     env["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
-    # print 'private_bufr_tables_dir+os.path.sep=',private_bufr_tables_dir+os.path.sep
+    # print 'private_bufr_tables_dir+os.path.sep=', \
+    #       private_bufr_tables_dir+os.path.sep
     
     ksup   = np.zeros(         9, dtype = np.int)
     ksec0  = np.zeros(         3, dtype = np.int)
@@ -238,14 +239,14 @@ if len(sys.argv)<2:
     print 'please give a BUFR file as first argument'
     sys.exit(1)
 
-input_bufr_file = sys.argv[1]
+INP_BUFR_FILE = sys.argv[1]
 
 print "-"*50
 print "BUFR decoding example"
 print "-"*50
 
-decoding_example(input_bufr_file)
-print 'succesfully decoded data from file: ',input_bufr_file
+decoding_example(INP_BUFR_FILE)
+print 'succesfully decoded data from file: ', INP_BUFR_FILE
 
 print "-"*50
 print "done"

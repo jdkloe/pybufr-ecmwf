@@ -331,13 +331,13 @@ def encoding_example(output_bufr_file):
     encoded_message = words[:numwords]
     
     # get an instance of the RawBUFRFile class
-    BF1 = RawBUFRFile()
+    bf1 = RawBUFRFile()
     # open the file for writing
-    BF1.open(output_bufr_file, 'w')
+    bf1.open(output_bufr_file, 'w')
     # write the encoded BUFR message
-    BF1.write_raw_bufr_msg(encoded_message)
+    bf1.write_raw_bufr_msg(encoded_message)
     # close the file
-    BF1.close()
+    bf1.close()
     #  #]
     
 #  #[ run the example
@@ -345,18 +345,18 @@ if len(sys.argv)<2:
     print 'please give a BUFR file as first argument'
     sys.exit(1)
 
-output_bufr_file = sys.argv[1]
+OUTP_BUFR_FILE = sys.argv[1]
 
 # make sure the outputfile does not yet exist
-if (os.path.exists(output_bufr_file)):
-    os.remove(output_bufr_file)
+if (os.path.exists(OUTP_BUFR_FILE)):
+    os.remove(OUTP_BUFR_FILE)
 
 print "-"*50
 print "BUFR encoding example"
 print "-"*50
 
-encoding_example(output_bufr_file)
-print 'succesfully written BUFR encoded data to file: ',output_bufr_file
+encoding_example(OUTP_BUFR_FILE)
+print 'succesfully written BUFR encoded data to file: ', OUTP_BUFR_FILE
 
 print "-"*50
 print "done"

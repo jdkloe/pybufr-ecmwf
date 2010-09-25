@@ -24,7 +24,6 @@ SystemError: NULL result without error in PyObject_Call
 # License: GPL v2.
 
 #  #[ imported modules
-import os          # import os functionality
 import sys         # system functions
 import numpy as np # import numerical capabilities
 
@@ -100,9 +99,9 @@ if len(sys.argv)<2:
     print 'please give a BUFR file as first argument'
     sys.exit(1)
 
-input_bufr_file = sys.argv[1]
-pb_example(input_bufr_file)
-print 'succesfully read data from file: ',input_bufr_file
+INP_BUFR_FILE = sys.argv[1]
+pb_example(INP_BUFR_FILE)
+print 'succesfully read data from file: ', INP_BUFR_FILE
 
 print "-"*50
 print "done"
