@@ -343,7 +343,9 @@ setup(cmdclass = {'build'    : Build,
       license = "GPLv2",
       packages = ['pybufr_ecmwf'],
       ext_modules = [ECMWF_BUFR_EXT],
-      requires = ["numpy", "numpy.f2py", "subprocess"]
+      requires = ["numpy", "numpy.f2py", "subprocess"],
+      provides = ["pybufr_ecmwf","pybufr_ecmwf.bufr",
+                  "pybufr_ecmwf.helpers"]
       # this requires use of the setup tools which needs to be installed
       # first (i.e. it makes the setup a little bit less portable)
       # see: http://peak.telecommunity.com/DevCenter/setuptools#test

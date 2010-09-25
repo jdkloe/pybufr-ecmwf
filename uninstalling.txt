@@ -1,0 +1,13 @@
+If you need to ununstall this package, this trick may help you
+
+python setup.py install --record files.txt
+cat files.txt | xargs rm -rf
+
+trick found on:
+http://kmandla.wordpress.com/2009/01/08/there-is-no-setuppy-uninstall/
+
+note however that some files seem to be let behind at the moment
+(I still have to sort out why):
+
+ecmwfbufr_parameters.py   ecmwf_bufrtables  pybufr_ecmwf.py
+ecmwfbufr_parameters.pyc  libbufr.a         pybufr_ecmwf.pyc
