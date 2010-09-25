@@ -149,6 +149,10 @@ def call_cmd_and_verify_output(cmd):
     # determine the full path of the current python interpreter
     python_interpreter = sys.executable
 
+    # disable the pylint warning:
+    # "Access to a protected member _getframe of a client class"
+    # pylint: disable-msg=W0212
+
     # determine the name of the calling function
     name_of_calling_function = sys._getframe(1).f_code.co_name
 
@@ -156,9 +160,10 @@ def call_cmd_and_verify_output(cmd):
     classname_of_calling_function = \
                  sys._getframe(1).f_locals['self'].__class__.__name__
 
+    # pylint: enable-msg=W0212
+
     # construct filenames for the actual and expected outputs
-    exp_dir = "example_programs/expected_test_outputs"
-    basename = os.path.join(exp_dir,
+    basename = os.path.join("example_programs/expected_test_outputs",
                             classname_of_calling_function+"."+\
                             name_of_calling_function)
     actual_stdout   = basename+".actual_stdout"
@@ -243,6 +248,9 @@ def ensure_permissions(filename, mode):
 
 def set_python_path():
     #  #[
+    """
+    a little helper routine to modify the sys.path setting if needed
+    """
     
     # make sure if we execute from within the source package, to let that
     # version have preference over a system wide module installation with the

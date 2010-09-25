@@ -104,7 +104,7 @@ def check_all_py_files():
         additional_args = ['--ignored-classes=numpy']
 
     result = []
-    #result.append(check('checking module: ', 'pybufr_ecmwf', additional_args))
+    result.append(check('checking module: ', 'pybufr_ecmwf', additional_args))
     result.append(check('checking script: ', 'clean.py', additional_args))
     result.append(check('checking script: ', 'port_2to3.py', additional_args))
     result.append(check('checking script: ', 'setup.py', additional_args))
