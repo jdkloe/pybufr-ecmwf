@@ -13,6 +13,21 @@ used for decoding a BUFR message.
 #
 # License: GPL v2.
 
+#  #[ pylint exceptions
+#
+# the whole point of this example program is to demonstrate that
+# using the bare interface costs an awfull lot of lines of code to
+# get things working properly.
+# Therefore I don't want pylint to start complaining about using
+# too many lines or variables here, so disable these warnings:
+#
+# disable warning: "Too many local variables"
+# pylint: disable-msg=R0914
+#
+# disable warning: "Too many statements"
+# pylint: disable-msg=R0915
+#
+#  #]
 #  #[ imported modules
 import os          # operating system functions
 import sys         # system functions

@@ -71,25 +71,17 @@ def encoding_example(output_bufr_file):
     bufr = pybufr_ecmwf.BUFRInterfaceECMWF(max_nr_descriptors=20)
     
     # fill sections 0, 1, 2 and 3
-    bufr_code_centre          =  98 # ECMWF
-    bufr_obstype              =   3 # sounding
-    bufr_subtype_l1b          = 251 # L1B
-    bufr_table_local_version  =   1
-    bufr_table_master         =   0
-    bufr_table_master_version =  15
-    bufr_code_subcentre       =   0 # L2B processing facility
-    bufr_compression_flag     =   0 #  64=compression/0=no compression
-    
     num_subsets = 4
-    bufr.fill_sections_0123(bufr_code_centre,
-                            bufr_obstype,
-                            bufr_subtype_l1b,
-                            bufr_table_local_version,
-                            bufr_table_master,
-                            bufr_table_master_version,
-                            bufr_code_subcentre,
-                            num_subsets,
-                            bufr_compression_flag)
+    bufr.fill_sections_0123(bufr_code_centre =  98, # ECMWF
+                            bufr_obstype     =   3, # sounding
+                            bufr_subtype     = 251, # L1B
+                            bufr_table_local_version  =  1,
+                            bufr_table_master         =  0,
+                            bufr_table_master_version = 15,
+                            bufr_code_subcentre = 0, # L2B processing facility
+                            num_subsets = num_subsets,
+                            bufr_compression_flag = 0)
+    # 64=compression/0=no compression
 
     # determine information from sections 0123 to construct the BUFR table
     # names expected by the ECMWF BUFR library and create symlinks to the
