@@ -126,12 +126,12 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         # since this was done already above, before starting the
         # sequence of unit tests, and since we omit the verbose
         # option, this should be silent
-        bufr = BUFRInterfaceECMWF()
+        bufrobj = BUFRInterfaceECMWF()
         
         # check its type
-        checkbufr1 = isinstance(bufr, BUFRInterfaceECMWF)
+        checkbufr1 = isinstance(bufrobj, BUFRInterfaceECMWF)
         self.assertEqual(checkbufr1, True)
-        checkbufr2 = isinstance(bufr, int)
+        checkbufr2 = isinstance(bufrobj, int)
         self.assertEqual(checkbufr2, False)
         
         # check that a call with a non-defined keyword fails
@@ -157,7 +157,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         master_table_version =   0 # = ksec1(15)
         edition_number       =   3 # =  ksec0( 3)
         master_table_number  =   0 # = ksec1(14)
-        bufr = BUFRInterfaceECMWF()
+        bufrobj = BUFRInterfaceECMWF()
         
         ecmwf_bufr_tables_dir = helpers.get_tables_dir()
         if not os.path.exists(ecmwf_bufr_tables_dir):
@@ -165,13 +165,14 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
             raise IOError
         
         (btable, dtable) = \
-                 bufr.get_expected_ecmwf_bufr_table_names(ecmwf_bufr_tables_dir,
-                                                          center,
-                                                          subcenter,
-                                                          local_version,
-                                                          master_table_version,
-                                                          edition_number,
-                                                          master_table_number)
+                 bufrobj.get_expected_ecmwf_bufr_table_names(\
+                             ecmwf_bufr_tables_dir,
+                             center,
+                             subcenter,
+                             local_version,
+                             master_table_version,
+                             edition_number,
+                             master_table_number)
 
         # print "tabel name B: ", btable
         # print "tabel name D: ", dtable
@@ -336,17 +337,23 @@ class CheckRawBUFRFile(unittest.TestCase):
 
 class CheckBufr(unittest.TestCase):
     #  #[
+    """
+    a class to check the bufr.py file
+    """
     def test_singleton(self):
         #  #[
-        a = bufr.Singleton(1)
-        b = bufr.Singleton(1)
-        self.assertEqual(a is b,True)
+        """
+        check the implementation of the singletom class in bufr.py
+        """
+        aaa = bufr.Singleton(1)
+        bbb = bufr.Singleton(1)
+        self.assertEqual(aaa is bbb, True)
 
-        repr_a = repr(a)
-        del(a)
-        c = bufr.Singleton(1)
-        repr_c = repr(c)
-        self.assertEqual(repr_a,repr_c)
+        repr_aaa = repr(aaa)
+        del(aaa)
+        ccc = bufr.Singleton(1)
+        repr_ccc = repr(ccc)
+        self.assertEqual(repr_aaa, repr_ccc)
         
         #  #]
     #  #]

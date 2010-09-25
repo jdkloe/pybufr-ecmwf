@@ -22,7 +22,7 @@ sys.path.append("pybufr_ecmwf")
 # /usr/lib/python2.6/site-packages/pylint/lint.py
 # for examples on how to run the checkers manually
 
-EX_PROGR_PATH = 'pybufr_ecmwf/example_programs'
+EX_PROGR_PATH = 'example_programs'
 EX_FILES = ['example_for_using_bufrinterface_ecmwf_for_decoding.py',
             'example_for_using_bufrinterface_ecmwf_for_encoding.py',
             'example_for_using_ecmwfbufr_for_decoding.py',
@@ -104,10 +104,11 @@ def check_all_py_files():
         additional_args = ['--ignored-classes=numpy']
 
     result = []
-    result.append(check('checking module: ', 'pybufr_ecmwf', additional_args))
+    #result.append(check('checking module: ', 'pybufr_ecmwf', additional_args))
     result.append(check('checking script: ', 'clean.py', additional_args))
     result.append(check('checking script: ', 'port_2to3.py', additional_args))
     result.append(check('checking script: ', 'setup.py', additional_args))
+    result.append(check('checking script: ', 'unittests.py', additional_args))
     result.append(check('checking script: ', 'pylint/run_pylint.py',
                         additional_args))
     # note: pylint_numpy_test.py is omitted here on purpose.
