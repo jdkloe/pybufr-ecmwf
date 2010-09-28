@@ -35,7 +35,7 @@ class RawBUFRFile:
     #  #[
     """
     a class to read and write the binary BUFR messages from and
-    to file. Is is ntended to replace the pbio routines from the ECMWF
+    to file. Is is intended to replace the pbio routines from the ECMWF
     library which for some obscure reason cannot be interfaced
     easily to python using the f2py tool.
     """

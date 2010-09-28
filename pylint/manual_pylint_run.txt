@@ -1,0 +1,5 @@
+To do a manual run of pylint, using my custom rc file, use this command:
+
+pylint --rcfile=pylint/pylintrc --ignored-classes=numpy file.py 
+
+(added this little text file mainly for my own convenience. JK)

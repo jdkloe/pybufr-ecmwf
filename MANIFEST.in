@@ -1,11 +1,12 @@
 include *.txt
+include *.sh
 include pybufr_ecmwf/alt_bufr_tables/*.TXT
 include *.py
 include */*.py
 include */*/*.py
 include setup.*
-include pybufr_ecmwf/testdata/*.BUFR
-include pybufr_ecmwf/expected_test_outputs/Check*
+include example_programs/testdata/*.BUFR
+include example_programs/expected_test_outputs/Check*
 
 # dirs to be excluded
 #prune dist

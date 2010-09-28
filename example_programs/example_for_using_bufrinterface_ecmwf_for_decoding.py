@@ -126,15 +126,15 @@ if len(sys.argv)<2:
     print 'please give a BUFR file as first argument'
     sys.exit(1)
     
-input_bufr_file = sys.argv[1]
+INP_BUFR_FILE = sys.argv[1]
 
 print "-"*50
 print "BUFR decoding example"
 print "-"*50
 
-BUFRMSG = decoding_example(input_bufr_file)
+BUFRMSG = decoding_example(INP_BUFR_FILE)
 display_results(BUFRMSG)
-print 'succesfully decoded data from file: ',input_bufr_file
+print 'succesfully decoded data from file: ', INP_BUFR_FILE
 
 print "-"*50
 print "done"

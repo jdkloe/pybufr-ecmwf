@@ -23,83 +23,94 @@ from pybufr_ecmwf import RawBUFRFile
 
 def raw_file_reading_example(input_bufr_file):
     #  #[
+    """
+    example for reading a BUFR message
+    """
+
     # get an instance of the RawBUFRFile class
-    BF = RawBUFRFile()
+    rbf = RawBUFRFile()
     
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
     # an array of pointers to the start and end of each BUFR message
-    BF.open(input_bufr_file, 'r')
+    rbf.open(input_bufr_file, 'r')
     
     # print the internal data of the class instance
-    BF.print_properties(prefix = "RawBUFRFile (opened for reading)")
+    rbf.print_properties(prefix = "RawBUFRFile (opened for reading)")
 
     # print the number of BUFR messages in the file
-    NUM_MSGS = BF.get_num_bufr_msgs()
-    print "This file contains: ", NUM_MSGS, " BUFR messages."
+    num_msgs = rbf.get_num_bufr_msgs()
+    print "This file contains: ", num_msgs, " BUFR messages."
 
     # sequentially read the raw (undecoded) BUFR messages from the
     # class instance
-    msg1 = BF.get_next_raw_bufr_msg() # should return proper data
-    msg2 = BF.get_next_raw_bufr_msg() # should return corrupted data
-    msg3 = BF.get_next_raw_bufr_msg() # should return corrupted data
+    msg1 = rbf.get_next_raw_bufr_msg() # should return proper data
+    msg2 = rbf.get_next_raw_bufr_msg() # should return corrupted data
+    msg3 = rbf.get_next_raw_bufr_msg() # should return corrupted data
     print "a warning is expected here:"
-    msg4 = BF.get_next_raw_bufr_msg() # returns with None
+    # msg4 =
+    rbf.get_next_raw_bufr_msg() # returns with None
 
-    for i in range(1, NUM_MSGS+1):
+    for i in range(1, num_msgs+1):
         # read a selected raw BUFR message from the class instance
-        raw_data = BF.get_raw_bufr_msg(i)
+        raw_data = rbf.get_raw_bufr_msg(i)
         print "msg ", i, " got ", len(raw_data), " words"
 
     # close the file
-    BF.close()
+    rbf.close()
     
     # delete the class instance
-    del(BF)
+    del(rbf)
     return (msg1, msg2, msg3)
     #  #]
 def raw_file_writing_example(output_bufr_file, msg1, msg2):
     #  #[
+    """
+    example for writing a BUFR message
+    """
     
     # get an instance of the RawBUFRFile class
-    BF1 = RawBUFRFile()
+    bf1 = RawBUFRFile()
     
     # open the test file for writing
-    BF1.open(output_bufr_file, 'w')
+    bf1.open(output_bufr_file, 'w')
     
     # write a few raw (encoded) BUFR messages
-    BF1.write_raw_bufr_msg(msg1)
-    BF1.write_raw_bufr_msg(msg2)
+    bf1.write_raw_bufr_msg(msg1)
+    bf1.write_raw_bufr_msg(msg2)
 
     # print the internal data of the class instance
-    BF1.print_properties(prefix = "RawBUFRFile (opened for writing)")
+    bf1.print_properties(prefix = "RawBUFRFile (opened for writing)")
     
     # close the file
-    BF1.close()
+    bf1.close()
     
     # delete the class instance
-    del(BF1)
+    del(bf1)
     #  #]
 def raw_file_appending_example(output_bufr_file, msg3):
     #  #[
+    """
+    example for appending a BUFR message
+    """
     
     # get an instance of the RawBUFRFile class
-    BF2 = RawBUFRFile()
+    bf2 = RawBUFRFile()
     
     # open the test file for appending
-    BF2.open(output_bufr_file, 'a')
+    bf2.open(output_bufr_file, 'a')
     
     # write a third raw (encoded) BUFR messages
-    BF2.write_raw_bufr_msg(msg3)
+    bf2.write_raw_bufr_msg(msg3)
     
     # print the internal data of the class instance
-    BF2.print_properties(prefix = "RawBUFRFile2 (opened for appending)")
+    bf2.print_properties(prefix = "RawBUFRFile2 (opened for appending)")
     
     # close the file
-    BF2.close()
+    bf2.close()
 
     # delete the class instance
-    del(BF2)
+    del(bf2)
     #  #]
 
 #  #[ run the example
@@ -107,29 +118,29 @@ if len(sys.argv)<3:
     print 'please give 2 BUFR files as argument'
     sys.exit(1)
 
-input_bufr_file  = sys.argv[1]
-output_bufr_file = sys.argv[2]
+INP_BUFR_FILE = sys.argv[1]
+OUTP_BUFR_FILE = sys.argv[2]
 # make sure the outputfile does not yet exist
-if (os.path.exists(output_bufr_file)):
-    os.remove(output_bufr_file)
+if (os.path.exists(OUTP_BUFR_FILE)):
+    os.remove(OUTP_BUFR_FILE)
 
 print "-"*50
 print "reading example"
 print "-"*50
 
-(msg1, msg2, msg3) = raw_file_reading_example(input_bufr_file)
+(MSG1, MSG2, MSG3) = raw_file_reading_example(INP_BUFR_FILE)
 
 print "-"*50
 print "writing example"
 print "-"*50
 
-raw_file_writing_example(output_bufr_file, msg1, msg2)
+raw_file_writing_example(OUTP_BUFR_FILE, MSG1, MSG2)
 
 print "-"*50
 print "appending example"
 print "-"*50
 
-raw_file_appending_example(output_bufr_file, msg3)
+raw_file_appending_example(OUTP_BUFR_FILE, MSG3)
 
 print "-"*50
 print "done"
