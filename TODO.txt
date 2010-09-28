@@ -1,0 +1,78 @@
+---------------------------
+todo: fix these test cases for the /bufr_count_msgs.py tool
+
+# tested on these bufr files:
+# /nobackup/users/kloedej/BUFR_test_files
+# ascat/* [work fine]
+# qscat/* [work fine]
+# ers12/* [fails]
+# MSS*    [fails]
+# synop/* [fails for one case, works fine for the other]
+
+#setenv PYTHONPATH ../
+# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ascat/ascat_20100920_003901_metopa_20335_eps_o_125_ovw.l2_bufr
+# 545
+# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ascat/ascat_20100920_003901_metopa_20335_eps_o_250_ovw.l2_bufr
+# 204
+# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr
+# 545
+# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/qscat/QS_D07060_S1821_E2002_B4009191_025.genws
+# 1624
+
+# incorrecte output:
+# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ers12/pscat2000013121.pp
+# 0
+# strings /nobackup/users/kloedej/BUFR_test_files/ers12/pscat2000013121.pp  | grep BUFR | wc -l
+# 22
+
+# incorrecte output:
+# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/MSS_S327121011_200_PAAL31_EGRR_231200
+# 0
+# strings /nobackup/users/kloedej/BUFR_test_files/MSS_S327121011_200_PAAL31_EGRR_231200  | grep BUFR | wc -l
+# 1
+
+# incorrecte output:
+# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0001.bin 
+# 1
+# strings /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0001.bin | grep BUFR | wc -l
+# 8
+
+# incorrecte output:
+# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0082.bin 
+# 1
+# strings /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0082.bin | grep BUFR | wc -l
+# 10
+
+# correct
+# bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/synop/greek.gts.bufr
+# 64
+
+# incorrect
+# bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/synop/greek.gts.bufr.gts 
+# 0 [moet zijn: 63]
+# strings /nobackup/users/kloedej/BUFR_test_files/synop/greek.gts.bufr.gts | grep BUFR | wc -l
+# 63
+
+---------------------------
+todo: add a little script to allow easy compilation and use of the
+      synop2bufr tool
+
+This sequence of commands works for me:
+
+csh
+cd pybufr_ecmwf/ecmwf_bufrtables
+setenv BUFR_TABLES `pwd`
+ln -s B_default.TXT B0000000000000014000.TXT
+ln -s D_default.TXT D0000000000000014000.TXT
+cd ../ecmwf_bufr_lib/bufr_000385/synop2bufr/
+setenv PP_BASE `pwd`
+./synop2bufr -i data/greek.gts -o data/greek.gts.bufr -c 96
+
+this generates an example file greek.gts.bufr
+from the provided greek.gts example input file.
+
+Note that the provided file greek.gts.bufr.gts
+is the same data converted to BUFR, but now the gts header is still 
+present in front of each BUFr message, which makes the file a bit larger.
+---------------------------
+
