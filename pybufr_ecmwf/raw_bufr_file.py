@@ -203,6 +203,91 @@ class RawBUFRFile:
 
                 if (start_pos != -1):
                     inside_message = True
+                else:
+                    # file end was not really reached
+                    file_end_reached = True
+
+                    
+            if (inside_message and not file_end_reached):
+                # try to find a txt_end string
+                end_pos = self.data.find(txt_end, search_pos)
+                if (self.verbose):
+                    print "search_pos = ", search_pos, \
+                          " end_pos = ", end_pos, \
+                          " txt = ", txt_end
+
+                if (end_pos != -1):
+                    inside_message = False
+
+                    # point to the end of the four sevens
+                    # (in slice notation, so the bufr msg data
+                    # can be adressed as data[start_pos:end_pos])
+                    end_pos = end_pos+4
+                    
+                    # step over the "7777" string to prepare for searching the
+                    # start of the next message
+                    search_pos = end_pos
+
+                    # store the found message
+                    self.list_of_bufr_pointers.append((start_pos, end_pos))
+                else:
+                    file_end_reached = True
+
+        # count howmany we found
+        self.nr_of_bufr_messages = len(self.list_of_bufr_pointers)
+        #  #]
+    def split_simple(self):
+        #  #[
+        """
+        scan a BUFR file to detect the start and end locations of the
+        separate BUFR messages. Note that a BUFR file may contain
+        additional junk, like GTS headers and such. The code should be
+        robust enough to handle this.
+        """
+        # NOTE: the assumption made here that BUFR messages are glued
+        # together without gaps is not always true!
+        # Especially data coming from GTS systems often have GTS-headers
+        # attached in front of each individual BUFR message (and this
+        # is allowed, so the newer split routine defined above was
+        # added to handle this)
+        
+        # Purpose: scans the file for the string "BUFR"
+        # which indicate the start of a new BUFR message,
+        # counts the nr of BUFR messages, and stores file
+        # pointers to the start of each BUFR message.
+
+        # safety catch
+        if (self.filesize == 0):
+            self.nr_of_bufr_messages = 0
+            return
+
+        # note: this very simpple search algorithm might accidently
+        # find the string "7777" in the middle of the data of a BUFR message.
+        # To check on this, make sure the distance between the end of a
+        # message and the start of a message if either 0 or 2 bytes
+        # (this may happen if the file is padded with zeros to contain
+        #  a multiple of 4 bytes)
+        # Do the same check on the end of the file.
+
+        inside_message   = False
+        file_end_reached = False
+        search_pos = 0
+        start_pos  = -1
+        end_pos    = -1
+        txt_start  = "BUFR"
+        txt_end    = "7777"
+        while not file_end_reached:
+
+            if (not inside_message):
+                # try to find a txt_start string
+                start_pos = self.data.find(txt_start, search_pos)
+                if (self.verbose):
+                    print "search_pos = ", search_pos, \
+                          " start_pos = ", start_pos, \
+                          " txt = ", txt_start
+
+                if (start_pos != -1):
+                    inside_message = True
 
                     # sanity check, see if distance to the previous BUFR
                     # message is no more than 4 bytes
@@ -282,7 +367,7 @@ class RawBUFRFile:
                     end_pos = end_pos+4
                     
                     # step over the "7777" string to prepare for searching the
-                    # end of the message
+                    # end start of the next message
                     search_pos = end_pos
 
                     # store the found message
