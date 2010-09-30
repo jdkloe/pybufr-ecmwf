@@ -728,8 +728,40 @@ class BUFRInterfaceECMWF:
             raise EcmwfBufrLibError(errtxt)
         return self.ksup[4]
         #  #]
+    def get_value(self, i, j):
+        #  #[ get the i th value from subset j
+        """
+        a helper function to request the i th value from subset j
+        for the current BUFR message
+        """
+        if (not self.data_decoded):
+            errtxt = "Sorry, retrieving values is only possible after "+\
+                     "a BUFR message has been decoded with a call to "+\
+                     "decode_data"
+            raise EcmwfBufrLibError(errtxt)
+
+        nsubsets  = self.get_num_subsets()
+        nelements = self.get_num_elements()
+        if i > nelements-1:
+            errtxt = "Sorry, this BUFR message has only "+str(nelements)+\
+                     " elements per subset, so requesting index "+\
+                     str(i)+" is not possible (remember the arrays are "+\
+                     "counted starting with 0)"
+            raise EcmwfBufrLibError(errtxt)
+
+        if j > nsubsets-1:
+            errtxt = "Sorry, this BUFR message has only "+str(nsubsets)+\
+                     " subsets, so requesting subset "+\
+                     str(j)+" is not possible (remember the arrays are "+\
+                     "counted starting with 0)"
+            raise EcmwfBufrLibError(errtxt)
+            
+        selection = self.max_nr_expanded_descriptors*j + i
+        value = self.values[selection]
+        return value
+        #  #]
     def get_values(self, i):
-        #  #[ get the i th number from each subset as an array
+        #  #[ get the i th value from each subset as an array
         """
         a helper function to request the i th value from each subset
         for the current BUFR message as an array

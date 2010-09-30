@@ -30,6 +30,7 @@ import os
 #import sys
 import glob
 from pybufr_ecmwf import RawBUFRFile
+from pybufr_ecmwf import BUFRInterfaceECMWF
 #  #]
 
 class ProgrammingError(Exception):
@@ -1119,6 +1120,45 @@ class BUFRFile(RawBUFRFile):
     #  ==>list-of-bufr-msgs = []
     #  #]
 
+# for now, only reading is implemented in this BUFR class
+class BUFR:
+    def __init__(self,input_bufr_file):
+        # get an instance of the RawBUFRFile class
+        self.rbf = RawBUFRFile()
+    
+        # open the file for reading, count nr of BUFR messages in it
+        # and store its content in memory, together with
+        # an array of pointers to the start and end of each BUFR message
+        self.rbf.open(input_bufr_file, 'r')
+    
+        # extract the number of BUFR messages from the file
+        self.num_msgs = self.rbf.get_num_bufr_msgs()
+
+    def get_next_msg(self):
+        raw_msg = self.rbf.get_next_raw_bufr_msg()
+        self.bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg,
+                                           max_nr_expanded_descriptors=44)
+        self.bufr_obj.decode_sections_012()
+        self.bufr_obj.setup_tables()
+        self.bufr_obj.decode_data()
+
+    def get_num_subsets(self):
+        return self.bufr_obj.get_num_subsets()
+
+    def get_num_elements(self):
+        return self.bufr_obj.get_num_elements()
+
+    def get_value(self,descr_nr,subset_nr):
+        return self.bufr_obj.get_value(descr_nr,subset_nr)
+
+    def get_values(self,descr_nr):
+        return self.bufr_obj.get_values(descr_nr)
+        
+        
+    def close(self):
+        # close the file
+        self.rbf.close()
+    
 if __name__ == "__main__":
     #  #[ test program
     print "Starting test program:"

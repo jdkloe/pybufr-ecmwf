@@ -23,5 +23,5 @@ except ImportError as imperr:
 from pybufr_ecmwf.bufr_template import *
 from pybufr_ecmwf.raw_bufr_file import *
 from pybufr_ecmwf.bufr_interface_ecmwf import *
-from pybufr_ecmwf import bufr
+from pybufr_ecmwf.bufr import *
 

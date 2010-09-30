@@ -25,7 +25,6 @@ in the ECMWF BUFR library to work in a portable way)
 #  #]
 #  #[ imported modules
 import os          # operating system functions
-import sys         # system functions
 import numpy as np # import numerical capabilities
 import struct      # allow converting c datatypes and structs
 
@@ -158,9 +157,13 @@ class RawBUFRFile:
         # then erase all settings
         self.__init__()
         #  #]
-    def get_expected_msg_size(self,start_location):
+    def get_expected_msg_size(self, start_location):
         #  #[
-
+        """ a routine to extract the expected message size from
+        a BUFR message, needed to verify which start tag BUFR matches
+        which end tag 7777. It also helps in excluding corrupted
+        and falsely identified messages.
+        """
         # According to ECMWF's BUFR User Guide:
         # http://www.ecmwf.int/products/data/software/bufr_user_guide.pdf
         # the first 8 bytes of a BUFR message should contain:
@@ -193,12 +196,12 @@ class RawBUFRFile:
         # 4096 bytes by this weird fileformat before trying to use them.
         
         if (self.verbose):
-            print 'getting message size of start location: ',start_location
+            print 'getting message size of start location: ', start_location
         try:
             raw_edition_number = self.data[start_location+8-1]
             edition_number = ord(raw_edition_number)
             if (self.verbose):
-                print 'edition_number = ',edition_number
+                print 'edition_number = ', edition_number
         except IndexError:
              # 0 signals this is not a valid BUFR msg, might be a false
              # start BUFR string, or a corrupted or truncated file
@@ -209,7 +212,7 @@ class RawBUFRFile:
         dataformat = ">1i"
 
         try:
-            if edition_number>1:
+            if edition_number > 1:
                 # get bytes 5 to 7 which should hold the total length of the
                 # current BUFR message
                 raw_bytes = chr(0)+self.data[start_location+5-1:
@@ -280,7 +283,7 @@ class RawBUFRFile:
         if msg_size > 15000:
             print "WARNING: by convention BUFR messages should not be larger"
             print "         than 15kb to allow transmission over the GTS."
-            print "         Size of current message is: ",msg_size," bytes"
+            print "         Size of current message is: ", msg_size, " bytes"
 
         return msg_size
         #  #]        
@@ -346,7 +349,7 @@ class RawBUFRFile:
         for start_location in list_of_start_locations:
             expected_msg_size = self.get_expected_msg_size(start_location)
             if (self.verbose):
-                print 'expected_msg_size = ',expected_msg_size
+                print 'expected_msg_size = ', expected_msg_size
             expected_msg_end_location = start_location + expected_msg_size - 4
             if expected_msg_end_location in list_of_end_locations:
                 if (self.verbose):
@@ -363,8 +366,8 @@ class RawBUFRFile:
         self.nr_of_bufr_messages = len(self.list_of_bufr_pointers)
 
         if (self.verbose):
-            print "list_of_start_locations = ",list_of_start_locations
-            print "list_of_end_locations   = ",list_of_end_locations
+            print "list_of_start_locations = ", list_of_start_locations
+            print "list_of_end_locations   = ", list_of_end_locations
 
         #  #]
     def split_simple(self):
