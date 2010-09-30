@@ -29,13 +29,6 @@ import tarfile     # handle tar archives
 import shutil      # portable file copying functions
 import subprocess  # support running additional executables
 import stat        # handling of file stat data
-
-# this will not work. It introduces a circular dependency
-# because build_interface is inside the module dir
-#import pybufr_ecmwf
-
-#from pybufr_ecmwf.helpers import NotYetImplementedError, ProgrammingError, \
-#     NetworkError, LibraryBuildError, InterfaceBuildError
 #  #]
 #  #[ exception definitions
 class NetworkError(Exception):

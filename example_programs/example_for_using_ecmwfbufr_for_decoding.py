@@ -39,8 +39,6 @@ from pybufr_ecmwf import RawBUFRFile
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 
-# import some help routines
-from pybufr_ecmwf import helpers
 #  #]
 
 def decoding_example(input_bufr_file):

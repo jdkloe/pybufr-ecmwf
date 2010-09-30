@@ -16,10 +16,6 @@ from pybufr_ecmwf.bufr_template import *
 from pybufr_ecmwf.raw_bufr_file import *
 from pybufr_ecmwf.bufr_interface_ecmwf import *
 from pybufr_ecmwf import bufr
-from pybufr_ecmwf import helpers
-
-# is this one needed as well?
-#from build_interface import *
 
 # allow this one to fail, because I wish to use the helpers.py functionality
 # from the port_2to3.py script, which may be used before doing the actual

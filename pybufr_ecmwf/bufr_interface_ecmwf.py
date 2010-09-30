@@ -398,11 +398,6 @@ class BUFRInterfaceECMWF:
                      "with a call to decode_sections_012"
             raise EcmwfBufrLibError(errtxt)
 
-        # dont use this! This would need an import of helpers
-        # which in turn imports pybufr_ecmwf so would give a circular
-        # dependency ...
-        #ecmwf_bufr_tables_dir = helpers.get_tables_dir()
-
         this_path = os.path.split(__file__)[0]
         ecmwf_bufr_tables_dir = os.path.join(this_path, "ecmwf_bufrtables")
         if not os.path.exists(ecmwf_bufr_tables_dir):
