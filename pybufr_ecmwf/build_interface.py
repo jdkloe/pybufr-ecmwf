@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+"""
+This module implements building the ECMWF BUFR library and creation of
+a python interface around the BUFR library provided by
+ECMWF to allow reading and writing the WMO BUFR file standard.
+"""
 
 #  #[ documentation
-#
-# This module implements building the ECMWF BUFR library and creation of
-# a python interface around the BUFR library provided by
-# ECMWF to allow reading and writing the WMO BUFR file standard.
 #
 # Note about the use of the "#  #[" and "#  #]" comments:
 #   these are folding marks for my favorite editor, emacs, combined with its
@@ -22,16 +23,123 @@
 #  #]
 #  #[ imported modules
 import os          # operating system functions
-# import sys         # system functions
 import re          # regular expression handling
 import glob        # allow for filename expansion
 import tarfile     # handle tar archives
 import shutil      # portable file copying functions
-# import some home made helper routines
-from helpers import run_shell_command, rem_quotes, ensure_permissions
-from helpers import NotYetImplementedError, ProgrammingError, \
-     NetworkError, LibraryBuildError, InterfaceBuildError
+import subprocess  # support running additional executables
+import stat        # handling of file stat data
+
+# this will not work. It introduces a circular dependency
+# because build_interface is inside the module dir
+#import pybufr_ecmwf
+
+#from pybufr_ecmwf.helpers import NotYetImplementedError, ProgrammingError, \
+#     NetworkError, LibraryBuildError, InterfaceBuildError
 #  #]
+#  #[ exception definitions
+class NetworkError(Exception):
+    """ an exception to indicate that a network problem occurred """
+    pass
+class LibraryBuildError(Exception):
+    """ an exception to indicate that building the ECMWF BUFR
+    library has failed """
+    pass
+class InterfaceBuildError(Exception): 
+    """ an exception to indicate that building the fortran-to-python
+    interface has failed """
+    pass
+class ProgrammingError(Exception):
+    """ an exception to indicate that a progromming error seems
+    present in the code (this should be reported to the author) """
+    pass
+
+#  #]
+
+# some helper functions
+def rem_quotes(txt):
+    #  #[
+    """ a little helper function to remove quotes from a string."""
+    if txt is None:
+        return txt
+    elif txt[0] == "'" and txt[-1] == "'":
+        return txt[1:-1]
+    elif txt[0] == '"' and txt[-1] == '"':
+        return txt[1:-1]
+    else:
+        return txt
+    #  #]
+def ensure_permissions(filename, mode):
+    #  #[ ensure permissions for "world"
+    """ a little routine to ensure the permissions for the
+        given file are as expected """
+    file_stat = os.stat(filename)
+    current_mode = stat.S_IMODE(file_stat.st_mode)
+    if mode == 'r':
+        new_mode = current_mode | int("444", 8)
+    if mode == 'w':
+        new_mode = current_mode | int("222", 8)
+    if mode == 'x':
+        new_mode = current_mode | int("111", 8)
+    os.chmod(filename, new_mode)
+    #  #]
+def run_shell_command(cmd, libpath = None, catch_output = True,
+                      module_path = './', verbose = True):
+    #  #[
+    """ a wrapper routine around subprocess.Popen intended
+    to make it a bit easier to call this functionality.
+    Options:
+    -libpath: add this path to the LD_LIBRARY_PATH environment variable
+     before executing the subprocess
+    -catch_output: if True, this function returns 2 lists of text lines
+     containing the stdout and stderr of the executed subprocess
+    -verbose: give some feedback to the user while executing the
+     code (usefull for debugging)"""
+
+    # get the list of already defined env settings
+    env = os.environ
+    if (libpath):
+        # add the additional env setting
+        envname = "LD_LIBRARY_PATH"
+        if (env.has_key(envname)):
+            env[envname] = env[envname] + ":" + libpath
+        else:
+            env[envname] = libpath
+
+    if (env.has_key('PYTHONPATH')):
+        env['PYTHONPATH'] = env['PYTHONPATH']+':'+module_path
+    else:
+        env['PYTHONPATH'] = module_path
+            
+    if (verbose):
+        print "Executing command: ", cmd
+        
+    if (catch_output):
+        # print 'env[PYTHONPATH] = ',env['PYTHONPATH']
+        subpr = subprocess.Popen(cmd,
+                                 shell  = True,
+                                 env    = env,
+                                 stdout = subprocess.PIPE,
+                                 stderr = subprocess.PIPE)
+        
+        # wait until the child process is done
+        # subpr.wait() # seems not necessary when catching stdout and stderr
+            
+        lines_stdout = subpr.stdout.readlines()
+        lines_stderr = subpr.stderr.readlines()
+        
+        #print "lines_stdout: ", lines_stdout
+        #print "lines_stderr: ", lines_stderr
+        
+        return (lines_stdout, lines_stderr)
+    
+    else:
+        subpr = subprocess.Popen(cmd, shell = True, env = env)
+        
+        # wait until the child process is done
+        subpr.wait()
+        return
+    #  #]
 
 class InstallBUFRInterfaceECMWF:
     #  #[
@@ -406,7 +514,7 @@ class InstallBUFRInterfaceECMWF:
                       self.preferred_fortran_compiler
                 print "valid options are: ", \
                       ", ".join(s for s in implementedfortran_compilers)
-                raise NotYetImplementedError
+                raise NotImplementedError
                 
             if (self.preferred_fortran_compiler == "custom"):
                 if (self.custom_fc_present):
@@ -493,7 +601,7 @@ class InstallBUFRInterfaceECMWF:
                       self.preferred_c_compiler
                 print "valid options are: ", \
                       ", ".join(s for s in implementedc_compilers)
-                raise NotYetImplementedError
+                raise NotImplementedError
 
             if (self.preferred_c_compiler == "custom"):
                 if (self.custom_cc_present):
@@ -713,9 +821,9 @@ class InstallBUFRInterfaceECMWF:
         # (easy to add if we woould need it)
 
         # a command to generate an archive (*.a) file
-        ar = "ar"
+        arcmd = "ar"
         # a command to generate an index of an archive file
-        rl = "/usr/bin/ranlib"
+        rlcmd = "/usr/bin/ranlib"
 
         # Unfortunately, the config files supplied with this library seem
         # somewhat outdated and sometimes incorrect, or incompatible with
@@ -751,18 +859,18 @@ class InstallBUFRInterfaceECMWF:
         print "Using: "+ccmp+" as c compiler"
 
         print "Creating ECMWF-BUFR config file: ", fullname_config_file
-        fd = open(fullname_config_file, 'wt')
-        fd.write("#   Generic configuration file for linux.\n")
-        fd.write("AR         = "+ar+"\n")
-        fd.write("ARFLAGS    = rv\n")
-        fd.write("CC         = "+ccmp+"\n")
-        fd.write("CFLAGS     = -O "+cflags+"\n")
-        fd.write("FASTCFLAGS = "+cflags+"\n")
-        fd.write("FC         = "+fcmp+"\n")
-        fd.write("FFLAGS     = "+fflags+"\n")
-        fd.write("VECTFFLAGS = "+fflags+"\n")
-        fd.write("RANLIB     = "+rl+"\n")
-        fd.close()
+        cfd = open(fullname_config_file, 'wt')
+        cfd.write("#   Generic configuration file for linux.\n")
+        cfd.write("AR         = "+arcmd+"\n")
+        cfd.write("ARFLAGS    = rv\n")
+        cfd.write("CC         = "+ccmp+"\n")
+        cfd.write("CFLAGS     = -O "+cflags+"\n")
+        cfd.write("FASTCFLAGS = "+cflags+"\n")
+        cfd.write("FC         = "+fcmp+"\n")
+        cfd.write("FFLAGS     = "+fflags+"\n")
+        cfd.write("VECTFFLAGS = "+fflags+"\n")
+        cfd.write("RANLIB     = "+rlcmd+"\n")
+        cfd.close()
         
         # create a backup copy in the ecmwf_bufr_lib_dir
         source      = fullname_config_file
@@ -815,13 +923,13 @@ class InstallBUFRInterfaceECMWF:
         
         # remove some excess files from the bufr tables directory
         # that we don't need any more (symlinks, tools)
-        files = os.listdir(table_dir)
-        for f in files:
-            fullname = os.path.join(table_dir, f)
+        tdfiles = os.listdir(table_dir)
+        for tdfile in tdfiles:
+            fullname = os.path.join(table_dir, tdfile)
             if os.path.islink(fullname):
                 os.unlink(fullname)
             else:
-                ext = os.path.splitext(f)[1]
+                ext = os.path.splitext(tdfile)[1]
                 if not ext.upper() == ".TXT":
                     os.remove(fullname)
                 else:
@@ -830,36 +938,36 @@ class InstallBUFRInterfaceECMWF:
         # select the newest set of tables and symlink them
         # to a default name
         pattern = os.path.join(table_dir,'B0*098*.TXT')
-        B_tables = glob.glob(pattern)
+        b_tables = glob.glob(pattern)
         # print 'pattern = ',pattern
-        # print 'B_tables = ',B_tables
+        # print 'b_tables = ',b_tables
         
-        if len(B_tables)>0:
-            B_tables.sort()
+        if len(b_tables)>0:
+            b_tables.sort()
             # assume the highest numbered table is the most recent one
-            newest_B_table = B_tables[-1]
-            bt_path,bt_file = os.path.split(newest_B_table)
-            bt_base,bt_ext = os.path.splitext(bt_file)
+            newest_b_table = b_tables[-1]
+            bt_file = os.path.split(newest_b_table)[1]
+            bt_base, bt_ext = os.path.splitext(bt_file)
             newest_table_code = bt_base[1:]
             ct_file = 'C'+newest_table_code+bt_ext
             dt_file = 'D'+newest_table_code+bt_ext
-            newest_C_table = os.path.join(table_dir,ct_file)
-            newest_D_table = os.path.join(table_dir,dt_file)
+            newest_c_table = os.path.join(table_dir, ct_file)
+            newest_d_table = os.path.join(table_dir, dt_file)
             
-            default_B_table = os.path.join(table_dir,'B_default.TXT')
-            default_C_table = os.path.join(table_dir,'C_default.TXT')
-            default_D_table = os.path.join(table_dir,'D_default.TXT')
+            default_b_table = os.path.join(table_dir, 'B_default.TXT')
+            default_c_table = os.path.join(table_dir, 'C_default.TXT')
+            default_d_table = os.path.join(table_dir, 'D_default.TXT')
             
-            # print 'B: newest ',newest_B_table,' default ',default_B_table
-            # print 'C: newest ',newest_C_table,' default ',default_C_table
-            # print 'D: newest ',newest_D_table,' default ',default_D_table
+            # print 'B: newest ',newest_b_table,' default ',default_b_table
+            # print 'C: newest ',newest_c_table,' default ',default_c_table
+            # print 'D: newest ',newest_d_table,' default ',default_d_table
             
-            os.symlink(os.path.abspath(newest_B_table),
-                       os.path.abspath(default_B_table))
-            os.symlink(os.path.abspath(newest_C_table),
-                       os.path.abspath(default_C_table))
-            os.symlink(os.path.abspath(newest_D_table),
-                       os.path.abspath(default_D_table))
+            os.symlink(os.path.abspath(newest_b_table),
+                       os.path.abspath(default_b_table))
+            os.symlink(os.path.abspath(newest_c_table),
+                       os.path.abspath(default_c_table))
+            os.symlink(os.path.abspath(newest_d_table),
+                       os.path.abspath(default_d_table))
         else:
             print 'WARNING: no default table B and D found'
         #  #]
@@ -884,8 +992,8 @@ class InstallBUFRInterfaceECMWF:
         #max_nr_expanded_descriptors = 140 # 160000
         #max_nr_subsets              = 361 # 25
 
-        parameter_file = os.path.join(source_dir,'bufrdc','parameter.F')
-        print 'inspecting parameter_file: ',parameter_file
+        parameter_file = os.path.join(source_dir, 'bufrdc', 'parameter.F')
+        print 'inspecting parameter_file: ', parameter_file
         key_val_pairs = []
         for line in open(parameter_file).readlines():
             if 'JSUP' in line:
@@ -907,24 +1015,24 @@ class InstallBUFRInterfaceECMWF:
         # print '\n'.join(txt.strip() for txt in key_val_pairs)
 
         parameter_dict = {}
-        for kv in key_val_pairs:
-            if not (kv.strip()==''):
+        for kvp in key_val_pairs:
+            if not (kvp.strip()==''):
                 try:
-                    rawkey,rawval = kv.split('=')
+                    rawkey, rawval = kvp.split('=')
                     key = rawkey.strip() # remove whitespace
                     val = rawval.strip() # remove whitespace
                     parameter_dict[key] = int(val)
-                except:
-                    print 'error interpreting: ['+kv+']'
-        print 'parameter_dict = ',parameter_dict
+                except ValueError:
+                    print 'error interpreting: ['+kvp+']'
+        print 'parameter_dict = ', parameter_dict
 
         python_parameter_file = 'ecmwfbufr_parameters.py'
-        print 'creating parameter python file: ',python_parameter_file
-        fd = open(python_parameter_file,'wt')
+        print 'creating parameter python file: ', python_parameter_file
+        pfd = open(python_parameter_file,'wt')
 
         # write a simple doc string
-        fd.write('"""')
-        fd.write("""
+        pfd.write('"""')
+        pfd.write("""
 This is a little generated file to hold some constant parameters
 defining all array sizes in the interfaces to the ecmwf library.
 These constants are not available through the f2py interface.
@@ -933,12 +1041,12 @@ ecmwf_bufr_lib/bufr_000380/bufrdc/parameter.F
 and are extracted from that file and store in this python
 file for convenience
 """)
-        fd.write('"""\n')
+        pfd.write('"""\n')
 
         # write the retrieved parameter values to a python file
-        for (key,val) in parameter_dict.iteritems():
+        for (key, val) in parameter_dict.iteritems():
             txt = key+' = '+str(val)+'\n'
-            fd.write(txt)
+            pfd.write(txt)
 
         # add some aliasses with easier names
         aliasses = ["LENGTH_SECTION_0 = JSEC0",
@@ -964,9 +1072,9 @@ file for convenience
                     # JTCLAS=64 ## 
 
         for alias in aliasses:
-            fd.write(alias+'\n')
+            pfd.write(alias+'\n')
             
-        fd.close()
+        pfd.close()
 
         # make sure the file is executable for all
         ensure_permissions(python_parameter_file, 'x')
@@ -1039,9 +1147,9 @@ end program pybufr_test_program
         # generate a testfile with a few lines of Fortran90 code
         fortran_test_executable = "pybufr_fortran_test_program"
         fortran_test_file       = fortran_test_executable+".F90"
-        fd = open(fortran_test_file, 'wt')
-        fd.write(fortran_test_code)
-        fd.close()
+        tfd = open(fortran_test_file, 'wt')
+        tfd.write(fortran_test_code)
+        tfd.close()
 
         # contruct the compile command
         #cmd = fcmp+' '+fflags+' -o '+fortran_test_executable+' '+\
@@ -1059,7 +1167,7 @@ end program pybufr_test_program
         # now execute the just generated test program to verify if we succeeded
         # add a './' to ensure the executable is also found for users that
         # do not have '.' in their default search path
-        cmd = os.path.join('.',fortran_test_executable)
+        cmd = os.path.join('.', fortran_test_executable)
         if (libpath == ""):
             (lines_stdout, lines_stderr) = run_shell_command(cmd)
         else:
@@ -1086,6 +1194,10 @@ end program pybufr_test_program
         #  #]
     def c_compile_test(self, ccmp, cflags, libpath):
         #  #[
+        """ a method to check if we really have some c compiler
+        installed (it writes a few lines of c, tries to compile
+        it, and compares the output with the expected output) """
+
         # Note: for now the flags are not used in these test because these
         # are specific for generating a shared-object file, and will fail to
         # generate a simple executable for testing
@@ -1104,9 +1216,9 @@ int main()
         # generate a testfile with a few lines of Fortran90 code
         c_test_executable = "pybufr_c_test_program"
         c_test_file       = c_test_executable+".c"
-        fd = open(c_test_file, 'wt')
-        fd.write(c_test_code)
-        fd.close()
+        tfd = open(c_test_file, 'wt')
+        tfd.write(c_test_code)
+        tfd.close()
 
         # contruct the compile command
         cmd = ccmp+' '+cflags+' -o '+c_test_executable+' '+c_test_file
@@ -1121,7 +1233,7 @@ int main()
         # now execute the just generated test program to verify if we succeeded
         # add a './' to ensure the executable is also found for users that
         # do not have '.' in their default search path
-        cmd = os.path.join('.',c_test_executable)
+        cmd = os.path.join('.', c_test_executable)
         if (libpath == ""):
             (lines_stdout, lines_stderr) = run_shell_command(cmd)
         else:
@@ -1227,8 +1339,8 @@ int main()
         # extract which fortran compiler is used
         fortran_compiler       = 'undefined'
         fortran_compiler_flags = 'undefined'
-        for l in lines:
-            parts = l.split('=')
+        for line in lines:
+            parts = line.split('=')
             if (parts[0].strip() == "FC"):
                 fortran_compiler = parts[1].strip()
             if (parts[0].strip() == "FFLAGS"):
@@ -1295,7 +1407,11 @@ int main()
         #  #]
     def adapt_f2py_signature_file(self, signature_file):
         #  #[
-
+        """
+        some code to adapt the signature file generated by the f2py tool.
+        Regrettably this is needed since this tool seems not to handle
+        constant parameters defined in include files properly.
+        """
         # NOTE: maybe this modification is not needed if I can get the file
         #       with the parameters included in an other way.
         #       Looking at the f2py manpage the option -include might do the
@@ -1303,7 +1419,7 @@ int main()
         #       should be used, but that again means modifying the signature
         #       file ...
         #       Also the --include_paths option might be related.
-        # TODO: sort this out
+        # TODO: sort this out (handling of constant parameters by f2py)
         
         #signature_file = "f2py_build/signatures.pyf"
 
@@ -1361,17 +1477,19 @@ int main()
         shutil.copyfile(source, destination)
         
         print "Fixing array size definitions in signatures definition ..."
-        fd = open(signature_file, "wt")
+        sfd = open(signature_file, "wt")
         inside_subroutine = False
-        for l in lines:
+        for line in lines:
 
-            if ('end subroutine' in l):
+            mod_line = line
+            
+            if ('end subroutine' in mod_line):
                 inside_subroutine = False
-            elif ('subroutine' in l):
+            elif ('subroutine' in mod_line):
                 inside_subroutine = True
 
             if (inside_subroutine):
-                if (' ::' in l):
+                if (' ::' in mod_line):
                     # Add the intent(inplace) switch to all subroutine
                     # parameters.
                     # This might not be very pretty, but otherwise all
@@ -1380,35 +1498,41 @@ int main()
                     # in this library which parameters are intent(in) and
                     # which are intent(out), but this is a huge task (and
                     # should be done by ECMWF rather then by us I think...)
-                    (part1, part2) = l.split(' ::')
-                    l = part1+',intent(inplace) ::'+part2
+                    (part1, part2) = mod_line.split(' ::')
+                    mod_line = part1+',intent(inplace) ::'+part2
                 
-            if 'dimension' in l:
-                #print "adapting line: ", l
-                for e in edits.keys():
-                    txt = '('+e.lower()+')'
-                    value = edits[e]
-                    if txt in l:
-                        l = l.replace(txt, str(value))
-                #print "to           : ", l
+            if 'dimension' in mod_line:
+                #print "adapting line: ", mod_line
+                for edit in edits.keys():
+                    txt = '('+edit.lower()+')'
+                    value = edits[edit]
+                    if txt in mod_line:
+                        mod_line = mod_line.replace(txt, str(value))
+                #print "to           : ", mod_line
 
-            if (l.strip() == "end interface"):
+            if (mod_line.strip() == "end interface"):
                 # NOTE: the pb interface routines are written in c, so f2py
                 # will not automatically generate their signature. This next
                 # subroutine call explicitely adds these signatures.
-                self.insert_pb_interface_definition(fd)
+                self.insert_pb_interface_definition(sfd)
 
-            fd.write(l)
-        fd.close()
+            sfd.write(mod_line)
+        sfd.close()
         #  #]
-    def insert_pb_interface_definition(self, fd):
+    def insert_pb_interface_definition(self, sfd):
         #  #[
+        """ the pb interface routines are written in c, so f2py
+        will not automatically generate their signature. This 
+        subroutine explicitely adds these signatures.
+        """
+
         # note:
         # it seems I am doing something wrong here, since this interface
         # is not yet functional. When trying to execute ecmwfbufr.pbopen()
         # I get the not very helpfull error message:
         #   "SystemError: NULL result without error in PyObject_Call"
         # Anybody out there who has an idea how this can be solved?
+        
         indentation = 8*' '
         lines_to_add = \
          ["subroutine pbopen(cFileUnit,BufrFileName,mode,bufr_error_flag)",
@@ -1440,8 +1564,8 @@ int main()
 
         print "Inserting hardcoded interface to pbbufr routines in "+\
               "signatures file ..."
-        for l in lines_to_add:
-            fd.write(indentation+l+'\n')
+        for lta in lines_to_add:
+            sfd.write(indentation+lta+'\n')
             
         #  #]
     #  #]
@@ -1453,25 +1577,25 @@ if __name__ == "__main__":
     # instantiate the class, and build library if needed
     # (4 different tests defined for this step, with 4 different compilers)
     
-    testcase = 1 # test default g95
-    #testcase = 2 # test default gfortran
-    #testcase = 3 # test custom gfortran
-    #testcase = 4 # test custom g95-32 bit
-    #testcase = 5 # test custom g95-64 bit
+    TESTCASE = 1 # test default g95
+    #TESTCASE = 2 # test default gfortran
+    #TESTCASE = 3 # test custom gfortran
+    #TESTCASE = 4 # test custom g95-32 bit
+    #TESTCASE = 5 # test custom g95-64 bit
     
-    if (testcase == 1):
+    if (TESTCASE == 1):
         # tested at my laptop at home with a g95 v.0.92 (32-bit)
         # in my search PATH
         # successfully tested 19-Mar-2010
         BI = InstallBUFRInterfaceECMWF(verbose = True)
         #BI = InstallBUFRInterfaceECMWF(verbose = True, debug_f2py_c_api = True)
-    elif (testcase == 2):
+    elif (TESTCASE == 2):
         # tested at my laptop at home with a systemwide
         # gfortran v4.3.2 installed
         # successfully tested 19-Mar-2010
         BI = InstallBUFRInterfaceECMWF(verbose = True,
                                        preferred_fortran_compiler = 'gfortran')
-    elif (testcase == 3):
+    elif (TESTCASE == 3):
         # note that the "-O" flag is allways set for each fortran compiler
         # so no need to specify it to the fortran_flags parameter.
         
@@ -1482,14 +1606,14 @@ if __name__ == "__main__":
                     fortran_compiler = "/home/jos/bin/gfortran_personal",
                     fortran_ld_library_path = "/home/jos/bin/gcc-trunk/lib64",
                     fortran_flags = "-fno-second-underscore -fPIC")
-    elif (testcase == 4):
+    elif (TESTCASE == 4):
         # tested at my laptop at home with a g95 v0.92 (32-bit) installed
         # in a user account
         # successfully tested 19-Mar-2010
         BI = InstallBUFRInterfaceECMWF(verbose = True,
                     fortran_compiler = "/home/jos/bin/g95_32",
                     fortran_flags = "-fno-second-underscore -fPIC -i4 -r8")
-    elif (testcase == 5):
+    elif (TESTCASE == 5):
         # tested at my laptop at home with a g95 v0.92 (64-bit)
         # installed in a user account
         # successfully tested 19-Mar-2010
@@ -1497,16 +1621,20 @@ if __name__ == "__main__":
                     fortran_compiler = "/home/jos/bin/g95_64",
                     fortran_flags = "-fno-second-underscore -fPIC -i4 -r8")
     #  #]
-
+    #  #[ make sure we are in the right directory
+    BUILD_DIR = os.path.split(__file__)[0]
+    os.chdir(BUILD_DIR)
+    # print 'cwd = ',os.getcwd()
+    #  #]
     # Build ecmwfbufr.so interface
     BI.build()
     
     #  #[ check for success
-    so_file = "ecmwfbufr.so"
-    if os.path.exists(so_file):
-        print "successfully build:", so_file
+    SO_FILE = "ecmwfbufr.so"
+    if os.path.exists(SO_FILE):
+        print "successfully build:", SO_FILE
     else:
-        print "cannot find file:", so_file
+        print "cannot find file:", SO_FILE
         print "something seems wrong here ..."
         raise InterfaceBuildError
     #  #]

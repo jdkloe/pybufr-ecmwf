@@ -30,8 +30,12 @@ import os
 #import sys
 import glob
 from pybufr_ecmwf import RawBUFRFile
-from pybufr_ecmwf.helpers import ProgrammingError, NotYetImplementedError
 #  #]
+
+class ProgrammingError(Exception):
+    """ an exception to indicate that a progromming error seems
+    present in the code (this should be reported to the author) """
+    pass
 
 class Singleton(object):
     #  #[ explanation
@@ -244,7 +248,7 @@ class ModificationCommand(Descriptor):
                 return False
         print "ERROR: handling this modification is not fully implemented yet:"
         print self
-        raise NotYetImplementedError
+        raise NotImplementedError
         #  #]
     def is_modification_end(self):
         #  #[
@@ -258,7 +262,7 @@ class ModificationCommand(Descriptor):
                 return False
         print "ERROR: handling this modification is not fully implemented yet:"
         print self
-        raise NotYetImplementedError
+        raise NotImplementedError
         #  #]
     def check_matches(self, descr):
         #  #[
@@ -286,7 +290,7 @@ class ModificationCommand(Descriptor):
             print "ERROR: handling this modification is not "+\
                   "fully implemented yet:"
             print self
-            raise NotYetImplementedError
+            raise NotImplementedError
         #  #]
 
     # Modification commands are:

@@ -35,14 +35,24 @@ import os          # operating system functions
 import time        # handling of date and time
 import numpy as np # import numerical capabilities
 
-# import some home made helper routines
-from pybufr_ecmwf.helpers import EcmwfBufrLibError
-from pybufr_ecmwf.helpers import EcmwfBufrTableError
-
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 from pybufr_ecmwf.bufr_template import BufrTemplate
 
+#  #]
+#  #[ exception definitions
+# see: http://docs.python.org/library/exceptions.html
+# for a list of already available exceptions.
+# are:     IOError, EOFError
+
+class EcmwfBufrLibError(Exception):
+    """ an exception to indicate that one of the subroutines or functions
+    in the ECMWF bufr library returned with an error """
+    pass
+class EcmwfBufrTableError(Exception):
+    """ an exception to indicate that no set of suitable BUFR tables
+    needed for bufr decoding/encoding can be found """
+    pass
 #  #]
 
 class BUFRInterfaceECMWF:

@@ -31,6 +31,7 @@ are planned as well.
 #  #[ imported modules
 import os, sys      # operating system functions
 import unittest  # import the unittest functionality
+import subprocess  # support running additional executables
 
 sys.path.append('./')
 from pybufr_ecmwf import BUFRInterfaceECMWF
@@ -41,6 +42,120 @@ from pybufr_ecmwf import helpers
 #import ecmwfbufr # import the wrapper module
 
 #  #]
+
+def call_cmd_and_verify_output(cmd):
+    #  #[
+    """ a wrapper around run_shell_command for easier testing.
+    It automatically constructs a name for the test output based
+    on the class and function name from which it was called.
+    Then it executes the test function and redirects the stdout and
+    stderr outputs to files with the just constructed names.
+    Finally it compares the actual test outputs with expected outputs
+    that should be present in the current directory.
+    If the outputs are as expected the function returns True,
+    otherwise False."""
+
+    # assume at first that all will work as planned
+    success = True
+
+    #  #[ some old notes
+    #print "__name__ = ", __name__
+    #print "__file__ = ", __file__
+    #print "self.__class__.__name__ = ", self.__class__.__name__
+    #print "func_filename = ", sys._getframe().f_code.co_filename
+    #print "func_name = ", sys._getframe().f_code.co_name
+    #print "dir(frame) = ", dir(sys._getframe())
+    #print "dir(f_code) = ", dir(sys._getframe().f_code)
+    #print "0:callers name = ", sys._getframe(0).f_code.co_name
+    #
+    #print "2:callers name = ", sys._getframe(2).f_code.co_name
+    #sys.exit(1)
+    # see: http://code.activestate.com/recipes/66062/
+    # for more examples on using sys._getframe()
+    #  #]
+    
+    # determine the full path of the current python interpreter
+    python_interpreter = sys.executable
+
+    # disable the pylint warning:
+    # "Access to a protected member _getframe of a client class"
+    # pylint: disable-msg=W0212
+
+    # determine the name of the calling function
+    name_of_calling_function = sys._getframe(1).f_code.co_name
+
+    # determine the name of the class that defines the calling function
+    classname_of_calling_function = \
+                 sys._getframe(1).f_locals['self'].__class__.__name__
+
+    # pylint: enable-msg=W0212
+
+    # construct filenames for the actual and expected outputs
+    basename = os.path.join("example_programs/expected_test_outputs",
+                            classname_of_calling_function+"."+\
+                            name_of_calling_function)
+    actual_stdout   = basename+".actual_stdout"
+    actual_stderr   = basename+".actual_stderr"
+    expected_stdout = basename+".expected_stdout"
+    expected_stderr = basename+".expected_stderr"
+
+    # get the list of already defined env settings
+    env = os.environ
+    module_path = './'
+    if (env.has_key('PYTHONPATH')):
+        env['PYTHONPATH'] = env['PYTHONPATH']+':'+module_path
+    else:
+        env['PYTHONPATH'] = module_path
+        
+    # execute the test and catch all output
+    subpr = subprocess.Popen(cmd,
+                             shell  = True,
+                             env    = env,
+                             stdout = subprocess.PIPE,
+                             stderr = subprocess.PIPE)
+    lines_stdout = subpr.stdout.readlines()
+    lines_stderr = subpr.stderr.readlines()
+
+    # write the actual outputs to file
+    file_descr = open(actual_stdout, 'wt')
+    file_descr.writelines(lines_stdout)
+    file_descr.close()
+
+    file_descr = open(actual_stderr, 'wt')
+    file_descr.writelines(lines_stderr)
+    file_descr.close()
+    
+    # try to read the expected outputs
+    try:
+        expected_lines_stdout = open(expected_stdout, 'rt').readlines()
+        expected_lines_stderr = open(expected_stderr, 'rt').readlines()
+    
+        # compare the actual and expected outputs
+        if not (lines_stdout == expected_lines_stdout):
+            print "stdout differs from what was expected!!!"
+            print "to find out what happended execute this diff command:"
+            print "xdiff ", actual_stdout, ' ', expected_stdout
+            success = False
+            
+        if not (lines_stderr == expected_lines_stderr):
+            print "stderr differs from what was expected!!!"
+            print "to find out what happended execute this diff command:"
+            print "xdiff ", actual_stderr, ' ', expected_stderr
+            success = False
+    except IOError:
+        print "ERROR: expected output not found; probably because"
+        print "you just defined a new unittest case."
+        print "Missing filenames:"
+        if not os.path.exists(expected_stdout):
+            print "expected_stdout: ", expected_stdout
+            print "(actual output available in: ", actual_stdout, ")"
+        if not os.path.exists(expected_stderr):
+            print "expected_stderr: ", expected_stderr
+            print "(actual output available in: ", actual_stderr, ")"
+        success = False
+        
+    return success
+    #  #]
 
 print "Starting test program:"
 
@@ -67,7 +182,7 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         testprog = "example_for_using_ecmwfbufr_for_decoding.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
         cmd = cmd + ' ' + self.testinputfile
-        success = helpers.call_cmd_and_verify_output(cmd)
+        success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     def test_run_encoding_example(self):
@@ -79,7 +194,7 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         testprog = "example_for_using_ecmwfbufr_for_encoding.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
         cmd = cmd + ' ' + self.testoutputfile2u
-        success = helpers.call_cmd_and_verify_output(cmd)
+        success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     def test_run_pb_routines_example(self):
@@ -100,7 +215,7 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         testprog = "example_for_using_pb_routines.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
         cmd = cmd + ' ' + self.corruptedtestinputfile
-        success = helpers.call_cmd_and_verify_output(cmd)
+        success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     #  #]
@@ -190,7 +305,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         cmd = os.path.join(self.example_programs_dir, testprog)
         cmd = cmd + ' ' + self.testinputfile
 
-        success = helpers.call_cmd_and_verify_output(cmd)
+        success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     def test_run_encoding_example(self):
@@ -204,7 +319,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         cmd = os.path.join(self.example_programs_dir, testprog)
         cmd = cmd + ' ' + self.testoutputfile1u
         
-        success = helpers.call_cmd_and_verify_output(cmd)
+        success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
 
@@ -330,7 +445,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         cmd = "example_programs/example_for_using_rawbufrfile.py"
         cmd = cmd + ' ' + self.corruptedtestinputfile + \
               ' ' + self.testoutputfile3u
-        success = helpers.call_cmd_and_verify_output(cmd)
+        success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
     #  #]

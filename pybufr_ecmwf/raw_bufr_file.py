@@ -158,7 +158,6 @@ class RawBUFRFile:
         # then erase all settings
         self.__init__()
         #  #]
-
     def get_expected_msg_size(self,start_location):
         #  #[
 
@@ -174,7 +173,7 @@ class RawBUFRFile:
         # fact only have a 4 byte section 0.
         # See the WMO BUFR Guide
         # http://www.wmo.int/pages/prog/www/WMOCodes/...
-        #        Guides/BUFRCREX/Layer1-2-English.pdf
+        #        Guides/BUFRCREX/Layer3-English-only.pdf
         # which is available from:
         # http://www.wmo.int/pages/prog/www/WMOCodes/...
         #        Guides/BUFRCREXPreface_en.html
@@ -275,7 +274,14 @@ class RawBUFRFile:
              # 0 signals this is not a valid BUFR msg, might be a false
              # start BUFR string, or a corrupted or truncated file
             return 0
-        
+
+        # see: p.L3-3 (p.5) of the file Layer3-English-only.pdf
+        #      mentioned above.
+        if msg_size > 15000:
+            print "WARNING: by convention BUFR messages should not be larger"
+            print "         than 15kb to allow transmission over the GTS."
+            print "         Size of current message is: ",msg_size," bytes"
+
         return msg_size
         #  #]        
     def split(self):
