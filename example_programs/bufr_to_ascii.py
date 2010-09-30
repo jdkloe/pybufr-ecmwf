@@ -17,7 +17,10 @@ to stdout.
 import os, sys     # operating system functions
 
 # import the python file defining the RawBUFRFile class
-import pybufr_ecmwf
+from pybufr_ecmwf.bufr import BUFR
+from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
+from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
+
 #  #]
 
 def print_bufr_content(input_bufr_file):
@@ -25,7 +28,7 @@ def print_bufr_content(input_bufr_file):
     
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = pybufr_ecmwf.BUFR(input_bufr_file)
+    bob = BUFR(input_bufr_file)
     
     for msg_nr in range(1,bob.num_msgs+1):
         bob.get_next_msg()
@@ -47,7 +50,7 @@ def print_bufr_content2(input_bufr_file):
     #  #[ implementation 2
 
     # get an instance of the RawBUFRFile class
-    BF = pybufr_ecmwf.RawBUFRFile()
+    BF = RawBUFRFile()
     
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
@@ -59,8 +62,8 @@ def print_bufr_content2(input_bufr_file):
 
     for msg_nr in range(1,num_msgs+1):
         raw_msg = BF.get_raw_bufr_msg(msg_nr)
-        bufr_obj = pybufr_ecmwf.BUFRInterfaceECMWF(encoded_message=raw_msg,
-                                              max_nr_expanded_descriptors=44)
+        bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg,
+                                      max_nr_expanded_descriptors=44)
         bufr_obj.decode_sections_012()
         bufr_obj.setup_tables()
         bufr_obj.decode_data()

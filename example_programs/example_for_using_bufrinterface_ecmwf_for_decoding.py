@@ -17,8 +17,9 @@ used for decoding a BUFR message.
 import sys  # operating system functions
 
 # import the BUFR wrapper module
-import pybufr_ecmwf
-
+#import pybufr_ecmwf
+from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
+from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 #  #]
 
 # decoding_excample
@@ -93,14 +94,14 @@ def decoding_example(input_bufr_file):
 
     # read the binary data using the BUFRFile class
     print 'loading testfile: ', input_bufr_file
-    rbf = pybufr_ecmwf.RawBUFRFile()
+    rbf = RawBUFRFile()
     rbf.open(input_bufr_file, 'r')
     words = rbf.get_next_raw_bufr_msg()
     rbf.close()
     
     print '------------------------------'
-    bufr = pybufr_ecmwf.BUFRInterfaceECMWF(encoded_message=words,
-                                           max_nr_expanded_descriptors=44)
+    bufr = BUFRInterfaceECMWF(encoded_message=words,
+                              max_nr_expanded_descriptors=44)
 
     print "calling: decode_sections_012():"
     bufr.decode_sections_012()

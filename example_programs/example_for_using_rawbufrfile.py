@@ -18,7 +18,7 @@ import os          # operating system functions
 import sys         # system functions
 
 # import the python file defining the RawBUFRFile class
-from pybufr_ecmwf import RawBUFRFile
+from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 #  #]
 
 def raw_file_reading_example(input_bufr_file):

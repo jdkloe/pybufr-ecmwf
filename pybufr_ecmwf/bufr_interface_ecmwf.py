@@ -36,8 +36,8 @@ import time        # handling of date and time
 import numpy as np # import numerical capabilities
 
 # import the raw wrapper interface to the ECMWF BUFR library
-from pybufr_ecmwf import ecmwfbufr
-from pybufr_ecmwf.bufr_template import BufrTemplate
+from . import ecmwfbufr
+from .bufr_template import BufrTemplate
 
 #  #]
 #  #[ exception definitions

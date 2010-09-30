@@ -34,8 +34,8 @@ import unittest  # import the unittest functionality
 import subprocess  # support running additional executables
 
 sys.path.append('./')
-from pybufr_ecmwf import BUFRInterfaceECMWF
-from pybufr_ecmwf import RawBUFRFile
+from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
+from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf import bufr
 from pybufr_ecmwf import ecmwfbufr
 

@@ -29,8 +29,8 @@ by providing several helper classes.
 import os
 #import sys
 import glob
-from pybufr_ecmwf import RawBUFRFile
-from pybufr_ecmwf import BUFRInterfaceECMWF
+from .raw_bufr_file import RawBUFRFile
+from .bufr_interface_ecmwf import BUFRInterfaceECMWF
 #  #]
 
 class ProgrammingError(Exception):

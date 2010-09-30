@@ -16,7 +16,7 @@ except ImportError:
 # this commandline option:
 #        '--init-hook=\'import sys;sys.path.append(\"pybufr_ecmwf\")\'',
 # is equivalent to:
-sys.path.append("pybufr_ecmwf")
+#sys.path.append("./")
 
 # see: the Run class in:
 # /usr/lib/python2.6/site-packages/pylint/lint.py
@@ -31,12 +31,26 @@ EX_FILES = ['example_for_using_bufrinterface_ecmwf_for_decoding.py',
             'example_for_using_rawbufrfile.py',
             'verify_bufr_tables.py']
 
+#MODULES_TO_CHECK = []
+MODULES_TO_CHECK = ['pybufr_ecmwf',]
+
+SCRIPTS_TO_CHECK = ['build_interface.py',
+                    'clean.py',
+                    'port_2to3.py',
+                    'setup.py',
+                    'unittests.py',
+                    'pylint/run_pylint.py',]
+# note: pylint/pylint_numpy_test.py is omitted here on purpose.
+# it is used inside check_pylint_numpy_handling() defined above.
+# look into that rouytine for more details.
+
 def check(msg, pycode, additional_args):
     #  #[
     """ a little helper function to run pylint on a python
     script or module directory """
     print msg+pycode
-    args = additional_args
+    args = []
+    args.extend(additional_args)
     args.extend(['--rcfile', 'pylint/pylintrc', pycode])
     #args.extend(['--files-output=yes', '--rcfile', 'pylint/pylintrc', pycode])
     try:
@@ -104,17 +118,15 @@ def check_all_py_files():
         additional_args = ['--ignored-classes=numpy']
 
     result = []
-    result.append(check('checking module: ', 'pybufr_ecmwf', additional_args))
-    result.append(check('checking script: ', 'clean.py', additional_args))
-    result.append(check('checking script: ', 'port_2to3.py', additional_args))
-    result.append(check('checking script: ', 'setup.py', additional_args))
-    result.append(check('checking script: ', 'unittests.py', additional_args))
-    result.append(check('checking script: ', 'pylint/run_pylint.py',
-                        additional_args))
-    # note: pylint_numpy_test.py is omitted here on purpose.
-    # it is used inside check_pylint_numpy_handling() defined above.
-    # look into that rouytine for more details.
-    
+
+    for mod_to_check in MODULES_TO_CHECK:
+        result.append(check('checking module: ',
+                            mod_to_check, additional_args))
+
+    for script in SCRIPTS_TO_CHECK:
+        result.append(check('checking script: ',
+                            script, additional_args))
+        
     for ex_file in EX_FILES:
         result.append(check('checking script: ',
                             os.path.join(EX_PROGR_PATH, ex_file),

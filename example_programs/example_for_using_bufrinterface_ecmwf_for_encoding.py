@@ -19,8 +19,10 @@ import os, sys     # operating system functions
 import numpy as np # import numerical capabilities
 
 # import BUFR wrapper module
-import pybufr_ecmwf
-
+#import pybufr_ecmwf
+from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
+from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
+from pybufr_ecmwf.bufr_template import BufrTemplate
 #  #]
 #  #[ define constants for the descriptors we need
 
@@ -68,7 +70,7 @@ def encoding_example(output_bufr_file):
     scope (since most of these variables are not constants at all))
     """
     
-    bufr = pybufr_ecmwf.BUFRInterfaceECMWF(max_nr_descriptors=20)
+    bufr = BUFRInterfaceECMWF(max_nr_descriptors=20)
     
     # fill sections 0, 1, 2 and 3
     num_subsets = 4
@@ -89,7 +91,7 @@ def encoding_example(output_bufr_file):
     bufr.setup_tables()
     
     # define a descriptor list
-    template = pybufr_ecmwf.BufrTemplate(max_nr_descriptors=20)
+    template = BufrTemplate(max_nr_descriptors=20)
     
     template.add_descriptors(DD_D_DATE_YYYYMMDD, # 0
                              DD_D_TIME_HHMM)     # 1
@@ -155,7 +157,7 @@ def encoding_example(output_bufr_file):
     bufr.encode_data(values, cvals)
     
     # get an instance of the RawBUFRFile class
-    bf1 = pybufr_ecmwf.RawBUFRFile()
+    bf1 = RawBUFRFile()
     # open the file for writing
     bf1.open(output_bufr_file, 'w')
     # write the encoded BUFR message

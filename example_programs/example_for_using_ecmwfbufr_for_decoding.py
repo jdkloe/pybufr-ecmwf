@@ -34,7 +34,7 @@ import sys         # system functions
 import numpy as np # import numerical capabilities
 
 # import the RawBUFRFile class to load the encoded raw BUFR data from file
-from pybufr_ecmwf import RawBUFRFile
+from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
