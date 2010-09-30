@@ -12,15 +12,16 @@ Created: 04-Feb-2010
 #           'bufr',
 #           'helpers']
 
+try:
+    import pybufr_ecmwf.ecmwfbufr
+except ImportError as imperr:
+    print "===="
+    print "Sorry, this module needs to be build before you can use it !"
+    print "===="
+    raise imperr
+
 from pybufr_ecmwf.bufr_template import *
 from pybufr_ecmwf.raw_bufr_file import *
 from pybufr_ecmwf.bufr_interface_ecmwf import *
 from pybufr_ecmwf import bufr
 
-# allow this one to fail, because I wish to use the helpers.py functionality
-# from the port_2to3.py script, which may be used before doing the actual
-# build of ecmwfbufr.so
-try:
-    import pybufr_ecmwf.ecmwfbufr
-except ImportError:
-    pass

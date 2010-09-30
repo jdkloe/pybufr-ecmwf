@@ -1565,6 +1565,12 @@ int main()
 
 if __name__ == "__main__":
     print "Building ecmwfbufr.so interface:\n"
+    #  #[ make sure we are in the right directory
+    BUILD_DIR = 'pybufr_ecmwf'
+    os.chdir(BUILD_DIR)
+    # print 'cwd = ',os.getcwd()
+
+    #  #]
     #  #[ define how to build the library and interface
     
     # instantiate the class, and build library if needed
@@ -1614,11 +1620,7 @@ if __name__ == "__main__":
                     fortran_compiler = "/home/jos/bin/g95_64",
                     fortran_flags = "-fno-second-underscore -fPIC -i4 -r8")
     #  #]
-    #  #[ make sure we are in the right directory
-    BUILD_DIR = os.path.split(__file__)[0]
-    os.chdir(BUILD_DIR)
-    # print 'cwd = ',os.getcwd()
-    #  #]
+
     # Build ecmwfbufr.so interface
     BI.build()
     
