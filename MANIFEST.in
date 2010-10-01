@@ -3,7 +3,6 @@ include *.sh
 include pybufr_ecmwf/alt_bufr_tables/*.TXT
 include *.py
 include */*.py
-include */*/*.py
 include setup.*
 include example_programs/testdata/*.BUFR
 include example_programs/expected_test_outputs/Check*

@@ -17,7 +17,7 @@ then printed to stdout.
 import os, sys     # operating system functions
 
 # import the python file defining the RawBUFRFile class
-from pybufr_ecmwf import RawBUFRFile
+from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 #  #]
 
 def count_msgs(input_bufr_file):

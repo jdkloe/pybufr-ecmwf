@@ -69,6 +69,18 @@ if [ "$1" == "7" ] ;  then \
     exit;
 fi;
 
+if [ "$1" == "8" ] ;  then \
+    ./example_programs/bufr_count_msgs.py \
+    $CORRUPTEDTESTINPUTFILE
+    exit;
+fi;
+
+if [ "$1" == "9" ] ;  then \
+    ./example_programs/bufr_to_ascii.py \
+    $TESTINPUTFILE
+    exit;
+fi;
+
 echo
 echo this script takes a number to choose which test program to run
 echo
@@ -79,6 +91,8 @@ echo 4: example_for_using_ecmwfbufr_for_encoding.py
 echo 5: example_for_using_pb_routines.py [has known problems]
 echo 6: example_for_using_rawbufrfile.py
 echo 7: verify_bufr_tables.py
+echo 8: bufr_count_msgs.py
+echo 9: bufr_to_ascii.py
 echo 
 echo please choose one of them and run again like this:
 echo ./run_example_program.sh 2

@@ -298,8 +298,9 @@ class BuildExt(_build_ext):
 DESCR = "a python interface around the ECMWF-BUFR library."
 LONG_DESCR = """a python interface around the Fortran90 ECMWF-BUFR library
 constructed using the f2py interface generation tool.
-For now only the equivalent subroutines to the ones in the ECMWF-BUFR
-library are made available to python. In a next stage the plan is to
+The equivalent subroutines to the ones in the ECMWF-BUFR
+library are made available to python, but also a set of wrapper 
+routines/classes is implemented to
 create also a more object-oriented/pythonic interface.
 Building the interface is still a bit rough, and may require some
 editing of the setup.cfg file to choose the correct fortran and c-compiler.
@@ -344,8 +345,7 @@ setup(cmdclass = {'build'    : Build,
       packages = ['pybufr_ecmwf'],
       ext_modules = [ECMWF_BUFR_EXT],
       requires = ["numpy", "numpy.f2py", "subprocess"],
-      provides = ["pybufr_ecmwf","pybufr_ecmwf.bufr",
-                  "pybufr_ecmwf.helpers"]
+      provides = ["pybufr_ecmwf"]
       # this requires use of the setup tools which needs to be installed
       # first (i.e. it makes the setup a little bit less portable)
       # see: http://peak.telecommunity.com/DevCenter/setuptools#test
