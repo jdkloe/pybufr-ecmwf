@@ -14,10 +14,11 @@ to stdout.
 # License: GPL v2.
 
 #  #[ imported modules
-import os, sys     # operating system functions
+import os, sys # operating system functions
+import numpy   # array functionality
 
 # import the python file defining the RawBUFRFile class
-from pybufr_ecmwf.bufr import BUFR
+from pybufr_ecmwf.bufr import BUFRReader
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 
@@ -28,7 +29,24 @@ def print_bufr_content(input_bufr_file):
     
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = BUFR(input_bufr_file)
+    bob = BUFRReader(input_bufr_file)
+    
+    for msg_nr in range(1,bob.num_msgs+1):
+        bob.get_next_msg()
+        data = bob.get_values_as_2d_array()
+        for subs in range(len(data[:,0])):
+            print str(subs)+' '+' '.join(str(val) for val in data[subs,:])
+        
+    # close the file
+    bob.close()
+    #  #]
+
+def print_bufr_content2(input_bufr_file):
+    #  #[ implementation 2
+    
+    # get an instance of the BUFR class
+    # which automatically opens the file for reading and decodes it
+    bob = BUFRReader(input_bufr_file)
     
     for msg_nr in range(1,bob.num_msgs+1):
         bob.get_next_msg()
@@ -46,8 +64,8 @@ def print_bufr_content(input_bufr_file):
     bob.close()
     #  #]
 
-def print_bufr_content2(input_bufr_file):
-    #  #[ implementation 2
+def print_bufr_content3(input_bufr_file):
+    #  #[ implementation 3
 
     # get an instance of the RawBUFRFile class
     BF = RawBUFRFile()

@@ -37,6 +37,7 @@ sys.path.append('./')
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf import bufr
+from pybufr_ecmwf import bufr_table
 from pybufr_ecmwf import ecmwfbufr
 
 #import ecmwfbufr # import the wrapper module
@@ -464,26 +465,52 @@ class CheckRawBUFRFile(unittest.TestCase):
         #  #]
     #  #]
 
-class CheckBufr(unittest.TestCase):
+class CheckBufrTable(unittest.TestCase):
     #  #[
     """
-    a class to check the bufr.py file
+    a class to check the bufr_table.py file
     """
     def test_singleton(self):
         #  #[
         """
         check the implementation of the singletom class in bufr.py
         """
-        aaa = bufr.Singleton(1)
-        bbb = bufr.Singleton(1)
+        aaa = bufr_table.Singleton(1)
+        bbb = bufr_table.Singleton(1)
         self.assertEqual(aaa is bbb, True)
 
         repr_aaa = repr(aaa)
         del(aaa)
-        ccc = bufr.Singleton(1)
+        ccc = bufr_table.Singleton(1)
         repr_ccc = repr(ccc)
         self.assertEqual(repr_aaa, repr_ccc)
         
+        #  #]
+    #  #]
+
+class CheckBufr(unittest.TestCase):
+    #  #[
+    """
+    a class to check the bufr.py file
+    """
+    # common settings for the following tests
+    example_programs_dir   = "example_programs"
+    testdatadir            = 'example_programs/testdata'
+    testinputfile          = os.path.join(testdatadir,
+                                          'Testfile.BUFR')
+    def test_run_decoding_example(self):
+        #  #[
+        """
+        test the decoding example program
+        """
+        
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' ' + self.testinputfile
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
         #  #]
     #  #]
 
