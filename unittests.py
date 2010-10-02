@@ -36,7 +36,7 @@ import subprocess  # support running additional executables
 sys.path.append('./')
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
-from pybufr_ecmwf import bufr
+# from pybufr_ecmwf import bufr
 from pybufr_ecmwf import bufr_table
 from pybufr_ecmwf import ecmwfbufr
 
@@ -76,7 +76,7 @@ def call_cmd_and_verify_output(cmd):
     #  #]
     
     # determine the full path of the current python interpreter
-    python_interpreter = sys.executable
+    # python_interpreter = sys.executable
 
     # disable the pylint warning:
     # "Access to a protected member _getframe of a client class"

@@ -6,7 +6,7 @@ and reports any inconsistencies it finds in the table definitions
 """
 
 import sys
-from pybufr_ecmwf.bufr import BufrTable
+from pybufr_ecmwf.bufr_table import BufrTable
 
 if len(sys.argv)<3:
     print 'please give 2 BUFR TABLE files as argument'

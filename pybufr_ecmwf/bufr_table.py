@@ -27,10 +27,7 @@ by providing several helper classes.
 #  #]
 #  #[ imported modules
 import os
-#import sys
 import glob
-from .raw_bufr_file import RawBUFRFile
-from .bufr_interface_ecmwf import BUFRInterfaceECMWF
 #  #]
 
 class ProgrammingError(Exception):
@@ -96,7 +93,7 @@ class Singleton(object):
         #print "class Singleton: calling init"
         #pass
         #  #]
-    def checkinit(*args, **kwargs):
+    def checkinit(self, *args, **kwargs):
         #  #[
         """
         classes that inherit from this Singleton class should
@@ -150,7 +147,7 @@ class Descriptor(Singleton):
             assert(self.unit_scale     == unit_scale)
             assert(self.unit_reference == unit_reference)
             assert(self.data_width     == data_width)
-        except AssertionError as e:
+        except AssertionError as aerr:
             print 'checkinit check failed !!!'
             print
             print "self.reference      = ", self.reference   , \
@@ -165,7 +162,7 @@ class Descriptor(Singleton):
                   "unit_reference      = ", unit_reference
             print "self.data_width     = ", self.data_width  , \
                   "data_width          = ", data_width
-            raise e
+            raise aerr
         #  #]
     #  #]
 
@@ -459,14 +456,16 @@ class BufrTable:
         if (tables_dir is not None):
             # dont use autolinking if the user provided a tables dir
             self.autolink_tables = False
-
+            self.tables_dir = tables_dir
+            
         # if self.autolink_tables is True, 
         # try to automatically make symbolic links to
         # BUFR tables provided by the ECMWF library for any new
         # BUFR table name that is requested by the decoder/encoder
         # in this directory
         self.autolink_tablesdir = autolink_tablesdir
-        
+
+        # apply the choosen tables dir setting
         if (self.autolink_tables):
             self.set_bufr_tables_dir(self.autolink_tablesdir)
         else:
@@ -490,8 +489,8 @@ class BufrTable:
 
         # make sure the BUFR tables can be found by setting the
         # needed environment variable
-        e = os.environ
-        e["BUFR_TABLES"] = self.tables_dir
+        env = os.environ
+        env["BUFR_TABLES"] = self.tables_dir
         #  #]
     def get_descr_object(self, reference):
         #  #[
@@ -504,10 +503,10 @@ class BufrTable:
         if self.table_d.has_key(reference):
             return self.table_d[reference]
         # get 1st digit
-        f = int(reference/100000.)
+        f_val = int(reference/100000.)
         # note: the cases f == 0 should already be part of table_b
         # and the cases f == 3 should already be part of table_d
-        if f == 1:
+        if f_val == 1:
             # this is a special code
             if self.specials.has_key(reference):
                 return self.specials[reference]
@@ -517,7 +516,7 @@ class BufrTable:
                 special = SpecialCommand(reference)
                 self.specials[reference] = special
                 return special
-        if f == 2:
+        if f_val == 2:
             # this is a modifier
             if self.modifiers.has_key(reference):
                 return self.modifiers[reference]
@@ -530,7 +529,7 @@ class BufrTable:
             
         return None
         #  #]
-    def load(self, file):
+    def load(self, t_file):
         #  #[
         """
         load a BUFR B or D table from file
@@ -546,21 +545,21 @@ class BufrTable:
 
         # first see if the user specified a valid full path/file combination
         # and use it if it exists
-        if os.path.exists(file):
-            tablefile = file
+        if os.path.exists(t_file):
+            tablefile = t_file
         else:
             # if it does not exist, try to find it in the tables_dir
-            tablefile = os.path.join(self.tables_dir, file)
+            tablefile = os.path.join(self.tables_dir, t_file)
             if not os.path.exists(tablefile):
                 # if still not found, see if autolinking is on
                 if (self.autolink_tables):
                     # if so, try to automatically get a symlink 
-                    print "autolinking table file: ", file
-                    self.autolinkbufrtablefile(file)
+                    print "autolinking table file: ", t_file
+                    self.autolinkbufrtablefile(t_file)
 
-        #print "inspecting file: ", file
+        #print "inspecting file: ", t_file
         #maxlen = 0
-        #for line in open(file, 'rt'):
+        #for line in open(t_file, 'rt'):
         #    l = line.replace('\r', '').replace('\n', '')
         #    if len(l)>maxlen:
         #        maxlen = len(l)
@@ -576,7 +575,7 @@ class BufrTable:
             print "(path, base) = ", (path, base)
             raise IOError
         #  #]
-    def autolinkbufrtablefile(self, file):
+    def autolinkbufrtablefile(self, t_file):
         #  #[
         """
         a method that automatically creates a symbolic link to
@@ -601,13 +600,12 @@ class BufrTable:
             ecmwf_bufr_tables_dir = "../ecmwf_bufrtables"
             
         ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
-        tables_dir = os.path.abspath(self.tables_dir)
 
         # algorithm: try the list B or D files one by one,
         # and remove a character from the name in every step.
         # Then try to find a match using glob. This should give
         # the filename that most closely matches the required one,
-        pattern = file
+        pattern = t_file
         while (len(pattern)>1):
             pattern = pattern[:-1]
             print "trying pattern: ", \
@@ -618,7 +616,7 @@ class BufrTable:
             print "len(matches) = ", len(matches)
             if len(matches)>0:
                 source      = matches[0]
-                destination = os.path.join(self.tables_dir, file)
+                destination = os.path.join(self.tables_dir, t_file)
                 if (not os.path.exists(destination)):
                     print "making symlink from ", source, \
                           " to ", destination
@@ -635,45 +633,41 @@ class BufrTable:
         nr_of_ignored_probl_entries = 0
         for (i, line) in enumerate(open(bfile, 'rt')):
             success = True
-            l = line.replace('\r', '').replace('\n', '')
-
-            # suppres the pylint warning for too long lines
-            # (but only for this example line)
-            # pylint: disable-msg=C0301
+            line_copy = line.replace('\r', '').replace('\n', '')
 
             # example of the expected format (156 chars per line):
-            # " 005001 LATITUDE (HIGH ACCURACY)                                         DEGREE                     5     -9000000  25 DEGREE                    5         7"
+            # " 005001 LATITUDE (HIGH ACCURACY)                    "+\
+            # "                     DEGREE                     5   "+\
+            # "  -9000000  25 DEGREE                    5         7"
 
-            # turn the pylint warning back on again
-            # pylint: enable-msg=C0301
             
-            if len(l) >= 118:
-                txt_reference       = l[0:8] # 8 characters
-                txt_name            = l[8:73] # 64 characters
-                txt_unit            = l[73:98] # 24 characters
-                txt_unit_scale      = l[98:102] # 4 characters
-                txt_unit_reference  = l[102:115] # 14 characters
-                txt_data_width      = l[115:118] # 4 characters
+            if len(line_copy) >= 118:
+                txt_reference       = line_copy[0:8] # 8 characters
+                txt_name            = line_copy[8:73] # 64 characters
+                txt_unit            = line_copy[73:98] # 24 characters
+                txt_unit_scale      = line_copy[98:102] # 4 characters
+                txt_unit_reference  = line_copy[102:115] # 14 characters
+                txt_data_width      = line_copy[115:118] # 4 characters
                 # sometimes additional info seems present, but
                 # I don't know yet the definition used for that
                 txt_additional_info = ''
-                if len(l)>118:
-                    txt_additional_info = l[118:]
+                if len(line_copy)>118:
+                    txt_additional_info = line_copy[118:]
             else:
                 success = False
                 nr_of_ignored_probl_entries += 1
                 print "ERROR: unexpected format in table B file..."
                 print "linecount: ", i
-                print "line: ["+l+"]"
+                print "line: ["+line_copy+"]"
                 print "Line is too short, it should hold at "+\
                       "least 118 characters"
-                print "but seems to have only: ", len(l), " characters."
-                #print "txt_reference       = ["+l[0:8]+"]"
-                #print "txt_name            = ["+l[8:73]+"]"
-                #print "txt_unit            = ["+l[73:98]+"]"
-                #print "txt_unit_scale      = ["+l[98:102]+"]"
-                #print "txt_unit_reference  = ["+l[102:115]+"]"
-                #print "txt_data_width      = ["+l[115:118]+"]"
+                print "but seems to have only: ", len(line_copy), " characters."
+                #print "txt_reference       = ["+line_copy[0:8]+"]"
+                #print "txt_name            = ["+line_copy[8:73]+"]"
+                #print "txt_unit            = ["+line_copy[73:98]+"]"
+                #print "txt_unit_scale      = ["+line_copy[98:102]+"]"
+                #print "txt_unit_reference  = ["+line_copy[102:115]+"]"
+                #print "txt_data_width      = ["+line_copy[115:118]+"]"
                 print "You could report this to the creator of this table "+\
                       "since this should never happen."
                 print "Ignoring this entry ....."
@@ -689,7 +683,7 @@ class BufrTable:
                     name = txt_name.strip()
                     unit = txt_unit.strip()
                     
-                except:
+                except ValueError:
                     success = False
                     nr_of_ignored_probl_entries += 1
                     if (txt_name.strip() == "RESERVED"):
@@ -702,6 +696,7 @@ class BufrTable:
                         print "txt_unit_scale      = ["+txt_unit_scale+"]"
                         print "txt_unit_reference  = ["+txt_unit_reference+"]"
                         print "txt_data_width      = ["+txt_data_width+"]"
+                        print "txt_additional_info = ["+txt_additional_info+"]"
                         print "Ignoring this entry ....."
 
             if (success):
@@ -765,16 +760,17 @@ class BufrTable:
         
         handled_blocks = 0
         list_of_handled_blocks = []
-        for bl in self.list_of_d_entry_lineblocks:
-            #print "bl=", bl
+        for d_entry_block in self.list_of_d_entry_lineblocks:
+            #print "d_entry_block=", d_entry_block
 
-            # ensure i is defined, even if bl is an empty list
-            # (pylint is not smart enough to detect this)
+            # ensure i and line are defined,
+            # even if d_entry_block is an empty list
             i = 0
-
-            for (j, (i, l)) in enumerate(bl):
-                #print j, "considering line ["+l+"]"
-                parts = l[:18].split()
+            line = ''
+            
+            for (j, (i, line)) in enumerate(d_entry_block):
+                #print j, "considering line ["+line+"]"
+                parts = line[:18].split()
                 if j == 0: # startline
                     #print "is a start line"
                     reference     = int(parts[0], 10)
@@ -783,21 +779,21 @@ class BufrTable:
                     comment        = ''
                     postpone = False
                     descriptor_list = []
-                    if len(l)>18:
-                        comment = l[18:]
+                    if len(line)>18:
+                        comment = line[18:]
                 else: # continuation_line:
                     #print "is a continuation line"
                     ref_reference = int(parts[0], 10)
                     extra_comment  = ''
-                    if len(l)>18:
+                    if len(line)>18:
                         # todo: check if the ref_reference is maybe a table-D
                         # entry without comment, and add the comment there
                         # in stead
-                        extra_comment = l[18:]
+                        extra_comment = line[18:]
                         if not (extra_comment.strip() == ""):
                             print "WARNING: ignoring extra comment on "+\
                                   "continuation line: "
-                            print "line: ["+l+"]"
+                            print "line: ["+line+"]"
                         
                 #print descriptor_list, reference, \
                 #      ref_reference, postpone, report_unhandled
@@ -829,7 +825,7 @@ class BufrTable:
                     print "ERROR: unexpected format in table D file..."
                     print "problematic descriptor is: ", reference
                     print "linecount: ", i
-                    print "line: ["+l+"]"
+                    print "line: ["+line+"]"
                     print "This D-table entry defines more descriptors than"
                     print "specified in the start line."
                     print "Please report this problem, together with"
@@ -857,13 +853,13 @@ class BufrTable:
                             print "Ignoring this entry for now....."
                         
                 # mark this block as done
-                list_of_handled_blocks.append(bl)
+                list_of_handled_blocks.append(d_entry_block)
                 # count successfully handled blocks
                 handled_blocks += 1
 
         # remove the processed blocks
-        for bl in list_of_handled_blocks:
-            self.list_of_d_entry_lineblocks.remove(bl)
+        for d_entry_block in list_of_handled_blocks:
+            self.list_of_d_entry_lineblocks.remove(d_entry_block)
 
         remaining_blocks = len(self.list_of_d_entry_lineblocks)
                 
@@ -890,9 +886,9 @@ class BufrTable:
         self.list_of_d_entry_lineblocks = []
         this_lineblock = None
         for (i, line) in enumerate(open(dfile, 'rt')):
-            l = line.replace('\r', '').replace('\n', '')
+            line_copy = line.replace('\r', '').replace('\n', '')
             #print "considering line ["+l+"]"
-            parts = l[:18].split()
+            parts = line_copy[:18].split()
             start_line = False
             continuation_line = False
             if (len(parts) == 3):
@@ -902,7 +898,7 @@ class BufrTable:
             else:
                 print "ERROR: unexpected format in table D file..."
                 print "linecount: ", i
-                print "line: ["+l+"]"
+                print "line: ["+line_copy+"]"
                 print "first 17 characters should hold either 1 or 3 integer"
                 print "numbers, but in stead it holds: ", len(parts), " parts"
                 print "You could report this to the creator of this table "+\
@@ -916,11 +912,11 @@ class BufrTable:
                     self.list_of_d_entry_lineblocks.append(this_lineblock)
                 # and start with a new lineblock
                 this_lineblock = []
-                this_lineblock.append((i, l))
+                this_lineblock.append((i, line_copy))
                 
             if continuation_line:
                 #print "is a continuation line"
-                this_lineblock.append((i, l))
+                this_lineblock.append((i, line_copy))
 
         # save the last block as well
         if (this_lineblock != None):
@@ -996,19 +992,19 @@ class BufrTable:
 
         mod_descr_list = []
         current_modifications = []
-        for d in descr_list:
-            if isinstance(d, ModificationCommand):
-                if d.is_modification_start():
-                    current_modifications.append(d)
-                elif d.is_modification_end():
-                    removed_d = current_modifications.pop()
-                    d.check_matches(removed_d)
+        for descr in descr_list:
+            if isinstance(descr, ModificationCommand):
+                if descr.is_modification_start():
+                    current_modifications.append(descr)
+                elif descr.is_modification_end():
+                    removed_descr = current_modifications.pop()
+                    descr.check_matches(removed_descr)
                 else:
                     print "Problem in apply_modification_commands."
                     print "Modifier not recognised as start or end command."
                     print "This should never happen !"
                     raise ProgrammingError
-            elif isinstance(d, SpecialCommand):
+            elif isinstance(descr, SpecialCommand):
                 print "Problem in apply_modification_commands."
                 print "The current descriptor list still seems to contain"
                 print "replication commands, so it is not yet expanded!!!"
@@ -1017,14 +1013,15 @@ class BufrTable:
                 raise ProgrammingError
             else:
                 if len(current_modifications)>0:
-                    mod_descr = ModifiedDescriptor(d)
+                    mod_descr = ModifiedDescriptor(descr)
                     print "current_modifications:"
-                    print ";".join(str(m) for m in current_modifications)
-                    for m in current_modifications:
-                        mod_descr.add_modification(m)
+                    print ";".join(str(cur_mod) for cur_mod
+                                   in current_modifications)
+                    for cur_mod in current_modifications:
+                        mod_descr.add_modification(cur_mod)
                     mod_descr_list.append(mod_descr)
                 else:
-                    mod_descr_list.append(d)
+                    mod_descr_list.append(descr)
         return mod_descr_list
         #  #]
     def unload_tables(self):
@@ -1103,12 +1100,12 @@ if __name__ == "__main__":
              "005001", # = LATITUDE (HIGH ACCURACY)  [DEGREE]
              "006001", # = LONGITUDE (HIGH ACCURACY) [DEGREE]
              "207000"] # = end of modifier   
-    descr_list = []
+    DESCR_LIST = []
     for c in CODES:
-        descr_list.append(BT.get_descr_object(int(c, 10)))
-    print "descr_list = ", descr_list
+        DESCR_LIST.append(BT.get_descr_object(int(c, 10)))
+    print "DESCR_LIST = ", DESCR_LIST
     
-    mod_descr_list = BT.apply_modification_commands(descr_list)
+    MOD_DESCR_LIST = BT.apply_modification_commands(DESCR_LIST)
     
     #  #]
     

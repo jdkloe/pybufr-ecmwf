@@ -32,7 +32,7 @@ EX_FILES = ['example_for_using_bufrinterface_ecmwf_for_decoding.py',
             'verify_bufr_tables.py']
 
 #MODULES_TO_CHECK = []
-MODULES_TO_CHECK = ['pybufr_ecmwf',]
+MODULES_TO_CHECK = ['pybufr_ecmwf', ]
 
 SCRIPTS_TO_CHECK = ['build_interface.py',
                     'clean.py',

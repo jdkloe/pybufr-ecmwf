@@ -26,9 +26,7 @@ by providing several helper classes.
 # License: GPL v2.
 #  #]
 #  #[ imported modules
-import os
-#import sys
-import glob
+#import os, sys
 import numpy   # array functionality
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF
@@ -46,7 +44,17 @@ class DataValue:
     a base class for data values
     """
     def __init__(self):
-        pass
+        self.value = None
+        # pass
+    def set_value(self, value):
+        """ a method to set a value """
+        self.value = value
+        # pass
+    def get_value(self):
+        """ a method to get a value """
+        return self.value
+        # pass
+    
     #  ==>value or string-value
     #  ==>already filled or not?
     #  ==>pointer to the associated descriptor object
@@ -58,7 +66,17 @@ class BUFRMessage: # [moved here from pybufr_ecmwf.py]
     a base class for BUFR messages
     """
     def __init__(self):
-        pass
+        self.store_something = None
+        # pass
+    def do_something(self):
+        """ do something """
+        self.store_something = 1.2345
+        # pass
+    def do_somethingelse(self):
+        """ do something else """
+        self.store_something = 5.4321
+        # pass
+
     #  ==>properties-list = [sec0, sec1, sec2, sec3 data]
     #  ==>list-of-descriptor-objects = []
     #  ==>finish (set num subsets, num delayed replications)
@@ -78,22 +96,26 @@ class BUFRMessage: # [moved here from pybufr_ecmwf.py]
     # -...
     #  #]
 
-class BUFRFile(RawBUFRFile):
+#class BUFRFile(RawBUFRFile):
     #  #[
-    """
-    a base class for BUFR files
-    """
-    pass
-    # bufr-file [can reuse much functionality from what I have now in the
-    #            RawBUFRFile class in pybufr_ecmwf.py]
-    #  ==>some meta data
-    #  ==>list-of-bufr-msgs = []
+#    """
+#    a base class for BUFR files
+#    """
+#    pass
+#    # bufr-file [can reuse much functionality from what I have now in the
+#    #            RawBUFRFile class in pybufr_ecmwf.py]
+#    #  ==>some meta data
+#    #  ==>list-of-bufr-msgs = []
     #  #]
 
-# this class implements combined reading and ecoding
+# this class implements combined reading and decoding
 class BUFRReader:
     #  #[
-    def __init__(self,input_bufr_file):
+    """
+    a class that combines reading and decoding of a BUFR file
+    to allow easier reading and usage of BUFR files
+    """
+    def __init__(self, input_bufr_file):
         #  #[
         # get an instance of the RawBUFRFile class
         self.rbf = RawBUFRFile()
@@ -109,9 +131,13 @@ class BUFRReader:
         # keep track of which bufr message has been loaded and
         # decoded from this file
         self.msg_loaded = -1
+        self.bufr_obj = None
         #  #]
     def get_next_msg(self):
         #  #[
+        """
+        step to the next BUFR message in the open file
+        """
         raw_msg = self.rbf.get_next_raw_bufr_msg()
         self.bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg,
                                            max_nr_expanded_descriptors=44)
@@ -123,24 +149,37 @@ class BUFRReader:
         #  #]
     def get_num_subsets(self):
         #  #[
+        """
+        request the number of subsets in the current BUFR message
+        """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
         return self.bufr_obj.get_num_subsets()
         #  #]
     def get_num_elements(self):
         #  #[
+        """
+        request the number of elements (descriptors) in the current subset
+        """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
         return self.bufr_obj.get_num_elements()
         #  #]
-    def get_value(self,descr_nr,subset_nr):
+    def get_value(self, descr_nr, subset_nr):
         #  #[
+        """
+        request a value for a given subset and descriptor number
+        """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
-        return self.bufr_obj.get_value(descr_nr,subset_nr)
+        return self.bufr_obj.get_value(descr_nr, subset_nr)
         #  #]
-    def get_values(self,descr_nr):
+    def get_values(self, descr_nr):
         #  #[
+        """
+        request an array of values containing the values
+        for a given descriptor number for all subsets
+        """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
         return self.bufr_obj.get_values(descr_nr)
@@ -156,16 +195,18 @@ class BUFRReader:
             raise NoMsgLoadedError
         num_subsets  = self.bufr_obj.get_num_subsets()
         num_elements = self.bufr_obj.get_num_elements()
-        result = numpy.zeros([num_subsets, num_elements],dtype=float)
+        result = numpy.zeros([num_subsets, num_elements], dtype=float)
 
         for descr_nr in range(num_elements):
-            result[:,descr_nr] = self.bufr_obj.get_values(descr_nr)
+            result[:, descr_nr] = self.bufr_obj.get_values(descr_nr)
 
         return result
         #  #]
     def close(self):
         #  #[
-        # close the file
+        """
+        close the file object
+        """
         self.rbf.close()
         #  #]
     #  #]
@@ -177,7 +218,7 @@ if __name__ == "__main__":
     # this is how I think the BUFR module interfacing should look like
     
     # get a msg instance
-    bm = BUFRMessage()
+    BMSG = BUFRMessage()
     # all sections should be filled with sensible defaults but ofcourse
     # the user should be able to change all of them
     # also the user should be able to insert a bufr table name to be
