@@ -318,10 +318,17 @@ CL = ["Development Status :: 3 - Alpha",
       "Natural Language :: English",
       "Operating System :: POSIX",
       "Programming Language :: Fortran",
-      "Programming Language :: Python :: 2",
       "Topic :: Scientific/Engineering",
       "Topic :: Software Development :: Libraries"
       ]
+
+if (sys.version_info[0]==2):
+    CL.append("Programming Language :: Python :: 2")
+elif (sys.version_info[0]==3):
+    CL.append("Programming Language :: Python :: 3")
+else:
+     errtxt = 'This python version is not supported: '+sys.version
+     raise NotImplementedError(errtxt)
 
 # passing a python file to do the build does not work, it gives this error:
 # error: unknown file type '.py' (from 'pybufr_ecmwf/build_interface.py')
