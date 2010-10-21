@@ -318,14 +318,16 @@ CL = ["Development Status :: 3 - Alpha",
       "Natural Language :: English",
       "Operating System :: POSIX",
       "Programming Language :: Fortran",
+      "Programming Language :: Python :: 2",
+      "Programming Language :: Python :: 3",
       "Topic :: Scientific/Engineering",
       "Topic :: Software Development :: Libraries"
       ]
 
 if (sys.version_info[0]==2):
-    CL.append("Programming Language :: Python :: 2")
+    package_name = 'pybufr-ecmwf'
 elif (sys.version_info[0]==3):
-    CL.append("Programming Language :: Python :: 3")
+    package_name = 'pybufr-ecmwf3'
 else:
      errtxt = 'This python version is not supported: '+sys.version
      raise NotImplementedError(errtxt)
@@ -338,7 +340,7 @@ ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr',
 
 setup(cmdclass = {'build'    : Build,
                   'build_ext': BuildExt},
-      name = 'pybufr-ecmwf',
+      name = package_name,
       version = '0.2',
       description = DESCR,
       long_description = LONG_DESCR,
