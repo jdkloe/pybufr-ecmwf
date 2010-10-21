@@ -23,6 +23,7 @@ ECMWF to allow reading and writing the WMO BUFR file standard.
 #  #]
 #  #[ imported modules
 import os          # operating system functions
+import sys         # operating system functions
 import re          # regular expression handling
 import glob        # allow for filename expansion
 import tarfile     # handle tar archives
@@ -117,9 +118,24 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         
         # wait until the child process is done
         # subpr.wait() # seems not necessary when catching stdout and stderr
-            
-        lines_stdout = subpr.stdout.readlines()
-        lines_stderr = subpr.stderr.readlines()
+
+        if (sys.version_info[0]==2):
+            lines_stdout = subpr.stdout.readlines()
+            lines_stderr = subpr.stderr.readlines()
+        elif (sys.version_info[0]==3):
+            # in python 3 the readlines() method returns bytes,
+            # so convert them to a unicode string for convenience
+            tmp_lines_stdout = subpr.stdout.readlines()
+            tmp_lines_stderr = subpr.stderr.readlines()
+            lines_stdout = []
+            lines_stderr = []
+            for line in tmp_lines_stdout:
+                lines_stdout.append(line.decode('utf-8'))
+            for line in tmp_lines_stderr:
+                lines_stderr.append(line.decode('utf-8'))
+        else:
+            errtxt = 'This python version is not supported: '+sys.version
+            raise NotImplementedError(errtxt)
         
         #print "lines_stdout: ", lines_stdout
         #print "lines_stderr: ", lines_stderr
