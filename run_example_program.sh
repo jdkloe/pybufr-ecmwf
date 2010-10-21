@@ -53,6 +53,12 @@ fi;
 if [ "$1" == "5" ] ;  then \
     ./example_programs/example_for_using_pb_routines.py \
     $CORRUPTEDTESTINPUTFILE; \
+    echo 
+    echo 
+    echo "Note that an error is expected for this program on some platforms"
+    echo "Seems especially the case on 64-bit linux)"
+    echo 
+    echo 
     exit;
 fi;
 
@@ -97,4 +103,3 @@ echo
 echo please choose one of them and run again like this:
 echo ./run_example_program.sh 2
 echo
-

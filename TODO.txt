@@ -1,4 +1,7 @@
 ---------------------------
+note: these problems probably are fixed now, but I'll have to do a bit more testing
+to be absolutely sure.
+---------------------------
 todo: fix these test cases for the /bufr_count_msgs.py tool
 
 # tested on these bufr files:
