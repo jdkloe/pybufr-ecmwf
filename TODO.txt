@@ -4,13 +4,13 @@ to be absolutely sure.
 ---------------------------
 todo: fix these test cases for the /bufr_count_msgs.py tool
 
-# tested on these bufr files:
+# tested ./bufr_count_msgs.py on these bufr files:
 # /nobackup/users/kloedej/BUFR_test_files
-# ascat/* [work fine]
-# qscat/* [work fine]
-# ers12/* [fails]
-# MSS*    [fails]
-# synop/* [fails for one case, works fine for the other]
+# ascat/* [bufr_count_msgs.py works fine] bufr_to_ascii.py fails [table loading problem]
+# qscat/* [bufr_count_msgs.py works fine] dito
+# ers12/* [bufr_count_msgs.py works fine] dito
+# MSS*    [bufr_count_msgs.py works fine] dito
+# synop/* [bufr_count_msgs.py works fine] dito
 
 #setenv PYTHONPATH ../
 # ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ascat/ascat_20100920_003901_metopa_20335_eps_o_125_ovw.l2_bufr
@@ -21,39 +21,17 @@ todo: fix these test cases for the /bufr_count_msgs.py tool
 # 545
 # ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/qscat/QS_D07060_S1821_E2002_B4009191_025.genws
 # 1624
-
-# incorrecte output:
 # ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ers12/pscat2000013121.pp
-# 0
-# strings /nobackup/users/kloedej/BUFR_test_files/ers12/pscat2000013121.pp  | grep BUFR | wc -l
 # 22
-
-# incorrecte output:
 # ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/MSS_S327121011_200_PAAL31_EGRR_231200
-# 0
-# strings /nobackup/users/kloedej/BUFR_test_files/MSS_S327121011_200_PAAL31_EGRR_231200  | grep BUFR | wc -l
 # 1
-
-# incorrecte output:
 # ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0001.bin 
-# 1
-# strings /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0001.bin | grep BUFR | wc -l
 # 8
-
-# incorrecte output:
 # ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0082.bin 
-# 1
-# strings /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0082.bin | grep BUFR | wc -l
 # 10
-
-# correct
 # bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/synop/greek.gts.bufr
 # 64
-
-# incorrect
 # bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/synop/greek.gts.bufr.gts 
-# 0 [moet zijn: 63]
-# strings /nobackup/users/kloedej/BUFR_test_files/synop/greek.gts.bufr.gts | grep BUFR | wc -l
 # 63
 
 ---------------------------
