@@ -167,11 +167,12 @@ class BUFRInterfaceECMWF:
         # also, force a slash at the end, otherwise the library fails
         # to find the tables (at least this has been the case for many
         # library versions I worked with)
-        env = os.environ
-        env["BUFR_TABLES"] = self.private_bufr_tables_dir+os.path.sep
+        os.environ["BUFR_TABLES"] = self.private_bufr_tables_dir+\
+                                    os.path.sep
         # the above works just fine for me, no need for this one:
         #os.putenv("BUFR_TABLES",self.private_bufr_tables_dir+os.path.sep)
 
+        self.outp_file = None
         #  #]        
     def get_expected_ecmwf_bufr_table_names(self,
                                             ecmwf_bufr_tables_dir,
@@ -328,6 +329,47 @@ class BUFRInterfaceECMWF:
         
         return (name_table_b, name_table_d)
         #  #]
+
+    # the next 2 methods where a nice idea, but they fail
+    # miserably because fortran has no portable flush function
+    # that I can use. I'll need to invent some other workaround.
+    def store_fortran_stdout(self):
+        #  #[
+        """
+        Set the 'STD_OUT' environment variable to redirect the
+        fortran output to a temporary file named fort.12
+        (or whatever the number in STD_OUT is)
+        This is needed because otherwise the fortran and python/c
+        output get written to 2 different output buffers, and will
+        be mixed in inpredictable ways
+        """
+        if os.environ.has_key('STD_OUT'):
+            outp_fileunit = os.environ['STD_OUT']
+        else:
+            outp_fileunit = '12'
+            os.environ['STD_OUT'] = outp_fileunit
+
+        self.outp_file = 'fort.'+str(outp_fileunit)
+        #  #]
+    def display_fortran_stdout(self):
+        #  #[
+        """
+        display the fortran output that was stored in the temporary
+        file by the store_fortran_stdout method
+        """
+        # now read the temporary file and display the output
+        if os.path.exists(self.outp_file):
+            for line in open(self.outp_file).readlines():
+                print line,
+        else:
+            print '[there was no output]'
+            
+        # finally remove the temporary file
+        if os.path.exists(self.outp_file):
+            os.remove(self.outp_file)
+        
+        #  #]        
+
     def decode_sections_012(self):
         #  #[ wrapper for bus012
         """
@@ -515,8 +557,8 @@ class BUFRInterfaceECMWF:
         # also, force a slash at the end, otherwise the library fails
         # to find the tables (at least this has been the case for many
         # library versions I worked with)
-        env = os.environ
-        env["BUFR_TABLES"] = self.private_bufr_tables_dir+os.path.sep
+        os.environ["BUFR_TABLES"] = self.private_bufr_tables_dir+\
+                                    os.path.sep
     
         #  #]
     def print_sections_012(self):
@@ -534,10 +576,14 @@ class BUFRInterfaceECMWF:
 
         print '------------------------------'
         print "printing content of section 0:"
+        # self.store_fortran_stdout()
         ecmwfbufr.buprs0(self.ksec0)
+        # self.display_fortran_stdout()
         print '------------------------------'
         print "printing content of section 1:"
+        # self.store_fortran_stdout()
         ecmwfbufr.buprs1(self.ksec1)
+        # self.display_fortran_stdout()
         print '------------------------------'
         sec2_len = self.ksec2[0]        
         if (sec2_len > 0):
@@ -552,8 +598,10 @@ class BUFRInterfaceECMWF:
                              self.ksup,
                              kerr)
             print "printing content of section 2:"
+            # self.store_fortran_stdout()
             ecmwfbufr.buprs2(self.ksup,
                              self.key)
+            # self.display_fortran_stdout()
         else:
             print 'skipping section 2 [since it seems unused]'
         #  #]
@@ -909,10 +957,13 @@ class BUFRInterfaceECMWF:
         # explanation.
         # They will also print zeros for all not used elements of
         # these ktdlst and ktdexp arrays
+
+        # self.store_fortran_stdout()
         ecmwfbufr.buprs3(self.ksec3,
                          self.ktdlst,
                          self.ktdexp,
                          self.cnames)
+        # self.display_fortran_stdout()
         #  #]        
     def fill_sections_0123(self,
                            bufr_code_centre,

@@ -55,23 +55,23 @@ class Build(_build):
     #  #[
     """Adapted Python binary builder."""
     user_options = _build.user_options
-    user_options.append(("preferred-fortran-compiler", None,
+    user_options.append(("preferred-fortran-compiler=", None,
                          "name of preferred fortran compiler to be used"))
-    user_options.append(("preferred-c-compiler", None,
+    user_options.append(("preferred-c-compiler=", None,
                          "name of preferred c compiler to be used"))
-    user_options.append(("fortran-compiler", None,
+    user_options.append(("fortran-compiler=", None,
                          "name and full path of fortran compiler to be used"))
-    user_options.append(("fortran-ld-library-path", None,
+    user_options.append(("fortran-ld-library-path=", None,
                          "path in which shared objects can be found that "+\
                          "are needed by the choosen fortran compiler"))
-    user_options.append(("fortran-flags", None,
+    user_options.append(("fortran-flags=", None,
                          "flags to be passed to the fortran compiler"))
-    user_options.append(("c-compiler", None,
+    user_options.append(("c-compiler=", None,
                          "name and full path of c compiler to be used"))
-    user_options.append(("c-ld-library-path", None,
+    user_options.append(("c-ld-library-path=", None,
                          "path in which shared objects can be found that "+\
                          "are needed by the choosen c compiler"))
-    user_options.append(("c-flags", None,
+    user_options.append(("c-flags=", None,
                          "flags to be passed to the c compiler"))
 
     def initialize_options(self):
@@ -87,17 +87,17 @@ class Build(_build):
         self.c_flags = None
         _build.initialize_options(self)
         #  #]
-    #def run(self):
+    def run(self):
         #  #[ modified run (for debugging only)
         # some test prints:
-        #print "build: self.user_options = ", self.user_options
-        #print "build: self.preferred_fortran_compiler = ",\
-        #      self.preferred_fortran_compiler
-        #print "build: self.preferred_c_compiler = ",\
-        #      self.preferred_c_compiler
+        print "build: self.user_options = ", self.user_options
+        print "build: self.preferred_fortran_compiler = ",\
+              self.preferred_fortran_compiler
+        print "build: self.preferred_c_compiler = ",\
+              self.preferred_c_compiler
 
         # call the run command of the default build
-        #_build.run(self)
+        _build.run(self)
         #  #]
     #  #]
 
@@ -117,23 +117,23 @@ class BuildExt(_build_ext):
     # to handle fortran as well
 
     user_options = _build_ext.user_options
-    user_options.append(("preferred-fortran-compiler", None,
+    user_options.append(("preferred-fortran-compiler=", None,
                          "name of fortran compiler to be used"))
-    user_options.append(("preferred-c-compiler", None,
+    user_options.append(("preferred-c-compiler=", None,
                          "name of c compiler to be used"))
-    user_options.append(("fortran-compiler", None,
+    user_options.append(("fortran-compiler=", None,
                          "name and full path of fortran compiler to be used"))
-    user_options.append(("fortran-ld-library-path", None,
+    user_options.append(("fortran-ld-library-path=", None,
                          "path in which shared objects can be found that "+\
                          "are needed by the choosen fortran compiler"))
-    user_options.append(("fortran-flags", None,
+    user_options.append(("fortran-flags=", None,
                          "flags to be passed to the fortran compiler"))
-    user_options.append(("c-compiler", None,
+    user_options.append(("c-compiler=", None,
                          "name and full path of c compiler to be used"))
-    user_options.append(("c-ld-library-path", None,
+    user_options.append(("c-ld-library-path=", None,
                          "path in which shared objects can be found that "+\
                          "are needed by the choosen c compiler"))
-    user_options.append(("c-flags", None,
+    user_options.append(("c-flags=", None,
                          "flags to be passed to the c compiler"))
     def initialize_options(self):
         #  #[ initialise the additional options 

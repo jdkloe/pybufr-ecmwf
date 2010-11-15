@@ -484,7 +484,10 @@ class InstallBUFRInterfaceECMWF:
             if not success:
                 # fallback option: copy the (possibly outdated version)
                 # of the library sources stored in ecmwf_bufr_lib_sources
-                tgz_file = glob.glob('ecmwf_bufr_lib_sources/bufr*gz')
+                pattern = os.path.join('..',
+                                       'ecmwf_bufr_lib_sources',
+                                       'bufr*gz')
+                tgz_file = glob.glob(pattern)
                 cmd = 'cp '+tgz_file[0]+' '+self.ecmwf_bufr_lib_dir
                 print "Executing command: ", cmd
                 os.system(cmd)
@@ -1607,8 +1610,8 @@ if __name__ == "__main__":
     # instantiate the class, and build library if needed
     # (4 different tests defined for this step, with 4 different compilers)
     
-    TESTCASE = 1 # test default g95
-    #TESTCASE = 2 # test default gfortran
+    #TESTCASE = 1 # test default g95
+    TESTCASE = 2 # test default gfortran
     #TESTCASE = 3 # test custom gfortran
     #TESTCASE = 4 # test custom g95-32 bit
     #TESTCASE = 5 # test custom g95-64 bit
