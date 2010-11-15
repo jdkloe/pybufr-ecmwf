@@ -324,17 +324,21 @@ class InstallBUFRInterfaceECMWF:
         if not os.path.exists(self.ecmwf_bufr_lib_dir):
             os.makedirs(self.ecmwf_bufr_lib_dir)
 
-        import urllib
-
+        try:
+            import urllib
+        except ImportError:
+            print 'import of urllib failed!'
+            return False
+            
         if (self.verbose):
             print "setting up connection to ECMWF website"
         try:
             # Get a file-like object for this website
             urlf = urllib.urlopen(url_bufr_page)
-        except:
+        except IOError:
             print "connection failed......"
             print "could not open url: ", url_bufr_page
-            raise NetworkError
+            return False
 
         # Read from the object, storing the page's contents in a list of lines
         lines = urlf.readlines()
@@ -404,10 +408,10 @@ class InstallBUFRInterfaceECMWF:
         try:
             # Get a file-like object for this website
             urlf = urllib.urlopen(download_url)
-        except:
+        except IOError:
             print "connection failed......"
             print "could not open url: ", download_url
-            raise NetworkError
+            return False
         
         tarfiledata = urlf.read()
         urlf.close()
@@ -422,6 +426,8 @@ class InstallBUFRInterfaceECMWF:
 
         if (self.verbose):
             print "created local copy of: ", most_recent_bufr_tarfile_name
+
+        return True
         #  #]
     def get_source_dir(self):
         #  #[
@@ -473,7 +479,16 @@ class InstallBUFRInterfaceECMWF:
             # location, in which case downloading in not needed)
             (source_dir, tarfile_to_install) = self.get_source_dir()
         if (source_dir == None):
-            self.download_library()
+            success = self.download_library()
+
+            if not success:
+                # fallback option: copy the (possibly outdated version)
+                # of the library sources stored in ecmwf_bufr_lib_sources
+                tgz_file = glob.glob('ecmwf_bufr_lib_sources/bufr*gz')
+                cmd = 'cp '+tgz_file[0]+' '+self.ecmwf_bufr_lib_dir
+                print "Executing command: ", cmd
+                os.system(cmd)
+                
             # retry (hopefully we have a copy of the tarfile now)
             (source_dir, tarfile_to_install) = self.get_source_dir()
             
