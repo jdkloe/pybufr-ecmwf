@@ -329,10 +329,6 @@ class BUFRInterfaceECMWF:
         
         return (name_table_b, name_table_d)
         #  #]
-
-    # the next 2 methods where a nice idea, but they fail
-    # miserably because fortran has no portable flush function
-    # that I can use. I'll need to invent some other workaround.
     def store_fortran_stdout(self):
         #  #[
         """
@@ -349,7 +345,9 @@ class BUFRInterfaceECMWF:
             outp_fileunit = '12'
             os.environ['STD_OUT'] = outp_fileunit
 
-        self.outp_file = 'fort.'+str(outp_fileunit)
+        # self.outp_file = 'fort.'+str(outp_fileunit)
+        self.outp_file = 'tmp_stdout.txt'
+        ecmwfbufr.open_fortran_stdout(self.outp_file)
         #  #]
     def display_fortran_stdout(self):
         #  #[
@@ -357,19 +355,25 @@ class BUFRInterfaceECMWF:
         display the fortran output that was stored in the temporary
         file by the store_fortran_stdout method
         """
+
+        # close the fortran stdout() channel. This should flush all
+        # output may still be buffered at this point
+        ecmwfbufr.close_fortran_stdout()
+        
         # now read the temporary file and display the output
         if os.path.exists(self.outp_file):
-            for line in open(self.outp_file).readlines():
-                print line,
+            lines = open(self.outp_file).readlines()
+            print 'detected ',len(lines),' lines of fortran stdout:'
+            for line in lines:
+                print 'FORTRAN STDOUT: '+line,
         else:
-            print '[there was no output]'
+            print '[there was no FORTRAN output to STDOUT]'
             
         # finally remove the temporary file
         if os.path.exists(self.outp_file):
             os.remove(self.outp_file)
         
         #  #]        
-
     def decode_sections_012(self):
         #  #[ wrapper for bus012
         """
@@ -381,12 +385,14 @@ class BUFRInterfaceECMWF:
         kerr = 0
 
         print "calling: ecmwfbufr.bus012():"
+        self.store_fortran_stdout()
         ecmwfbufr.bus012(self.encoded_message, # input
                          self.ksup,  # output
                          self.ksec0, # output
                          self.ksec1, # output
                          self.ksec2, # output
                          kerr)       # output
+        self.display_fortran_stdout()
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bus012'))
 
@@ -413,6 +419,7 @@ class BUFRInterfaceECMWF:
         kerr = 0
        
         print "calling: ecmwfbufr.bus012():"
+        self.store_fortran_stdout()
         ecmwfbufr.bus0123(self.encoded_message, # input
                           self.ksup,  # output
                           self.ksec0, # output
@@ -420,6 +427,7 @@ class BUFRInterfaceECMWF:
                           self.ksec2, # output
                           self.ksec3, # output
                           kerr)       # output
+        self.display_fortran_stdout()
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bus0123'))
 
@@ -576,14 +584,14 @@ class BUFRInterfaceECMWF:
 
         print '------------------------------'
         print "printing content of section 0:"
-        # self.store_fortran_stdout()
+        self.store_fortran_stdout()
         ecmwfbufr.buprs0(self.ksec0)
-        # self.display_fortran_stdout()
+        self.display_fortran_stdout()
         print '------------------------------'
         print "printing content of section 1:"
-        # self.store_fortran_stdout()
+        self.store_fortran_stdout()
         ecmwfbufr.buprs1(self.ksec1)
-        # self.display_fortran_stdout()
+        self.display_fortran_stdout()
         print '------------------------------'
         sec2_len = self.ksec2[0]        
         if (sec2_len > 0):
@@ -592,16 +600,18 @@ class BUFRInterfaceECMWF:
             print '------------------------------'
             print "calling buukey"
             kerr = 0
+            self.store_fortran_stdout()
             ecmwfbufr.buukey(self.ksec1,
                              self.ksec2,
                              self.key,
                              self.ksup,
                              kerr)
+            self.display_fortran_stdout()
             print "printing content of section 2:"
-            # self.store_fortran_stdout()
+            self.store_fortran_stdout()
             ecmwfbufr.buprs2(self.ksup,
                              self.key)
-            # self.display_fortran_stdout()
+            self.display_fortran_stdout()
         else:
             print 'skipping section 2 [since it seems unused]'
         #  #]
@@ -626,6 +636,7 @@ class BUFRInterfaceECMWF:
         self.values = np.zeros(      self.kvals, dtype = np.float64)
         self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
 
+        self.store_fortran_stdout()
         ecmwfbufr.bufrex(self.encoded_message, # input
                          self.ksup,   # output
                          self.ksec0,  # output
@@ -638,6 +649,7 @@ class BUFRInterfaceECMWF:
                          self.values, # output
                          self.cvals,  # output
                          kerr)        # output
+        self.display_fortran_stdout()
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bufrex'))
 
@@ -885,11 +897,13 @@ class BUFRInterfaceECMWF:
         kerr   = 0
     
         print "calling: ecmwfbufr.busel():"
+        self.store_fortran_stdout()
         ecmwfbufr.busel(self.ktdlen, # actual number of data descriptors
                         self.ktdlst, # list of data descriptors
                         self.ktdexl, # actual nr of expanded data descriptors
                         self.ktdexp, # list of expanded data descriptors
                         kerr)   # error  message
+        self.display_fortran_stdout()
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bufrex'))
 
@@ -958,12 +972,12 @@ class BUFRInterfaceECMWF:
         # They will also print zeros for all not used elements of
         # these ktdlst and ktdexp arrays
 
-        # self.store_fortran_stdout()
+        self.store_fortran_stdout()
         ecmwfbufr.buprs3(self.ksec3,
                          self.ktdlst,
                          self.ktdexp,
                          self.cnames)
-        # self.display_fortran_stdout()
+        self.display_fortran_stdout()
         #  #]        
     def fill_sections_0123(self,
                            bufr_code_centre,
@@ -1114,6 +1128,7 @@ class BUFRInterfaceECMWF:
                 
         print "delayed replication factors: ", self.kdata
 
+        self.store_fortran_stdout()
         ecmwfbufr.buxdes(iprint,
                          self.ksec1,
                          self.ktdlst,
@@ -1123,12 +1138,14 @@ class BUFRInterfaceECMWF:
                          self.cnames,
                          self.cunits,
                          kerr)
+        self.display_fortran_stdout()
+        if (kerr != 0):
+            raise EcmwfBufrLibError(self.explain_error(kerr, 'buxdes'))
+
         print "ktdlst = ", self.ktdlst
         selection = np.where(self.ktdexp>0)
         print "ktdexp = ", self.ktdexp[selection]
         # print "ktdexl = ", self.ktdexl # this one seems not to be filled ...?
-        if (kerr != 0):
-            raise EcmwfBufrLibError(self.explain_error(kerr, 'buxdes'))
 
         # It is not clear to me why buxdes seems to correctly produce
         # the expanded descriptor list, but yet it does
@@ -1175,6 +1192,7 @@ class BUFRInterfaceECMWF:
         words = np.zeros(num_words, dtype=np.int)
 
         # call BUFREN
+        self.store_fortran_stdout()
         ecmwfbufr.bufren(self.ksec0, # input
                          self.ksec1, # input
                          self.ksec2, # input
@@ -1187,6 +1205,7 @@ class BUFRInterfaceECMWF:
                          cvals,  # input: strings to encode
                          words, # output: the encoded message
                          kerr)  # output: an error flag
+        self.display_fortran_stdout()
         print "bufren call finished"
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bufren'))
