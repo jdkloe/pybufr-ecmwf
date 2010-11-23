@@ -1,0 +1,36 @@
+ 
+
+
+        DATA DESCRIPTORS (UNEXPANDED)
+ 
+    1  301011
+    2  301012
+    3  102000
+    4  031001
+    5  007004
+    6  012001
+    7  102003
+    8  005001
+    9  006001
+ 
+
+        DATA DESCRIPTORS (EXPANDED)
+ 
+                ELEMENT NAME                                                      UNIT
+ 
+     1  004001  YEAR                                                              YEAR                    
+     2  004002  MONTH                                                             MONTH                   
+     3  004003  DAY                                                               DAY                     
+     4  004004  HOUR                                                              HOUR                    
+     5  004005  MINUTE                                                            MINUTE                  
+     6  031001  DELAYED DESCRIPTOR REPLICATION FACTOR                             NUMERIC                 
+     7  007004  PRESSURE                                                          PA                      
+     8  012001  TEMPERATURE/DRY-BULB TEMPERATURE                                  K                       
+     9  007004  PRESSURE                                                          PA                      
+    10  012001  TEMPERATURE/DRY-BULB TEMPERATURE                                  K                       
+    11  005001  LATITUDE (HIGH ACCURACY)                                          DEGREE                  
+    12  006001  LONGITUDE (HIGH ACCURACY)                                         DEGREE                  
+    13  005001  LATITUDE (HIGH ACCURACY)                                          DEGREE                  
+    14  006001  LONGITUDE (HIGH ACCURACY)                                         DEGREE                  
+    15  005001  LATITUDE (HIGH ACCURACY)                                          DEGREE                  
+    16  006001  LONGITUDE (HIGH ACCURACY)                                         DEGREE                  

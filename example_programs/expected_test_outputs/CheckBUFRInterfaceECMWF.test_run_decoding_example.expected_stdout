@@ -22,8 +22,34 @@ D_default.TXT
 calling: print_sections_012():
 ------------------------------
 printing content of section 0:
+detected  6  lines of fortran stdout:
+FORTRAN STDOUT: 1
+FORTRAN STDOUT:           BUFR SECTION 0    
+FORTRAN STDOUT:  
+FORTRAN STDOUT:  LENGTH OF SECTION 0 (BYTES)                  4
+FORTRAN STDOUT:  TOTAL LENGTH OF BUFR MESSAGE (BYTES)         0
+FORTRAN STDOUT:  BUFR EDITION NUMBER                          0
 ------------------------------
 printing content of section 1:
+detected  18  lines of fortran stdout:
+FORTRAN STDOUT: 1
+FORTRAN STDOUT:          BUFR SECTION 1    
+FORTRAN STDOUT:  
+FORTRAN STDOUT:  LENGTH OF SECTION 1 (BYTES)      18
+FORTRAN STDOUT:  BUFR EDITION NUMBER               0
+FORTRAN STDOUT:  ORIGINATING CENTRE              210
+FORTRAN STDOUT:  UPDATE SEQUENCE NUMBER            0
+FORTRAN STDOUT:  FLAG (PRESENCE OF SECTION 2)      0
+FORTRAN STDOUT:  BUFR MESSAGE TYPE                12
+FORTRAN STDOUT:  BUFR MESSAGE SUBTYPE              8
+FORTRAN STDOUT:  VERSION NUMBER OF LOCAL TABLE     1
+FORTRAN STDOUT:  YEAR                             98
+FORTRAN STDOUT:  MONTH                            12
+FORTRAN STDOUT:  DAY                              16
+FORTRAN STDOUT:  HOUR                             22
+FORTRAN STDOUT:  MINUTE                           25
+FORTRAN STDOUT:  VERSION NUMBER OF MASTER TABLE    0
+FORTRAN STDOUT:  BUFR MASTER TABLE                 0
 ------------------------------
 skipping section 2 [since it seems unused]
 ------------------------------
@@ -122,6 +148,87 @@ expanded descriptor list:  [ 1007 25060  1033  1034  1012  4001  4002  4003  400
 expanded descriptor list length:  44
 ------------------------------
 printing content of section 3:
+detected  80  lines of fortran stdout:
+FORTRAN STDOUT: 1
+FORTRAN STDOUT:           BUFR SECTION 3    
+FORTRAN STDOUT:  
+FORTRAN STDOUT:  LENGTH OF SECTION 3 (BYTES)            10
+FORTRAN STDOUT:  RESERVED                                0
+FORTRAN STDOUT:  NUMBER OF DATA SUBSETS                361
+FORTRAN STDOUT:  FLAG (DATA TYPE/DATA COMPRESSION)     192
+FORTRAN STDOUT:  
+FORTRAN STDOUT: 
+FORTRAN STDOUT: 
+FORTRAN STDOUT:         DATA DESCRIPTORS (UNEXPANDED)
+FORTRAN STDOUT:  
+FORTRAN STDOUT:     1  312021
+FORTRAN STDOUT:     2  000000
+FORTRAN STDOUT:     3  000000
+FORTRAN STDOUT:     4  000000
+FORTRAN STDOUT:     5  000000
+FORTRAN STDOUT:     6  000000
+FORTRAN STDOUT:     7  000000
+FORTRAN STDOUT:     8  000000
+FORTRAN STDOUT:     9  000000
+FORTRAN STDOUT:    10  000000
+FORTRAN STDOUT:    11  000000
+FORTRAN STDOUT:    12  000000
+FORTRAN STDOUT:    13  000000
+FORTRAN STDOUT:    14  000000
+FORTRAN STDOUT:    15  000000
+FORTRAN STDOUT:    16  000000
+FORTRAN STDOUT:    17  000000
+FORTRAN STDOUT:    18  000000
+FORTRAN STDOUT:    19  000000
+FORTRAN STDOUT:    20  000000
+FORTRAN STDOUT:  
+FORTRAN STDOUT: 
+FORTRAN STDOUT:         DATA DESCRIPTORS (EXPANDED)
+FORTRAN STDOUT:  
+FORTRAN STDOUT:      1  001007  SATELLITE IDENTIFIER                                            
+FORTRAN STDOUT:      2  025060  SOFTWARE IDENTIFICATION (SEE NOTE 2)                            
+FORTRAN STDOUT:      3  001033  IDENTIFICATION OF ORIGINATING/GENERATING CENTRE                 
+FORTRAN STDOUT:      4  001034  IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTRE             
+FORTRAN STDOUT:      5  001012  DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**              
+FORTRAN STDOUT:      6  004001  YEAR                                                            
+FORTRAN STDOUT:      7  004002  MONTH                                                           
+FORTRAN STDOUT:      8  004003  DAY                                                             
+FORTRAN STDOUT:      9  004004  HOUR                                                            
+FORTRAN STDOUT:     10  004005  MINUTE                                                          
+FORTRAN STDOUT:     11  004006  SECOND                                                          
+FORTRAN STDOUT:     12  027031  IN DIRECTION OF 0 DEGREES LONGITUDE, DISTANCE FROM THE EARTH'S C
+FORTRAN STDOUT:     13  028031  IN DIRECTION 90 DEGREES EAST, DISTANCE FROM THE EARTH'S CENTRE  
+FORTRAN STDOUT:     14  010031  IN DIRECTION OF THE NORTH POLE, DISTANCE FROM THE EARTH'S CENTRE
+FORTRAN STDOUT:     15  001041  ABSOLUTE PLATFORM VELOCITY - FIRST COMPONENT (SEE NOTE 6)       
+FORTRAN STDOUT:     16  001042  ABSOLUTE PLATFORM VELOCITY - SECOND COMPONENT (SEE NOTE 6)      
+FORTRAN STDOUT:     17  001043  ABSOLUTE PLATFORM VELOCITY - THIRD COMPONENT (SEE NOTE 6)       
+FORTRAN STDOUT:     18  002021  SATELLITE INSTRUMENT DATA USED IN PROCESSING                    
+FORTRAN STDOUT:     19  004001  YEAR                                                            
+FORTRAN STDOUT:     20  004002  MONTH                                                           
+FORTRAN STDOUT:     21  004003  DAY                                                             
+FORTRAN STDOUT:     22  004004  HOUR                                                            
+FORTRAN STDOUT:     23  004005  MINUTE                                                          
+FORTRAN STDOUT:     24  004006  SECOND                                                          
+FORTRAN STDOUT:     25  005002  LATITUDE (COARSE ACCURACY)                                      
+FORTRAN STDOUT:     26  006002  LONGITUDE (COARSE ACCURACY)                                     
+FORTRAN STDOUT:     27  002111  RADAR INCIDENCE ANGLE                                           
+FORTRAN STDOUT:     28  002112  RADAR LOOK ANGLE                                                
+FORTRAN STDOUT:     29  021062  BACKSCATTER                                                     
+FORTRAN STDOUT:     30  021063  RADIOMETRIC RESOLUTION (NOISE VALUE)                            
+FORTRAN STDOUT:     31  021065  MISSING PACKET COUNTER                                          
+FORTRAN STDOUT:     32  002111  RADAR INCIDENCE ANGLE                                           
+FORTRAN STDOUT:     33  002112  RADAR LOOK ANGLE                                                
+FORTRAN STDOUT:     34  021062  BACKSCATTER                                                     
+FORTRAN STDOUT:     35  021063  RADIOMETRIC RESOLUTION (NOISE VALUE)                            
+FORTRAN STDOUT:     36  021065  MISSING PACKET COUNTER                                          
+FORTRAN STDOUT:     37  002111  RADAR INCIDENCE ANGLE                                           
+FORTRAN STDOUT:     38  002112  RADAR LOOK ANGLE                                                
+FORTRAN STDOUT:     39  021062  BACKSCATTER                                                     
+FORTRAN STDOUT:     40  021063  RADIOMETRIC RESOLUTION (NOISE VALUE)                            
+FORTRAN STDOUT:     41  021065  MISSING PACKET COUNTER                                          
+FORTRAN STDOUT:     42  011012  WIND SPEED AT 10 M                                              
+FORTRAN STDOUT:     43  011011  WIND DIRECTION AT 10 M                                          
+FORTRAN STDOUT:     44  021067  WIND PRODUCT CONFIDENCE DATA                                    
 succesfully decoded data from file:  example_programs/testdata/Testfile.BUFR
 --------------------------------------------------
 done

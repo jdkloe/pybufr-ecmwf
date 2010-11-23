@@ -62,6 +62,8 @@ class BUFRInterfaceECMWF:
     raw ECMWF BUFR interface wrapper
     """
     #  #[ local constant parameters
+
+    # some default array sizes used by the ecmwf interface
     size_ksup  =    9
     size_ksec0 =    3
     size_ksec1 =   40
@@ -69,6 +71,19 @@ class BUFRInterfaceECMWF:
     size_key   =   52
     size_ksec3 =    4
     size_ksec4 =    2
+
+    # location for storing temporary files
+    temp_dir = '/tmp/pybufr_ecmwf_temporary_files'
+
+    # filename to use to redirect the fortran stdout stream
+    fortran_stdout_tmp_file = 'tmp_fortran_stdout.txt'
+
+    # path in which symlinks will be created to the BUFR tables we need
+    # (note that it must be an absolute path! this is required by the
+    #  ecmwf library)
+    private_bufr_tables_dir = os.path.abspath(os.path.join(temp_dir,
+                                                           'tmp_BUFR_TABLES'))
+    
     #  #]
     def __init__(self, encoded_message=None,
                  max_nr_descriptors=20,
@@ -157,9 +172,9 @@ class BUFRInterfaceECMWF:
         # has been retrieved (so just before entering the bufrex routine)
         self.values = None
         self.cvals  = None
-
-        # define our own location for storing (symlinks to) the BUFR tables
-        self.private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
+        
+        # ensure the directory exsists in which we will create
+        # symbolic links to the bufr tables to be used
         if (not os.path.exists(self.private_bufr_tables_dir)):
             os.mkdir(self.private_bufr_tables_dir)
 
@@ -173,6 +188,11 @@ class BUFRInterfaceECMWF:
         #os.putenv("BUFR_TABLES",self.private_bufr_tables_dir+os.path.sep)
 
         self.outp_file = None
+
+        # ensure the directory needed to store temporary files is present
+        if not os.path.exists(self.temp_dir):
+            os.mkdir(self.temp_dir)
+
         #  #]        
     def get_expected_ecmwf_bufr_table_names(self,
                                             ecmwf_bufr_tables_dir,
@@ -345,8 +365,13 @@ class BUFRInterfaceECMWF:
             outp_fileunit = '12'
             os.environ['STD_OUT'] = outp_fileunit
 
+        # suppres the default ECMWF welcome message which
+        # is not yet redirected to the above defined fileunit
+        os.environ['PRINT_TABLE_NAMES'] = 'FALSE'
+
         # self.outp_file = 'fort.'+str(outp_fileunit)
-        self.outp_file = 'tmp_stdout.txt'
+        self.outp_file = os.path.join(self.temp_dir,
+                                      self.fortran_stdout_tmp_file)
         ecmwfbufr.open_fortran_stdout(self.outp_file)
         #  #]
     def display_fortran_stdout(self):
@@ -363,11 +388,13 @@ class BUFRInterfaceECMWF:
         # now read the temporary file and display the output
         if os.path.exists(self.outp_file):
             lines = open(self.outp_file).readlines()
-            print 'detected ',len(lines),' lines of fortran stdout:'
-            for line in lines:
-                print 'FORTRAN STDOUT: '+line,
+            if len(lines)>0:
+                print 'detected ',len(lines),' lines of fortran stdout:'
+                for line in lines:
+                    print 'FORTRAN STDOUT: '+line,
         else:
-            print '[there was no FORTRAN output to STDOUT]'
+            pass
+            # print '[there was no FORTRAN output to STDOUT]'
             
         # finally remove the temporary file
         if os.path.exists(self.outp_file):

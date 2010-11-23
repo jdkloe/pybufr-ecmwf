@@ -117,7 +117,19 @@ def decoding_example(input_bufr_file):
     env["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
     # print 'private_bufr_tables_dir+os.path.sep=', \
     #       private_bufr_tables_dir+os.path.sep
-    
+
+    # redirect all fortran stdout to fileunit 12, so the text
+    # will end-up in a file called 'fort.12'
+    # This is needed to get reproducible output for my unittests.
+    # Without this trick the stdout stream from fortran and the stdout
+    # stream from c/python may be mixed in inpredictable ways
+    # (depending on the size of the buffer used to store the streams)
+    os.environ['STD_OUT'] = '12'
+
+    # suppres the default ECMWF welcome message which
+    # is not yet redirected to the above defined fileunit
+    os.environ['PRINT_TABLE_NAMES'] = 'FALSE'
+
     ksup   = np.zeros(         9, dtype = np.int)
     ksec0  = np.zeros(         3, dtype = np.int)
     ksec1  = np.zeros(        40, dtype = np.int)

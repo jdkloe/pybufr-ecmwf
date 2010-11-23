@@ -29,9 +29,9 @@ are planned as well.
 
 #  #]
 #  #[ imported modules
-import os, sys      # operating system functions
-import unittest  # import the unittest functionality
-import subprocess  # support running additional executables
+import os, sys    # operating system functions
+import unittest   # import the unittest functionality
+import subprocess # support running additional executables
 
 sys.path.append('./')
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
@@ -185,6 +185,49 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         cmd = cmd + ' ' + self.testinputfile
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
+
+        # unfortunately the next check is impossible because the
+        # fort.12 file holding the fortran stdout seems only closed/flushed
+        # after the end of this python script, causing inpredictible results.
+        # Note that the example_for_using_bufrinterface_ecmwf_for_decoding
+        # and example_for_using_bufrinterface_ecmwf_for_encoding tests
+        # use the bufr_interface_ecmwf.py module which implement an explicit
+        # close of the fortran file used for stdout, so in these tests
+        # the actual text output of the ecmwf bufr library routines is
+        # tested as well.
+
+        # verify the output to the 'fort.12' file
+        #success = True
+        #expected_stdout = \
+        #   os.path.join("example_programs/expected_test_outputs",
+        #                'CheckRawECMWFBUFR.test_run_decoding_example.fort.12')
+        #actual_stdout = 'fort.12'
+        #try:
+        #    # try to read the actual and expected outputs
+        #    expected_lines_stdout = open(expected_stdout, 'rt').readlines()
+        #    lines_stdout = open(actual_stdout, 'rt').readlines()
+        #
+        #    # compare the actual and expected outputs
+        #    if not (lines_stdout == expected_lines_stdout):
+        #        print "stdout differs from what was expected!!!"
+        #        print "to find out what happended execute this diff command:"
+        #        cmd = "xdiff "+actual_stdout+' '+expected_stdout
+        #        print cmd
+        #        # os.system(cmd)
+        #        success = False
+        #    
+        #except IOError:
+        #    print "ERROR: expected output not found; probably because"
+        #    print "you just defined a new unittest case."
+        #    print "Missing filename:"
+        #    if not os.path.exists(expected_stdout):
+        #        print "expected_stdout: ", expected_stdout
+        #        print "(actual output available in: ", actual_stdout, ")"
+        #    success = False
+        #
+        #self.assertEqual(success, True)
+
+        os.remove('fort.12')
         #  #]
     def test_run_encoding_example(self):
         #  #[
@@ -197,6 +240,12 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         cmd = cmd + ' ' + self.testoutputfile2u
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
+
+        # see also the note on why the 'fort.12' redirected stdout is
+        # not tested in the test_run_decoding_example method above.
+
+        os.remove('fort.12')
+
         #  #]
     def test_run_pb_routines_example(self):
         #  #[
