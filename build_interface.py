@@ -562,9 +562,9 @@ class InstallBUFRInterfaceECMWF:
         close_stdout_filemame = 'close_stdout.F'
         close_stdout_file = os.path.join(source_dir, 'bufrdc',
                                          close_stdout_filemame)
-        fd = open(close_stdout_file,'w')
-        fd.write('\n'.join(line for line in fortr_code))
-        fd.close()
+        fds = open(close_stdout_file,'w')
+        fds.write('\n'.join(line for line in fortr_code))
+        fds.close()
 
         print 'created file: '+close_stdout_file
 
@@ -572,18 +572,18 @@ class InstallBUFRInterfaceECMWF:
         # the compilation and library creation procedure
 
         sources_file = os.path.join(source_dir, 'bufrdc', 'sources')
-        fd = open(sources_file, 'r')
-        sources_lines = fd.readlines()
-        fd.close()
+        fds = open(sources_file, 'r')
+        sources_lines = fds.readlines()
+        fds.close()
 
         # save the original with a modified name
         os.system('mv '+sources_file+' '+sources_file+'.orig')
         
-        fd = open(sources_file, 'w')
-        fd.write(''.join(line for line in sources_lines[:5]))
-        fd.write('   '+close_stdout_filemame+' \\\n')
-        fd.write(''.join(line for line in sources_lines[5:]))
-        fd.close()
+        fds = open(sources_file, 'w')
+        fds.write(''.join(line for line in sources_lines[:5]))
+        fds.write('   '+close_stdout_filemame+' \\\n')
+        fds.write(''.join(line for line in sources_lines[5:]))
+        fds.close()
         
         print 'added file '+close_stdout_file+' to the sources list'
         

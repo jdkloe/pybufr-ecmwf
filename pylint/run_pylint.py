@@ -31,8 +31,10 @@ EX_FILES = ['example_for_using_bufrinterface_ecmwf_for_decoding.py',
             'example_for_using_rawbufrfile.py',
             'verify_bufr_tables.py']
 
-#MODULES_TO_CHECK = []
-MODULES_TO_CHECK = ['pybufr_ecmwf', ]
+MODULES_TO_CHECK = []
+# my current pylint version crashes with a runtime error when I
+# try to check this module, so its disabled for now
+#MODULES_TO_CHECK = ['pybufr_ecmwf', ]
 
 SCRIPTS_TO_CHECK = ['build_interface.py',
                     'clean.py',
@@ -113,8 +115,11 @@ def check_all_py_files():
 
     use_numpy_checks = check_pylint_numpy_handling()
     if use_numpy_checks:
+        print '==>numpy imports can safely be checked by pylint'
         additional_args = []
     else:
+        print '==>pylint does not handle numpy imports correctly'
+        print '==>ignoring this module from pylint checking'
         additional_args = ['--ignored-classes=numpy']
 
     result = []

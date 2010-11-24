@@ -91,9 +91,9 @@ class Build(_build):
         #  #[ modified run (for debugging only)
         # some test prints:
         print "build: self.user_options = ", self.user_options
-        print "build: self.preferred_fortran_compiler = ",\
+        print "build: self.preferred_fortran_compiler = ", \
               self.preferred_fortran_compiler
-        print "build: self.preferred_c_compiler = ",\
+        print "build: self.preferred_c_compiler = ", \
               self.preferred_c_compiler
 
         # call the run command of the default build
@@ -325,12 +325,12 @@ CL = ["Development Status :: 3 - Alpha",
       ]
 
 if (sys.version_info[0]==2):
-    package_name = 'pybufr-ecmwf'
+    PACKAGE_NAME = 'pybufr-ecmwf'
 elif (sys.version_info[0]==3):
-    package_name = 'pybufr-ecmwf3'
+    PACKAGE_NAME = 'pybufr-ecmwf3'
 else:
-     errtxt = 'This python version is not supported: '+sys.version
-     raise NotImplementedError(errtxt)
+    ERRTXT = 'This python version is not supported: '+sys.version
+    raise NotImplementedError(ERRTXT)
 
 # passing a python file to do the build does not work, it gives this error:
 # error: unknown file type '.py' (from 'pybufr_ecmwf/build_interface.py')
@@ -340,7 +340,7 @@ ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr',
 
 setup(cmdclass = {'build'    : Build,
                   'build_ext': BuildExt},
-      name = package_name,
+      name = PACKAGE_NAME,
       version = '0.3dev',
       description = DESCR,
       long_description = LONG_DESCR,

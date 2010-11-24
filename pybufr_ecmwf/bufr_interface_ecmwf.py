@@ -72,18 +72,9 @@ class BUFRInterfaceECMWF:
     size_ksec3 =    4
     size_ksec4 =    2
 
-    # location for storing temporary files
-    temp_dir = '/tmp/pybufr_ecmwf_temporary_files'
-
     # filename to use to redirect the fortran stdout stream
     fortran_stdout_tmp_file = 'tmp_fortran_stdout.txt'
 
-    # path in which symlinks will be created to the BUFR tables we need
-    # (note that it must be an absolute path! this is required by the
-    #  ecmwf library)
-    private_bufr_tables_dir = os.path.abspath(os.path.join(temp_dir,
-                                                           'tmp_BUFR_TABLES'))
-    
     #  #]
     def __init__(self, encoded_message=None,
                  max_nr_descriptors=20,
@@ -173,6 +164,23 @@ class BUFRInterfaceECMWF:
         self.values = None
         self.cvals  = None
         
+        # location for storing temporary files, include the uid
+        # in the name to make sure the path is unique for each user
+        self.temp_dir = '/tmp/pybufr_ecmwf_temporary_files_'+\
+                        str(os.getuid())
+
+        # ensure the directory needed to store temporary files is present
+        if not os.path.exists(self.temp_dir):
+            os.mkdir(self.temp_dir)
+
+        # path in which symlinks will be created to the BUFR tables we need
+        # (note that it must be an absolute path! this is required by the
+        #  ecmwf library)
+        self.private_bufr_tables_dir = \
+             os.path.abspath(os.path.join(self.temp_dir,
+                                          'tmp_BUFR_TABLES'))
+    
+
         # ensure the directory exsists in which we will create
         # symbolic links to the bufr tables to be used
         if (not os.path.exists(self.private_bufr_tables_dir)):
@@ -188,10 +196,6 @@ class BUFRInterfaceECMWF:
         #os.putenv("BUFR_TABLES",self.private_bufr_tables_dir+os.path.sep)
 
         self.outp_file = None
-
-        # ensure the directory needed to store temporary files is present
-        if not os.path.exists(self.temp_dir):
-            os.mkdir(self.temp_dir)
 
         #  #]        
     def get_expected_ecmwf_bufr_table_names(self,
