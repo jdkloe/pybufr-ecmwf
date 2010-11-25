@@ -217,7 +217,7 @@ class BUFRInterfaceECMWF:
         # this format was introduced with bufr_000270
         testfile_long   = "B0000000000098000000.TXT"
 
-        # somne codes to define the conventions
+        # some codes to define the conventions
         conv_undefined = -1
         conv_short     =  1
         conv_medium    =  2
@@ -251,12 +251,16 @@ class BUFRInterfaceECMWF:
         copy_center            = center
         copy_subcenter         = subcenter
         copy_mastertablenumber = MasterTableNumber
-    
-        # exception: if version of local table is set to zero then
-        # it is assumed in BUGBTS that a standard ECMWF table is used !
-        if (LocalVersion == 0):
-            copy_center    = 98 # ECMWF
-            copy_subcenter = 0
+        copy_localversion      = LocalVersion
+        
+        # exception: if version of local table is set to 0 or 255
+        # then use WMO origination centre ID
+        if ( (LocalVersion == 0) or (LocalVersion == 255) ):
+            copy_center       = 0 # xx (WMO)
+            copy_subcenter    = 0 # ww
+            copy_localversion = 0 # zz
+
+            zz=0 # local table version
 
         # initialise
         name_table_b = ''
@@ -271,7 +275,8 @@ class BUFRInterfaceECMWF:
                 # has one digit more
                 table_format = "%3.3i%3.3i%2.2i%2.2i"
             numeric_part = table_format % (copy_subcenter, copy_center,
-                                           MasterTableVersion, LocalVersion)
+                                           MasterTableVersion,
+                                           copy_localversion)
             
         elif (bufrtable_naming_convention == conv_medium):
             table_format = "%3.3i%4.4i%4.4i%2.2i%2.2i"
@@ -280,7 +285,8 @@ class BUFRInterfaceECMWF:
                 copy_mastertablenumber = 0
             numeric_part = table_format % (copy_mastertablenumber,
                                            copy_subcenter, copy_center,
-                                           MasterTableVersion, LocalVersion)
+                                           MasterTableVersion,
+                                           copy_localversion)
 
         elif (bufrtable_naming_convention == conv_long):
             table_format = "%3.3i%5.5i%5.5i%3.3i%3.3i"
@@ -289,20 +295,36 @@ class BUFRInterfaceECMWF:
                 copy_mastertablenumber = 0
             numeric_part = table_format % (copy_mastertablenumber,
                                            copy_subcenter, copy_center,
-                                           MasterTableVersion, LocalVersion)
+                                           MasterTableVersion,
+                                           copy_localversion)
 
         name_table_b = 'B'+numeric_part+'.TXT'
         name_table_d = 'D'+numeric_part+'.TXT'
 
+        # Note that this naming scheme is specific for the ECMWF library
+        # and is not related to any BUFR file format requirement
+        # Other BUFR file handling libraries might use other conventions.
+
+        # This naming scheme is defined in these BUFR library source files:
+        # bufr_*/bufrdc/buetab.F and bufr_*/bufrdc/bugbts.F
+
         # xx=KSEC1(3)  = kcenter
         # yy=KSEC1(15) = kMasterTableVersion
         # zz=KSEC1(08) = kLocalVersion
+        #
         # for bufr editions 1 and 2
         # ww=0
         # ss=0
+        #
         # for bufr editions 3 and 4
         # ww=KSEC1(16) = ksubcenter
         # ss=KSEC1(14) = kMasterTableNumber
+        #
+        # if standard tables used, use WMO origination centre ID
+        # so: in case ksec1(8)==0 OR ksec1(8)==255 use
+        # xx=0
+        # ww=0
+        # zz=0
         #
         # naming convention for BUFR tables:
         # [B/C/D]xxxxxyyzz
@@ -341,15 +363,13 @@ class BUFRInterfaceECMWF:
         #
         #             BSSSWWWWXXXXYYZZ , CSSSWWWWXXXXYYZZ , DSSSWWWWXXXXYYZZ
         #
-        #             B      - BUFR TABLE 'B'
-        #             C      - BUFR TABLE 'C'
-        #             D      - BUFR TABLE 'D'
-        #             SSS    - MASTER TABLE
-        #             WWWW(W)   - ORIGINATING SUB-CENTRE
-        #             XXXX(X)   - ORIGINATING CENTRE
-        #             YY(Y)     - VERSION NUMBER OF MASTER
-        #                         TABLE USED( CURRENTLY 12 )
-        #             ZZ(Y)     - VERSION NUMBER OF LOCAL TABLE USED
+        #             B/C/D  - BUFR TABLE B/C/D
+        #             SSS    - MASTER TABLE NUMBER (zero for WMP tables)
+        #             WWWWW  - ORIGINATING SUB-CENTRE
+        #             XXXXX  - ORIGINATING CENTRE
+        #             YYY    - VERSION NUMBER OF MASTER
+        #                      TABLE USED( CURRENTLY 12 )
+        #             ZZZ    - VERSION NUMBER OF LOCAL TABLE USED
         
         return (name_table_b, name_table_d)
         #  #]
@@ -378,10 +398,10 @@ class BUFRInterfaceECMWF:
                                       self.fortran_stdout_tmp_file)
         ecmwfbufr.open_fortran_stdout(self.outp_file)
         #  #]
-    def display_fortran_stdout(self):
+    def get_fortran_stdout(self):
         #  #[
         """
-        display the fortran output that was stored in the temporary
+        retrieve the fortran output that was stored in the temporary
         file by the store_fortran_stdout method
         """
 
@@ -392,18 +412,24 @@ class BUFRInterfaceECMWF:
         # now read the temporary file and display the output
         if os.path.exists(self.outp_file):
             lines = open(self.outp_file).readlines()
-            if len(lines)>0:
-                print 'detected ',len(lines),' lines of fortran stdout:'
-                for line in lines:
-                    print 'FORTRAN STDOUT: '+line,
         else:
-            pass
-            # print '[there was no FORTRAN output to STDOUT]'
-            
+            lines = []
+        
         # finally remove the temporary file
         if os.path.exists(self.outp_file):
             os.remove(self.outp_file)
-        
+
+        return lines
+        #  #]        
+    def display_fortran_stdout(self,lines):
+        #  #[
+        """
+        display the fortran output that was retrieved by get_fortran_stdout
+        """
+        if len(lines)>0:
+            print 'detected ',len(lines),' lines of fortran stdout:'
+            for line in lines:
+                print 'FORTRAN STDOUT: '+line,
         #  #]        
     def decode_sections_012(self):
         #  #[ wrapper for bus012
@@ -423,7 +449,8 @@ class BUFRInterfaceECMWF:
                          self.ksec1, # output
                          self.ksec2, # output
                          kerr)       # output
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bus012'))
 
@@ -458,7 +485,8 @@ class BUFRInterfaceECMWF:
                           self.ksec2, # output
                           self.ksec3, # output
                           kerr)       # output
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bus0123'))
 
@@ -495,9 +523,19 @@ class BUFRInterfaceECMWF:
 
         center             = self.ksec1[3-1]
         LocalVersion       = self.ksec1[8-1]
+        DataCategory       = self.ksec1[11-1]
         MasterTableNumber  = self.ksec1[14-1]
         MasterTableVersion = self.ksec1[15-1]
         subcenter          = self.ksec1[16-1]
+
+        if DataCategory == 11:
+            print "WARNING: this BUFR msg contains a BUFR table!"
+            print "so possibly this BUFR file cannot be decoded by"
+            print "using the ECMWF BUFR tables ..."
+            print "Decoding BUFR tables provided in the same file"
+            print "as the data itself, as is done by NCEP for example,"
+            print "is not yet implemented."
+            sys.exit(1)
 
         (expected_name_table_b, expected_name_table_d) = \
               self.get_expected_ecmwf_bufr_table_names(
@@ -617,12 +655,14 @@ class BUFRInterfaceECMWF:
         print "printing content of section 0:"
         self.store_fortran_stdout()
         ecmwfbufr.buprs0(self.ksec0)
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         print '------------------------------'
         print "printing content of section 1:"
         self.store_fortran_stdout()
         ecmwfbufr.buprs1(self.ksec1)
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         print '------------------------------'
         sec2_len = self.ksec2[0]        
         if (sec2_len > 0):
@@ -637,12 +677,14 @@ class BUFRInterfaceECMWF:
                              self.key,
                              self.ksup,
                              kerr)
-            self.display_fortran_stdout()
+            lines = self.get_fortran_stdout()
+            self.display_fortran_stdout(lines)
             print "printing content of section 2:"
             self.store_fortran_stdout()
             ecmwfbufr.buprs2(self.ksup,
                              self.key)
-            self.display_fortran_stdout()
+            lines = self.get_fortran_stdout()
+            self.display_fortran_stdout(lines)
         else:
             print 'skipping section 2 [since it seems unused]'
         #  #]
@@ -680,7 +722,8 @@ class BUFRInterfaceECMWF:
                          self.values, # output
                          self.cvals,  # output
                          kerr)        # output
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bufrex'))
 
@@ -689,10 +732,15 @@ class BUFRInterfaceECMWF:
         # but in my tests it seems to return with 0.
         # Note that this condition may occur if the user gives a wrong
         # value for max_nr_expanded_descriptors in __init__.
-        # Therefore check to see if sec4 was decoded allright:
+        #
+        # Also in case a descriptor is missing from a BUFR table
+        # kerr remains zero. This happens if a wrong BUFR table is supplied.
+        #
+        # Therefore check to see if sec4 was decoded allright (it should
+        # contain the length of the encoded section 4 in bytes, so if it
+        # remains zero something is very wrong):
         if self.ksec4[0] == 0:
-            errtxt = "Sorry, call to bufrex failed, Maybe you have choosen "+\
-                     "a too small value for max_nr_expanded_descriptors?"
+            errtxt = self.analyse_errors_in_fortran_stdout(lines,'bufrex')
             raise EcmwfBufrLibError(errtxt)
         
         self.data_decoded = True
@@ -787,6 +835,31 @@ class BUFRInterfaceECMWF:
 
         return 'libbufr subroutine '+subroutine_name+\
                ' reported error code: kerr = '+str(kerr)
+        #  #]
+    def analyse_errors_in_fortran_stdout(self,lines,funcname):
+        #  #[ explain error codes returned by the bufrlib routines
+        """
+        a helper subroutine to print some helpfull information
+        if one of the library routines returns with an error
+        indicated by a ksec4[0]==0 condition, while still reporting
+        kerr=0. In this case inspect the fortran stdout to see what
+        might be wrong.
+        """
+        
+        #errtxt = "Sorry, call to bufrex failed, Maybe you have choosen "+\
+        #         "a too small value for max_nr_expanded_descriptors?"
+
+        fortran_errors = ['TABLE B REFERENCE NOT FOUND.']
+        error_list= []
+        for l in lines:
+            for ferr in fortran_errors:
+                if ferr in l:
+                    error_list.append(ferr)
+                    
+        errtxt = 'Sorry, call to '+funcname+' failed, '+\
+                 'reported fortran error(s)" '+\
+                 ';'.join(ferr for ferr in error_list)
+        return errtxt
         #  #]
     def get_num_subsets(self):
         #  #[ return number of subsets in this BUFR message
@@ -934,7 +1007,8 @@ class BUFRInterfaceECMWF:
                         self.ktdexl, # actual nr of expanded data descriptors
                         self.ktdexp, # list of expanded data descriptors
                         kerr)   # error  message
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bufrex'))
 
@@ -1008,7 +1082,8 @@ class BUFRInterfaceECMWF:
                          self.ktdlst,
                          self.ktdexp,
                          self.cnames)
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         #  #]        
     def fill_sections_0123(self,
                            bufr_code_centre,
@@ -1169,7 +1244,8 @@ class BUFRInterfaceECMWF:
                          self.cnames,
                          self.cunits,
                          kerr)
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'buxdes'))
 
@@ -1236,7 +1312,8 @@ class BUFRInterfaceECMWF:
                          cvals,  # input: strings to encode
                          words, # output: the encoded message
                          kerr)  # output: an error flag
-        self.display_fortran_stdout()
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
         print "bufren call finished"
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bufren'))
