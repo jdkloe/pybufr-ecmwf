@@ -31,7 +31,7 @@ to make it a bit easier in dayly use.
 #  #]
 #  #[ imported modules
 import os          # operating system functions
-#import sys         # system functions
+import sys         # system functions
 import time        # handling of date and time
 import numpy as np # import numerical capabilities
 
@@ -76,9 +76,7 @@ class BUFRInterfaceECMWF:
     fortran_stdout_tmp_file = 'tmp_fortran_stdout.txt'
 
     #  #]
-    def __init__(self, encoded_message=None,
-                 max_nr_descriptors=20,
-                 max_nr_expanded_descriptors=140):
+    def __init__(self, encoded_message=None):
         #  #[
         """
         initialise all module parameters needed for encoding and decoding
@@ -101,12 +99,16 @@ class BUFRInterfaceECMWF:
         #       and check whether they pass the library maximum or not.
         #       (and choose sensible defaults if not provided)
 
-        # define the needed sizes
-        # (especially the last 2 define the size of the values and cvals
-        #  array and can cause serious memory usage, so maybe later I'll
-        #  add an option to choose the values at runtime)
-        self.max_nr_descriptors          = max_nr_descriptors
-        self.max_nr_expanded_descriptors = max_nr_expanded_descriptors
+        # define the needed sizes. These are only used by busel,
+        # not by the call to bufrex (where they would cause
+        # serious memory usage)
+        self.max_nr_descriptors          = 44
+        self.max_nr_expanded_descriptors = 44
+        #self.max_nr_descriptors          = 100 # 140
+        #self.max_nr_expanded_descriptors = 100 # 140
+        #self.max_nr_descriptors          = 1000 # this fails!
+        #self.max_nr_expanded_descriptors = 10000 # this fails!
+
         #
         # note: these maximum constants are only used by the decoder,
         # and will be redefined during encoding
@@ -522,12 +524,13 @@ class BUFRInterfaceECMWF:
         EditionNumber      = self.ksec0[3-1]
 
         center             = self.ksec1[3-1]
+        DataCategory       = self.ksec1[6-1] # or Bufr message type
         LocalVersion       = self.ksec1[8-1]
-        DataCategory       = self.ksec1[11-1]
         MasterTableNumber  = self.ksec1[14-1]
         MasterTableVersion = self.ksec1[15-1]
         subcenter          = self.ksec1[16-1]
 
+        # these category codes are defined in Table A
         if DataCategory == 11:
             print "WARNING: this BUFR msg contains a BUFR table!"
             print "so possibly this BUFR file cannot be decoded by"
@@ -700,14 +703,46 @@ class BUFRInterfaceECMWF:
                      "before entering the decode_data subroutine."
             raise EcmwfBufrLibError(errtxt)
 
+        # fill the descriptor list arrays ktdexp and ktdlst
+        # this is not strictly needed before entering the decoding
+        # but is is the only way to get an accurate value of the actual
+        # number of expanded data descriptors, which in turn is needed
+        # to limit the memory that we need to pre-allocate for the
+        # cvals and values arrays (and especially the cvals array can becone
+        # rather huge ...)
+
+        # does not work
+        #self.fill_descriptor_list()
+        # todo: replace by the newly written extract_raw_descriptor_list()
+
         # calculate the needed size of the values and cvals arrays
         actual_nr_of_subsets = self.get_num_subsets()
-        self.kvals  = self.max_nr_expanded_descriptors*actual_nr_of_subsets
+        #actual_nr_of_descriptors = self.ktdexl
+        actual_nr_of_descriptors = self.max_nr_descriptors
+        self.kvals  = actual_nr_of_descriptors*\
+                      actual_nr_of_subsets
+
+        #              actual_nr_of_descriptors*\
+        #              actual_nr_of_subsets
+
+        #print 'TESTJOS: actual_nr_of_descriptors = ',actual_nr_of_descriptors
+        #print 'TESTJOS: actual_nr_of_subsets = ',actual_nr_of_subsets
+        #print 'TESTJOS: self.kvals = ',self.kvals
 
         # allocate space for decoding
         # note: float64 is the default, but it doesn't hurt to make it explicit
         self.values = np.zeros(      self.kvals, dtype = np.float64)
         self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
+
+        #print 'TESTJOS: len(self.ksec0)=',len(self.ksec0)
+        #print 'TESTJOS: len(self.ksec1)=',len(self.ksec1)
+        #print 'TESTJOS: len(self.ksec2)=',len(self.ksec2)
+        #print 'TESTJOS: len(self.ksec3)=',len(self.ksec3)
+        #print 'TESTJOS: len(self.ksec4)=',len(self.ksec4)
+        #print 'TESTJOS: len(self.cnames)=',len(self.cnames)
+        #print 'TESTJOS: len(self.cunits)=',len(self.cunits)
+        #print 'TESTJOS: len(self.values)=',len(self.values)
+        #print 'TESTJOS: len(self.cvals)=',len(self.cvals)
 
         self.store_fortran_stdout()
         ecmwfbufr.bufrex(self.encoded_message, # input
@@ -846,19 +881,25 @@ class BUFRInterfaceECMWF:
         might be wrong.
         """
         
-        #errtxt = "Sorry, call to bufrex failed, Maybe you have choosen "+\
-        #         "a too small value for max_nr_expanded_descriptors?"
+        #errtxt = "Sorry, call to bufrex failed, 
 
-        fortran_errors = ['TABLE B REFERENCE NOT FOUND.']
+        fortran_errors = [('TABLE B REFERENCE NOT FOUND.',
+                           'did you supply the correct BUFR tables?'),
+                          ('TABLE D REFERENCE NOT FOUND.',
+                           'did you supply the correct BUFR tables?'),
+                          ('KELEM ARGUMENT TOO SMALL',
+                           'Maybe you have choosen a too small value for '+\
+                           'max_nr_expanded_descriptors?"')]
         error_list= []
         for l in lines:
-            for ferr in fortran_errors:
+            for (ferr, fmsg) in fortran_errors:
                 if ferr in l:
-                    error_list.append(ferr)
+                    error_list.append((ferr, fmsg))
                     
         errtxt = 'Sorry, call to '+funcname+' failed, '+\
                  'reported fortran error(s)" '+\
-                 ';'.join(ferr for ferr in error_list)
+                 ';'.join('%s (%s)' % (ferr, fmsg)
+                          for (ferr, fmsg) in error_list)
         return errtxt
         #  #]
     def get_num_subsets(self):
@@ -976,6 +1017,27 @@ class BUFRInterfaceECMWF:
         txtu = ''.join(c for c in self.cunits[i])
 
         return (txtn.strip(), txtu.strip())
+        #  #]
+    def extract_raw_descriptor_list(self):
+        #  #[ extract the raw descriptor list from the binary bufr msg
+        """
+        Extract the raw descriptor list from the binary BUFR message,
+        without having to decode the whole BUFR message. This is needed
+        to estimate the needed array sizes before decoding the actual
+        BUFR message.
+        Extracting only the descriptor lost seems not possible with
+        the routines provided by the ECMWF BUFR library, therefore
+        this is implemented in python here.
+        """
+
+        print "extracting raw descriptor list:"
+
+        # method to implement
+        # use get_expected_msg_size from raw_bufr_file.py
+        # to get all relevant section start pointers
+        # and use this to start extracting this data.
+        
+        
         #  #]
     def fill_descriptor_list(self):
         #  #[ fills both the normal and expanded descriptor lists

@@ -139,8 +139,7 @@ class BUFRReader:
         step to the next BUFR message in the open file
         """
         raw_msg = self.rbf.get_next_raw_bufr_msg()
-        self.bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg,
-                                           max_nr_expanded_descriptors=44)
+        self.bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg)
         self.bufr_obj.decode_sections_012()
         self.bufr_obj.setup_tables()
         self.bufr_obj.decode_data()

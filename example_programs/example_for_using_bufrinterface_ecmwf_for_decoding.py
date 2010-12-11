@@ -100,8 +100,7 @@ def decoding_example(input_bufr_file):
     rbf.close()
     
     print '------------------------------'
-    bufr = BUFRInterfaceECMWF(encoded_message=words,
-                              max_nr_expanded_descriptors=44)
+    bufr = BUFRInterfaceECMWF(encoded_message=words)
 
     print "calling: decode_sections_012():"
     bufr.decode_sections_012()
@@ -114,6 +113,10 @@ def decoding_example(input_bufr_file):
 
     print "calling: print_sections_012():"
     bufr.print_sections_012()
+
+    # seems not to work correctly now ...
+    #bufr.fill_descriptor_list()
+    #bufr.print_descriptors()
 
     print '------------------------------'
     print "calling: ecmwfbufr.bufrex():"
