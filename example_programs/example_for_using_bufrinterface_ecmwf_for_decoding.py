@@ -94,13 +94,16 @@ def decoding_example(input_bufr_file):
 
     # read the binary data using the BUFRFile class
     print 'loading testfile: ', input_bufr_file
-    rbf = RawBUFRFile()
+    rbf = RawBUFRFile(verbose=False)
     rbf.open(input_bufr_file, 'r')
-    words = rbf.get_next_raw_bufr_msg()
+    (words, section_sizes, section_start_locations) = \
+            rbf.get_next_raw_bufr_msg()
     rbf.close()
     
     print '------------------------------'
-    bufr = BUFRInterfaceECMWF(encoded_message=words)
+    bufr = BUFRInterfaceECMWF(encoded_message=words,
+                              section_sizes=section_sizes,
+                              section_start_locations=section_start_locations)
 
     print "calling: decode_sections_012():"
     bufr.decode_sections_012()

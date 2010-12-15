@@ -34,6 +34,7 @@ import os          # operating system functions
 import sys         # system functions
 import time        # handling of date and time
 import numpy as np # import numerical capabilities
+import struct      # allow converting c datatypes and structs
 
 # import the raw wrapper interface to the ECMWF BUFR library
 from . import ecmwfbufr
@@ -76,7 +77,8 @@ class BUFRInterfaceECMWF:
     fortran_stdout_tmp_file = 'tmp_fortran_stdout.txt'
 
     #  #]
-    def __init__(self, encoded_message=None):
+    def __init__(self, encoded_message=None, section_sizes=None,
+                 section_start_locations=None):
         #  #[
         """
         initialise all module parameters needed for encoding and decoding
@@ -86,6 +88,11 @@ class BUFRInterfaceECMWF:
         # or after encoding to the raw BUFR format
         # (usually stored as a 4-byte integer array)
         self.encoded_message = encoded_message
+
+        # these tuples hold some metadata that was retrieved by the raw
+        # reading method get_raw_bufr_msg defined in raw_bufr_file.py
+        self.section_sizes = section_sizes
+        self.section_start_locations = section_start_locations
 
         # switches
         self.sections012_decoded      = False
@@ -714,7 +721,10 @@ class BUFRInterfaceECMWF:
         # does not work
         #self.fill_descriptor_list()
         # todo: replace by the newly written extract_raw_descriptor_list()
-
+        self.extract_raw_descriptor_list()
+        print 'TESTJOS: breakpoint'
+        sys.exit(1)
+        
         # calculate the needed size of the values and cvals arrays
         actual_nr_of_subsets = self.get_num_subsets()
         #actual_nr_of_descriptors = self.ktdexl
@@ -1025,18 +1035,46 @@ class BUFRInterfaceECMWF:
         without having to decode the whole BUFR message. This is needed
         to estimate the needed array sizes before decoding the actual
         BUFR message.
-        Extracting only the descriptor lost seems not possible with
+        Extracting only the descriptor list seems not possible with
         the routines provided by the ECMWF BUFR library, therefore
         this is implemented in python here.
         """
 
         print "extracting raw descriptor list:"
-
+        
         # method to implement
         # use get_expected_msg_size from raw_bufr_file.py
         # to get all relevant section start pointers
         # and use this to start extracting this data.
+
+        # available meta data:
+        # self.section_sizes
+        # self.section_start_locations
+        # available data:
+        # self.encoded_message
+
+        # assume little endian for now when converting
+        # raw bytes/characters to integers and vice-versa
+        dataformat = "<i"
+        size_words = len(self.encoded_message)
+        size_bytes = size_words*4
+
+        list_of_raw_data_bytes = []
+        for (i, word) in enumerate(self.encoded_message):
+            list_of_raw_data_bytes.append(struct.pack(dataformat, word))
+        raw_data_bytes = ''.join(rdb for rdb in list_of_raw_data_bytes)
+
+        # note: the headers seem to use big-endian encoding
+        # even on little endian machines, for the msg size.
+        dataformat = ">1i"
         
+        start_section3 = self.section_start_locations[3]
+        print 'start_section3 = ',start_section3
+        # extract the number of subsets from bytes 5 and 6
+        raw_bytes = chr(0)*2+raw_data_bytes[start_section3+5-1:
+                                            start_section3+6]
+        tmp_num_subsets = struct.unpack(dataformat, raw_bytes)[0]
+        print 'tmp_num_subsets = ',tmp_num_subsets
         
         #  #]
     def fill_descriptor_list(self):

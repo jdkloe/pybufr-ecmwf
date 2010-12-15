@@ -39,7 +39,7 @@ def print_bufr_data_category(input_bufr_file):
     num_msgs = BF.get_num_bufr_msgs()
 
     for msg_nr in range(1,num_msgs+1):
-        raw_msg = BF.get_raw_bufr_msg(msg_nr)
+        raw_msg = BF.get_raw_bufr_msg(msg_nr)[0]
         bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg)
         bufr_obj.decode_sections_012()
         DataCategory = bufr_obj.ksec1[11-1]

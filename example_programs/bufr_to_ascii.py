@@ -79,7 +79,7 @@ def print_bufr_content3(input_bufr_file):
     num_msgs = BF.get_num_bufr_msgs()
 
     for msg_nr in range(1,num_msgs+1):
-        raw_msg = BF.get_raw_bufr_msg(msg_nr)
+        raw_msg = BF.get_raw_bufr_msg(msg_nr)[0]
         bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg,
                                       max_nr_expanded_descriptors=44)
         bufr_obj.decode_sections_012()

@@ -44,16 +44,16 @@ def raw_file_reading_example(input_bufr_file):
 
     # sequentially read the raw (undecoded) BUFR messages from the
     # class instance
-    msg1 = rbf.get_next_raw_bufr_msg() # should return proper data
-    msg2 = rbf.get_next_raw_bufr_msg() # should return corrupted data
-    msg3 = rbf.get_next_raw_bufr_msg() # should return corrupted data
+    msg1 = rbf.get_next_raw_bufr_msg()[0] # should return proper data
+    msg2 = rbf.get_next_raw_bufr_msg()[0] # should return corrupted data
+    msg3 = rbf.get_next_raw_bufr_msg()[0] # should return corrupted data
     print "a warning is expected here:"
     # msg4 =
-    rbf.get_next_raw_bufr_msg() # returns with None
+    rbf.get_next_raw_bufr_msg()[0] # returns with None
 
     for i in range(1, num_msgs+1):
         # read a selected raw BUFR message from the class instance
-        raw_data = rbf.get_raw_bufr_msg(i)
+        raw_data = rbf.get_raw_bufr_msg(i)[0]
         print "msg ", i, " got ", len(raw_data), " words"
 
     # close the file

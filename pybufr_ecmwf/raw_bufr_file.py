@@ -194,7 +194,11 @@ class RawBUFRFile:
         # If you need to use this kind of files, write your own correction
         # routine to remove the 8 byte control-words inserted at every
         # 4096 bytes by this weird fileformat before trying to use them.
-        
+
+        # section nr               0 1 2 3 4 5
+        section_sizes           = [0,0,0,0,0,0]
+        section_start_locations = [0,0,0,0,0,0]
+
         if (self.verbose):
             print 'getting message size of start location: ', start_location
         try:
@@ -205,79 +209,133 @@ class RawBUFRFile:
         except IndexError:
              # 0 signals this is not a valid BUFR msg, might be a false
              # start BUFR string, or a corrupted or truncated file
-            return 0
+            return (0, section_sizes, section_start_locations)
 
         # note: the headers seem to use big-endian encoding
         # even on little endian machines, for the msg size.
         dataformat = ">1i"
 
         try:
+            #  #[ retrieve size of section 0 and if possible the msg_size
+            start_section0 = start_location
             if edition_number > 1:
                 # get bytes 5 to 7 which should hold the total length of the
                 # current BUFR message
-                raw_bytes = chr(0)+self.data[start_location+5-1:
-                                             start_location+7]
+                raw_bytes = chr(0)+self.data[start_section0+5-1:
+                                             start_section0+7]
                 msg_size = struct.unpack(dataformat, raw_bytes)[0]
-            else:
+
+            if edition_number <= 1:
                 size_section0 = 4
+                # i.e. only the 4 characters 'BUFR'
+            else:
+                size_section0 = 8
+                # i.e. the 4 characters 'BUFR',
+                # AND the BUFR msg size (3 bytes) and the BUFR edition nr.
 
-                # retrieve size of section 1
-                offset = size_section0
-                # get length of section 1 from bytes 1 to 3
-                raw_bytes = chr(0)+self.data[start_location+offset+1-1:
-                                             start_location+offset+3]
-                size_section1 = struct.unpack(dataformat, raw_bytes)[0]
-
-                # see if the optional section 2 is present or not
-                # this is indicated by bit 1 of byte 8 of section 1
-                byte8 = ord(self.data[start_location+offset+8-1])
-                section2_present = False
-                if (byte8 & 1):
-                    section2_present = True
+            if (self.verbose):
+                print 'size_section0 = ', size_section0, \
+                      'start_section0 = ', start_section0
+            #  #]
+            #  #[ retrieve size of section 1
+            offset = size_section0
+            start_section1 = start_location + offset
+            # get length of section 1 from bytes 1 to 3
+            raw_bytes = chr(0)+self.data[start_section1+1-1:
+                                         start_section1+3]
+            size_section1 = struct.unpack(dataformat, raw_bytes)[0]
+            if (self.verbose):
+                print 'size_section1 = ', size_section1, \
+                      ' start_section1 = ', start_section1
+            #  #]
+            #  #[ retrieve size of section 2
+            
+            # see if the optional section 2 is present or not
+            # this is indicated by bit 1 of byte 8 of section 1
+            byte8 = ord(self.data[start_location+offset+8-1])
+            section2_present = False
+            if (byte8 & 1):
+                section2_present = True
                 
-                if section2_present:
-                    # retrieve size of section 2
-                    offset = size_section0 + size_section1
-                    # get length of section 2 from bytes 1 to 3
-                    raw_bytes = chr(0)+self.data[start_location+offset+1-1:
-                                                 start_location+offset+3]
-                    size_section2 = struct.unpack(dataformat, raw_bytes)[0]
-                else:
-                    size_section2 = 0
-                    
-                # retrieve size of section 3
-                offset = size_section0 + size_section1 + size_section2
-                # get length of section 3 from bytes 1 to 3
-                raw_bytes = chr(0)+self.data[start_location+offset+1-1:
-                                             start_location+offset+3]
-                size_section3 = struct.unpack(dataformat, raw_bytes)[0]
+            # retrieve size of section 2
+            offset = size_section0 + size_section1
+            start_section2 = start_location + offset
+            if section2_present:
+                # get length of section 2 from bytes 1 to 3
+                raw_bytes = chr(0)+self.data[start_section2+1-1:
+                                             start_section2+3]
+                size_section2 = struct.unpack(dataformat, raw_bytes)[0]
+            else:
+                size_section2 = 0
 
-                # retrieve size of section 4
-                offset = size_section0 + size_section1 + \
-                         size_section2 + size_section3
-                # get length of section 4 from bytes 1 to 3
-                raw_bytes = chr(0)+self.data[start_location+offset+1-1:
-                                             start_location+offset+3]
-                size_section4 = struct.unpack(dataformat, raw_bytes)[0]
+            if (self.verbose):
+                print 'size_section2 = ',size_section2, \
+                      ' start_section2 = ', start_section2
+            #  #]
+            #  #[ retrieve size of section 3
+            offset = size_section0 + size_section1 + size_section2
+            start_section3 = start_location + offset
+            # get length of section 3 from bytes 1 to 3
+            raw_bytes = chr(0)+self.data[start_section3+1-1:
+                                         start_section3+3]
+            size_section3 = struct.unpack(dataformat, raw_bytes)[0]
 
-                size_section5 = 4
+            if (self.verbose):
+                print 'size_section3 = ',size_section3, \
+                      ' start_section3 = ', start_section3
+            #  #]
+            #  #[ retrieve size of section 4
+            offset = size_section0 + size_section1 + \
+                     size_section2 + size_section3
+            start_section4 = start_location + offset
+            # get length of section 4 from bytes 1 to 3
+            raw_bytes = chr(0)+self.data[start_section4+1-1:
+                                         start_section4+3]
+            size_section4 = struct.unpack(dataformat, raw_bytes)[0]
 
-                # print 'size section 0 = ',size_section0
-                # print 'size section 1 = ',size_section1
-                # print 'size section 2 = ',size_section2
-                # print 'size section 3 = ',size_section3
-                # print 'size section 4 = ',size_section4
-                # print 'size section 5 = ',size_section5
+            if (self.verbose):
+                print 'size_section4 = ',size_section4, \
+                      ' start_section4 = ', start_section4
+            #  #]
+            #  #[ retrieve size of section 5
+            offset = size_section0 + size_section1 + \
+                     size_section2 + size_section3 + size_section4
+            start_section5 = start_location + offset
 
-                msg_size = size_section0 + size_section1 + \
-                           size_section2 + size_section3 + \
-                           size_section4 + size_section5
+            size_section5 = 4
 
+            if (self.verbose):
+                print 'size_section5 = ',size_section5, \
+                      ' start_section5 = ', start_section5
+            #  #]
+            calculated_msg_size = size_section0 + size_section1 + \
+                                  size_section2 + size_section3 + \
+                                  size_section4 + size_section5
+
+            if edition_number <= 1:
+                # for editions 0 and 1 the msg_size is not contained
+                # in section 0, and still needs to be set:
+                msg_size = calculated_msg_size
+                
         except IndexError:
-             # 0 signals this is not a valid BUFR msg, might be a false
-             # start BUFR string, or a corrupted or truncated file
-            return 0
-
+            # 0 signals this is not a valid BUFR msg, might be a false
+            # start BUFR string, or a corrupted or truncated file
+            return (0, section_sizes, section_start_locations)
+        
+        section_sizes           = [size_section0, size_section1,
+                                   size_section2, size_section3,
+                                   size_section4, size_section5]
+        # note: the start locations stored above are relative to
+        # the beginning of the file, but for further use it is more
+        # convenient to have them relative to the beginning
+        # of the BUFR message, so subtract start_location  from them
+        section_start_locations = [start_section0-start_location,
+                                   start_section1-start_location,
+                                   start_section2-start_location,
+                                   start_section3-start_location,
+                                   start_section4-start_location,
+                                   start_section5-start_location]
+        
         # see: p.L3-3 (p.5) of the file Layer3-English-only.pdf
         #      mentioned above.
         if msg_size > 15000:
@@ -285,7 +343,7 @@ class RawBUFRFile:
             print "         than 15kb to allow transmission over the GTS."
             print "         Size of current message is: ", msg_size, " bytes"
 
-        return msg_size
+        return (msg_size, section_sizes, section_start_locations)
         #  #]        
     def split(self):
         #  #[
@@ -347,7 +405,8 @@ class RawBUFRFile:
         # marker or a corrupt BUFR message. If it matches, assume
         # the BUFR message is valid and add it to the list
         for start_location in list_of_start_locations:
-            expected_msg_size = self.get_expected_msg_size(start_location)
+            expected_msg_size, section_sizes, section_start_locations = \
+                               self.get_expected_msg_size(start_location)
             if (self.verbose):
                 print 'expected_msg_size = ', expected_msg_size
             expected_msg_end_location = start_location + expected_msg_size - 4
@@ -359,7 +418,9 @@ class RawBUFRFile:
                 # can be adressed as data[start_pos:end_pos])
                 # and store it
                 self.list_of_bufr_pointers.append((start_location,
-                                                   expected_msg_end_location+4))
+                                                   expected_msg_end_location+4,
+                                                   section_sizes,
+                                                   section_start_locations))
         
 
         # count howmany we found
@@ -369,148 +430,6 @@ class RawBUFRFile:
             print "list_of_start_locations = ", list_of_start_locations
             print "list_of_end_locations   = ", list_of_end_locations
 
-        #  #]
-    def split_simple(self):
-        #  #[
-        """
-        scan a BUFR file to detect the start and end locations of the
-        separate BUFR messages. Note that a BUFR file may contain
-        additional junk, like GTS headers and such. The code should be
-        robust enough to handle this.
-        """
-        # NOTE: the assumption made here that BUFR messages are glued
-        # together without gaps is not always true!
-        # Especially data coming from GTS systems often have GTS-headers
-        # attached in front of each individual BUFR message (and this
-        # is allowed, so the newer split routine defined above was
-        # added to handle this)
-        
-        # Purpose: scans the file for the string "BUFR"
-        # which indicate the start of a new BUFR message,
-        # counts the nr of BUFR messages, and stores file
-        # pointers to the start of each BUFR message.
-
-        # safety catch
-        if (self.filesize == 0):
-            self.nr_of_bufr_messages = 0
-            return
-
-        # note: this very simpple search algorithm might accidently
-        # find the string "7777" in the middle of the data of a BUFR message.
-        # To check on this, make sure the distance between the end of a
-        # message and the start of a message if either 0 or 2 bytes
-        # (this may happen if the file is padded with zeros to contain
-        #  a multiple of 4 bytes)
-        # Do the same check on the end of the file.
-
-        inside_message   = False
-        file_end_reached = False
-        search_pos = 0
-        start_pos  = -1
-        end_pos    = -1
-        txt_start  = "BUFR"
-        txt_end    = "7777"
-        while not file_end_reached:
-
-            if (not inside_message):
-                # try to find a txt_start string
-                start_pos = self.data.find(txt_start, search_pos)
-                if (self.verbose):
-                    print "search_pos = ", search_pos, \
-                          " start_pos = ", start_pos, \
-                          " txt = ", txt_start
-
-                if (start_pos != -1):
-                    inside_message = True
-
-                    # sanity check, see if distance to the previous BUFR
-                    # message is no more than 4 bytes
-                    if (end_pos != -1):
-                        distance = (start_pos-end_pos)
-                        if (self.verbose):
-                            print "distance = ", distance, " bytes"
-                        if (distance > 3):
-                            # this means we have found a false "7777"
-                            # end marker, so ignore the last added msg
-                            # and start looking again
-                            prev_start_pos = \
-                                           self.list_of_bufr_pointers.pop()[0]
-                            # restore the previous msg start pos
-                            # to allow trying to search again for a correct
-                            # end marker
-                            start_pos = prev_start_pos
-                            if (self.verbose):
-                                print "restored start_pos = ", start_pos
-
-                            # step over the "7777" string to prepare for
-                            #  searching the real end of the message
-                            search_pos = end_pos
-                        else:
-                            # step over the "BUFR" string to prepare for
-                            #  searching the end of the message
-                            search_pos = start_pos+4
-
-
-                else:
-                    # check the distance to the fileend
-                    # This should be no more than 4 bytes.
-                    # If it is larger we have found a false "7777"
-                    # end marker (or the file is corrupted and truncated)
-                    distance = (self.filesize-end_pos)
-                    if (self.verbose):
-                        print "distance to fileend = ", distance, " bytes"
-                    if (distance > 3):
-                        # this means we have found a false "7777"
-                        # end marker, so ignore the last added msg
-                        # and start looking again
-                        prev_start_pos = \
-                                       self.list_of_bufr_pointers.pop()[0]
-                        # restore the previous msg start pos
-                        # to allow trying to search again for a correct
-                        # end marker
-                        start_pos = prev_start_pos
-                        if (self.verbose):
-                            print "restored start_pos = ", start_pos
-                        
-                        # step over the "7777" string to prepare for
-                        #  searching the real end of the message
-                        search_pos = end_pos
-
-                        # file end was not yet reached, keep on looking
-                        file_end_reached = False
-                        inside_message = True
-                    else:
-                        # file end was not really reached
-                        file_end_reached = True
-
-                    
-            if (inside_message and not file_end_reached):
-                # try to find a txt_end string
-                end_pos = self.data.find(txt_end, search_pos)
-                if (self.verbose):
-                    print "search_pos = ", search_pos, \
-                          " end_pos = ", end_pos, \
-                          " txt = ", txt_end
-
-                if (end_pos != -1):
-                    inside_message = False
-
-                    # point to the end of the four sevens
-                    # (in slice notation, so the bufr msg data
-                    # can be adressed as data[start_pos:end_pos])
-                    end_pos = end_pos+4
-                    
-                    # step over the "7777" string to prepare for searching the
-                    # end start of the next message
-                    search_pos = end_pos
-
-                    # store the found message
-                    self.list_of_bufr_pointers.append((start_pos, end_pos))
-                else:
-                    file_end_reached = True
-
-        # count howmany we found
-        self.nr_of_bufr_messages = len(self.list_of_bufr_pointers)
         #  #]
     def get_num_bufr_msgs(self):
         #  #[
@@ -551,7 +470,8 @@ class RawBUFRFile:
             return None
 
         self.last_used_msg = msg_nr
-        (start_index, end_index) = self.list_of_bufr_pointers[msg_nr-1]
+        (start_index, end_index, section_sizes, section_start_locations) = \
+                      self.list_of_bufr_pointers[msg_nr-1]
 
         size_bytes = (end_index-start_index)
 
@@ -580,7 +500,7 @@ class RawBUFRFile:
         dataformat = "<"+str(size_words)+"i"
         words = np.array(struct.unpack(dataformat, raw_data_bytes))
 
-        return words
+        return (words, section_sizes, section_start_locations)
         #  #]
     def get_next_raw_bufr_msg(self):
         #  #[
@@ -636,4 +556,3 @@ class RawBUFRFile:
         self.filesize = self.filesize + size_bytes
         #  #]
     #  #]
-

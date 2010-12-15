@@ -51,7 +51,7 @@ def decoding_example(input_bufr_file):
 
     rbf = RawBUFRFile()
     rbf.open(input_bufr_file, 'r')
-    words = rbf.get_next_raw_bufr_msg()
+    words = rbf.get_next_raw_bufr_msg()[0]
     rbf.close()
     
     # define the needed constants
