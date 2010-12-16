@@ -38,8 +38,9 @@ import struct      # allow converting c datatypes and structs
 
 # import the raw wrapper interface to the ECMWF BUFR library
 from . import ecmwfbufr
+from . import ecmwfbufr_parameters
 from .bufr_template import BufrTemplate
-
+from .bufr_table import BufrTable
 #  #]
 #  #[ exception definitions
 # see: http://docs.python.org/library/exceptions.html
@@ -65,13 +66,13 @@ class BUFRInterfaceECMWF:
     #  #[ local constant parameters
 
     # some default array sizes used by the ecmwf interface
-    size_ksup  =    9
-    size_ksec0 =    3
-    size_ksec1 =   40
-    size_ksec2 = 4096
-    size_key   =   52
-    size_ksec3 =    4
-    size_ksec4 =    2
+    size_ksup  = ecmwfbufr_parameters.JSUP
+    size_ksec0 = ecmwfbufr_parameters.JSEC0
+    size_ksec1 = ecmwfbufr_parameters.JSEC1
+    size_ksec2 = ecmwfbufr_parameters.JSEC2
+    size_key   = ecmwfbufr_parameters.JKEY
+    size_ksec3 = ecmwfbufr_parameters.JSEC3
+    size_ksec4 = ecmwfbufr_parameters.JSEC4
 
     # filename to use to redirect the fortran stdout stream
     fortran_stdout_tmp_file = 'tmp_fortran_stdout.txt'
@@ -109,12 +110,8 @@ class BUFRInterfaceECMWF:
         # define the needed sizes. These are only used by busel,
         # not by the call to bufrex (where they would cause
         # serious memory usage)
-        self.max_nr_descriptors          = 44
-        self.max_nr_expanded_descriptors = 44
-        #self.max_nr_descriptors          = 100 # 140
-        #self.max_nr_expanded_descriptors = 100 # 140
-        #self.max_nr_descriptors          = 1000 # this fails!
-        #self.max_nr_expanded_descriptors = 10000 # this fails!
+        self.max_nr_descriptors          = 20 # 44
+        self.max_nr_expanded_descriptors = 50
 
         #
         # note: these maximum constants are only used by the decoder,
@@ -132,7 +129,7 @@ class BUFRInterfaceECMWF:
         # self.max_nr_delayed_replication_factors = ///
 
         # copy to names that are more common in the ECMWF software
-        self.ktdlen = self.max_nr_descriptors
+
         # self.krdlen = self.max_nr_delayed_replication_factors
         self.kelem  = self.max_nr_expanded_descriptors
 
@@ -204,6 +201,15 @@ class BUFRInterfaceECMWF:
         # the above works just fine for me, no need for this one:
         #os.putenv("BUFR_TABLES",self.private_bufr_tables_dir+os.path.sep)
 
+        self.tables_have_been_setup = False
+        self.table_b_file_to_use = None
+        self.table_d_file_to_use = None
+
+        # lists used by the python extraction of the descriptors
+        self.py_num_subsets = 0
+        self.py_unexp_descr_list = None
+        self.py_expanded_descr_list = None
+        
         self.outp_file = None
 
         #  #]        
@@ -646,7 +652,10 @@ class BUFRInterfaceECMWF:
         # library versions I worked with)
         os.environ["BUFR_TABLES"] = self.private_bufr_tables_dir+\
                                     os.path.sep
-    
+
+        self.tables_have_been_setup = True
+        self.table_b_file_to_use = destination_b
+        self.table_d_file_to_use = destination_d
         #  #]
     def print_sections_012(self):
         #  #[ wrapper for buprs0, buprs1, buprs2
@@ -710,6 +719,12 @@ class BUFRInterfaceECMWF:
                      "before entering the decode_data subroutine."
             raise EcmwfBufrLibError(errtxt)
 
+        if not self.tables_have_been_setup:
+            errtxt = "Sorry, you need to tell this module which BUFR tables "+\
+                     "to use, by calling the setup_tables() method, before "+\
+                     "you can actually decode a BUFR message."
+            raise EcmwfBufrLibError(errtxt)
+                     
         # fill the descriptor list arrays ktdexp and ktdlst
         # this is not strictly needed before entering the decoding
         # but is is the only way to get an accurate value of the actual
@@ -722,27 +737,56 @@ class BUFRInterfaceECMWF:
         #self.fill_descriptor_list()
         # todo: replace by the newly written extract_raw_descriptor_list()
         self.extract_raw_descriptor_list()
-        print 'TESTJOS: breakpoint'
-        sys.exit(1)
-        
+        self.expand_raw_descriptor_list()
+
+        # after these 2 method calls, these arrays and variables are filled:
+        # len(self.py_expanded_descr_list)
+        # len(self.py_unexp_descr_list)
+        # self.py_num_subsets
+
         # calculate the needed size of the values and cvals arrays
         actual_nr_of_subsets = self.get_num_subsets()
-        #actual_nr_of_descriptors = self.ktdexl
-        actual_nr_of_descriptors = self.max_nr_descriptors
+
+        # double check: see if both methods to extract num_subsets
+        # yield the same number:
+        if actual_nr_of_subsets != self.py_num_subsets:
+            errtxt = "a programming error occurred! "+\
+                     "get_num_subsets() yielded "+str(actual_nr_of_subsets)+\
+                     " subsets, but extract_raw_descriptor_list() yielded "+\
+                     str(self.py_num_subsets)+" subsets. "+\
+                     "These numbers should be identical !!"
+            raise EcmwfBufrLibError(errtxt)
+        
+        #print 'TESTJOS: breakpoint'
+        #sys.exit(1)
+
+        # NOTE: this size is the maximum array size that is needed DURING
+        # the decoding process. This ALSO includes modification
+        # descriptors (with f=2) which are removed again in the
+        # final expanded descriptor list. This final list may be
+        # smaller in some cases (for example for ERS2 data) than
+        # the maximum intermediate size needed....
+        actual_nr_of_descriptors = len(self.py_expanded_descr_list)
+
+        # calc. needed array sizes
         self.kvals  = actual_nr_of_descriptors*\
                       actual_nr_of_subsets
 
         #              actual_nr_of_descriptors*\
         #              actual_nr_of_subsets
 
-        #print 'TESTJOS: actual_nr_of_descriptors = ',actual_nr_of_descriptors
-        #print 'TESTJOS: actual_nr_of_subsets = ',actual_nr_of_subsets
-        #print 'TESTJOS: self.kvals = ',self.kvals
+        print 'TESTJOS: actual_nr_of_descriptors = ',actual_nr_of_descriptors
+        print 'TESTJOS: actual_nr_of_subsets = ',actual_nr_of_subsets
+        print 'TESTJOS: self.kvals = ',self.kvals
 
         # allocate space for decoding
         # note: float64 is the default, but it doesn't hurt to make it explicit
         self.values = np.zeros(      self.kvals, dtype = np.float64)
         self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
+        self.cnames = np.zeros((actual_nr_of_descriptors, 64),
+                               dtype = np.character)
+        self.cunits = np.zeros((actual_nr_of_descriptors, 24),
+                               dtype = np.character)
 
         #print 'TESTJOS: len(self.ksec0)=',len(self.ksec0)
         #print 'TESTJOS: len(self.ksec1)=',len(self.ksec1)
@@ -1073,9 +1117,53 @@ class BUFRInterfaceECMWF:
         # extract the number of subsets from bytes 5 and 6
         raw_bytes = chr(0)*2+raw_data_bytes[start_section3+5-1:
                                             start_section3+6]
-        tmp_num_subsets = struct.unpack(dataformat, raw_bytes)[0]
-        print 'tmp_num_subsets = ',tmp_num_subsets
+        self.py_num_subsets = struct.unpack(dataformat, raw_bytes)[0]
+        print 'self.py_num_subsets = ',self.py_num_subsets
+
+        print 'length section3: ', self.section_sizes[3]
+        num_descriptors = int(0.5*(self.section_sizes[3]-7))
+        print 'num descriptors: ',num_descriptors
+
+        # do the actual extraction of the raw/unexpanded descriptors
+        self.py_unexp_descr_list = []
+        for i in range(num_descriptors):
+            # extract the unexpanded descriptors
+            raw_bytes = raw_data_bytes[start_section3+8-1+i*2:
+                                       start_section3+8+1+i*2]
+            #print 'raw_bytes = '+'.'.join(str(ord(b)) for b in raw_bytes)
+            f = (ord(raw_bytes[0]) & (128+64))/64
+            x = ord(raw_bytes[0]) & (64-1)
+            y = ord(raw_bytes[1])
+            #print 'extracted descriptor: f,x,y = %1.1i.%2.2i.%3.3i' % (f,x,y)
+            self.py_unexp_descr_list.append('%1.1i%2.2i%3.3i' % (f,x,y))
+
+        print 'self.py_unexp_descr_list = ',self.py_unexp_descr_list
+        print 'with length = ',len(self.py_unexp_descr_list)
+        #  #]
+    def expand_raw_descriptor_list(self):
+        #  #[
+        bt = BufrTable(autolink_tablesdir=self.private_bufr_tables_dir,
+                       verbose=False)
+        bt.load(self.table_b_file_to_use)
+        bt.load(self.table_d_file_to_use)
+
+        self.py_expanded_descr_list = \
+             bt.expand_descriptor_list(self.py_unexp_descr_list)
         
+        #for descr in 
+        #    if descr[0]=='3':
+        #        # print 'expanding: ',descr
+        #        tmp_list = bt.table_d[int(descr)].expand()
+        #        for int_descr in tmp_list:
+        #            str_descr = '%6.6i' % int_descr
+        #            self.py_expanded_descr_list.append(str_descr)
+        #    else:
+        #        # print 'keeping: ',descr
+        #        self.py_expanded_descr_list.append(descr)
+
+        print 'result:'
+        print 'self.py_expanded_descr_list: ',self.py_expanded_descr_list
+        print 'with length: ',len(self.py_expanded_descr_list)
         #  #]
     def fill_descriptor_list(self):
         #  #[ fills both the normal and expanded descriptor lists

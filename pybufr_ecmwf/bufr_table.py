@@ -27,6 +27,7 @@ by providing several helper classes.
 #  #]
 #  #[ imported modules
 import os
+import sys
 import glob
 #  #]
 
@@ -409,11 +410,12 @@ class CompositeDescriptor(Descriptor): #[table D entry]
     """
     a base class for composite descriptors (table D entries)
     """
-    def __init__(self, reference, descriptor_list, comment):
+    def __init__(self, reference, descriptor_list, comment, parent):
         #  #[
         self.reference = reference
         self.descriptor_list = descriptor_list
         self.comment = comment
+        self.parent = parent
         #  #]
     def __str__(self):
         #  #[
@@ -422,8 +424,81 @@ class CompositeDescriptor(Descriptor): #[table D entry]
               ";".join(str(d.reference) for d in self.descriptor_list)
         return txt
         #  #]
-    def checkinit(self, reference, descriptor_list, comment):
+    # to remove:
+    def expand(self):
         #  #[
+        """ a function to expand a table D entry into a list of
+        table B entries.
+        """
+        expanded_descriptor_list = []
+        num_descr_to_skip = 0
+        print '==> expanding: %6.6i' % self.reference
+        for (i,descr) in enumerate(self.descriptor_list):
+
+            # for replicated blocks, several descriptors may have been
+            # added already (maybe several times) to the
+            # expanded_descriptor_list, so this trick allows them to be
+            # skipped when continuing the loop
+            if num_descr_to_skip>0:
+                num_descr_to_skip -= 1
+                print 'skipping: %6.6i' % descr.reference
+                continue
+            
+            f_val = int(descr.reference/100000.)
+            if f_val==3:
+                # this is another table D entry, so expand recursively
+                print 'adding expanded version of: %6.6i' % \
+                      descr.reference
+                tmp_list = self.parent.table_d[descr.reference].expand()
+                expanded_descriptor_list.extend(tmp_list)
+            elif f_val==1:
+                # this is a replication operator
+                print 'handling replication operator: %6.6i' % descr.reference
+                xx  = int((descr.reference-100000.)/1000)
+                yyy = (descr.reference-100000-1000*xx)
+                print 'xx = ',xx,' = num. descr. to replicate'
+                print 'yyy = ',yyy,' = repl. count'
+
+                # note: for now only handle normal replication
+                # since I have no testfile at hand with delayed replication.
+                # In case of delayed replication, the replication operator
+                # is followed by a maximum replication count, and I believe
+                # the expansion of the descriptor list should assume the
+                # maximum (but this is to be confirmed)
+                replication_count = yyy
+                num_descr_to_skip = xx
+
+                # note that i points to the replication operator
+                descr_list_to_be_replicated = self.descriptor_list[i+1:i+1+xx]
+                print 'descr_list_to_be_replicated = ',\
+                      ';'.join(str(s.reference) for s
+                               in descr_list_to_be_replicated)
+                # do the replication
+                for j in range(yyy):
+                    for repl_descr in descr_list_to_be_replicated:
+                        repl_descr_f_val = int(repl_descr.reference/100000.)
+                        if repl_descr_f_val==3:
+                            print '%i: adding expanded version of: %6.6i' % \
+                                  (j, repl_descr.reference)
+                            expanded_descriptor_list.extend(repl_descr.expand())
+                        else:
+                            print '%i: adding copy of: %6.6i' % \
+                                  (j, repl_descr.reference)
+                            expanded_descriptor_list.\
+                                     append(repl_descr.reference)
+                
+                # print 'TESTJOS: breakpoint'
+                # sys.exit(1)
+                
+            else:
+                print 'adding: %6.6i' % descr.reference
+                expanded_descriptor_list.append(descr.reference)
+                
+        return expanded_descriptor_list
+        #  #]    
+    def checkinit(self, reference, descriptor_list, comment, parent):
+        #  #[
+
         """
         a function to be called when an instance is created for a
         composite descriptor that had been instantiated before.
@@ -435,6 +510,8 @@ class CompositeDescriptor(Descriptor): #[table D entry]
         assert(self.reference       == reference)
         assert(self.descriptor_list == descriptor_list)
         assert(self.comment         == comment)
+        assert(self.parent          == parent)
+
         #  #]
     #  #]
 
@@ -445,13 +522,16 @@ class BufrTable:
     """
     def __init__(self,
                  autolink_tablesdir = "tmp_BUFR_TABLES",
-                 tables_dir = None):
+                 tables_dir = None,
+                 verbose=True):
         #  #[
-        self.table_b   = {} # dict of desciptor-objects
-        self.table_d   = {} # dict of composite-descriptor-objects
-        self.specials  = {} # dict of specials
-        self.modifiers = {} # dict of modifiers
+        self.table_b   = {} # dict of desciptor-objects (f=0)
+        self.specials  = {} # dict of specials  (f=1)
+        self.modifiers = {} # dict of modifiers (f=2)
+        self.table_d   = {} # dict of composite-descriptor-objects (f=3)
 
+        self.verbose = verbose
+        
         self.autolink_tables = True
         if (tables_dir is not None):
             # dont use autolinking if the user provided a tables dir
@@ -476,6 +556,105 @@ class BufrTable:
         self.num_d_blocks = 0
 
         #  #]
+    def expand_descriptor_list(self, descr_list):
+        #  #[
+        """ a function to expand a descriptor list, holding table D entries
+        and replicators etc. into a clean list of table B entries (with f=0)
+        and modification operators (with f=2).
+        """
+        expanded_descriptor_list = []
+        num_descr_to_skip = 0
+
+        for (i,tmp_descr) in enumerate(descr_list):
+
+            if isinstance(tmp_descr, Descriptor):
+                descr = tmp_descr
+            else:
+                if (type(tmp_descr) == int):
+                    f_val = int(tmp_descr/100000.)
+                    if f_val==0:
+                        descr = self.table_b[tmp_descr]
+                    if f_val==1:
+                        descr = self.specials[tmp_descr]
+                    if f_val==2:
+                        descr = self.modifiers[tmp_descr]
+                    if f_val==3:
+                        descr = self.table_d[tmp_descr]
+                elif (type(tmp_descr) == str):
+                    f_val = tmp_descr[0]
+                    if f_val=='0':
+                        descr = self.table_b[int(tmp_descr)]
+                    if f_val=='1':
+                        descr = self.specials[int(tmp_descr)]
+                    if f_val=='2':
+                        descr = self.modifiers[int(tmp_descr)]
+                    if f_val=='3':
+                        descr = self.table_d[int(tmp_descr)]
+                else:
+                    print 'ERROR in expand_descriptor_list'
+                    print 'for descriptor: ',str(tmp_descr)
+                    print 'of type: ',type(tmp_descr)
+                    print 'ERROR: this point should never be reached'
+                    raise ProgrammingError
+                    
+            # for replicated blocks, several descriptors may have been
+            # added already (maybe several times) to the
+            # expanded_descriptor_list, so this trick allows them to be
+            # skipped when continuing the loop
+            if num_descr_to_skip>0:
+                num_descr_to_skip -= 1
+                print 'skipping: %6.6i' % descr.reference
+                continue
+            
+            f_val = int(descr.reference/100000.)
+            if f_val==3:
+                # this is another table D entry, so expand recursively
+                print 'adding expanded version of: %6.6i' % \
+                      descr.reference
+                tmp_list = self.expand_descriptor_list(\
+                                self.table_d[descr.reference].descriptor_list)
+                expanded_descriptor_list.extend(tmp_list)
+            elif f_val==1:
+                # this is a replication operator
+                print 'handling replication operator: %6.6i' % descr.reference
+                xx  = int((descr.reference-100000.)/1000)
+                yyy = (descr.reference-100000-1000*xx)
+                print 'xx = ',xx,' = num. descr. to replicate'
+                print 'yyy = ',yyy,' = repl. count'
+
+                # note: for now only handle normal replication
+                # since I have no testfile at hand with delayed replication.
+                # In case of delayed replication, the replication operator
+                # is followed by a maximum replication count, and I believe
+                # the expansion of the descriptor list should assume the
+                # maximum (but this is to be confirmed)
+                replication_count = yyy
+                num_descr_to_skip = xx
+
+                # note that i points to the replication operator
+                descr_list_to_be_replicated = descr_list[i+1:i+1+xx]
+                print 'descr_list_to_be_replicated = ',\
+                      ';'.join(str(s.reference) for s
+                               in descr_list_to_be_replicated)
+                # do the replication
+                for j in range(yyy):
+                    for repl_descr in descr_list_to_be_replicated:
+                        repl_descr_f_val = int(repl_descr.reference/100000.)
+                        if repl_descr_f_val==3:
+                            print '%i: adding expanded version of: %6.6i' % \
+                                  (j, repl_descr.reference)
+                            expanded_descriptor_list.extend(repl_descr.expand())
+                        else:
+                            print '%i: adding copy of: %6.6i' % \
+                                  (j, repl_descr.reference)
+                            expanded_descriptor_list.\
+                                     append(repl_descr.reference)
+            else:
+                print 'adding: %6.6i' % descr.reference
+                expanded_descriptor_list.append(descr.reference)
+                
+        return expanded_descriptor_list
+        #  #]    
     def set_bufr_tables_dir(self, tables_dir):
         #  #[
         """
@@ -512,7 +691,8 @@ class BufrTable:
                 return self.specials[reference]
             else:
                 # this is a new special
-                print "adding special: ", reference
+                if self.verbose:
+                    print "adding special: ", reference
                 special = SpecialCommand(reference)
                 self.specials[reference] = special
                 return special
@@ -522,7 +702,8 @@ class BufrTable:
                 return self.modifiers[reference]
             else:
                 # this is a new modifier
-                print "adding modifier: ", reference
+                if self.verbose:
+                    print "adding modifier: ", reference
                 modifier = ModificationCommand(reference)
                 self.modifiers[reference] = modifier
                 return modifier
@@ -715,9 +896,10 @@ class BufrTable:
                     nr_of_ignored_probl_entries += 1
 
         print "-------------"
-        if (nr_of_ignored_probl_entries>0):
-            print "nr_of_ignored_probl_entries = ", \
-                  nr_of_ignored_probl_entries
+        if self.verbose:
+            if (nr_of_ignored_probl_entries>0):
+                print "nr_of_ignored_probl_entries = ", \
+                      nr_of_ignored_probl_entries
         print "Loaded: ", len(self.table_b), " table B entries"
         print "-------------"
         #print "self.table_b[006001] = ", self.table_b[int('006001', 10)]
@@ -791,9 +973,10 @@ class BufrTable:
                         # in stead
                         extra_comment = line[18:]
                         if not (extra_comment.strip() == ""):
-                            print "WARNING: ignoring extra comment on "+\
-                                  "continuation line: "
-                            print "line: ["+line+"]"
+                            if self.verbose:
+                                print "WARNING: ignoring extra comment on "+\
+                                      "continuation line: "
+                                print "line: ["+line+"]"
                         
                 #print descriptor_list, reference, \
                 #      ref_reference, postpone, report_unhandled
@@ -809,7 +992,7 @@ class BufrTable:
                 if len(descriptor_list) == count:
                     #print "************************storing result"
                     d_descr = CompositeDescriptor(reference, descriptor_list,
-                                                  comment)
+                                                  comment, self)
                     if not self.table_d.has_key(reference):
                         #print "adding descr. key ", reference
                         self.table_d[reference] = d_descr
@@ -835,11 +1018,12 @@ class BufrTable:
                     if len(descriptor_list)<count:
                         raise IOError
                     else:
-                        print "ignoring excess descriptors for now..."
+                        if self.verbose:
+                            print "ignoring excess descriptors for now..."
                         #print "************************storing result"
                         d_descr = CompositeDescriptor(reference,
                                                       descriptor_list,
-                                                      comment)
+                                                      comment, self)
                         if not self.table_d.has_key(reference):
                             #print "adding descr. key ", reference
                             self.table_d[reference] = d_descr
@@ -878,9 +1062,10 @@ class BufrTable:
         # in the current example file, this happens for entry 301028
         # which is used on line 67, but only defined on line 69
 
-        print "********************"
-        print "**** first pass ****"
-        print "********************"
+        if self.verbose:
+            print "********************"
+            print "**** first pass ****"
+            print "********************"
 
         #  #[ create a list of blocks of lines
         self.list_of_d_entry_lineblocks = []
@@ -926,29 +1111,39 @@ class BufrTable:
         self.num_d_blocks = len(self.list_of_d_entry_lineblocks)
         #  #]
 
-        print "*********************"
-        print "**** second pass ****"
-        print "*********************"
+        if self.verbose:
+            print "*********************"
+            print "**** second pass ****"
+            print "*********************"
 
         handled_blocks = 1
         loop_count = 0
         while (handled_blocks>0):
             loop_count += 1
-            print "==============>loop count: ", loop_count
+            if self.verbose:
+                print "==============>loop count: ", loop_count
             (handled_blocks, remaining_blocks) = self.decode_blocks()
 
-        print "remaining blocks: ", remaining_blocks
-        print "decoded blocks:   ", handled_blocks
-        if remaining_blocks > 0:
-            print "---------------------------------------------------"
-            print "Reporting problematic blocks:"
-            print "---------------------------------------------------"
-            (handled_blocks, remaining_blocks) = \
-                             self.decode_blocks(report_unhandled = True)
-            print "---------------------------------------------------"
+        if self.verbose:
+            print "remaining blocks: ", remaining_blocks
+            print "decoded blocks:   ", handled_blocks
+            if remaining_blocks > 0:
+                print "---------------------------------------------------"
+                print "Reporting problematic blocks:"
+                print "---------------------------------------------------"
+                # nothing more to decode here, but run it once more with
+                # the report_unhandled flag set, to generate a listing
+                # of not properly used/defined entries
+                (handled_blocks, remaining_blocks) = \
+                                 self.decode_blocks(report_unhandled = True)
+                print "---------------------------------------------------"
 
-        print "self.num_d_blocks = ", self.num_d_blocks
-        print "remaining_blocks = ", remaining_blocks
+        print '-------------'
+        print 'Loaded: ', self.num_d_blocks,' table D entries'
+        print '-------------'
+        
+        if self.verbose:
+            print "remaining_blocks = ", remaining_blocks
 
         if (self.num_d_blocks == remaining_blocks):
             print "ERROR: it seems you forgot to load the B-table before trying"
@@ -1075,11 +1270,14 @@ if __name__ == "__main__":
     # tables defined on the lines above
     
     # test the available bufr tables
-    TABLE_CODES = [#"0000000000000014000",
-                   "0000000000098000000",
+    TABLE_CODES = ["0000000000098000000",
                    "0000000000098002001", "0000000000098006000",
                    "0000000000098006001", "0000000000098013001",
-                   "0000000000098014001", "0000000000254011001"]
+                   "0000000000098014001"]
+    #, "0000000000000014000",
+    #, "0000000000254011001"
+    # this last one seems only to have a B table but no D table!!!!
+    
     PATH = "ecmwf_bufrtables"
     for table_code in TABLE_CODES:
         BT.load(os.path.join(PATH, "B"+table_code+".TXT"))

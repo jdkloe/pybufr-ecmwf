@@ -84,7 +84,7 @@ def display_results(bufr):
     print "printing content of section 3:"
     bufr.print_descriptors()
     #  #]
-def decoding_example(input_bufr_file):
+def decoding_example(input_bufr_file, custom_bufr_tables=None):
     #  #[
     """
     wrap the example in a function to circumvent the pylint
@@ -99,6 +99,10 @@ def decoding_example(input_bufr_file):
     (words, section_sizes, section_start_locations) = \
             rbf.get_next_raw_bufr_msg()
     rbf.close()
+
+    if words is None:
+        print 'No valid BUFR messages found'
+        sys.exit(0)
     
     print '------------------------------'
     bufr = BUFRInterfaceECMWF(encoded_message=words,
@@ -112,7 +116,11 @@ def decoding_example(input_bufr_file):
     bufr.print_sections_012_metadata()
 
     print "calling: setup_tables()"
-    bufr.setup_tables()
+    if custom_bufr_tables:
+        bufr.setup_tables(table_b_to_use=custom_bufr_tables[0],
+                          table_d_to_use=custom_bufr_tables[1])
+    else:
+        bufr.setup_tables()
 
     print "calling: print_sections_012():"
     bufr.print_sections_012()
@@ -122,7 +130,7 @@ def decoding_example(input_bufr_file):
     #bufr.print_descriptors()
 
     print '------------------------------'
-    print "calling: ecmwfbufr.bufrex():"
+    print "calling: bufr.decode_data():"
     bufr.decode_data()
 
     return bufr
@@ -139,7 +147,11 @@ print "-"*50
 print "BUFR decoding example"
 print "-"*50
 
-BUFRMSG = decoding_example(INP_BUFR_FILE)
+CUSTOM_BUFR_TABLES = \
+      ('pybufr_ecmwf/alt_bufr_tables/GENERIC_SCAT_BUFR_TABLE_B.TXT',
+       'pybufr_ecmwf/alt_bufr_tables/GENERIC_SCAT_BUFR_TABLE_D.TXT')
+BUFRMSG = decoding_example(INP_BUFR_FILE, custom_bufr_tables=CUSTOM_BUFR_TABLES)
+#BUFRMSG = decoding_example(INP_BUFR_FILE)
 display_results(BUFRMSG)
 print 'succesfully decoded data from file: ', INP_BUFR_FILE
 

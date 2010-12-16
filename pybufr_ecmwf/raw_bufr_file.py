@@ -199,6 +199,7 @@ class RawBUFRFile:
         section_sizes           = [0,0,0,0,0,0]
         section_start_locations = [0,0,0,0,0,0]
 
+        # self.verbose = True
         if (self.verbose):
             print 'getting message size of start location: ', start_location
         try:
@@ -254,7 +255,14 @@ class RawBUFRFile:
             # this is indicated by bit 1 of byte 8 of section 1
             byte8 = ord(self.data[start_location+offset+8-1])
             section2_present = False
-            if (byte8 & 1):
+
+            # NOTE: formally, only bit one signals the presence of
+            # section2, but I have some example ERS files that use other
+            # bits (i.e. that have byte8==8)
+            # So for now, assume section2 is present if any of the bits
+            # of byte8 is set.
+            #if (byte8 & 1):
+            if (byte8 > 0):
                 section2_present = True
                 
             # retrieve size of section 2
@@ -316,6 +324,15 @@ class RawBUFRFile:
                 # for editions 0 and 1 the msg_size is not contained
                 # in section 0, and still needs to be set:
                 msg_size = calculated_msg_size
+            else:
+                # extra sanity check
+                if msg_size != calculated_msg_size:
+                    print 'ERROR! msg_size from section0 does not match'
+                    print 'msg_size calculated from individual section lengths!'
+                    print 'msg_size from section0: ',msg_size
+                    print 'calculated msg_size;    ',calculated_msg_size
+                    print 'SKIPPING this message...'
+                    return (0, section_sizes, section_start_locations)
                 
         except IndexError:
             # 0 signals this is not a valid BUFR msg, might be a false
@@ -461,13 +478,13 @@ class RawBUFRFile:
             print "WARNING: non-existing BUFR message: ", msg_nr
             print "This file only contains: ", self.nr_of_bufr_messages, \
                   " BUFR messages"
-            return None
+            return (None, None, None)
 
         if (msg_nr<1):
             print "WARNING: invalid BUFR message number: ", msg_nr
             print "For this file this number should be between 1 and: ", \
                   self.nr_of_bufr_messages
-            return None
+            return (None, None, None)
 
         self.last_used_msg = msg_nr
         (start_index, end_index, section_sizes, section_start_locations) = \
