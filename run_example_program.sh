@@ -28,23 +28,23 @@ DTABLE='pybufr_ecmwf/ecmwf_bufrtables/D_default.TXT'
 
 if [ "$1" == "1" ] ;  then \
     ./example_programs/example_for_using_bufrinterface_ecmwf_for_decoding.py \
-    ../BUFR_test_files2/noaa_mos/sn.0082.bin; \
+    ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr; \
     exit;
 fi;
 #    $TESTINPUTFILE; \
 # available testfiles:
-#    ../BUFR_test_files2/noaa_mos/sn.0082.bin; \
-#    ../BUFR_test_files2/noaa_mos/sn.0001.bin; \
+#ok  ../BUFR_test_files2/noaa_mos/sn.0082.bin; \
+#x   ../BUFR_test_files2/noaa_mos/sn.0001.bin; \
 #ok  ../BUFR_test_files2/ers12/ERS19930120.coll.bufr; \
 #ok  ../BUFR_test_files2/ers12/pscat96021703.pp; \
-#x   ../BUFR_test_files2/ers12/pscat2000013121.pp; \
+#ok  ../BUFR_test_files2/ers12/pscat2000013121.pp; \
 #bt  ../BUFR_test_files2/MSS_S327121011_200_PAAL31_EGRR_231200; \ # has delayed replication
-#    ../BUFR_test_files2/qscat/QS_D07060_S1821_E2002_B4009191_025.genws; \ 
-#    ../BUFR_test_files2/qscat/S1L2B2009313_00683_00684.bufr; \
-#    ../BUFR_test_files2/ascat/ascat_20100924_063000_metopa_20395_eps_o_125.l1_bufr;\
-#    ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_o_125_ovw.l2_bufr; \
-#    ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_o_250_ovw.l2_bufr; \
-#    ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr; \
+#ok  ../BUFR_test_files2/qscat/QS_D07060_S1821_E2002_B4009191_025.genws; \
+#ok  ../BUFR_test_files2/qscat/S1L2B2009313_00683_00684.bufr; \
+#x   ../BUFR_test_files2/ascat/ascat_20100924_063000_metopa_20395_eps_o_125.l1_bufr;\
+#ok  ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_o_125_ovw.l2_bufr; \
+#ok  ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_o_250_ovw.l2_bufr; \
+#ok  ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr; \
 
 if [ "$1" == "2" ] ;  then \
     ./example_programs/example_for_using_bufrinterface_ecmwf_for_encoding.py \

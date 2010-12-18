@@ -561,42 +561,51 @@ class BufrTable:
         """ a function to expand a descriptor list, holding table D entries
         and replicators etc. into a clean list of table B entries (with f=0)
         and modification operators (with f=2).
+        Descr_list may be a list of descriptor instances, or a list of
+        integer reference numbers, or a list of strings that can be
+        converted to a list of reference numbers.
         """
-        expanded_descriptor_list = []
-        num_descr_to_skip = 0
-
-        for (i,tmp_descr) in enumerate(descr_list):
+        #  #[ normalise the list to hold only Desciptor instances
+        normalised_descriptor_list = []
+        for tmp_descr in descr_list:
 
             if isinstance(tmp_descr, Descriptor):
                 descr = tmp_descr
             else:
-                if (type(tmp_descr) == int):
-                    f_val = int(tmp_descr/100000.)
-                    if f_val==0:
-                        descr = self.table_b[tmp_descr]
-                    if f_val==1:
-                        descr = self.specials[tmp_descr]
-                    if f_val==2:
-                        descr = self.modifiers[tmp_descr]
-                    if f_val==3:
-                        descr = self.table_d[tmp_descr]
-                elif (type(tmp_descr) == str):
-                    f_val = tmp_descr[0]
-                    if f_val=='0':
-                        descr = self.table_b[int(tmp_descr)]
-                    if f_val=='1':
-                        descr = self.specials[int(tmp_descr)]
-                    if f_val=='2':
-                        descr = self.modifiers[int(tmp_descr)]
-                    if f_val=='3':
-                        descr = self.table_d[int(tmp_descr)]
+                if (type(tmp_descr) == str):
+                    int_descr = int(tmp_descr)
+                elif (type(tmp_descr) == int):
+                    int_descr = tmp_descr
                 else:
-                    print 'ERROR in expand_descriptor_list'
-                    print 'for descriptor: ',str(tmp_descr)
-                    print 'of type: ',type(tmp_descr)
-                    print 'ERROR: this point should never be reached'
-                    raise ProgrammingError
-                    
+                    print 'ERROR: type(tmp_descr): ',type(tmp_descr)
+                    print 'tmp_descr = ',tmp_descr
+                f_val = int(int_descr/100000.)
+                if f_val==0:
+                    # this one should already be in the table_b dictionary
+                    # otherwise the wrong table_b is loaded
+                    descr = self.table_b[int_descr]
+                if f_val==1:
+                    if not self.specials.has_key(int_descr):
+                        new_descr = SpecialCommand(int_descr)
+                        self.specials[int_descr] = new_descr
+                    descr = self.specials[int_descr]
+                if f_val==2:
+                    if not self.modifiers.has_key(int_descr):
+                        new_descr = ModificationCommand(int_descr)
+                        self.modifiers[int_descr] = new_descr
+                    descr = self.modifiers[int_descr]
+                if f_val==3:
+                    # this one should already be in the table_d dictionary
+                    # otherwise the wrong table_d is loaded
+                    descr = self.table_d[int_descr]
+
+            normalised_descriptor_list.append(descr)
+        #  #]
+        #  #[ do the actual expansion
+        expanded_descriptor_list = []
+        num_descr_to_skip = 0
+        for (i,descr) in enumerate(normalised_descriptor_list):
+
             # for replicated blocks, several descriptors may have been
             # added already (maybe several times) to the
             # expanded_descriptor_list, so this trick allows them to be
@@ -614,6 +623,8 @@ class BufrTable:
                 tmp_list = self.expand_descriptor_list(\
                                 self.table_d[descr.reference].descriptor_list)
                 expanded_descriptor_list.extend(tmp_list)
+                print 'done expanding: %6.6i' % \
+                      descr.reference
             elif f_val==1:
                 # this is a replication operator
                 print 'handling replication operator: %6.6i' % descr.reference
@@ -632,7 +643,8 @@ class BufrTable:
                 num_descr_to_skip = xx
 
                 # note that i points to the replication operator
-                descr_list_to_be_replicated = descr_list[i+1:i+1+xx]
+                descr_list_to_be_replicated = \
+                      normalised_descriptor_list[i+1:i+1+xx]
                 print 'descr_list_to_be_replicated = ',\
                       ';'.join(str(s.reference) for s
                                in descr_list_to_be_replicated)
@@ -649,10 +661,12 @@ class BufrTable:
                                   (j, repl_descr.reference)
                             expanded_descriptor_list.\
                                      append(repl_descr.reference)
+                print 'done handling replication operator: %6.6i' % \
+                      descr.reference
             else:
                 print 'adding: %6.6i' % descr.reference
                 expanded_descriptor_list.append(descr.reference)
-                
+        #  #]
         return expanded_descriptor_list
         #  #]    
     def set_bufr_tables_dir(self, tables_dir):

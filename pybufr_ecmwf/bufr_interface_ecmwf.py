@@ -757,9 +757,6 @@ class BUFRInterfaceECMWF:
                      "These numbers should be identical !!"
             raise EcmwfBufrLibError(errtxt)
         
-        #print 'TESTJOS: breakpoint'
-        #sys.exit(1)
-
         # NOTE: this size is the maximum array size that is needed DURING
         # the decoding process. This ALSO includes modification
         # descriptors (with f=2) which are removed again in the
@@ -778,6 +775,9 @@ class BUFRInterfaceECMWF:
         print 'TESTJOS: actual_nr_of_descriptors = ',actual_nr_of_descriptors
         print 'TESTJOS: actual_nr_of_subsets = ',actual_nr_of_subsets
         print 'TESTJOS: self.kvals = ',self.kvals
+
+        #print 'TESTJOS: breakpoint'
+        #sys.exit(1)
 
         # allocate space for decoding
         # note: float64 is the default, but it doesn't hurt to make it explicit
@@ -1185,6 +1185,17 @@ class BUFRInterfaceECMWF:
         #          during previous library calls
         # Therefore it only produces correct results when either bus012
         # or bufrex have been called previously on the same bufr message.....
+
+        actual_nr_of_descriptors = len(self.py_unexp_descr_list)
+        actual_nr_of_expanded_descriptors = len(self.py_expanded_descr_list)
+
+        # arrays to hold the descriptors
+        self.ktdlen = 0 # will hold nr of descriptors
+        self.ktdlst = np.zeros(actual_nr_of_descriptors,
+                               dtype = np.int)
+        self.ktdexl = 0 # will hold nr of expanded descriptors
+        self.ktdexp = np.zeros(actual_nr_of_expanded_descriptors,
+                               dtype = np.int)
     
         kerr   = 0
     
