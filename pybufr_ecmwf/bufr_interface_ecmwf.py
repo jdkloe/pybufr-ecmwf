@@ -1014,8 +1014,9 @@ class BUFRInterfaceECMWF:
                      str(j)+" is not possible (remember the arrays are "+\
                      "counted starting with 0)"
             raise EcmwfBufrLibError(errtxt)
-            
-        selection = self.max_nr_expanded_descriptors*j + i
+
+        actual_nr_of_descriptors = len(self.py_expanded_descr_list)
+        selection = actual_nr_of_descriptors*j + i
         value = self.values[selection]
         return value
         #  #]
@@ -1039,8 +1040,9 @@ class BUFRInterfaceECMWF:
                      str(i)+" is not possible (remember the arrays are "+\
                      "counted starting with 0)"
             raise EcmwfBufrLibError(errtxt)
-        
-        selection = self.max_nr_expanded_descriptors*\
+
+        actual_nr_of_descriptors = len(self.py_expanded_descr_list)
+        selection = actual_nr_of_descriptors*\
                     np.array(range(nsubsets))+i
 
         values = self.values[selection]
