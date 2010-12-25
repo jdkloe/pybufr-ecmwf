@@ -30,7 +30,7 @@ def print_bufr_content(input_bufr_file):
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file)
-    
+
     for msg_nr in range(1,bob.num_msgs+1):
         bob.get_next_msg()
         data = bob.get_values_as_2d_array()

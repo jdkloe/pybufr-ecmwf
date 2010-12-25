@@ -28,7 +28,7 @@ DTABLE='pybufr_ecmwf/ecmwf_bufrtables/D_default.TXT'
 
 if [ "$1" == "1" ] ;  then \
     ./example_programs/example_for_using_bufrinterface_ecmwf_for_decoding.py \
-    ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr; \
+    $TESTINPUTFILE; \
     exit;
 fi;
 #    $TESTINPUTFILE; \
@@ -45,6 +45,12 @@ fi;
 #ok  ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_o_125_ovw.l2_bufr; \
 #ok  ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_o_250_ovw.l2_bufr; \
 #ok  ../BUFR_test_files2/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr; \
+
+# notes on failing tests:
+# sn.0001.bin failes because I have no BUFR table that defines table B descriptor 011200
+# ascat_*_metopa_*.l1_bufr failes because bufrex returns with the error "KELEMARGUMENT TOO SMALL"
+# which I don't understand because the nr of descriptors of 117 and the number of
+# subsets of 1722 seems to be determined correctly.
 
 if [ "$1" == "2" ] ;  then \
     ./example_programs/example_for_using_bufrinterface_ecmwf_for_encoding.py \

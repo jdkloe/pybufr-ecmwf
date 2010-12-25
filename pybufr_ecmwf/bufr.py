@@ -140,7 +140,11 @@ class BUFRReader:
         """
         (raw_msg, section_sizes, section_start_locations) = \
                  self.rbf.get_next_raw_bufr_msg()
-        self.bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg)
+        print '(raw_msg, section_sizes, section_start_locations) = ',\
+              (raw_msg, section_sizes, section_start_locations)
+        self.bufr_obj = BUFRInterfaceECMWF(raw_msg,
+                                           section_sizes,
+                                           section_start_locations)
         self.bufr_obj.decode_sections_012()
         self.bufr_obj.setup_tables()
         self.bufr_obj.decode_data()

@@ -793,10 +793,10 @@ class BUFRInterfaceECMWF:
         #print 'TESTJOS: len(self.ksec2)=',len(self.ksec2)
         #print 'TESTJOS: len(self.ksec3)=',len(self.ksec3)
         #print 'TESTJOS: len(self.ksec4)=',len(self.ksec4)
-        #print 'TESTJOS: len(self.cnames)=',len(self.cnames)
-        #print 'TESTJOS: len(self.cunits)=',len(self.cunits)
-        #print 'TESTJOS: len(self.values)=',len(self.values)
-        #print 'TESTJOS: len(self.cvals)=',len(self.cvals)
+        print 'TESTJOS: len(self.cnames)=',len(self.cnames)
+        print 'TESTJOS: len(self.cunits)=',len(self.cunits)
+        print 'TESTJOS: len(self.values)=',len(self.values)
+        print 'TESTJOS: len(self.cvals)=',len(self.cvals)
 
         self.store_fortran_stdout()
         ecmwfbufr.bufrex(self.encoded_message, # input

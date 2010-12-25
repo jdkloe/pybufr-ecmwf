@@ -150,7 +150,14 @@ print "-"*50
 CUSTOM_BUFR_TABLES = \
       ('pybufr_ecmwf/alt_bufr_tables/GENERIC_SCAT_BUFR_TABLE_B.TXT',
        'pybufr_ecmwf/alt_bufr_tables/GENERIC_SCAT_BUFR_TABLE_D.TXT')
-BUFRMSG = decoding_example(INP_BUFR_FILE, custom_bufr_tables=CUSTOM_BUFR_TABLES)
+if 'noaa_mos' in INP_BUFR_FILE:
+    BUFRMSG = decoding_example(INP_BUFR_FILE)
+else:
+    # the custom generic_scat tables are only usefull when decoding
+    # scatteromet BUFR files
+    BUFRMSG = decoding_example(INP_BUFR_FILE,
+                               custom_bufr_tables=CUSTOM_BUFR_TABLES)
+    
 #BUFRMSG = decoding_example(INP_BUFR_FILE)
 display_results(BUFRMSG)
 print 'succesfully decoded data from file: ', INP_BUFR_FILE
