@@ -17,8 +17,8 @@ Table names expected by the library:
 B0000000000210000001.TXT
 D0000000000210000001.TXT
 Tables to be used:
-B_default.TXT
-D_default.TXT
+GENERIC_SCAT_BUFR_TABLE_B.TXT
+GENERIC_SCAT_BUFR_TABLE_D.TXT
 calling: print_sections_012():
 ------------------------------
 printing content of section 0:
@@ -53,7 +53,7 @@ FORTRAN STDOUT:  BUFR MASTER TABLE                 0
 ------------------------------
 skipping section 2 [since it seems unused]
 ------------------------------
-calling: ecmwfbufr.bufrex():
+calling: bufr.decode_data():
 ------------------------------
 Metadata for decoded BUFR message:
 ksup :  [  16    1    4    2   44  361    0 6598    3]
@@ -67,11 +67,11 @@ sec4 :  [6562    0]
 ------------------------------
 The list of names and units for the numbers in this BUFR message:
 [index] cname [cunit] : 
-[000]:SATELLITE IDENTIFIER                                             [CODE TABLE 1007         ]
-[001]:SOFTWARE IDENTIFICATION (SEE NOTE 2)                             [NUMERIC                 ]
-[002]:IDENTIFICATION OF ORIGINATING/GENERATING CENTRE                  [CODE TABLE 1033         ]
-[003]:IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTRE              [CODE TABLE 1034         ]
-[004]:DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**               [DEGREE TRUE             ]
+[000]:SATELLITE IDENTIFIER                                             [CODE TABLE 001007       ]
+[001]:SOFTWARE IDENTIFICATION                                          [NUMERIC                 ]
+[002]:IDENTIFICATION OF ORIGINATING/GENERATING CENTRE                  [CODE TABLE 001033       ]
+[003]:IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTRE              [CODE TABLE 001034       ]
+[004]:DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM                 [DEGREE TRUE             ]
 [005]:YEAR                                                             [YEAR                    ]
 [006]:MONTH                                                            [MONTH                   ]
 [007]:DAY                                                              [DAY                     ]
@@ -81,10 +81,10 @@ The list of names and units for the numbers in this BUFR message:
 [011]:IN DIRECTION OF 0 DEGREES LONGITUDE, DISTANCE FROM THE EARTH'S C [M                       ]
 [012]:IN DIRECTION 90 DEGREES EAST, DISTANCE FROM THE EARTH'S CENTRE   [M                       ]
 [013]:IN DIRECTION OF THE NORTH POLE, DISTANCE FROM THE EARTH'S CENTRE [M                       ]
-[014]:ABSOLUTE PLATFORM VELOCITY - FIRST COMPONENT (SEE NOTE 6)        [M/S                     ]
-[015]:ABSOLUTE PLATFORM VELOCITY - SECOND COMPONENT (SEE NOTE 6)       [M/S                     ]
-[016]:ABSOLUTE PLATFORM VELOCITY - THIRD COMPONENT (SEE NOTE 6)        [M/S                     ]
-[017]:SATELLITE INSTRUMENT DATA USED IN PROCESSING                     [FLAG TABLE 2021         ]
+[014]:ABSOLUTE PLATFORM VELOCITY - FIRST COMPONENT                     [M/S                     ]
+[015]:ABSOLUTE PLATFORM VELOCITY - SECOND COMPONENT                    [M/S                     ]
+[016]:ABSOLUTE PLATFORM VELOCITY - THIRD COMPONENT                     [M/S                     ]
+[017]:SATELLITE INSTRUMENT DATA USED IN PROCESSING                     [FLAG TABLE 002021       ]
 [018]:YEAR                                                             [YEAR                    ]
 [019]:MONTH                                                            [MONTH                   ]
 [020]:DAY                                                              [DAY                     ]
@@ -110,11 +110,10 @@ The list of names and units for the numbers in this BUFR message:
 [040]:MISSING PACKET COUNTER                                           [NUMERIC                 ]
 [041]:WIND SPEED AT 10 M                                               [M/S                     ]
 [042]:WIND DIRECTION AT 10 M                                           [DEGREE TRUE             ]
-[043]:WIND PRODUCT CONFIDENCE DATA                                     [FLAG TABLE 21067        ]
+[043]:WIND PRODUCT CONFIDENCE DATA                                     [FLAG TABLE 021067       ]
 ------------------------------
 Decoded BUFR message:
-values array:  [  2.00000000e+00   8.03000000e+02   2.10000000e+02 ...,   1.70000000e+38
-   1.70000000e+38   6.40000000e+01]
+values array:  [   2.  803.  210. ...,    0.    0.    0.]
 values[:20] :  2.0;803.0;210.0;1.0;348.0;1998.0;12.0;16.0;22.0;26.0;36.49;7164713.6;106558.26;15.73201;7377.06752;8.0;1998.0;12.0;
 number of subsets in the BUFR message is:  361
 number of elements in each subset is:  44
@@ -148,7 +147,7 @@ expanded descriptor list:  [ 1007 25060  1033  1034  1012  4001  4002  4003  400
 expanded descriptor list length:  44
 ------------------------------
 printing content of section 3:
-detected  80  lines of fortran stdout:
+detected  69  lines of fortran stdout:
 FORTRAN STDOUT: 1
 FORTRAN STDOUT:           BUFR SECTION 3    
 FORTRAN STDOUT:  
@@ -162,34 +161,15 @@ FORTRAN STDOUT:
 FORTRAN STDOUT:         DATA DESCRIPTORS (UNEXPANDED)
 FORTRAN STDOUT:  
 FORTRAN STDOUT:     1  312021
-FORTRAN STDOUT:     2  000000
-FORTRAN STDOUT:     3  000000
-FORTRAN STDOUT:     4  000000
-FORTRAN STDOUT:     5  000000
-FORTRAN STDOUT:     6  000000
-FORTRAN STDOUT:     7  000000
-FORTRAN STDOUT:     8  000000
-FORTRAN STDOUT:     9  000000
-FORTRAN STDOUT:    10  000000
-FORTRAN STDOUT:    11  000000
-FORTRAN STDOUT:    12  000000
-FORTRAN STDOUT:    13  000000
-FORTRAN STDOUT:    14  000000
-FORTRAN STDOUT:    15  000000
-FORTRAN STDOUT:    16  000000
-FORTRAN STDOUT:    17  000000
-FORTRAN STDOUT:    18  000000
-FORTRAN STDOUT:    19  000000
-FORTRAN STDOUT:    20  000000
 FORTRAN STDOUT:  
 FORTRAN STDOUT: 
 FORTRAN STDOUT:         DATA DESCRIPTORS (EXPANDED)
 FORTRAN STDOUT:  
 FORTRAN STDOUT:      1  001007  SATELLITE IDENTIFIER                                            
-FORTRAN STDOUT:      2  025060  SOFTWARE IDENTIFICATION (SEE NOTE 2)                            
+FORTRAN STDOUT:      2  025060  SOFTWARE IDENTIFICATION                                         
 FORTRAN STDOUT:      3  001033  IDENTIFICATION OF ORIGINATING/GENERATING CENTRE                 
 FORTRAN STDOUT:      4  001034  IDENTIFICATION OF ORIGINATING/GENERATING SUB-CENTRE             
-FORTRAN STDOUT:      5  001012  DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM**              
+FORTRAN STDOUT:      5  001012  DIRECTION OF MOTION OF MOVING OBSERVING PLATFORM                
 FORTRAN STDOUT:      6  004001  YEAR                                                            
 FORTRAN STDOUT:      7  004002  MONTH                                                           
 FORTRAN STDOUT:      8  004003  DAY                                                             
@@ -199,9 +179,9 @@ FORTRAN STDOUT:     11  004006  SECOND
 FORTRAN STDOUT:     12  027031  IN DIRECTION OF 0 DEGREES LONGITUDE, DISTANCE FROM THE EARTH'S C
 FORTRAN STDOUT:     13  028031  IN DIRECTION 90 DEGREES EAST, DISTANCE FROM THE EARTH'S CENTRE  
 FORTRAN STDOUT:     14  010031  IN DIRECTION OF THE NORTH POLE, DISTANCE FROM THE EARTH'S CENTRE
-FORTRAN STDOUT:     15  001041  ABSOLUTE PLATFORM VELOCITY - FIRST COMPONENT (SEE NOTE 6)       
-FORTRAN STDOUT:     16  001042  ABSOLUTE PLATFORM VELOCITY - SECOND COMPONENT (SEE NOTE 6)      
-FORTRAN STDOUT:     17  001043  ABSOLUTE PLATFORM VELOCITY - THIRD COMPONENT (SEE NOTE 6)       
+FORTRAN STDOUT:     15  001041  ABSOLUTE PLATFORM VELOCITY - FIRST COMPONENT                    
+FORTRAN STDOUT:     16  001042  ABSOLUTE PLATFORM VELOCITY - SECOND COMPONENT                   
+FORTRAN STDOUT:     17  001043  ABSOLUTE PLATFORM VELOCITY - THIRD COMPONENT                    
 FORTRAN STDOUT:     18  002021  SATELLITE INSTRUMENT DATA USED IN PROCESSING                    
 FORTRAN STDOUT:     19  004001  YEAR                                                            
 FORTRAN STDOUT:     20  004002  MONTH                                                           
@@ -229,6 +209,14 @@ FORTRAN STDOUT:     41  021065  MISSING PACKET COUNTER
 FORTRAN STDOUT:     42  011012  WIND SPEED AT 10 M                                              
 FORTRAN STDOUT:     43  011011  WIND DIRECTION AT 10 M                                          
 FORTRAN STDOUT:     44  021067  WIND PRODUCT CONFIDENCE DATA                                    
+FORTRAN STDOUT:     45  000000                                                                  
+FORTRAN STDOUT:     46  000000                                                                  
+FORTRAN STDOUT:     47  000000                                                                  
+FORTRAN STDOUT:     48  000000                                                                  
+FORTRAN STDOUT:     49  000000                                                                  
+FORTRAN STDOUT:     50  000000                                                                  
+FORTRAN STDOUT:     51  000000                                                                  
+FORTRAN STDOUT:     52  000000                                                                  
 succesfully decoded data from file:  example_programs/testdata/Testfile.BUFR
 --------------------------------------------------
 done

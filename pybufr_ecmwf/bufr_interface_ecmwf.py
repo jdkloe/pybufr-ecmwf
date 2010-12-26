@@ -772,11 +772,11 @@ class BUFRInterfaceECMWF:
         #              actual_nr_of_descriptors*\
         #              actual_nr_of_subsets
 
-        print 'TESTJOS: actual_nr_of_descriptors = ',actual_nr_of_descriptors
-        print 'TESTJOS: actual_nr_of_subsets = ',actual_nr_of_subsets
-        print 'TESTJOS: self.kvals = ',self.kvals
+        # print 'TESTJOS: actual_nr_of_descriptors = ',actual_nr_of_descriptors
+        # print 'TESTJOS: actual_nr_of_subsets = ',actual_nr_of_subsets
+        # print 'TESTJOS: self.kvals = ',self.kvals
 
-        #print 'TESTJOS: breakpoint'
+        # print 'TESTJOS: breakpoint'
         #sys.exit(1)
 
         # allocate space for decoding
@@ -788,15 +788,15 @@ class BUFRInterfaceECMWF:
         self.cunits = np.zeros((actual_nr_of_descriptors, 24),
                                dtype = np.character)
 
-        #print 'TESTJOS: len(self.ksec0)=',len(self.ksec0)
-        #print 'TESTJOS: len(self.ksec1)=',len(self.ksec1)
-        #print 'TESTJOS: len(self.ksec2)=',len(self.ksec2)
-        #print 'TESTJOS: len(self.ksec3)=',len(self.ksec3)
-        #print 'TESTJOS: len(self.ksec4)=',len(self.ksec4)
-        print 'TESTJOS: len(self.cnames)=',len(self.cnames)
-        print 'TESTJOS: len(self.cunits)=',len(self.cunits)
-        print 'TESTJOS: len(self.values)=',len(self.values)
-        print 'TESTJOS: len(self.cvals)=',len(self.cvals)
+        # print 'TESTJOS: len(self.ksec0)=',len(self.ksec0)
+        # print 'TESTJOS: len(self.ksec1)=',len(self.ksec1)
+        # print 'TESTJOS: len(self.ksec2)=',len(self.ksec2)
+        # print 'TESTJOS: len(self.ksec3)=',len(self.ksec3)
+        # print 'TESTJOS: len(self.ksec4)=',len(self.ksec4)
+        # print 'TESTJOS: len(self.cnames)=',len(self.cnames)
+        # print 'TESTJOS: len(self.cunits)=',len(self.cunits)
+        # print 'TESTJOS: len(self.values)=',len(self.values)
+        # print 'TESTJOS: len(self.cvals)=',len(self.cvals)
 
         self.store_fortran_stdout()
         ecmwfbufr.bufrex(self.encoded_message, # input
@@ -1086,7 +1086,7 @@ class BUFRInterfaceECMWF:
         this is implemented in python here.
         """
 
-        print "extracting raw descriptor list:"
+        # print "extracting raw descriptor list:"
         
         # method to implement
         # use get_expected_msg_size from raw_bufr_file.py
@@ -1115,16 +1115,16 @@ class BUFRInterfaceECMWF:
         dataformat = ">1i"
         
         start_section3 = self.section_start_locations[3]
-        print 'start_section3 = ',start_section3
+        # print 'start_section3 = ',start_section3
         # extract the number of subsets from bytes 5 and 6
         raw_bytes = chr(0)*2+raw_data_bytes[start_section3+5-1:
                                             start_section3+6]
         self.py_num_subsets = struct.unpack(dataformat, raw_bytes)[0]
-        print 'self.py_num_subsets = ',self.py_num_subsets
+        # print 'self.py_num_subsets = ',self.py_num_subsets
 
-        print 'length section3: ', self.section_sizes[3]
+        # print 'length section3: ', self.section_sizes[3]
         num_descriptors = int(0.5*(self.section_sizes[3]-7))
-        print 'num descriptors: ',num_descriptors
+        # print 'num descriptors: ',num_descriptors
 
         # do the actual extraction of the raw/unexpanded descriptors
         self.py_unexp_descr_list = []
@@ -1139,8 +1139,8 @@ class BUFRInterfaceECMWF:
             #print 'extracted descriptor: f,x,y = %1.1i.%2.2i.%3.3i' % (f,x,y)
             self.py_unexp_descr_list.append('%1.1i%2.2i%3.3i' % (f,x,y))
 
-        print 'self.py_unexp_descr_list = ',self.py_unexp_descr_list
-        print 'with length = ',len(self.py_unexp_descr_list)
+        # print 'self.py_unexp_descr_list = ',self.py_unexp_descr_list
+        # print 'with length = ',len(self.py_unexp_descr_list)
         #  #]
     def expand_raw_descriptor_list(self):
         #  #[
@@ -1163,9 +1163,9 @@ class BUFRInterfaceECMWF:
         #        # print 'keeping: ',descr
         #        self.py_expanded_descr_list.append(descr)
 
-        print 'result:'
-        print 'self.py_expanded_descr_list: ',self.py_expanded_descr_list
-        print 'with length: ',len(self.py_expanded_descr_list)
+        # print 'result:'
+        # print 'self.py_expanded_descr_list: ',self.py_expanded_descr_list
+        # print 'with length: ',len(self.py_expanded_descr_list)
         #  #]
     def fill_descriptor_list(self):
         #  #[ fills both the normal and expanded descriptor lists
