@@ -28,6 +28,17 @@ are planned as well.
 #
 
 #  #]
+#  #[ pylint exceptions
+#
+# disable the warning on too many records, since here this
+# is caused by the many methods in the unittest.TestCase
+# class that is used for unit testing, and there is really
+# nothing I can do to change this.
+#
+# disable warning: Too many public methods (../20)
+# pylint: disable-msg=R0904
+#
+#  #]
 #  #[ imported modules
 import os, sys    # operating system functions
 import unittest   # import the unittest functionality
@@ -55,6 +66,12 @@ def call_cmd_and_verify_output(cmd):
     that should be present in the current directory.
     If the outputs are as expected the function returns True,
     otherwise False."""
+
+    # disable the "Too many local variables" pylint warning
+    # since I feel this helper routine really could not be
+    # rewritten using less local variables
+    #
+    # pylint: disable-msg=R0914
 
     # assume at first that all will work as planned
     success = True
@@ -156,6 +173,9 @@ def call_cmd_and_verify_output(cmd):
         success = False
         
     return success
+
+    # enable the "Too many local variables" warning again
+    # pylint: enable-msg=R0914
     #  #]
 
 print "Starting test program:"

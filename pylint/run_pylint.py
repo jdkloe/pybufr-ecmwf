@@ -151,9 +151,13 @@ def check_all_py_files():
     print '\n'.join('status: %2i file %s' % (i, f) for (i, f) in result)
 
     if num_not_ok > 0:
+        # warning: dont use the word pylint followed by a colon ':'
+        # in text strings, since pylint will interpret this as a
+        # command and starts issuing warnings...
+        # For this reason a space has been inserted below.
         print '\nfor more details on the detected errors and warnings, '
         print 'you can inspect the output files that have been generated'
-        print 'by pylint:'
+        print 'by pylint :'
         filelist = glob.glob('pylint_*.txt')
         print '\n'.join(file for file in filelist)
     #  #]
