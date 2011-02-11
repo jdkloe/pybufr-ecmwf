@@ -25,6 +25,15 @@ by providing several helper classes.
 #
 # License: GPL v2.
 #  #]
+#  #[ some notes
+# see: WMO_BUFR_Guide_Layer3-English-only.pdf
+#
+# p.25 (L3-23)
+# for F=0 (table B entries)
+# classes x=48 to 63 are reserved for local use
+# entries y=192-255 within all classes are reserved for local use
+#
+#  #]
 #  #[ imported modules
 import os
 import sys

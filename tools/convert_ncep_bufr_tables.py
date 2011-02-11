@@ -8,15 +8,18 @@ http://www.emc.ncep.noaa.gov/mmb/data_processing/...
 and convert it to BUFR Tables formatted such that the ECMWF library
 can use them.
 """
-
-import os, urllib
-
+#  #[ imported modules
+import os, sys, urllib
+#  #]
+#  #[ settings
 ascii_source_table_url = 'http://www.emc.ncep.noaa.gov/mmb/data_processing/'+\
                          'NCEP_BUFR_File_Structure.htm'
 local_copy = './local_copy_NCEP_ASCII_BUFR_TABLE.txt'
 ncep_table_b = 'NCEP_table_B.txt'
+#  #]
 
 def remove_tags(txt):
+    #  #[ take a text line with tags and return it without tags
     # assume tags are not broken into multiple lines
     clean_txt = []
     inside_tag = False
@@ -30,7 +33,9 @@ def remove_tags(txt):
                 clean_txt.append(c)
 
     return ''.join(c for c in clean_txt)
-
+    #  #]
+    
+#  #[ if needed, download the html tables
 if not os.path.exists(local_copy):
     try:
         html_fd = urllib.urlopen(ascii_source_table_url)
@@ -47,8 +52,8 @@ if not os.path.exists(local_copy):
     fd = open(local_copy,'w')
     fd.write(html_data)
     fd.close()
-
-# read (again) into a list of lines
+#  #]
+#  #[ read the tables (again) into a list of cleaned lines
 html_data = open(local_copy).readlines()
 
 print 'html_data contains ',len(html_data),' bytes'
@@ -75,8 +80,12 @@ for l in new_lines:
     cl_line = cl_line.replace('&lt;','<')
     cl_line = cl_line.replace('&gt;','>')
     cleaned_table_lines.append(cl_line)
+#  #]
+#  #[ now extract the actual data and sort into 3 dicts
 
-# now extract the actual data
+#for l in cleaned_table_lines:
+#    print l
+#sys.exit(1)
 
 mnemonic_defs   = {} # definition of symbols (mnemonics)
 sequence_defs   = {} # this corresponds to Table D
@@ -130,20 +139,23 @@ for l in cleaned_table_lines:
                  (mnemonic != 'MNEMONIC') and
                  (mnemonic != '----------') ):
                 descriptor_defs[mnemonic] = (scale, reference, numbits, unit)
+    #  #]
+#  #[ test prints for the extraction results
+print 'mnemonic_defs:'
+for (key,data) in mnemonic_defs.items():
+    print key+'[%s][%s]' % data
 
-#print 'mnemonic_defs:'
-#for (key,data) in mnemonic_defs.items():
-#    print key+'[%s][%s]' % data
-
-#print 'sequence_defs:'
-#for (key,data) in sequence_defs.items():
-#    print key+'[%s]' % data
+print 'sequence_defs:'
+for (key,data) in sequence_defs.items():
+    print key+': [%s]' % data
 
 print 'descriptor_defs:'
 for (mnemonic,data) in descriptor_defs.items():
     print mnemonic+'[%s][%s][%s][%s]' % data,
     print mnemonic_defs[mnemonic]
 
+sys.exit(1)
+#  #]
 # now construct table B
 table_b_lines = []
 for (mnemonic,data) in descriptor_defs.items():

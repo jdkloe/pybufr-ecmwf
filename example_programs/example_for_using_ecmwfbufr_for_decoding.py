@@ -41,6 +41,27 @@ from pybufr_ecmwf import ecmwfbufr
 
 #  #]
 
+def ensure_symlink_exists(source, destination):
+    #  #[
+    """ a little helper function for creating symlinks in
+    case they are not yet present, to avoid duplicate code
+    or pylint to complain about to many branches """
+    if (not os.path.exists(destination)):
+        os.symlink(source, destination)
+    #  #]
+
+def check_error_flag(name, kerr):
+    #  #[
+    """ a little helper function to check the kerr return
+    value of some ecmwfbufr library routines,
+    to avoid duplicate code
+    or pylint to complain about to many branches """
+    if (kerr != 0):
+        print "an error was reported by: ", name
+        print "kerr = ", kerr
+        sys.exit(1)
+    #  #]
+        
 def decoding_example(input_bufr_file):
     #  #[
     """
@@ -102,13 +123,11 @@ def decoding_example(input_bufr_file):
     
     source      = os.path.join(ecmwf_bufr_tables_dir, available_b_table)
     destination = os.path.join(private_bufr_tables_dir, needed_b_table)
-    if (not os.path.exists(destination)):
-        os.symlink(source, destination)
+    ensure_symlink_exists(source, destination)
     
     source      = os.path.join(ecmwf_bufr_tables_dir, available_d_table)
     destination = os.path.join(private_bufr_tables_dir, needed_d_table)
-    if (not os.path.exists(destination)):
-        os.symlink(source, destination)
+    ensure_symlink_exists(source, destination)
             
     # make sure the BUFR tables can be found
     # also, force a slash at the end, otherwise the library fails
@@ -138,9 +157,8 @@ def decoding_example(input_bufr_file):
     
     print "calling: ecmwfbufr.bus012():"
     ecmwfbufr.bus012(words, ksup, ksec0, ksec1, ksec2, kerr)
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
+    check_error_flag('ecmwfbufr.bus012', kerr)
+
     print 'ksup = ', ksup
     print '------------------------------'
     print "printing content of section 0:"
@@ -183,9 +201,7 @@ def decoding_example(input_bufr_file):
     print "calling: ecmwfbufr.bufrex():"
     ecmwfbufr.bufrex(words, ksup, ksec0, ksec1, ksec2, ksec3, ksec4,
                      cnames, cunits, values, cvals, kerr)
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
+    check_error_flag('ecmwfbufr.bufrex', kerr)
         
     # print a selection of the decoded numbers
     print '------------------------------'
@@ -250,9 +266,7 @@ def decoding_example(input_bufr_file):
                     ktdexl, # actual number of expanded data descriptors
                     ktdexp, # list of expanded data descriptors
                     kerr)   # error  message
-    if (kerr != 0):
-        print "kerr = ", kerr
-        sys.exit(1)
+    check_error_flag('ecmwfbufr.busel', kerr)
 
     print 'busel result:'
     print "ktdlen = ", ktdlen

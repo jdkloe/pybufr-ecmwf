@@ -40,6 +40,15 @@ from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf import ecmwfbufr
 #  #]
 
+def ensure_symlink_exists(source, destination):
+    #  #[
+    """ a little helper function for creating symlinks in
+    case they are not yet present, to avoid duplicate code
+    or pylint to complain about to many branches """
+    if (not os.path.exists(destination)):
+        os.symlink(source, destination)
+    #  #]
+
 def encoding_example(output_bufr_file):
     #  #[
     """
@@ -116,13 +125,11 @@ def encoding_example(output_bufr_file):
 
     source      = os.path.join(ecmwf_bufr_tables_dir,  available_b_table)
     destination = os.path.join(private_bufr_tables_dir, needed_b_table)
-    if (not os.path.exists(destination)):
-        os.symlink(source, destination)
+    ensure_symlink_exists(source, destination)
         
     source      = os.path.join(ecmwf_bufr_tables_dir, available_d_table)
     destination = os.path.join(private_bufr_tables_dir, needed_d_table)
-    if (not os.path.exists(destination)):
-        os.symlink(source, destination)
+    ensure_symlink_exists(source, destination)
             
     # make sure the BUFR tables can be found
     # also, force a slash at the end, otherwise the library fails
