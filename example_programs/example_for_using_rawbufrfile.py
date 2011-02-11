@@ -49,7 +49,10 @@ def raw_file_reading_example(input_bufr_file):
     msg3 = rbf.get_next_raw_bufr_msg()[0] # should return corrupted data
     print "a warning is expected here:"
     # msg4 =
-    rbf.get_next_raw_bufr_msg()[0] # returns with None
+    try:
+        rbf.get_next_raw_bufr_msg()[0] # should raise an EOF error
+    except EOFError:
+        print "Warning: EOF reached !"
 
     for i in range(1, num_msgs+1):
         # read a selected raw BUFR message from the class instance

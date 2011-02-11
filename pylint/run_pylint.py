@@ -29,7 +29,11 @@ EX_FILES = ['example_for_using_bufrinterface_ecmwf_for_decoding.py',
             'example_for_using_ecmwfbufr_for_encoding.py',
             'example_for_using_pb_routines.py',
             'example_for_using_rawbufrfile.py',
-            'verify_bufr_tables.py']
+            'verify_bufr_tables.py',
+            'bufr_count_msgs.py',
+            'bufr_extract_data_category.py',
+            'bufr_to_ascii.py',
+            ]
 
 MODULES_TO_CHECK = []
 # my current pylint version crashes with a runtime error when I
@@ -44,7 +48,7 @@ SCRIPTS_TO_CHECK = ['build_interface.py',
                     'pylint/run_pylint.py',]
 # note: pylint/pylint_numpy_test.py is omitted here on purpose.
 # it is used inside check_pylint_numpy_handling() defined above.
-# look into that rouytine for more details.
+# look into that routine for more details.
 
 def check(msg, pycode, additional_args):
     #  #[

@@ -14,7 +14,7 @@ then printed to stdout.
 # License: GPL v2.
 
 #  #[ imported modules
-import os, sys     # operating system functions
+import sys     # operating system functions
 
 # import the python file defining the RawBUFRFile class
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
@@ -22,25 +22,33 @@ from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 
 def count_msgs(input_bufr_file):
     #  #[
+    """
+    a little example routine to demonstrate how to extract
+    the number of messages from a BUFR file
+    """
+
     # get an instance of the RawBUFRFile class
-    BF = RawBUFRFile()
-    #BF = RawBUFRFile(verbose=True)
+    rbf = RawBUFRFile()
+    #rbf = RawBUFRFile(verbose=True)
     
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
     # an array of pointers to the start and end of each BUFR message
-    BF.open(input_bufr_file, 'r')
+    rbf.open(input_bufr_file, 'r')
     
     # extract the number of BUFR messages from the file
-    num_msgs = BF.get_num_bufr_msgs()
+    num_msgs = rbf.get_num_bufr_msgs()
 
-    # print 'BF.nr_of_bufr_messages = ',BF.nr_of_bufr_messages
+    # print 'rbf.nr_of_bufr_messages = ',rbf.nr_of_bufr_messages
     
     # close the file
-    BF.close()
+    rbf.close()
     
     # delete the class instance
-    del(BF)
+    # (just as test, not really needed here since this scope is about
+    #  to be deleted anyway)
+    del(rbf)
+    
     return num_msgs
     #  #]
 
@@ -49,8 +57,6 @@ if len(sys.argv)<2:
     print 'please give a BUFR file as argument'
     sys.exit(1)
 
-input_bufr_file  = sys.argv[1]
-
-num_msgs = count_msgs(input_bufr_file)
-print num_msgs
+INPUT_BUFR_FILE  = sys.argv[1]
+print count_msgs(INPUT_BUFR_FILE)
 #  #]

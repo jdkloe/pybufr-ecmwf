@@ -9,8 +9,7 @@ RawBUFRFile (opened for reading): list_of_bufr_pointers =  [(0, 6598, [4, 18, 0,
 RawBUFRFile (opened for reading): nr_of_bufr_messages =  3
 This file contains:  3  BUFR messages.
 a warning is expected here:
-WARNING: non-existing BUFR message:  4
-This file only contains:  3  BUFR messages
+Warning: EOF reached !
 msg  1  got  1650  words
 msg  2  got  1650  words
 msg  3  got  1650  words

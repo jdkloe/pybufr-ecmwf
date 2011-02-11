@@ -386,6 +386,20 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
+    def test_run_extract_data_category(self):
+        #  #[
+        """
+        test the bufr_extract_data_category example program
+        """
+
+        # run the provided example code and verify the output
+        testprog = "bufr_extract_data_category.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' ' + self.testinputfile
+        
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
+        #  #]
 
     #  #]
             
@@ -397,8 +411,8 @@ class CheckRawBUFRFile(unittest.TestCase):
     # common settings for the following tests
     example_programs_dir   = "example_programs"
     testdatadir            = 'example_programs/testdata'
-    #testinputfile          = os.path.join(testdatadir,
-    #                                      'Testfile.BUFR')
+    testinputfile          = os.path.join(testdatadir,
+                                          'Testfile.BUFR')
     corruptedtestinputfile = os.path.join(testdatadir,
                                           'Testfile3CorruptedMsgs.BUFR')
     testoutputfile3u       = os.path.join(testdatadir,
@@ -509,6 +523,17 @@ class CheckRawBUFRFile(unittest.TestCase):
         cmd = "example_programs/example_for_using_rawbufrfile.py"
         cmd = cmd + ' ' + self.corruptedtestinputfile + \
               ' ' + self.testoutputfile3u
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
+        #  #]
+    def test_run_count_msgs(self):
+        #  #[
+        """
+        test the example file for counting BUFR messages in a file
+        """
+        # run the provided example code and verify the output
+        cmd = "example_programs/bufr_count_msgs.py"
+        cmd = cmd + ' ' + self.testinputfile
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]

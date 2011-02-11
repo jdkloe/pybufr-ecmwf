@@ -526,6 +526,9 @@ class RawBUFRFile:
         This routine uses the internal instance variable last_used_msg
         to store the index of the last read BUFR message.
         """
+        if (self.last_used_msg == self.nr_of_bufr_messages):
+            raise EOFError
+        
         return self.get_raw_bufr_msg(self.last_used_msg+1)
         #  #]
     def write_raw_bufr_msg(self, words):
