@@ -207,14 +207,20 @@ class BuildExt(_build_ext):
     def build_extension(self, ext):
         #  #[ the actual build
         """ initiate building the extension module """
-        self.preferred_fortran_compiler = None
-        self.preferred_c_compiler = None
-        self.fortran_compiler = None
-        self.fortran_ld_library_path = None
-        self.fortran_flags = None
-        self.c_compiler = None
-        self.c_ld_library_path = None
-        self.c_flags = None
+        # don't re-initialise these properties here !
+        # at his point the setup machinery already has processed
+        # the cfg file and the commandline, so these will be lost
+        # if you init these properties here again!
+        #
+        #self.preferred_fortran_compiler = None
+        #self.preferred_c_compiler = None
+        #self.fortran_compiler = None
+        #self.fortran_ld_library_path = None
+        #self.fortran_flags = None
+        #self.c_compiler = None
+        #self.c_ld_library_path = None
+        #self.c_flags = None
+        
         #fullname = self.get_ext_fullname(ext.name)
         #print "trying to build extension: ", fullname
         log.info("building '%s' extension", ext.name)
@@ -248,9 +254,6 @@ class BuildExt(_build_ext):
         cwd = os.getcwd()
         os.chdir(build_dir)
 
-        #print "TESTJOS: sys.path = ", sys.path
-        #print "TESTJOS: cwd = ", os.getcwd()
-        
         from build_interface import InstallBUFRInterfaceECMWF
         # this will fail, because it loads the __init__.py inside
         # the pybufr_ecmwf directory, which in turn tries to load the
