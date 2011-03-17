@@ -277,7 +277,7 @@ class InstallBUFRInterfaceECMWF:
 
         # note 2: the build script in pybufr_ecmwf/ searches for the tarfile
         # of the bufr library in directory ecmwf_bufr_lib/
-        # However, duriong the setup-build stage the code is run
+        # However, during the setup-build stage the code is run
         # from within a dir like: build/lib.linux-x86_64-2.6/pybufr_ecmwf/
         # so:
         # ==>walk upward the directory path untill we find a file
@@ -291,10 +291,11 @@ class InstallBUFRInterfaceECMWF:
             absdirname = base
             files = os.listdir(absdirname)
             if "setup.cfg" in files:
-                ecmwf_bufr_lib_dir  = os.path.join(absdirname, "pybufr_ecmwf",
-                                                   "ecmwf_bufr_lib")
+                local_ecmwf_bufr_lib_dir = os.path.join(absdirname,
+                                                        "pybufr_ecmwf",
+                                                        self.ecmwf_bufr_lib_dir)
                 list_of_bufr_tarfiles = glob.glob(os.path.join(\
-                                          ecmwf_bufr_lib_dir, "*.tar.gz"))
+                                          local_ecmwf_bufr_lib_dir, "*.tar.gz"))
 
                 if len(list_of_bufr_tarfiles)>0:
                     # make sure the destination dir exists and step to it
@@ -309,9 +310,37 @@ class InstallBUFRInterfaceECMWF:
                         print "making symlink from [%s] to [%s]" % (btf, bbtf)
                         os.symlink(btf, bbtf)
                     break # exit the while loop
-            
+
+        # return to the original location 
         os.chdir(cwd)
         #  #]
+
+    def use_fallback_library_copy(self):
+        #  #[
+        # fallback option: copy the (possibly outdated version)
+        # of the library sources stored in ecmwf_bufr_lib_sources
+        # for the same reason as in find_copy_of_library above,
+        # we must descend the directory tree first to find the root
+        # before doing this copy
+
+        cwd = os.getcwd()
+        absdirname = os.path.abspath(cwd)
+        while absdirname != "/":
+            base = os.path.split(absdirname)[0]
+            absdirname = base
+            files = os.listdir(absdirname)
+            if "setup.cfg" in files:
+                pattern = os.path.join(absdirname,
+                                       'ecmwf_bufr_lib_sources',
+                                       'bufr*gz')
+                tgz_file = glob.glob(pattern)
+                cmd = 'cp '+tgz_file[0]+' '+self.ecmwf_bufr_lib_dir
+                print "Executing command: ", cmd
+                os.system(cmd)
+
+        # return to the original location 
+        os.chdir(cwd)
+        #  #] 
     def download_library(self):
         #  #[
         """ a method to download the most recent version of the
@@ -484,13 +513,7 @@ class InstallBUFRInterfaceECMWF:
             if not success:
                 # fallback option: copy the (possibly outdated version)
                 # of the library sources stored in ecmwf_bufr_lib_sources
-                pattern = os.path.join('..',
-                                       'ecmwf_bufr_lib_sources',
-                                       'bufr*gz')
-                tgz_file = glob.glob(pattern)
-                cmd = 'cp '+tgz_file[0]+' '+self.ecmwf_bufr_lib_dir
-                print "Executing command: ", cmd
-                os.system(cmd)
+                self.use_fallback_library_copy()
                 
             # retry (hopefully we have a copy of the tarfile now)
             (source_dir, tarfile_to_install) = self.get_source_dir()
