@@ -1,37 +1,48 @@
 ---------------------------
-note: these problems probably are fixed now, but I'll have to do a bit more testing
-to be absolutely sure.
+note: these test files are not redistributed with this library
+so a todo for myself is to create a script outside this python
+model to automatically test on all these files 
 ---------------------------
-todo: fix these test cases for the /bufr_count_msgs.py tool
-
 # tested ./bufr_count_msgs.py on these bufr files:
-# /nobackup/users/kloedej/BUFR_test_files
-# ascat/* [bufr_count_msgs.py works fine] bufr_to_ascii.py fails [table loading problem]
-# qscat/* [bufr_count_msgs.py works fine] dito
-# ers12/* [bufr_count_msgs.py works fine] dito
-# MSS*    [bufr_count_msgs.py works fine] dito
-# synop/* [bufr_count_msgs.py works fine] dito
+# ascat/* [works fine]
+# qscat/* [works fine]
+# ers12/* [works fine]
+# MSS*    [works fine]
+# synop/* [works fine]
+---------------------------
+# tested ./bufr_to_ascii.py on these bufr files:
+# ascat/* fails [table loading problem]
+# qscat/* dito
+# ers12/* dito
+# MSS*    dito
+# synop/* dito
 
+# at home
+#setenv TESTDATADIR /home/jos/werk/pybufr_ecmwf_interface/BUFR_test_files2
+# at KNMI
+#setenv TESTDATADIR /nobackup/users/kloedej/BUFR_test_files
+
+#cd example_programs
 #setenv PYTHONPATH ../
-# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ascat/ascat_20100920_003901_metopa_20335_eps_o_125_ovw.l2_bufr
+# ./bufr_count_msgs.py $TESTDATADIR/ascat/ascat_20100920_003901_metopa_20335_eps_o_125_ovw.l2_bufr
 # 545
-# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ascat/ascat_20100920_003901_metopa_20335_eps_o_250_ovw.l2_bufr
+# ./bufr_count_msgs.py $TESTDATADIR/ascat/ascat_20100920_003901_metopa_20335_eps_o_250_ovw.l2_bufr
 # 204
-# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr
+# ./bufr_count_msgs.py $TESTDATADIR/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr
 # 545
-# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/qscat/QS_D07060_S1821_E2002_B4009191_025.genws
+# ./bufr_count_msgs.py $TESTDATADIR/qscat/QS_D07060_S1821_E2002_B4009191_025.genws
 # 1624
-# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/ers12/pscat2000013121.pp
+# ./bufr_count_msgs.py $TESTDATADIR/ers12/pscat2000013121.pp
 # 22
-# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/MSS_S327121011_200_PAAL31_EGRR_231200
+# ./bufr_count_msgs.py $TESTDATADIR/MSS_S327121011_200_PAAL31_EGRR_231200
 # 1
-# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0001.bin 
+# ./bufr_count_msgs.py $TESTDATADIR/noaa_mos/sn.0001.bin 
 # 8
-# ./bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/noaa_mos/sn.0082.bin 
+# ./bufr_count_msgs.py $TESTDATADIR/noaa_mos/sn.0082.bin 
 # 10
-# bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/synop/greek.gts.bufr
+# bufr_count_msgs.py $TESTDATADIR/synop/greek.gts.bufr
 # 64
-# bufr_count_msgs.py /nobackup/users/kloedej/BUFR_test_files/synop/greek.gts.bufr.gts 
+# bufr_count_msgs.py $TESTDATADIR/synop/greek.gts.bufr.gts 
 # 63
 
 ---------------------------
