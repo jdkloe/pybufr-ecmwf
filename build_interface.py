@@ -629,8 +629,6 @@ class InstallBUFRInterfaceECMWF:
         cwd = os.getcwd()
         absdirname = os.path.abspath(cwd)
         while absdirname != "/":
-            base = os.path.split(absdirname)[0]
-            absdirname = base
             files = os.listdir(absdirname)
             if "setup.cfg" in files:
                 pattern = os.path.join(absdirname,
@@ -640,6 +638,9 @@ class InstallBUFRInterfaceECMWF:
                 cmd = 'cp '+tgz_file[0]+' '+self.ecmwf_bufr_lib_dir
                 print "Executing command: ", cmd
                 os.system(cmd)
+                break
+            base = os.path.split(absdirname)[0]
+            absdirname = base
 
         # return to the original location 
         os.chdir(cwd)
