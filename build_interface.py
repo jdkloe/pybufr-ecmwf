@@ -661,7 +661,7 @@ class InstallBUFRInterfaceECMWF:
         except IOError:
             print "connection failed......"
             print "could not open url: ", URL_BUFR_PAGE
-            return False
+            return (None, None)
 
         # Read from the object, storing the page's contents in a list of lines
         lines = urlf.readlines()
@@ -815,9 +815,12 @@ class InstallBUFRInterfaceECMWF:
         if (source_dir == None):
             (most_recent_bufr_lib_url,
              most_recent_bufr_tarfile_name) = self.find_newest_library()
-            success = self.download_library(most_recent_bufr_lib_url,
-                                            most_recent_bufr_tarfile_name)
-
+            if most_recent_bufr_lib_url is None:
+                success = False
+            else:
+                success = self.download_library(most_recent_bufr_lib_url,
+                                                most_recent_bufr_tarfile_name)
+                
             if not success:
                 # fallback option: copy the (possibly outdated version)
                 # of the library sources stored in ecmwf_bufr_lib_sources
