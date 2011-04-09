@@ -807,12 +807,12 @@ class InstallBUFRInterfaceECMWF:
 
         #  #[ download and unpack the ECMWF BUFR library tar file
         (source_dir, tarfile_to_install) = self.get_source_dir()
-        if (source_dir == None):
+        if (source_dir is None):
             self.find_copy_of_library()
             # retry (maybe we already had downloaded a copy in a different
             # location, in which case downloading in not needed)
             (source_dir, tarfile_to_install) = self.get_source_dir()
-        if (source_dir == None):
+        if (source_dir is None):
             (most_recent_bufr_lib_url,
              most_recent_bufr_tarfile_name) = self.find_newest_library()
             if most_recent_bufr_lib_url is None:
@@ -824,21 +824,22 @@ class InstallBUFRInterfaceECMWF:
             if not success:
                 # fallback option: copy the (possibly outdated version)
                 # of the library sources stored in ecmwf_bufr_lib_sources
+                print 'Using fall back library copy...'
                 self.use_fallback_library_copy()
                 
             # retry (hopefully we have a copy of the tarfile now)
             (source_dir, tarfile_to_install) = self.get_source_dir()
+
+        # safety catch
+        if source_dir is None:
+            print "ERROR: extracting source_dir failed"
+            raise NetworkError
             
         if (not os.path.exists(source_dir)):
 
             # safety catch
             if (tarfile_to_install == None):
                 print "ERROR: no tarfile available for BUFR library."
-                print "Maybe the automatic download failed?"
-                print "If you try to install without internet connection you"
-                print "have to manually create a directory named ecmwf_bufr_lib"
-                print "and place a copy of a recent ECMWF BUFR library tarfile"
-                print "in it before running the pybufr_ecmwf.py command."
                 raise NetworkError
 
             cmd = "cd "+self.ecmwf_bufr_lib_dir+";tar zxvf "+tarfile_to_install
