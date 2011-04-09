@@ -30,6 +30,8 @@ import tarfile     # handle tar archives
 import shutil      # portable file copying functions
 import subprocess  # support running additional executables
 import stat        # handling of file stat data
+import urllib      # handling of url downloads
+
 #  #]
 #  #[ exception definitions
 class NetworkError(Exception):
@@ -48,6 +50,11 @@ class ProgrammingError(Exception):
     present in the code (this should be reported to the author) """
     pass
 
+#  #]
+#  #[ constants
+URL_ECMWF_WEBSITE = "http://www.ecmwf.int/"
+URL_BUFR_PAGE     = URL_ECMWF_WEBSITE+"products/data/"+\
+                    "software/download/bufr.html"
 #  #]
 
 # some helper functions
@@ -148,6 +155,302 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         # wait until the child process is done
         subpr.wait()
         return
+    #  #]
+def fortran_compile_test(fcmp, fflags, libpath):
+    #  #[
+    """ a method to check if we really have some fortran compiler
+    installed (it writes a few lines of fortran, tries to compile
+    it, and compares the output with the expected output) """
+    
+    # Note: for now the flags are not used in these test because these
+    # are specific for generating a shared-object file, and will fail to
+    # generate a simple executable for testing
+    
+    fortran_test_code = \
+"""
+program pybufr_test_program
+
+  print *,'Hello pybufr module:'
+  print *,'Fortran compilation seems to work fine ...'
+
+end program pybufr_test_program
+"""
+
+    # generate a testfile with a few lines of Fortran90 code
+    fortran_test_executable = "pybufr_fortran_test_program"
+    fortran_test_file       = fortran_test_executable+".F90"
+    tfd = open(fortran_test_file, 'wt')
+    tfd.write(fortran_test_code)
+    tfd.close()
+    
+    # contruct the compile command
+    #cmd = fcmp+' '+fflags+' -o '+fortran_test_executable+' '+\
+    #      fortran_test_file
+    cmd = fcmp+' '+fflags+' -o '+fortran_test_executable+\
+          ' '+fortran_test_file
+    
+    # now issue the compile command
+    if (libpath == ""):
+        print "Executing command: ", cmd
+        os.system(cmd)
+    else:
+        run_shell_command(cmd, libpath = libpath, catch_output = False)
+
+    # now execute the just generated test program to verify if we succeeded
+    # add a './' to ensure the executable is also found for users that
+    # do not have '.' in their default search path
+    cmd = os.path.join('.', fortran_test_executable)
+    if (libpath == ""):
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
+    else:
+        (lines_stdout, lines_stderr) = \
+                       run_shell_command(cmd, libpath = libpath)
+        
+    expected_output = [' Hello pybufr module:\n',
+                       ' Fortran compilation seems to work fine ...\n']
+    if ( (expected_output[0] not in lines_stdout) or
+         (expected_output[1] not in lines_stdout)   ):
+        print "ERROR: Fortran compilation test failed; "+\
+              "something seems very wrong"
+        print "Expected output: ", expected_output
+        print 'actual output stdout = ', lines_stdout
+        print 'actual output stderr = ', lines_stderr
+        raise EnvironmentError
+    
+    print "Fortran compilation test successfull..."
+    
+    # clean up
+    os.remove(fortran_test_executable)
+    os.remove(fortran_test_file)
+    
+    #  #]
+def c_compile_test(ccmp, cflags, libpath):
+    #  #[
+    """ a method to check if we really have some c compiler
+    installed (it writes a few lines of c, tries to compile
+    it, and compares the output with the expected output) """
+    
+    # Note: for now the flags are not used in these test because these
+    # are specific for generating a shared-object file, and will fail to
+    # generate a simple executable for testing
+    
+    c_test_code = \
+r"""
+#include <stdio.h>
+int main()
+{
+  printf("Hello pybufr module:\n");
+  printf("c compilation seems to work fine ...\n");
+  return 0;
+}
+"""
+
+    # generate a testfile with a few lines of Fortran90 code
+    c_test_executable = "pybufr_c_test_program"
+    c_test_file       = c_test_executable+".c"
+    tfd = open(c_test_file, 'wt')
+    tfd.write(c_test_code)
+    tfd.close()
+    
+    # contruct the compile command
+    cmd = ccmp+' '+cflags+' -o '+c_test_executable+' '+c_test_file
+    
+    # now issue the compile command
+    if (libpath == ""):
+        print "Executing command: ", cmd
+        os.system(cmd)
+    else:
+        run_shell_command(cmd, libpath = libpath, catch_output = False)
+        
+    # now execute the just generated test program to verify if we succeeded
+    # add a './' to ensure the executable is also found for users that
+    # do not have '.' in their default search path
+    cmd = os.path.join('.', c_test_executable)
+    if (libpath == ""):
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
+    else:
+        (lines_stdout, lines_stderr) = \
+                       run_shell_command(cmd, libpath = libpath)
+        
+    expected_output = ['Hello pybufr module:\n',
+                       'c compilation seems to work fine ...\n']
+    if ( (expected_output[0] not in lines_stdout) or
+         (expected_output[1] not in lines_stdout)   ):
+        print "ERROR: c compilation test failed; something seems very wrong"
+        print "Expected output: ", expected_output
+        print 'actual output stdout = ', lines_stdout
+        print 'actual output stderr = ', lines_stderr
+        raise EnvironmentError
+    
+    print "c compilation test successfull..."
+    
+    # clean up
+    os.remove(c_test_executable)
+    os.remove(c_test_file)
+    #  #]
+def insert_pb_interface_definition(sfd):
+    #  #[
+    """ the pb interface routines are written in c, so f2py
+    will not automatically generate their signature. This 
+    subroutine explicitely adds these signatures.
+    """
+    
+    # note:
+    # it seems I am doing something wrong here, since this interface
+    # is not yet functional. When trying to execute ecmwfbufr.pbopen()
+    # I get the not very helpfull error message:
+    #   "SystemError: NULL result without error in PyObject_Call"
+    # Anybody out there who has an idea how this can be solved?
+    
+    indentation = 8*' '
+    lines_to_add = \
+         ["subroutine pbopen(cFileUnit,BufrFileName,mode,bufr_error_flag)",
+          #"   intent(c) pbopen"
+          #"   intent(c)"
+          "   integer*4,        intent(out) :: cFileUnit",
+          "   character(len=*), intent(in)  :: BufrFileName",
+          "   character(len=1), intent(in)  :: mode",
+          "   integer*4,        intent(out) :: bufr_error_flag",
+          "end subroutine pbopen",
+          "subroutine pbclose(cFileUnit,bufr_error_flag)",
+          "   integer*4,        intent(inplace) :: cFileUnit",
+          "   integer*4,        intent(inplace) :: bufr_error_flag ",
+          "end subroutine pbclose",
+          "subroutine pbbufr(cFileUnit,Buffer,BufferSizeBytes,MsgSizeBytes,&",
+          "                  bufr_error_flag)",
+          "   integer*4,              intent(inplace) :: cFileUnit",
+          "   integer*4,dimension(*), intent(inplace) :: Buffer",
+          "   integer*4,              intent(inplace) :: BufferSizeBytes",
+          "   integer*4,              intent(inplace) :: MsgSizeBytes",
+          "   integer*4,              intent(inplace) :: bufr_error_flag ",
+          "end subroutine pbbufr",
+          "subroutine pbwrite(cFileUnit,Buffer,MsgSizeBytes,bufr_return_value)",
+          "   integer*4,              intent(inplace) :: cFileUnit",
+          "   integer*4,dimension(*), intent(inplace) :: Buffer",
+          "   integer*4,              intent(inplace) :: MsgSizeBytes",
+          "   integer*4,              intent(inplace) :: bufr_return_value",
+          "end subroutine pbwrite"]
+
+    print "Inserting hardcoded interface to pbbufr routines in "+\
+          "signatures file ..."
+    for lta in lines_to_add:
+        sfd.write(indentation+lta+'\n')
+        
+    #  #]
+def adapt_f2py_signature_file(signature_file):
+    #  #[
+    """
+    some code to adapt the signature file generated by the f2py tool.
+    Regrettably this is needed since this tool seems not to handle
+    constant parameters defined in include files properly.
+    """
+    # NOTE: maybe this modification is not needed if I can get the file
+    #       with the parameters included in an other way.
+    #       Looking at the f2py manpage the option -include might do the
+    #       trick but that one is depricated. In stead a usercode section
+    #       should be used, but that again means modifying the signature
+    #       file ...
+    #       Also the --include_paths option might be related.
+    # TODO: sort this out (handling of constant parameters by f2py)
+    
+    #signature_file = "f2py_build/signatures.pyf"
+    
+    # these values are defined in parameter.F 
+    # PARAMETER(JSUP =   9,
+    #          JSEC0=   3,
+    #          JSEC1=  40,
+    #          JSEC2=4096,
+    #          JSEC3=   4
+    #          JSEC4=   2,
+    #          JELEM=320000,
+    #          JSUBS=400,
+    #          JCVAL=150 ,
+    #          JBUFL=512000,
+    #          JBPW =  32,
+    #          JTAB =3000,
+    #          JCTAB=3000,
+    #          JCTST=9000,
+    #          JCTEXT=9000,
+    #          JWORK=4096000,
+    #          JKEY=46,
+    #          JTMAX=10,
+    #          JTCLAS=64,
+    #          JTEL=255)
+    
+    edits = {}
+    edits['JSUP']  = 9
+    edits['JSEC0'] = 3
+    edits['JSEC1'] = 40
+    edits['JSEC2'] = 4096
+    edits['JSEC3'] = 4
+    edits['JSEC4'] = 2
+    edits['JELEM'] = 320000
+    edits['JSUBS'] = 400
+    edits['JCVAL'] = 150
+    edits['JBUFL'] = 512000
+    edits['JBPW'] = 32
+    edits['JTAB'] = 3000
+    edits['JCTAB'] = 3000
+    edits['JCTST'] = 9000
+    edits['JCTEXT'] = 9000
+    edits['JWORK'] = 4096000
+    edits['JKEY'] = 46
+    edits['JTMAX'] = 10
+    edits['JTCLAS'] = 64
+    edits['JTEL'] = 255
+    # edits[''] = 
+    
+    # read the file
+    lines = open(signature_file).readlines()
+    
+    # create a backup copy, to allow manual inspection
+    source      = signature_file
+    destination = signature_file+".bak"
+    shutil.copyfile(source, destination)
+    
+    print "Fixing array size definitions in signatures definition ..."
+    sfd = open(signature_file, "wt")
+    inside_subroutine = False
+    for line in lines:
+        
+        mod_line = line
+        
+        if ('end subroutine' in mod_line):
+            inside_subroutine = False
+        elif ('subroutine' in mod_line):
+            inside_subroutine = True
+            
+        if (inside_subroutine):
+            if (' ::' in mod_line):
+                # Add the intent(inplace) switch to all subroutine
+                # parameters.
+                # This might not be very pretty, but otherwise all
+                # parameters are assigned the default, which is intent(in).
+                # Maybe the proper way would be to sort out for each routine
+                # in this library which parameters are intent(in) and
+                # which are intent(out), but this is a huge task (and
+                # should be done by ECMWF rather then by us I think...)
+                (part1, part2) = mod_line.split(' ::')
+                mod_line = part1+',intent(inplace) ::'+part2
+            
+        if 'dimension' in mod_line:
+            #print "adapting line: ", mod_line
+            for edit in edits.keys():
+                txt = '('+edit.lower()+')'
+                value = edits[edit]
+                if txt in mod_line:
+                    mod_line = mod_line.replace(txt, str(value))
+            #print "to           : ", mod_line
+
+        if (mod_line.strip() == "end interface"):
+            # NOTE: the pb interface routines are written in c, so f2py
+            # will not automatically generate their signature. This next
+            # subroutine call explicitely adds these signatures.
+            insert_pb_interface_definition(sfd)
+
+        sfd.write(mod_line)
+
+    sfd.close()
     #  #]
 
 class InstallBUFRInterfaceECMWF:
@@ -317,11 +620,11 @@ class InstallBUFRInterfaceECMWF:
 
     def use_fallback_library_copy(self):
         #  #[
-        # fallback option: copy the (possibly outdated version)
-        # of the library sources stored in ecmwf_bufr_lib_sources
-        # for the same reason as in find_copy_of_library above,
-        # we must descend the directory tree first to find the root
-        # before doing this copy
+        """ fallback option: copy the (possibly outdated version)
+        of the library sources stored in ecmwf_bufr_lib_sources
+        (usefull on systems with no internet access).
+        We must descend the directory tree first to find the root
+        before doing this copy. """
 
         cwd = os.getcwd()
         absdirname = os.path.abspath(cwd)
@@ -341,32 +644,23 @@ class InstallBUFRInterfaceECMWF:
         # return to the original location 
         os.chdir(cwd)
         #  #] 
-    def download_library(self):
+    def find_newest_library(self):
         #  #[
-        """ a method to download the most recent version of the
-        ECMWF BUFR library tarball from the ECMWF website """
-        
-        url_bufr_page     = "http://www.ecmwf.int/products/data/"+\
-                            "software/download/bufr.html"
-        url_ecmwf_website = "http://www.ecmwf.int/"
 
+        """ a method to find the name of the most recent version of the
+        ECMWF BUFR library tarball on the ECMWF website """
+        
         if not os.path.exists(self.ecmwf_bufr_lib_dir):
             os.makedirs(self.ecmwf_bufr_lib_dir)
 
-        try:
-            import urllib
-        except ImportError:
-            print 'import of urllib failed!'
-            return False
-            
         if (self.verbose):
             print "setting up connection to ECMWF website"
         try:
             # Get a file-like object for this website
-            urlf = urllib.urlopen(url_bufr_page)
+            urlf = urllib.urlopen(URL_BUFR_PAGE)
         except IOError:
             print "connection failed......"
-            print "could not open url: ", url_bufr_page
+            print "could not open url: ", URL_BUFR_PAGE
             return False
 
         # Read from the object, storing the page's contents in a list of lines
@@ -430,10 +724,21 @@ class InstallBUFRInterfaceECMWF:
         if (self.verbose):
             print "Most recent library version seems to be: ", \
                   most_recent_bufr_tarfile_name
-        download_url = url_ecmwf_website+most_recent_bufr_lib_url
+
+        return (most_recent_bufr_lib_url,
+                most_recent_bufr_tarfile_name)
+
+        #  #]
+    def download_library(self, most_recent_bufr_lib_url,
+                         most_recent_bufr_tarfile_name):
+        #  #[
+        """ a method to download the most recent version of the
+        ECMWF BUFR library tarball from the ECMWF website """
 
         if (self.verbose):
             print "trying to download: ", most_recent_bufr_tarfile_name
+
+        download_url = URL_ECMWF_WEBSITE+most_recent_bufr_lib_url
         try:
             # Get a file-like object for this website
             urlf = urllib.urlopen(download_url)
@@ -508,7 +813,10 @@ class InstallBUFRInterfaceECMWF:
             # location, in which case downloading in not needed)
             (source_dir, tarfile_to_install) = self.get_source_dir()
         if (source_dir == None):
-            success = self.download_library()
+            (most_recent_bufr_lib_url,
+             most_recent_bufr_tarfile_name) = self.find_newest_library()
+            success = self.download_library(most_recent_bufr_lib_url,
+                                            most_recent_bufr_tarfile_name)
 
             if not success:
                 # fallback option: copy the (possibly outdated version)
@@ -1003,8 +1311,8 @@ class InstallBUFRInterfaceECMWF:
         #  #]
         
         #  #[ compile little pieces of Fortran and c to test the compilers
-        self.fortran_compile_test(fcmp, fflags, libpath)
-        self.c_compile_test(ccmp, cflags, libpath)
+        fortran_compile_test(fcmp, fflags, libpath)
+        c_compile_test(ccmp, cflags, libpath)
         #  #]
 
         #  #[ now use the make command to build the library
@@ -1248,138 +1556,6 @@ file for convenience
             # command is present in default path
             return True
         #  #]
-    def fortran_compile_test(self, fcmp, fflags, libpath):
-        #  #[
-        """ a method to check if we really have some fortran compiler
-        installed (it writes a few lines of fortran, tries to compile
-        it, and compares the output with the expected output) """
-
-        # Note: for now the flags are not used in these test because these
-        # are specific for generating a shared-object file, and will fail to
-        # generate a simple executable for testing
-
-        fortran_test_code = \
-"""
-program pybufr_test_program
-
-  print *,'Hello pybufr module:'
-  print *,'Fortran compilation seems to work fine ...'
-
-end program pybufr_test_program
-"""
-
-        # generate a testfile with a few lines of Fortran90 code
-        fortran_test_executable = "pybufr_fortran_test_program"
-        fortran_test_file       = fortran_test_executable+".F90"
-        tfd = open(fortran_test_file, 'wt')
-        tfd.write(fortran_test_code)
-        tfd.close()
-
-        # contruct the compile command
-        #cmd = fcmp+' '+fflags+' -o '+fortran_test_executable+' '+\
-        #      fortran_test_file
-        cmd = fcmp+' '+fflags+' -o '+fortran_test_executable+\
-              ' '+fortran_test_file
-        
-         # now issue the compile command
-        if (libpath == ""):
-            print "Executing command: ", cmd
-            os.system(cmd)
-        else:
-            run_shell_command(cmd, libpath = libpath, catch_output = False)
-
-        # now execute the just generated test program to verify if we succeeded
-        # add a './' to ensure the executable is also found for users that
-        # do not have '.' in their default search path
-        cmd = os.path.join('.', fortran_test_executable)
-        if (libpath == ""):
-            (lines_stdout, lines_stderr) = run_shell_command(cmd)
-        else:
-            (lines_stdout, lines_stderr) = \
-                           run_shell_command(cmd, libpath = libpath)
-
-        expected_output = [' Hello pybufr module:\n',
-                           ' Fortran compilation seems to work fine ...\n']
-        if ( (expected_output[0] not in lines_stdout) or
-             (expected_output[1] not in lines_stdout)   ):
-            print "ERROR: Fortran compilation test failed; "+\
-                  "something seems very wrong"
-            print "Expected output: ", expected_output
-            print 'actual output stdout = ', lines_stdout
-            print 'actual output stderr = ', lines_stderr
-            raise EnvironmentError
-
-        print "Fortran compilation test successfull..."
-
-        # clean up
-        os.remove(fortran_test_executable)
-        os.remove(fortran_test_file)
-        
-        #  #]
-    def c_compile_test(self, ccmp, cflags, libpath):
-        #  #[
-        """ a method to check if we really have some c compiler
-        installed (it writes a few lines of c, tries to compile
-        it, and compares the output with the expected output) """
-
-        # Note: for now the flags are not used in these test because these
-        # are specific for generating a shared-object file, and will fail to
-        # generate a simple executable for testing
-
-        c_test_code = \
-r"""
-#include <stdio.h>
-int main()
-{
-  printf("Hello pybufr module:\n");
-  printf("c compilation seems to work fine ...\n");
-  return 0;
-}
-"""
-
-        # generate a testfile with a few lines of Fortran90 code
-        c_test_executable = "pybufr_c_test_program"
-        c_test_file       = c_test_executable+".c"
-        tfd = open(c_test_file, 'wt')
-        tfd.write(c_test_code)
-        tfd.close()
-
-        # contruct the compile command
-        cmd = ccmp+' '+cflags+' -o '+c_test_executable+' '+c_test_file
-        
-         # now issue the compile command
-        if (libpath == ""):
-            print "Executing command: ", cmd
-            os.system(cmd)
-        else:
-            run_shell_command(cmd, libpath = libpath, catch_output = False)
-
-        # now execute the just generated test program to verify if we succeeded
-        # add a './' to ensure the executable is also found for users that
-        # do not have '.' in their default search path
-        cmd = os.path.join('.', c_test_executable)
-        if (libpath == ""):
-            (lines_stdout, lines_stderr) = run_shell_command(cmd)
-        else:
-            (lines_stdout, lines_stderr) = \
-                           run_shell_command(cmd, libpath = libpath)
-
-        expected_output = ['Hello pybufr module:\n',
-                           'c compilation seems to work fine ...\n']
-        if ( (expected_output[0] not in lines_stdout) or
-             (expected_output[1] not in lines_stdout)   ):
-            print "ERROR: c compilation test failed; something seems very wrong"
-            print "Expected output: ", expected_output
-            print 'actual output stdout = ', lines_stdout
-            print 'actual output stderr = ', lines_stderr
-            raise EnvironmentError
-
-        print "c compilation test successfull..."
-
-        # clean up
-        os.remove(c_test_executable)
-        os.remove(c_test_file)
-        #  #]
     def generate_python_wrapper(self, source_dir):
         #  #[
         """ a method to call f2py to create a wrapper between the fortran
@@ -1427,9 +1603,6 @@ int main()
                                [libpath, self.c_ld_library_path]
                                if (s != ""))
 
-        if (libpath != ""):
-            print "Using LD_LIBRARY_PATH setting: ", libpath
-
         # call f2py and create a signature file that defines the
         # interfacing to the fortran routines in this library
         cmd = "f2py --build-dir "+self.wrapper_build_dir+\
@@ -1443,6 +1616,7 @@ int main()
             #(lines_stdout, lines_stderr) = \
             #       run_shell_command(cmd, catch_output = True)
         else:
+            print "Using LD_LIBRARY_PATH setting: ", libpath
             #(lines_stdout, lines_stderr) = \
             #       run_shell_command(cmd, libpath = libpath,
             #                              catch_output = True)
@@ -1477,7 +1651,7 @@ int main()
         # and replace them by their numerical values
         # (maybe there is a more clever way to do this in f2py, but I have
         #  not yet found another way ...)
-        self.adapt_f2py_signature_file(signatures_fullfilename)
+        adapt_f2py_signature_file(signatures_fullfilename)
 
         # it might be usefull for debugging to include this option: --debug-capi
         debug_f2py_c_api_option = ""
@@ -1528,169 +1702,6 @@ int main()
             print "the compilation or linking stage failed"
             raise InterfaceBuildError
 
-        #  #]
-    def adapt_f2py_signature_file(self, signature_file):
-        #  #[
-        """
-        some code to adapt the signature file generated by the f2py tool.
-        Regrettably this is needed since this tool seems not to handle
-        constant parameters defined in include files properly.
-        """
-        # NOTE: maybe this modification is not needed if I can get the file
-        #       with the parameters included in an other way.
-        #       Looking at the f2py manpage the option -include might do the
-        #       trick but that one is depricated. In stead a usercode section
-        #       should be used, but that again means modifying the signature
-        #       file ...
-        #       Also the --include_paths option might be related.
-        # TODO: sort this out (handling of constant parameters by f2py)
-        
-        #signature_file = "f2py_build/signatures.pyf"
-
-        # these values are defined in parameter.F 
-        # PARAMETER(JSUP =   9,
-        #          JSEC0=   3,
-        #          JSEC1=  40,
-        #          JSEC2=4096,
-        #          JSEC3=   4
-        #          JSEC4=   2,
-        #          JELEM=320000,
-        #          JSUBS=400,
-        #          JCVAL=150 ,
-        #          JBUFL=512000,
-        #          JBPW =  32,
-        #          JTAB =3000,
-        #          JCTAB=3000,
-        #          JCTST=9000,
-        #          JCTEXT=9000,
-        #          JWORK=4096000,
-        #          JKEY=46,
-        #          JTMAX=10,
-        #          JTCLAS=64,
-        #          JTEL=255)
-        
-        edits = {}
-        edits['JSUP']  = 9
-        edits['JSEC0'] = 3
-        edits['JSEC1'] = 40
-        edits['JSEC2'] = 4096
-        edits['JSEC3'] = 4
-        edits['JSEC4'] = 2
-        edits['JELEM'] = 320000
-        edits['JSUBS'] = 400
-        edits['JCVAL'] = 150
-        edits['JBUFL'] = 512000
-        edits['JBPW'] = 32
-        edits['JTAB'] = 3000
-        edits['JCTAB'] = 3000
-        edits['JCTST'] = 9000
-        edits['JCTEXT'] = 9000
-        edits['JWORK'] = 4096000
-        edits['JKEY'] = 46
-        edits['JTMAX'] = 10
-        edits['JTCLAS'] = 64
-        edits['JTEL'] = 255
-        # edits[''] = 
-
-        # read the file
-        lines = open(signature_file).readlines()
-
-        # create a backup copy, to allow manual inspection
-        source      = signature_file
-        destination = signature_file+".bak"
-        shutil.copyfile(source, destination)
-        
-        print "Fixing array size definitions in signatures definition ..."
-        sfd = open(signature_file, "wt")
-        inside_subroutine = False
-        for line in lines:
-
-            mod_line = line
-            
-            if ('end subroutine' in mod_line):
-                inside_subroutine = False
-            elif ('subroutine' in mod_line):
-                inside_subroutine = True
-
-            if (inside_subroutine):
-                if (' ::' in mod_line):
-                    # Add the intent(inplace) switch to all subroutine
-                    # parameters.
-                    # This might not be very pretty, but otherwise all
-                    # parameters are assigned the default, which is intent(in).
-                    # Maybe the proper way would be to sort out for each routine
-                    # in this library which parameters are intent(in) and
-                    # which are intent(out), but this is a huge task (and
-                    # should be done by ECMWF rather then by us I think...)
-                    (part1, part2) = mod_line.split(' ::')
-                    mod_line = part1+',intent(inplace) ::'+part2
-                
-            if 'dimension' in mod_line:
-                #print "adapting line: ", mod_line
-                for edit in edits.keys():
-                    txt = '('+edit.lower()+')'
-                    value = edits[edit]
-                    if txt in mod_line:
-                        mod_line = mod_line.replace(txt, str(value))
-                #print "to           : ", mod_line
-
-            if (mod_line.strip() == "end interface"):
-                # NOTE: the pb interface routines are written in c, so f2py
-                # will not automatically generate their signature. This next
-                # subroutine call explicitely adds these signatures.
-                self.insert_pb_interface_definition(sfd)
-
-            sfd.write(mod_line)
-        sfd.close()
-        #  #]
-    def insert_pb_interface_definition(self, sfd):
-        #  #[
-        """ the pb interface routines are written in c, so f2py
-        will not automatically generate their signature. This 
-        subroutine explicitely adds these signatures.
-        """
-
-        # note:
-        # it seems I am doing something wrong here, since this interface
-        # is not yet functional. When trying to execute ecmwfbufr.pbopen()
-        # I get the not very helpfull error message:
-        #   "SystemError: NULL result without error in PyObject_Call"
-        # Anybody out there who has an idea how this can be solved?
-        
-        indentation = 8*' '
-        lines_to_add = \
-         ["subroutine pbopen(cFileUnit,BufrFileName,mode,bufr_error_flag)",
-          #"   intent(c) pbopen"
-          #"   intent(c)"
-          "   integer*4,        intent(out) :: cFileUnit",
-          "   character(len=*), intent(in)  :: BufrFileName",
-          "   character(len=1), intent(in)  :: mode",
-          "   integer*4,        intent(out) :: bufr_error_flag",
-          "end subroutine pbopen",
-          "subroutine pbclose(cFileUnit,bufr_error_flag)",
-          "   integer*4,        intent(inplace) :: cFileUnit",
-          "   integer*4,        intent(inplace) :: bufr_error_flag ",
-          "end subroutine pbclose",
-          "subroutine pbbufr(cFileUnit,Buffer,BufferSizeBytes,MsgSizeBytes,&",
-          "                  bufr_error_flag)",
-          "   integer*4,              intent(inplace) :: cFileUnit",
-          "   integer*4,dimension(*), intent(inplace) :: Buffer",
-          "   integer*4,              intent(inplace) :: BufferSizeBytes",
-          "   integer*4,              intent(inplace) :: MsgSizeBytes",
-          "   integer*4,              intent(inplace) :: bufr_error_flag ",
-          "end subroutine pbbufr",
-          "subroutine pbwrite(cFileUnit,Buffer,MsgSizeBytes,bufr_return_value)",
-          "   integer*4,              intent(inplace) :: cFileUnit",
-          "   integer*4,dimension(*), intent(inplace) :: Buffer",
-          "   integer*4,              intent(inplace) :: MsgSizeBytes",
-          "   integer*4,              intent(inplace) :: bufr_return_value",
-          "end subroutine pbwrite"]
-
-        print "Inserting hardcoded interface to pbbufr routines in "+\
-              "signatures file ..."
-        for lta in lines_to_add:
-            sfd.write(indentation+lta+'\n')
-            
         #  #]
     #  #]
 
