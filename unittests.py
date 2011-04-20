@@ -43,8 +43,38 @@ are planned as well.
 import os, sys    # operating system functions
 import unittest   # import the unittest functionality
 import subprocess # support running additional executables
+import glob       # support wildcard expansion on filenames
 
-sys.path.append('./')
+# see where to import the module from, either the local directory
+# or the build/lib.linux* directory
+possible_path1 = '.'
+possible_path2 = './build/lib*'
+possible_so_files_1 = glob.glob(os.path.join('.',
+                                             'pybufr_ecmwf','ecmwfbufr.so'))
+possible_so_files_2 = glob.glob(os.path.join('.','build','lib*',
+                                             'pybufr_ecmwf','ecmwfbufr.so'))
+# print 'possible_so_files_1 = ',possible_so_files_1
+# print 'possible_so_files_2 = ',possible_so_files_2
+# sys.exit(1)
+
+if len(possible_so_files_1)>0:
+    module_path = './'
+elif len(possible_so_files_2)>0:
+    module_path = glob.glob(os.path.join('.','build','lib*'))[0]
+
+print 'appending path: ',module_path
+sys.path.append(module_path)
+
+if module_path != './':
+    # remove the current dir from the path
+    path_list = sys.path
+    for p in sys.path:
+        if os.path.abspath(p)==os.path.abspath('./'):
+            print 'removing path: ',os.path.abspath(p)
+            sys.path.remove(p)
+
+# print 'sys.path = ',sys.path
+
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 # from pybufr_ecmwf import bufr
@@ -119,7 +149,6 @@ def call_cmd_and_verify_output(cmd):
 
     # get the list of already defined env settings
     env = os.environ
-    module_path = './'
     if (env.has_key('PYTHONPATH')):
         env['PYTHONPATH'] = env['PYTHONPATH']+':'+module_path
     else:
