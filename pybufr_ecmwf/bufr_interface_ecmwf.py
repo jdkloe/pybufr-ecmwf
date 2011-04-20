@@ -37,7 +37,13 @@ import numpy as np # import numerical capabilities
 import struct      # allow converting c datatypes and structs
 
 # import the raw wrapper interface to the ECMWF BUFR library
-from . import ecmwfbufr
+try:
+    from . import ecmwfbufr
+except ImportError:
+    print 'import of ecmwfbufr failed.'
+    print 'sys.path = ',sys.path
+    raise ImportError
+
 from . import ecmwfbufr_parameters
 from .bufr_template import BufrTemplate
 from .bufr_table import BufrTable
