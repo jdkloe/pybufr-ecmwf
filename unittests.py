@@ -164,9 +164,9 @@ def call_cmd_and_verify_output(cmd):
     # get the list of already defined env settings
     env = os.environ
     if (env.has_key('PYTHONPATH')):
-        env['PYTHONPATH'] = env['PYTHONPATH']+':'+MY_MODULE_PATH
+        env['PYTHONPATH'] = env['PYTHONPATH']+':'+MY_MODULE_PATH+':./'
     else:
-        env['PYTHONPATH'] = MY_MODULE_PATH
+        env['PYTHONPATH'] = MY_MODULE_PATH+':./'
         
     # execute the test and catch all output
     subpr = subprocess.Popen(cmd,
