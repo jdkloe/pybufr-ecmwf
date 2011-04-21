@@ -79,10 +79,15 @@ def get_and_set_the_module_path(syspath):
         # remove the current dir from the path
         syspath_copy = syspath
         for spth in syspath_copy:
-            if os.path.abspath(spth)==os.path.abspath('./'):
-                print 'removing path: ', os.path.abspath(spth)
-                syspath.remove(os.path.abspath(spth))
-                syspath.remove(spth)
+            abs_spth = os.path.abspath(spth)
+            if abs_spth==os.path.abspath('./'):
+                print 'removing path: ', abs_spth
+                if spth in syspath:
+                    print 'removing path: ', spth
+                    syspath.remove(spth)
+                if abs_spth in syspath:
+                    print 'removing abs_path: ', abs_spth
+                    syspath.remove(abs_spth)
 
     print 'syspath = ',syspath
     return (syspath, abs_module_path)
