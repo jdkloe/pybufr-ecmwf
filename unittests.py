@@ -81,20 +81,17 @@ def get_and_set_the_module_path(syspath):
         for spth in syspath_copy:
             abs_spth = os.path.abspath(spth)
             if abs_spth==os.path.abspath('./'):
-                print 'removing path: ', abs_spth
                 if spth in syspath:
-                    print 'removing path: ', spth
+                    # print 'removing path: ', spth
                     syspath.remove(spth)
                 if abs_spth in syspath:
-                    print 'removing abs_path: ', abs_spth
+                    # print 'removing abs_path: ', abs_spth
                     syspath.remove(abs_spth)
 
-    print 'syspath = ',syspath
     return (syspath, abs_module_path)
     #  #]
 
 (sys.path, MY_MODULE_PATH) = get_and_set_the_module_path(sys.path)
-print 'TESTJOS: sys.path = ',sys.path
 
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
