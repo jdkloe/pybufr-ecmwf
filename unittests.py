@@ -46,7 +46,7 @@ import subprocess # support running additional executables
 import glob       # support wildcard expansion on filenames
 from build_interface import InterfaceBuildError
 
-def get_and_set_the_module_path():
+def get_and_set_the_module_path(syspath):
     #  #[
     """
     a little helper function to see where to import the module from,
@@ -73,21 +73,20 @@ def get_and_set_the_module_path():
 
     abs_module_path = os.path.abspath(module_path)
     print 'appending path: ', abs_module_path
-    sys.path.append(abs_module_path)
+    syspath.append(abs_module_path)
 
     if module_path != './':
         # remove the current dir from the path
-        path_list = sys.path
-        for spth in path_list:
+        for spth in syspath:
             if os.path.abspath(spth)==os.path.abspath('./'):
                 print 'removing path: ', os.path.abspath(spth)
-                sys.path.remove(spth)
+                syspath.remove(spth)
 
-    # print 'sys.path = ',sys.path
+    print 'syspath = ',syspath
     return abs_module_path
     #  #]
 
-MY_MODULE_PATH = get_and_set_the_module_path()
+MY_MODULE_PATH = get_and_set_the_module_path(sys.path)
 print 'TESTJOS: sys.path = ',sys.path
 
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
