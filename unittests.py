@@ -71,9 +71,9 @@ def get_and_set_the_module_path():
                  'the interface seems not yet build!'
         raise InterfaceBuildError(errtxt)
 
-    module_path = os.path.abspath(module_path)
-    print 'appending path: ', module_path
-    sys.path.append(module_path)
+    abs_module_path = os.path.abspath(module_path)
+    print 'appending path: ', abs_module_path
+    sys.path.append(abs_module_path)
 
     if module_path != './':
         # remove the current dir from the path
