@@ -74,6 +74,15 @@ def port_2to3():
     '''
     # first see if python3 and the 2to3 tool are available
     tools_to_check = ['2to3', 'python3', 'hg']
+
+    # note: normally, if you have a recent python2 installed
+    # (and on some systems maybe the python-tools package as well)
+    # the 2to3 tool will be available in: /usr/bin/2to3
+    #
+    # However, if you have only python3 installed then (on my fedora14
+    # system) 2to3 is installed in: /usr/lib64/python3.1/Tools/scripts/2to3
+    # In my case 2to3 is part of the python3-tools package.
+    
     for tool_to_check in tools_to_check:
         cmd = 'which '+tool_to_check
         (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
@@ -119,7 +128,8 @@ def port_2to3():
 
     # commit the modified code to allow usage by my automatic test
     # system, which copies the module by taking a clone of the repository.
-    cmd = 'hg commit -m "automatic commit by the port_2to3.py tool"'
+    cmd = 'cd tmp_2to3_converted_sources;'+\
+          'hg commit -m "automatic commit by the port_2to3.py tool"'
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
     
     print 'conversion done'

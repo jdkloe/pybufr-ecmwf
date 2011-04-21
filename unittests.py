@@ -72,7 +72,7 @@ def get_and_set_the_module_path(syspath):
         raise InterfaceBuildError(errtxt)
 
     abs_module_path = os.path.abspath(module_path)
-    print 'appending path: ', abs_module_path
+    # print 'appending path: ', abs_module_path
     syspath.append(abs_module_path)
 
     if module_path != './':
