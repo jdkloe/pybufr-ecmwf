@@ -73,7 +73,7 @@ class Build(_build):
                          "are needed by the choosen c compiler"))
     user_options.append(("c-flags=", None,
                          "flags to be passed to the c compiler"))
-    user_options.append(("download_library_sources=", None,
+    user_options.append(("download-library-sources=", None,
                          "try to download the latest sources of "+\
                          "the ECMWF BUFR library or not"))
 
@@ -140,7 +140,7 @@ class BuildExt(_build_ext):
                          "are needed by the choosen c compiler"))
     user_options.append(("c-flags=", None,
                          "flags to be passed to the c compiler"))
-    user_options.append(("download_library_sources=", None,
+    user_options.append(("download-library-sources=", None,
                          "try to download the latest sources of "+\
                          "the ECMWF BUFR library or not"))
 
@@ -278,7 +278,7 @@ class BuildExt(_build_ext):
         #from pybufr_ecmwf.build_interface import InstallBUFRInterfaceECMWF
 
         do_download_library_sources = True
-        if self.download_library_sources.lower() == 'false':
+        if str(self.download_library_sources).lower() == 'false':
             do_download_library_sources = False
 
         # run the build method from the InstallBUFRInterfaceECMWF class
