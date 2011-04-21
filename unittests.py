@@ -88,6 +88,7 @@ def get_and_set_the_module_path():
     #  #]
 
 MY_MODULE_PATH = get_and_set_the_module_path()
+print 'TESTJOS: sys.path = ',sys.path
 
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
