@@ -84,7 +84,7 @@ def get_and_set_the_module_path():
                 sys.path.remove(spth)
 
     # print 'sys.path = ',sys.path
-    return module_path
+    return abs_module_path
     #  #]
 
 MY_MODULE_PATH = get_and_set_the_module_path()

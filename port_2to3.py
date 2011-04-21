@@ -116,6 +116,11 @@ def port_2to3():
     #    for line in lines_stderr:
     #        print line,
     #    sys.exit(1)
+
+    # commit the modified code to allow usage by my automatic test
+    # system, which copies the module by taking a clone of the repository.
+    cmd = 'hg commit -m "automatic commit by the port_2to3.py tool"'
+    (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
     
     print 'conversion done'
     #  #]
