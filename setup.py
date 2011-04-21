@@ -100,6 +100,8 @@ class Build(_build):
               self.preferred_fortran_compiler
         print "build: self.preferred_c_compiler = ", \
               self.preferred_c_compiler
+        print 'build: self.download_library_sources = ', \
+              self.download_library_sources
 
         # call the run command of the default build
         _build.run(self)
@@ -182,7 +184,7 @@ class BuildExt(_build_ext):
                                    ('c_ld_library_path',
                                     'c_ld_library_path'),
                                    ('c_flags',
-                                    'c_flags')
+                                    'c_flags'),
                                    ('download_library_sources',
                                     'download_library_sources')
                                    )
