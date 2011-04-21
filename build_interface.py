@@ -468,7 +468,8 @@ class InstallBUFRInterfaceECMWF:
                  c_compiler = None,
                  c_ld_library_path = None,
                  c_flags = None,
-                 debug_f2py_c_api = False):
+                 debug_f2py_c_api = False,
+                 download_library_sources = True):
         #  #[
 
         # first remove any quotes that may be around the strings
@@ -482,7 +483,8 @@ class InstallBUFRInterfaceECMWF:
         self.fortran_flags              = rem_quotes(fortran_flags)
         self.c_flags                    = rem_quotes(c_flags)
         self.debug_f2py_c_api           = debug_f2py_c_api
-
+        self.download_library_sources   = download_library_sources
+        
         # save the verbose setting
         self.verbose = verbose
 
@@ -807,21 +809,32 @@ class InstallBUFRInterfaceECMWF:
         """ a method to compile the ECMWF BUFR library """
 
         #  #[ download and unpack the ECMWF BUFR library tar file
+
+        # first see if there is already a tarfile available
+        # (the user may have provided one)
         (source_dir, tarfile_to_install) = self.get_source_dir()
+
+        # if not available, search some possible alternative locations
         if (source_dir is None):
             self.find_copy_of_library()
             # retry (maybe we already had downloaded a copy in a different
             # location, in which case downloading in not needed)
             (source_dir, tarfile_to_install) = self.get_source_dir()
+
+        # if still not found download, or use spare copy
         if (source_dir is None):
-            (most_recent_bufr_lib_url,
-             most_recent_bufr_tarfile_name) = self.find_newest_library()
-            if most_recent_bufr_lib_url is None:
-                success = False
-            else:
-                success = self.download_library(most_recent_bufr_lib_url,
-                                                most_recent_bufr_tarfile_name)
-                
+            success = False
+            if self.download_library_sources:
+                # try to download the source code for the
+                # newest ECMWF bufr library
+                (most_recent_bufr_lib_url,
+                 most_recent_bufr_tarfile_name) = \
+                             self.find_newest_library()
+                if most_recent_bufr_lib_url is not None:
+                    success = self.download_library( \
+                                       most_recent_bufr_lib_url,
+                                       most_recent_bufr_tarfile_name)
+                        
             if not success:
                 # fallback option: copy the (possibly outdated version)
                 # of the library sources stored in ecmwf_bufr_lib_sources
@@ -830,7 +843,7 @@ class InstallBUFRInterfaceECMWF:
                 
             # retry (hopefully we have a copy of the tarfile now)
             (source_dir, tarfile_to_install) = self.get_source_dir()
-
+            
         # safety catch
         if source_dir is None:
             print "ERROR: extracting source_dir failed"
