@@ -73,6 +73,9 @@ class Build(_build):
                          "are needed by the choosen c compiler"))
     user_options.append(("c-flags=", None,
                          "flags to be passed to the c compiler"))
+    user_options.append(("download_library_sources=", None,
+                         "try to download the latest sources of "+\
+                         "the ECMWF BUFR library or not"))
 
     def initialize_options(self):
         #  #[ initialise the additional options 
@@ -85,6 +88,8 @@ class Build(_build):
         self.c_compiler = None
         self.c_ld_library_path = None
         self.c_flags = None
+        self.download_library_sources = None
+        
         _build.initialize_options(self)
         #  #]
     def run(self):
@@ -135,6 +140,10 @@ class BuildExt(_build_ext):
                          "are needed by the choosen c compiler"))
     user_options.append(("c-flags=", None,
                          "flags to be passed to the c compiler"))
+    user_options.append(("download_library_sources=", None,
+                         "try to download the latest sources of "+\
+                         "the ECMWF BUFR library or not"))
+
     def initialize_options(self):
         #  #[ initialise the additional options 
         """ initialise custom defined options """
@@ -146,6 +155,8 @@ class BuildExt(_build_ext):
         self.c_compiler = None
         self.c_ld_library_path = None
         self.c_flags = None
+        self.download_library_sources = None
+        
         _build_ext.initialize_options(self)
         #  #]
     def finalize_options (self):
@@ -172,6 +183,8 @@ class BuildExt(_build_ext):
                                     'c_ld_library_path'),
                                    ('c_flags',
                                     'c_flags')
+                                   ('download_library_sources',
+                                    'download_library_sources')
                                    )
         _build_ext.finalize_options(self)
         #  #]
@@ -200,6 +213,8 @@ class BuildExt(_build_ext):
         #      self.c_ld_library_path
         #print "build_ext: self.c_flags = ",\
         #      self.c_flags
+        #print "build_ext: self.download_library_sources = ",\
+        #      self.download_library_sources
 
         # this run command in turn runs the build_extension method
         #_build_ext.run(self) 
@@ -220,6 +235,7 @@ class BuildExt(_build_ext):
         #self.c_compiler = None
         #self.c_ld_library_path = None
         #self.c_flags = None
+        #self.download_library_sources = None
         
         #fullname = self.get_ext_fullname(ext.name)
         #print "trying to build extension: ", fullname
@@ -261,6 +277,10 @@ class BuildExt(_build_ext):
         # created by the ibi.build() call below.
         #from pybufr_ecmwf.build_interface import InstallBUFRInterfaceECMWF
 
+        do_download_library_sources = True
+        if self.download_library_sources.lower() == 'false':
+            do_download_library_sources = False
+
         # run the build method from the InstallBUFRInterfaceECMWF class
         # defined in the custom build script, to build the extension module
         ibi = InstallBUFRInterfaceECMWF(verbose = True,
@@ -277,7 +297,9 @@ class BuildExt(_build_ext):
                                         c_ld_library_path = \
                                         self.c_ld_library_path,
                                         c_flags = self.c_flags,
-                                        debug_f2py_c_api = False)
+                                        debug_f2py_c_api = False,
+                                        download_library_sources = \
+                                        do_download_library_sources )
         
         # Build ecmwfbufr.so interface
         ibi.build()   
