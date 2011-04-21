@@ -843,6 +843,9 @@ class InstallBUFRInterfaceECMWF:
                 
             # retry (hopefully we have a copy of the tarfile now)
             (source_dir, tarfile_to_install) = self.get_source_dir()
+        else:
+            print 'TESTJOS: (source_dir, tarfile_to_install) = ', \
+                  (source_dir, tarfile_to_install)
             
         # safety catch
         if source_dir is None:

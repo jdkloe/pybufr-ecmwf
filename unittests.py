@@ -81,6 +81,7 @@ def get_and_set_the_module_path(syspath):
         for spth in syspath_copy:
             if os.path.abspath(spth)==os.path.abspath('./'):
                 print 'removing path: ', os.path.abspath(spth)
+                syspath.remove(os.path.abspath(spth))
                 syspath.remove(spth)
 
     print 'syspath = ',syspath
