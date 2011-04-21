@@ -640,11 +640,15 @@ class InstallBUFRInterfaceECMWF:
                 pattern = os.path.join(absdirname,
                                        'ecmwf_bufr_lib_sources',
                                        'bufr*gz')
-                tgz_file = glob.glob(pattern)
-                cmd = 'cp '+tgz_file[0]+' '+self.ecmwf_bufr_lib_dir
-                print "Executing command: ", cmd
-                os.system(cmd)
-                break
+                tgz_filelist = glob.glob(pattern)
+                if len(tgz_filelist) > 0:
+                    tgz_file = tgz_filelist[0]
+                
+                    cmd = 'cp '+tgz_file+' '+self.ecmwf_bufr_lib_dir
+                    print "Executing command: ", cmd
+                    os.system(cmd)
+                    break
+            
             base = os.path.split(absdirname)[0]
             absdirname = base
 
@@ -848,8 +852,10 @@ class InstallBUFRInterfaceECMWF:
             # retry (hopefully we have a copy of the tarfile now)
             (source_dir, tarfile_to_install) = self.get_source_dir()
         else:
-            print 'TESTJOS: (source_dir, tarfile_to_install) = ', \
-                  (source_dir, tarfile_to_install)
+            # debug print
+            #print '(source_dir, tarfile_to_install) = ', \
+            #      (source_dir, tarfile_to_install)
+            pass
             
         # safety catch
         if source_dir is None:
