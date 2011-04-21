@@ -628,6 +628,10 @@ class InstallBUFRInterfaceECMWF:
         We must descend the directory tree first to find the root
         before doing this copy. """
 
+        # make sure the destination dir exists
+        if not os.path.exists(self.ecmwf_bufr_lib_dir):
+            os.makedirs(self.ecmwf_bufr_lib_dir)
+
         cwd = os.getcwd()
         absdirname = os.path.abspath(cwd)
         while absdirname != "/":
