@@ -31,16 +31,16 @@ example_programs/testdata/Testoutputfile.*.BUFR
 pylint_.*.txt$
 
 # generated and build directories to ignore:
-dist
-build
-ecmwf_bufr_lib
-f2py_build
-tmp_BUFR_TABLES
-ecmwf_bufrtables
-old_bufr_libs
-tmp_2to3_converted_sources
+dist/
+build/
+ecmwf_bufr_lib/
+f2py_build/
+tmp_BUFR_TABLES/
+ecmwf_bufrtables/
+old_bufr_libs/
+tmp_2to3_converted_sources/
 
-#syntx: glob
+#syntax: glob
 #
 #/ecmwf_bufr_lib
 #/ecmwf_bufr_lib/*
