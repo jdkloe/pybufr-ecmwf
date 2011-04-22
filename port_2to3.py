@@ -3,6 +3,13 @@
 """
 a little script to use the 2to3 conversion tool on this
 source code, to allow easier porting to python3
+
+WARNING:
+numpy for python3 is still very new, so may not be available
+as default package from your favourite linux distribution for some time.
+Therefore you need to install a 3rd party numpy rpm/deb package or install
+numpy from source first, before you can use the python3 version of this
+pybufr_ecmwf module. JK, 22-Apr-2011.
 """
 
 import os, sys
