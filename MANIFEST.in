@@ -6,6 +6,7 @@ include */*.py
 include setup.*
 include example_programs/testdata/*.BUFR
 include example_programs/expected_test_outputs/Check*
+include ecmwf_bufr_lib_sources/*.gz
 
 # dirs to be excluded
 #prune dist

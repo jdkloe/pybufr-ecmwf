@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 
 """ a small script to make it easier for me to run pylint
-on the python code in the pybufr_ecmwf module"""
+on the python code in the pybufr_ecmwf module.
+It is intended to be run in the software root of this project,
+so in the same directory as the one that holds the setup.py script.
+Launch the script like this:
+      ./pylint/run_pylint.py
+or like this:
+      ./pylint/run_pylint.py <file1> <file2>
+"""
 
 import sys, os, glob
 
@@ -22,33 +29,25 @@ except ImportError:
 # /usr/lib/python2.6/site-packages/pylint/lint.py
 # for examples on how to run the checkers manually
 
-EX_PROGR_PATH = 'example_programs'
-EX_FILES = ['example_for_using_bufrinterface_ecmwf_for_decoding.py',
-            'example_for_using_bufrinterface_ecmwf_for_encoding.py',
-            'example_for_using_ecmwfbufr_for_decoding.py',
-            'example_for_using_ecmwfbufr_for_encoding.py',
-            'example_for_using_pb_routines.py',
-            'example_for_using_rawbufrfile.py',
-            'verify_bufr_tables.py',
-            'bufr_count_msgs.py',
-            'bufr_extract_data_category.py',
-            'bufr_to_ascii.py',
-            ]
-
+if len(sys.argv)>1:
+    SCRIPTS_TO_CHECK = []
+    for filetocheck in sys.argv[1:]:
+        if os.path.exists(filetocheck):
+            SCRIPTS_TO_CHECK.append(filetocheck)
+else:
+    EX_PROGR_PATH = 'example_programs'
+    EX_FILES = glob.glob(os.path.join(EX_PROGR_PATH,'*.py'))
+    SCRIPTS_TO_CHECK = glob.glob('*.py')
+    SCRIPTS_TO_CHECK.append('pylint/run_pylint.py')
+    # note: pylint/pylint_numpy_test.py is omitted here on purpose.
+    # it is used inside check_pylint_numpy_handling() defined above.
+    # look into that routine for more details.
+    SCRIPTS_TO_CHECK.extend(EX_FILES)
+    
 MODULES_TO_CHECK = []
 # my current pylint version crashes with a runtime error when I
 # try to check this module, so its disabled for now
 #MODULES_TO_CHECK = ['pybufr_ecmwf', ]
-
-SCRIPTS_TO_CHECK = ['build_interface.py',
-                    'clean.py',
-                    'port_2to3.py',
-                    'setup.py',
-                    'unittests.py',
-                    'pylint/run_pylint.py',]
-# note: pylint/pylint_numpy_test.py is omitted here on purpose.
-# it is used inside check_pylint_numpy_handling() defined above.
-# look into that routine for more details.
 
 def check(msg, pycode, additional_args):
     #  #[
@@ -63,6 +62,9 @@ def check(msg, pycode, additional_args):
         # note: the Run method always ends with a sys.exit() call
         # so the except clause seems always to be called when
         # the checking is done
+
+        # debug print
+        # print 'launching: lint.Run('+str(args)+')'
         lint.Run(args)
 
         # this point is never reached ...
@@ -117,6 +119,8 @@ def check_all_py_files():
     the pylint checker on it.
     """
 
+    # check for problems when importing numpy
+    # (since some older pylint versions cannot properly handlethis dependency)
     use_numpy_checks = check_pylint_numpy_handling()
     if use_numpy_checks:
         print '==>numpy imports can safely be checked by pylint'
@@ -126,6 +130,18 @@ def check_all_py_files():
         print '==>ignoring this module from pylint checking'
         additional_args = ['--ignored-classes=numpy']
 
+    # check for presence of compiled ecmwfbufr.so shared object file
+    # which is only present after manually building the software
+    # and disable the import during the pylint checking if it is missing
+    if not os.path.exists(os.path.join('pybufr_ecmwf','ecmwfbufr.so')):
+        #additional_args.append('--ignored-classes=ecmwfbufr')
+        # note: this seems not to help at the moment ...
+        # workaround: do the manual build first before running pylint
+        print 'Sorry, you need to manually build the ecmwfbufr.so file first'
+        print 'to allow correct running of the pylint checker, using this'
+        print 'command: ./build_interface.py'
+        sys.exit(1)
+        
     result = []
 
     for mod_to_check in MODULES_TO_CHECK:
@@ -136,11 +152,6 @@ def check_all_py_files():
         result.append(check('checking script: ',
                             script, additional_args))
         
-    for ex_file in EX_FILES:
-        result.append(check('checking script: ',
-                            os.path.join(EX_PROGR_PATH, ex_file),
-                            additional_args))
-
     num_not_ok = sum([r[0] for r in result])
     num_ok     = len(result) - num_not_ok
     
