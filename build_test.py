@@ -25,10 +25,10 @@ import subprocess  # support running additional executables
 #  #[ settings
 REPODIR = '../pybufr-ecmwf'
 TESTDIR = '../pybufr_ecmwf_test_builds'
-DO_MANUAL_TESTS      = False # True
-DO_SETUP_BUILD_TESTS = False # True
-DO_SETUP_SDIST_TESTS = False # True
-DO_MANUAL_PY3_TESTS  = True
+DO_MANUAL_TESTS      = True
+DO_SETUP_BUILD_TESTS = True
+DO_SETUP_SDIST_TESTS = True
+DO_MANUAL_PY3_TESTS  = False # True # not yet implemented!
 #  #]
 #  #[ helper functions
 def run_shell_command(cmd_to_run):

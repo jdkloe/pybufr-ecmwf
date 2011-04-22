@@ -8,6 +8,8 @@ source code, to allow easier porting to python3
 import os, sys
 import subprocess  # support running additional executables
 
+PY3_CONVERTED_PATH = 'tmp_2to3_converted_sources'
+
 def run_shell_command(cmd, libpath = None, catch_output = True,
                       module_path = './', verbose = True):
     #  #[
@@ -96,17 +98,16 @@ def port_2to3():
             print 'tool found: ', tool_to_check
             
     # create the testdir
-    testdir = 'tmp_2to3_converted_sources'
-    if os.path.exists(testdir):
-        print 'ERROR: testdir: ', testdir, ' already exists'
+    if os.path.exists(PY3_CONVERTED_PATH):
+        print 'ERROR: testdir: ', PY3_CONVERTED_PATH, ' already exists'
         print 'please first run the clean.py tool before trying to run'
         print 'this conversion script'
         sys.exit(1)
-    os.mkdir(testdir)
+    os.mkdir(PY3_CONVERTED_PATH)
     
     # clone the repository to the testdir
     print 'cloning the repository'
-    cmd = 'hg clone . '+testdir
+    cmd = 'hg clone . '+PY3_CONVERTED_PATH
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
     if len(lines_stderr)>0:
         print 'sorry, failed command: ', cmd
@@ -116,7 +117,7 @@ def port_2to3():
 
     # do the actual conversion
     print 'converting sources to python3'
-    cmd = '2to3 -w tmp_2to3_converted_sources'
+    cmd = '2to3 -w '+PY3_CONVERTED_PATH
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
     # this next check is not usefull, since the 2to3 tool issues
     # several messages to stderr even if all runs well
@@ -126,9 +127,31 @@ def port_2to3():
     #        print line,
     #    sys.exit(1)
 
+    # walk along all python files and fix the shebang/hashbang line
+    # since the 2to3 tool seems to not fix this one.
+    for (dirpath, dirnames, filenames) in os.walk(PY3_CONVERTED_PATH):
+        for filename in filenames:
+            (base,ext) = os.path.splitext(filename)
+            if ext == '.py':
+                path_and_file = os.path.join(dirpath,filename)
+                print 'fixing: ', path_and_file
+
+                fdb = open(path_and_file,'rt')
+                lines = fdb.readlines()
+                fdb.close()
+
+                fda = open(path_and_file,'wt')
+                for line in lines:
+                    if '#!' in line:
+                        print 'shebang line found: ',line.replace('\n','')
+                        fda.write('#!/usr/bin/env python3\n')
+                    else:
+                        fda.write(line)
+                fda.close()
+                
     # commit the modified code to allow usage by my automatic test
     # system, which copies the module by taking a clone of the repository.
-    cmd = 'cd tmp_2to3_converted_sources;'+\
+    cmd = 'cd '+PY3_CONVERTED_PATH+';'+\
           'hg commit -m "automatic commit by the port_2to3.py tool"'
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
     
