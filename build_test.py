@@ -237,6 +237,12 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
             else:
                 fd.write(l)
         fd.close()
+
+        # commit the modified code, to track what happended incase
+        # I would pull from this modified repository by mistake.
+        cmd = 'cd '+temp_build_dir+';'+\
+              'hg commit -m "automatic commit by the build_test tool"'
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
     
         # -build the software
         cmd = 'cd '+temp_build_dir+';'+\
