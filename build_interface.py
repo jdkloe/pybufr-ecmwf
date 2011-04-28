@@ -1595,6 +1595,7 @@ file for convenience
         signatures_filename = "signatures.pyf"
         f2py_tool_name = './run_f2py_tool.py'
         #f2py_tool_name = 'f2py'
+        os.system('chmod u+x '+f2py_tool_name)
         
         #source_files = ["buxdes.F",
         #                "bufren.F",
