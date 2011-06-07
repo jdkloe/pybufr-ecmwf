@@ -136,11 +136,13 @@ def port_2to3():
 
     # walk along all python files and fix the shebang/hashbang line
     # since the 2to3 tool seems to not fix this one.
-    for (dirpath, dirnames, filenames) in os.walk(PY3_CONVERTED_PATH):
+    for walk_result in os.walk(PY3_CONVERTED_PATH):
+        dirpath   = walk_result[0]
+        filenames = walk_result[2]
         for filename in filenames:
-            (base,ext) = os.path.splitext(filename)
+            ext = os.path.splitext(filename)[1]
             if ext == '.py':
-                path_and_file = os.path.join(dirpath,filename)
+                path_and_file = os.path.join(dirpath, filename)
                 print 'fixing: ', path_and_file
 
                 fdb = open(path_and_file,'rt')
@@ -150,7 +152,7 @@ def port_2to3():
                 fda = open(path_and_file,'wt')
                 for line in lines:
                     if '#!' in line:
-                        print 'shebang line found: ',line.replace('\n','')
+                        print 'shebang line found: ', line.replace('\n','')
                         fda.write('#!/usr/bin/env python3\n')
                     else:
                         fda.write(line)

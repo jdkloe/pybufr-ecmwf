@@ -1639,7 +1639,7 @@ file for convenience
 
         # call f2py and create a signature file that defines the
         # interfacing to the fortran routines in this library
-        print 'TESTJOS: cwd = ',os.getcwd()
+        # print 'TESTJOS: cwd = ', os.getcwd()
         cmd = f2py_tool_name+\
               " --build-dir "+self.wrapper_build_dir+\
               " -m "+self.wrapper_module_name+\

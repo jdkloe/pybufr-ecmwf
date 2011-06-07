@@ -273,7 +273,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         pattern = os.path.join(test_dir, 'pybufr-ecmwf-*')
         unpacked_sdist_path = glob.glob(pattern)[0]
-        print 'TESTJOS: unpacked_sdist_path = ', unpacked_sdist_path
+        # print 'TESTJOS: unpacked_sdist_path = ', unpacked_sdist_path
 
         # -edit the setup.cfg file to choose the compiler
         #  and to prevent the library download
