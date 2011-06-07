@@ -25,10 +25,12 @@ import subprocess  # support running additional executables
 #  #[ settings
 REPODIR = '../pybufr-ecmwf'
 TESTDIR = '../pybufr_ecmwf_test_builds'
-DO_MANUAL_TESTS      = True
-DO_SETUP_BUILD_TESTS = True
-DO_SETUP_SDIST_TESTS = True
-DO_MANUAL_PY3_TESTS  = False # True # not yet implemented!
+DO_MANUAL_TESTS      = False # True
+DO_SETUP_BUILD_TESTS = False # True
+DO_SETUP_SDIST_TESTS = False # True
+DO_MANUAL_PY3_TESTS  = True
+# DO_MANUAL_PY3_TESTS  = False # True # not yet implemented!
+
 #  #]
 #  #[ helper functions
 def run_shell_command(cmd_to_run):
@@ -327,10 +329,8 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
     if (DO_MANUAL_PY3_TESTS):
         #  #[ convert to python3, and test the manual build
 
-        sys.exit(1)
-        
         # -create a temporary working dir for the build
-        build_dir_name = 'manual_build_'+fc
+        build_dir_name = 'py3_manual_build_'+fc
         temp_build_dir = os.path.join(TESTDIR, build_dir_name)
         if os.path.exists(temp_build_dir):
             print 'dir: ', temp_build_dir, ' exists; removing it first'
@@ -350,7 +350,20 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         saved_cwd = os.getcwd()
         os.chdir(temp_build_dir)
         
+        print 'temp_build_dir = ', temp_build_dir
         print 'saved_cwd   = ', saved_cwd
+        print 'os.getcwd() = ', os.getcwd()
+
+        # convert the source code to python3
+        cmd = './port_2to3.py'
+        print "Executing command: ", cmd
+        os.system(cmd)
+
+        temp_py3_build_dir = 'tmp_2to3_converted_sources'
+
+        os.chdir(temp_py3_build_dir)
+
+        print 'temp_py3_build_dir = ', temp_py3_build_dir
         print 'os.getcwd() = ', os.getcwd()
         
         # -build the software
@@ -374,6 +387,54 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         
         BI.build()
         del(BI)
+
+        # the py3 test almost works now. It fails in the f2py stage
+        # in the post-processing (stage 2) with this message:
+        # (seems to me this is a bug in f2py)
+        
+        # Post-processing (stage 2)...
+        # Saving signatures to file "f2py_build/signatures.pyf"
+        # Traceback (most recent call last):
+        #  File "./run_f2py_tool.py", line 11, in <module>
+        #    main()
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/f2py2e.py", line 563, in main
+        #    run_main(sys.argv[1:])
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/f2py2e.py", line 342, in run_main
+        #    postlist=callcrackfortran(files,options)
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/f2py2e.py", line 279, in callcrackfortran
+        #    pyf=crackfortran.crack2fortran(postlist)
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2693, in crack2fortran
+        #    pyf=crack2fortrangen(block)+'\n'
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2465, in crack2fortrangen
+        #    ret=ret+crack2fortrangen(g,tab)
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2505, in crack2fortrangen
+        #    body=crack2fortrangen(block['body'],tab+tabchar)
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2465, in crack2fortrangen
+        #    ret=ret+crack2fortrangen(g,tab)
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2505, in crack2fortrangen
+        #    body=crack2fortrangen(block['body'],tab+tabchar)
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2465, in crack2fortrangen
+        #    ret=ret+crack2fortrangen(g,tab)
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2506, in crack2fortrangen
+        #    vars=vars2fortran(block,block['vars'],al,tab+tabchar)
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2655, in vars2fortran
+        #    lst = true_intent_list(vars[a])
+        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2557, in true_intent_list
+        #    if c:
+        # UnboundLocalError: local variable 'c' referenced before assignment
+        # ERROR: build of python wrapper failed
+        # the signatures file could not be found
+        # Traceback (most recent call last):
+        #  File ".//build_test.py", line 388, in <module>
+        #    BI.build()
+        #  File "/home/jos/werk/pybufr_ecmwf_interface/pybufr-ecmwf/build_interface.py", line 543, in build
+        #    self.generate_python_wrapper(source_dir)
+        #  File "/home/jos/werk/pybufr_ecmwf_interface/pybufr-ecmwf/build_interface.py", line 1667, in generate_python_wrapper
+        #    raise InterfaceBuildError
+        # build_interface.InterfaceBuildError
+        #
+        
+        sys.exit(1)        
         
         # restore the original directory
         os.chdir(saved_cwd)
