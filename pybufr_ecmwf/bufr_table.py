@@ -526,11 +526,30 @@ class CompositeDescriptor(Descriptor): #[table D entry]
         differing attributes (which would mean a serious design problem
         in the BUFR files and/or template)
         """
-        assert(self.reference       == reference)
-        assert(self.descriptor_list == descriptor_list)
-        assert(self.comment         == comment)
-        assert(self.parent          == parent)
-
+        try:
+            assert(self.reference       == reference)
+            assert(self.descriptor_list == descriptor_list)
+            assert(self.comment         == comment)
+            assert(self.parent          == parent)
+        except:
+            print 'assertion failed in CompositeDescriptor.checkinit'
+            print 'in module pybufr_ecmwf.bufr_table'
+            print
+            print 'details: '
+            print 'self.reference = ',str(self.reference)
+            print 'reference      = ',str(reference)
+            print 'self.descriptor_list = ',str(self.descriptor_list)
+            print 'descriptor_list      = ',str(descriptor_list)
+            print 'self.comment = ',str(self.comment)
+            print 'comment      = ',str(comment)
+            print 'self.parent = ',str(self.parent)
+            print 'parent      = ',str(parent)
+            print
+            print '==>A possibly cause for this problem could be that'
+            print '==>you tried to load a BUFR D-table twice into the same'
+            print '==>BufrTable instance, without first deleting'
+            print '==>the previous copy?'
+            sys.exit(1)
         #  #]
     #  #]
 
@@ -539,6 +558,22 @@ class BufrTable:
     """
     a base class for BUFR B and D tables    
     """
+    # Some variables to remember if we already loaded a BUFR table or not.
+    # Note that these have to be stored as class variables.
+    # If they would have been stored as BufrTable instance variables
+    # the information could not be shared between 2 different
+    # instances of this class (even though the actual descriptor instances
+    # are shared thanks to the singleton trick used in this module).
+    # This is important to speed upn performance in case multiple
+    # BUFR messages need to be decoded sequentially that use the
+    # same set of BUFR tables (which will ususally be the case, although
+    # this is not a requirement as far as I know; even 2 BUFR messages
+    # from the same BUFR file could in theory use different tables ...).
+    currently_loaded_B_table = None
+    currently_loaded_D_table = None
+    saved_B_table = None
+    saved_D_table = None
+    
     def __init__(self,
                  autolink_tablesdir = "tmp_BUFR_TABLES",
                  tables_dir = None,
@@ -793,9 +828,22 @@ class BufrTable:
 
         (path, base) = os.path.split(tablefile)
         if base[0].upper() == 'B':
-            self.load_b_table(tablefile)
+            #
+            if (self.__class__.currently_loaded_B_table != tablefile):
+                self.load_b_table(tablefile)
+                self.__class__.currently_loaded_B_table = tablefile
+                self.__class__.saved_B_table = self.table_b
+            else:
+                print 'B-table already loaded: ',tablefile
+                self.table_b = self.__class__.saved_B_table
         elif base[0].upper() == 'D':
-            self.load_d_table(tablefile)
+            if (self.__class__.currently_loaded_D_table != tablefile):
+                self.load_d_table(tablefile)
+                self.__class__.currently_loaded_D_table = tablefile
+                self.__class__.saved_D_table = self.table_d
+            else:
+                print 'D-table already loaded: ',tablefile
+                self.table_d = self.__class__.saved_D_table
         else:
             print "ERROR: don;t know what table this is"
             print "(path, base) = ", (path, base)
