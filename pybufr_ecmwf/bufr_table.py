@@ -1354,8 +1354,59 @@ class BufrTable:
 
         #sys.exit(1)
         #  #]
-    #  possible additional methods:
-    #  ==>write-tables
+    def add_to_B_table(self,descriptor):
+        #  #[
+        assert(isinstance(descriptor,Descriptor)==True)
+        self.table_b[descriptor.reference] = descriptor
+        #  #]
+    def add_to_D_table(self,descriptor):
+        #  #[
+        assert(isinstance(descriptor,CompositeDescriptor)==True)
+        self.table_d[descriptor.reference] = descriptor
+        #  #]
+    def print_B_table(self):
+        #  #[
+        ref_list = self.table_b.keys()
+        ref_list.sort()
+        for ref in ref_list:
+            print str(self.table_b[ref])
+        #  #]
+    def print_D_table(self):
+        #  #[
+        ref_list = self.table_d.keys()
+        ref_list.sort()
+        for ref in ref_list:
+            print str(self.table_d[ref])
+        #  #]
+    def write_B_table(self,fd):
+        #  #[
+        ref_list = self.table_b.keys()
+        ref_list.sort()
+        for ref in ref_list:
+            txt = '{reference:6} {name} {unit} {unit_scale} {unit_reference} {data_width}'.format(self.table_b[ref])
+            fd.write(txt)
+        #  #]
+    def write_D_table(self,fd):
+        #  #[
+        ref_list = self.table_d.keys()
+        ref_list.sort()
+        for ref in ref_list:
+            print str(self.table_d[ref])
+        #  #]
+    def write_tables(self,table_name):
+        #  #[
+        b_table_name = 'B'+table_name
+        d_table_name = 'D'+table_name
+
+        fd = open(b_table_name,'w')
+        self.write_B_table(fd)
+        fd.close()
+
+        fd = open(d_table_name,'w')
+        self.write_D_table(fd)
+        fd.close()
+        #  #]
+
     #  #]
     
 if __name__ == "__main__":
