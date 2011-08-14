@@ -77,7 +77,7 @@ def print_bufr_content2(input_bufr_file):
     bob.close()
     #  #]
 
-def print_bufr_content3(input_bufr_file):
+def print_bufr_content3(input_bufr_file, output_file):
     #  #[ implementation 3
     """
     example implementation using the BUFRInterfaceECMWF class
@@ -94,13 +94,27 @@ def print_bufr_content3(input_bufr_file):
     # extract the number of BUFR messages from the file
     num_msgs = rbf.get_num_bufr_msgs()
 
+    # Open the output file
+    outF = open(output_file, "w")
+
     for msg_nr in range(1, num_msgs+1):
-        raw_msg = rbf.get_raw_bufr_msg(msg_nr)[0]
-        bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg,
-                                      max_nr_expanded_descriptors=44)
+        raw_msg = rbf.get_raw_bufr_msg(msg_nr)
+        bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg[0],
+                                      section_sizes=raw_msg[1],
+                              section_start_locations=raw_msg[2])
         bufr_obj.decode_sections_012()
         bufr_obj.setup_tables()
         bufr_obj.decode_data()
+
+        # Create header lines from variable names and units
+        if msg_nr == 1:
+            head_arr = [[''],['']]
+            for (i, cnam) in enumerate(bufr_obj.cnames):
+                head_arr[0].append("".join(cnam).strip())
+                head_arr[1].append("".join(bufr_obj.cunits[i]).strip())
+
+            outF.write(",".join(head_arr[0]) + "\n")
+            outF.write(",".join(head_arr[1]) + "\n")
 
         nsubsets = bufr_obj.get_num_subsets()
         for subs in range(nsubsets):
@@ -109,18 +123,31 @@ def print_bufr_content3(input_bufr_file):
             for descr_nr in range(nelements):
                 data = bufr_obj.get_value(descr_nr, subs)
                 data_list.append(data)
-            print str(subs)+' '+' '.join(str(val) for val in data_list)
+            outF.write(str(subs)+','+','.join(str(val) for val in
+                data_list) + "\n")
         
     # close the file
     rbf.close()
     #  #]
 
 #  #[ run the tool
-if len(sys.argv)<2:
+nargs = len(sys.argv)
+
+if nargs < 2:
     print 'please give a BUFR file as argument'
     sys.exit(1)
 
+if nargs < 3:
 INPUT_BUFR_FILE  = sys.argv[1]
+    OUTPUT_BUFR_FILE = sys.argv[1] + ".csv"
+else:
+    INPUT_BUFR_FILE  = sys.argv[1]
+    OUTPUT_BUFR_FILE = sys.argv[2]
 
-print_bufr_content(INPUT_BUFR_FILE)
+print_bufr_content3(INPUT_BUFR_FILE, OUTPUT_BUFR_FILE)
+
+print("output written to file " + OUTPUT_BUFR_FILE)
+
+
+
 #  #]
