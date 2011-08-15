@@ -642,13 +642,27 @@ class CheckBufr(unittest.TestCase):
     def test_run_decoding_example(self):
         #  #[
         """
-        test the decoding example program
+        test the decoding example program and produce ascii output
         """
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        cmd = cmd + ' ' + self.testinputfile
+        cmd = cmd + ' -a -i ' + self.testinputfile
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
+        #  #]
+    def test_run_decoding_example2(self):
+        #  #[
+        """
+        test the decoding example program, and produce csv output
+        """
+        
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' -c -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
