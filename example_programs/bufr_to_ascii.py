@@ -3,7 +3,7 @@
 """
 This is a small tool/example program intended to loop over all bufr messages
 in a bufr file and extract all the data from it, which is then printed
-to stdout.
+to stdout or written to file, either in ascii or csv format.
 """
 
 # For details on the revision history, refer to the log-notes in
@@ -15,6 +15,8 @@ to stdout.
 
 #  #[ imported modules
 import sys # operating system functions
+import getopt # a simpler version of argparse, which was introduced in
+              # python 2.7, and is not by default available for older versions
 
 # import the python file defining the RawBUFRFile class
 from pybufr_ecmwf.bufr import BUFRReader
@@ -77,7 +79,7 @@ def print_bufr_content2(input_bufr_file):
     bob.close()
     #  #]
 
-def print_bufr_content3(input_bufr_file, output_file):
+def print_bufr_content3(input_bufr_file, output_fd, output_to_ascii):
     #  #[ implementation 3
     """
     example implementation using the BUFRInterfaceECMWF class
@@ -94,27 +96,33 @@ def print_bufr_content3(input_bufr_file, output_file):
     # extract the number of BUFR messages from the file
     num_msgs = rbf.get_num_bufr_msgs()
 
-    # Open the output file
-    outF = open(output_file, "w")
-
     for msg_nr in range(1, num_msgs+1):
-        raw_msg = rbf.get_raw_bufr_msg(msg_nr)
-        bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg[0],
-                                      section_sizes=raw_msg[1],
-                              section_start_locations=raw_msg[2])
+        encoded_message, section_sizes, section_start_locations = \
+                         rbf.get_raw_bufr_msg(msg_nr)
+        bufr_obj = BUFRInterfaceECMWF(encoded_message, section_sizes,
+                                      section_start_locations)
         bufr_obj.decode_sections_012()
         bufr_obj.setup_tables()
         bufr_obj.decode_data()
 
         # Create header lines from variable names and units
+        if output_to_ascii:
+            separator = ' '
+        else:
+            separator = ',' # csv case
+            
         if msg_nr == 1:
-            head_arr = [[''],['']]
-            for (i, cnam) in enumerate(bufr_obj.cnames):
-                head_arr[0].append("".join(cnam).strip())
-                head_arr[1].append("".join(bufr_obj.cunits[i]).strip())
+            head_arr = [[''], ['']]
+            for (cname, cunit) in zip(bufr_obj.cnames, bufr_obj.cunits):
+                # glue the ndarray of characters together to form strings
+                cname_str = "".join(cname).strip()
+                cunit_str = "".join(cunit).strip()
+                # append the strings to the head list and quote them
+                head_arr[0].append('"'+cname_str+'"')
+                head_arr[1].append('"'+cunit_str+'"')
 
-            outF.write(",".join(head_arr[0]) + "\n")
-            outF.write(",".join(head_arr[1]) + "\n")
+            output_fd.write(separator.join(head_arr[0]) + "\n")
+            output_fd.write(separator.join(head_arr[1]) + "\n")
 
         nsubsets = bufr_obj.get_num_subsets()
         for subs in range(nsubsets):
@@ -123,31 +131,107 @@ def print_bufr_content3(input_bufr_file, output_file):
             for descr_nr in range(nelements):
                 data = bufr_obj.get_value(descr_nr, subs)
                 data_list.append(data)
-            outF.write(str(subs)+','+','.join(str(val) for val in
-                data_list) + "\n")
-        
-    # close the file
+            output_fd.write(str(subs)+separator+
+                            separator.join(str(val) for val in data_list)+
+                            "\n")
+    
+    # close the BUFR file
     rbf.close()
+
     #  #]
 
-#  #[ run the tool
-nargs = len(sys.argv)
+def usage():
+    #  #[
+    """ a small routine to print the options that may be used
+    with this example progra,
+    """
+    print 'Usage: '
+    print sys.argv[0] + ' [OPTIONS]'
+    print ''
+    print 'With [OPTIONS] being one or more of these possibilities: '
+    print '-a or --ascii   selects ascii output'
+    print '-c or --csv     selects csv output'
+    print '-i or --infile  defines the input BUFR file to be used [required]'
+    print '-o or --outfile defines the output file to be used'
+    print '                if this option is omitted, stdout will be used'
+    print '-h              display this help text'
+    #  #]
 
-if nargs < 2:
-    print 'please give a BUFR file as argument'
-    sys.exit(1)
+def main():
+    #  #[ define the main program
+    """ define the main code for this test program as a subroutine
+    to prevent the ugly pylint convention of using capital letters
+    for all variables at root level.
+    """
+    try:
+        # command line handling; the ':' and '=' note that the
+        # options must have a value following it
+        short_options = 'aci:o:h'
+        long_options  = ['ascii', 'csv', 'infile=', 'outfile=', 'help']
+        (options, other_args) = getopt.getopt(sys.argv[1:],
+                                              short_options, long_options)
+    except getopt.GetoptError, err:
+        # print help information and exit:
+        print str(err) # will print something like "option -a not recognized"
+        usage()
+        sys.exit(2)
 
-if nargs < 3:
-INPUT_BUFR_FILE  = sys.argv[1]
-    OUTPUT_BUFR_FILE = sys.argv[1] + ".csv"
-else:
-    INPUT_BUFR_FILE  = sys.argv[1]
-    OUTPUT_BUFR_FILE = sys.argv[2]
+    # test prints
+    #print 'options = ', options
+    #print 'other_args = ', other_args
 
-print_bufr_content3(INPUT_BUFR_FILE, OUTPUT_BUFR_FILE)
+    # defaults
+    output_to_ascii = True
+    input_bufr_file = None
+    output_file     = None
 
-print("output written to file " + OUTPUT_BUFR_FILE)
+    for (opt, value) in options:
+        if   ( (opt == '-h') or (opt == '--help') ):
+            usage()
+        elif ( (opt == '-a') or (opt == '--ascii') ):
+            output_to_ascii = True
+        elif ( (opt == '-c') or (opt == '--csv') ):
+            output_to_ascii = False # implies csv
+        elif ( (opt == '-i') or (opt == '--infile') ):
+            input_bufr_file = value
+        elif ( (opt == '-o') or (opt == '--outfile') ):
+            output_file = value
+        else:
+            print "Unhandled option: "+opt
+            usage()
+            sys.exit(2)
 
+    # ensure input_bufr_file is defined
+    if input_bufr_file is None:
+        print "Missing input file!"
+        usage()
+        sys.exit(2)
 
+    # warn about unused arguments
+    if len(other_args) > 0:
+        print 'WARNING: there seem to be unused arguments:'
+        print other_args
+
+    # Open the output file
+    if output_file:
+        output_fd = open(output_file, "w")
+    else:
+        output_fd = sys.stdout
+        
+    #print_bufr_content(input_bufr_file, output_fd, output_to_ascii)
+    #print_bufr_content2(input_bufr_file, output_fd, output_to_ascii)
+    print_bufr_content3(input_bufr_file, output_fd, output_to_ascii)
+
+    if output_file:
+        # close the output file
+        output_fd.close()
+
+        if output_to_ascii:
+            print("ascii output written to file " + output_file)
+        else:
+            print("csv output written to file " + output_file)
 
 #  #]
+
+# run the tool
+main()
