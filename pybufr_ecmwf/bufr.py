@@ -206,6 +206,34 @@ class BUFRReader:
 
         return result
         #  #]
+    def get_names(self):
+        #  #[
+        if (self.msg_loaded == -1):
+            raise NoMsgLoadedError
+
+        list_of_names = []
+        for cname in self.bufr_obj.cnames:
+            # glue the ndarray of characters together to form strings
+            cname_str = "".join(cname).strip()
+            # append the string to the list and quote them
+            list_of_names.append('"'+cname_str+'"')
+
+        return list_of_names
+        #  #]
+    def get_units(self):
+        #  #[
+        if (self.msg_loaded == -1):
+            raise NoMsgLoadedError
+
+        list_of_units = []
+        for cunit in self.bufr_obj.cunits:
+            # glue the ndarray of characters together to form strings
+            cunit_str = "".join(cunit).strip()
+            # append the string to the list and quote them
+            list_of_units.append('"'+cunit_str+'"')
+
+        return list_of_units
+        #  #]        
     def close(self):
         #  #[
         """

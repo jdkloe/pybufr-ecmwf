@@ -639,7 +639,7 @@ class CheckBufr(unittest.TestCase):
     testdatadir            = 'example_programs/testdata'
     testinputfile          = os.path.join(testdatadir,
                                           'Testfile.BUFR')
-    def test_run_decoding_example(self):
+    def test_run_decoding_example1_ascii(self):
         #  #[
         """
         test the decoding example program and produce ascii output
@@ -648,12 +648,12 @@ class CheckBufr(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        cmd = cmd + ' -a -i ' + self.testinputfile
+        cmd = cmd + ' -1 -a -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
-    def test_run_decoding_example2(self):
+    def test_run_decoding_example1_csv(self):
         #  #[
         """
         test the decoding example program, and produce csv output
@@ -662,7 +662,35 @@ class CheckBufr(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        cmd = cmd + ' -c -i ' + self.testinputfile
+        cmd = cmd + ' -1 -c -i ' + self.testinputfile
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
+        #  #]
+    def test_run_decoding_example2_ascii(self):
+        #  #[
+        """
+        test the decoding example program and produce ascii output
+        """
+        
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' -2 -a -i ' + self.testinputfile
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
+        #  #]
+    def test_run_decoding_example3_ascii(self):
+        #  #[
+        """
+        test the decoding example program and produce ascii output
+        """
+        
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' -3 -a -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
