@@ -1383,7 +1383,35 @@ class BufrTable:
         ref_list = self.table_b.keys()
         ref_list.sort()
         for ref in ref_list:
-            txt = '{reference:6} {name} {unit} {unit_scale} {unit_reference} {data_width}'.format(self.table_b[ref])
+            # the B BUFR table reading in the ECMWF BUFR library code
+            # uses the following format:
+            # '(1X,I6,1x,64x,1x,24x,1x,I3,1x,I12,1x,I3)'
+            # see: ecmwf_bufr_lib/bufr_000387/bufrdc/btable.F
+            # around line 142
+
+            # Note also that some ECMWF B-tables (especially for the
+            # CCITTIA5/character string definitions), there seem to be
+            # extra fields in the B-table; for example:
+            # "CHARACTER                 0    "
+            # for other descriptors these 2 fields seem to contain
+            # a copy of the unit and unit scale
+            # For some descriptors however, especially at the end of the
+            # table, these fields are not filled at all.
+            # It is not clear to me whether these extra fields
+            # are actually used or not.
+
+            # Note also that the BUFR standard actually dus not prescribe
+            # anything on the BUFR table format, so ECMWF can choose to
+            # do anything it likes to do here ...
+            
+            b_descr = self.table_b[ref]
+            txt = ' %6s %-64s %-24s %3i %12i %3i\n' % \
+                  (b_descr.reference,
+                   b_descr.name,
+                   b_descr.unit,
+                   b_descr.unit_scale,
+                   b_descr.unit_reference,
+                   b_descr.data_width)
             fd.write(txt)
         #  #]
     def write_D_table(self,fd):
@@ -1391,7 +1419,29 @@ class BufrTable:
         ref_list = self.table_d.keys()
         ref_list.sort()
         for ref in ref_list:
-            print str(self.table_d[ref])
+            # the BUFR table reading in the ECMWF BUFR library code
+            # uses the following format: '(1X,I6,I3)'
+            # for the first 2 items, and: '(11X,I6)'
+            # for the 3rd item.
+            # see: ecmwf_bufr_lib/bufr_000387/bufrdc/dtable.F
+            # around line 145
+
+            # Note also that there seem to be comment fields following
+            # some ECMWF D-table entries, but not often.
+            # It is not clear to me if these are used at all.
+            
+            d_descr = self.table_d[ref]
+            n = len(d_descr.descriptor_list)
+            for (i,ref_descr) in enumerate(d_descr.descriptor_list):
+                if (i==0):
+                    txt = ' %6s %2i %6s\n' % \
+                          (d_descr.reference, n, ref_descr.reference)
+                else:
+                    txt = ' %6s %2s %6s\n' % \
+                          ('', '', ref_descr.reference)
+                    
+                # txt = str(self.table_d[ref])+'\n'
+                fd.write(txt)
         #  #]
     def write_tables(self,table_name):
         #  #[
