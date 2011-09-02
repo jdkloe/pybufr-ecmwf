@@ -155,8 +155,9 @@ if 'noaa_mos' in INP_BUFR_FILE:
 else:
     # the custom generic_scat tables are only usefull when decoding
     # scatteromet BUFR files
-    BUFRMSG = decoding_example(INP_BUFR_FILE,
-                               custom_bufr_tables=CUSTOM_BUFR_TABLES)
+    BUFRMSG = decoding_example(INP_BUFR_FILE)
+#    BUFRMSG = decoding_example(INP_BUFR_FILE,
+#                               custom_bufr_tables=CUSTOM_BUFR_TABLES)
     
 #BUFRMSG = decoding_example(INP_BUFR_FILE)
 display_results(BUFRMSG)

@@ -101,25 +101,60 @@ if [ "$1" == "8" ] ;  then \
     exit;
 fi;
 
-if [ "$1" == "9" ] ;  then \
-    ./example_programs/bufr_to_ascii.py \
+if [ "$1" == "9a1" ] ;  then \
+    ./example_programs/bufr_to_ascii.py -a -1 -i \
+    $TESTINPUTFILE
+    exit;
+fi;
+
+if [ "$1" == "9a2" ] ;  then \
+    ./example_programs/bufr_to_ascii.py -a -2 -i \
+    $TESTINPUTFILE
+    exit;
+fi;
+
+if [ "$1" == "9a3" ] ;  then \
+    ./example_programs/bufr_to_ascii.py -a -3 -i \
+    $TESTINPUTFILE
+    exit;
+fi;
+
+if [ "$1" == "9c1" ] ;  then \
+    ./example_programs/bufr_to_ascii.py -c -1 -i \
+    $TESTINPUTFILE
+    exit;
+fi;
+
+if [ "$1" == "9c2" ] ;  then \
+    ./example_programs/bufr_to_ascii.py -c -2 -i \
+    $TESTINPUTFILE
+    exit;
+fi;
+
+if [ "$1" == "9c3" ] ;  then \
+    ./example_programs/bufr_to_ascii.py -c -3 -i \
     $TESTINPUTFILE
     exit;
 fi;
 
 echo
-echo this script takes a number to choose which test program to run
+echo 'this script takes a number/switch to choose which test program to run'
 echo
-echo 1: example_for_using_bufrinterface_ecmwf_for_decoding.py
-echo 2: example_for_using_bufrinterface_ecmwf_for_encoding.py
-echo 3: example_for_using_ecmwfbufr_for_decoding.py
-echo 4: example_for_using_ecmwfbufr_for_encoding.py
-echo 5: example_for_using_pb_routines.py [has known problems]
-echo 6: example_for_using_rawbufrfile.py
-echo 7: verify_bufr_tables.py
-echo 8: bufr_count_msgs.py
-echo 9: bufr_to_ascii.py
+echo '1: example_for_using_bufrinterface_ecmwf_for_decoding.py'
+echo '2: example_for_using_bufrinterface_ecmwf_for_encoding.py'
+echo '3: example_for_using_ecmwfbufr_for_decoding.py'
+echo '4: example_for_using_ecmwfbufr_for_encoding.py'
+echo '5: example_for_using_pb_routines.py [has known problems]'
+echo '6: example_for_using_rawbufrfile.py'
+echo '7: verify_bufr_tables.py'
+echo '8: bufr_count_msgs.py'
+echo '9a1: bufr_to_ascii.py -a -1 -i <file>'
+echo '9a2: bufr_to_ascii.py -a -2 -i <file>'
+echo '9a3: bufr_to_ascii.py -a -3 -i <file>'
+echo '9c1: bufr_to_ascii.py -c -1 -i <file>'
+echo '9c2: bufr_to_ascii.py -c -2 -i <file>'
+echo '9c3: bufr_to_ascii.py -c -3 -i <file>'
 echo 
-echo please choose one of them and run again like this:
-echo ./run_example_program.sh 2
+echo 'please choose one of them and run again like this:'
+echo './run_example_program.sh 2'
 echo

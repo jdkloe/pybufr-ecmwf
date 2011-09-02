@@ -589,8 +589,22 @@ class BufrTable:
         self.autolink_tables = True
         if (tables_dir is not None):
             # dont use autolinking if the user provided a tables dir
+            # print 'using user provided directory to look for BUFR tables: '
+            # print '==> tables_dir = ',tables_dir
             self.autolink_tables = False
             self.tables_dir = tables_dir
+
+        # inspect the environment setting 'BUFR_TABLES' and use that
+        # one as user provided BUFR table directory, if defined
+        # WARNING: this won't work when called from expand_raw_descriptor_list
+        # defined in bufr_interface_ecmwf (which in turn is called from
+        # decode_data, because setup_tables is supposed to be used first,
+        # and that one already alters the BUFR_TABLES env setting!
+        if os.environ.has_key('BUFR_TABLES'):
+            # print 'using user provided directory to look for BUFR tables: '
+            # print "==> os.environ['BUFR_TABLES'] = ",os.environ['BUFR_TABLES']
+            self.autolink_tables = False
+            self.tables_dir = os.environ['BUFR_TABLES']
             
         # if self.autolink_tables is True, 
         # try to automatically make symbolic links to
@@ -603,7 +617,7 @@ class BufrTable:
         if (self.autolink_tables):
             self.set_bufr_tables_dir(self.autolink_tablesdir)
         else:
-            self.set_bufr_tables_dir(tables_dir)
+            self.set_bufr_tables_dir(self.tables_dir)
 
         # used for the decoding of table D
         self.list_of_d_entry_lineblocks = []
