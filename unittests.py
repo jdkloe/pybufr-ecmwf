@@ -168,10 +168,22 @@ def call_cmd_and_verify_output(cmd):
     # get the list of already defined env settings
     env = os.environ
     if (env.has_key('PYTHONPATH')):
-        env['PYTHONPATH'] = MY_MODULE_PATH+':'+env['PYTHONPATH']
+        settings = env['PYTHONPATH'].split(':')
+        if not MY_MODULE_PATH in settings:
+            env['PYTHONPATH'] = MY_MODULE_PATH+':'+env['PYTHONPATH']
     else:
         env['PYTHONPATH'] = MY_MODULE_PATH
-        
+
+    # remove the env setting to
+    # /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES/
+    # they may have been left by a previous test
+    if (env.has_key('BUFR_TABLES')):
+        del(env['BUFR_TABLES'])
+
+    # print 'TESTJOS: env[PYTHONPATH] = ',env['PYTHONPATH']
+    # print 'TESTJOS: env[BUFR_TABLES] = ',env.get('BUFR_TABLES','undefined')
+    # print 'TESTJOS: cmd = ',cmd
+    
     # execute the test and catch all output
     subpr = subprocess.Popen(cmd,
                              shell  = True,
@@ -696,6 +708,10 @@ class CheckBufr(unittest.TestCase):
         self.assertEqual(success, True)                
         #  #]
     #  #]
+
+# cleanup old tmp_BUFR_TABLES dir that may have been created by a previous run
+os.system('\\rm -rf tmp_BUFR_TABLES')
+os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
 
 # this just runs all tests
 print "Running unit tests:"

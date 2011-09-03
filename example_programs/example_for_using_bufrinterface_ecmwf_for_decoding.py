@@ -14,7 +14,7 @@ used for decoding a BUFR message.
 # License: GPL v2.
 
 #  #[ imported modules
-import sys  # operating system functions
+import os, sys  # operating system functions
 
 # import the BUFR wrapper module
 #import pybufr_ecmwf
@@ -147,17 +147,21 @@ print "-"*50
 print "BUFR decoding example"
 print "-"*50
 
+EXAMPLES_DIR = os.path.dirname(os.path.abspath(__file__))
+ALT_BUFR_TABLES_DIR = os.path.join(os.path.split(EXAMPLES_DIR)[0],
+                                   'pybufr_ecmwf','alt_bufr_tables')
 CUSTOM_BUFR_TABLES = \
-      ('pybufr_ecmwf/alt_bufr_tables/GENERIC_SCAT_BUFR_TABLE_B.TXT',
-       'pybufr_ecmwf/alt_bufr_tables/GENERIC_SCAT_BUFR_TABLE_D.TXT')
+      (os.path.join(ALT_BUFR_TABLES_DIR,'GENERIC_SCAT_BUFR_TABLE_B.TXT'),
+       os.path.join(ALT_BUFR_TABLES_DIR,'GENERIC_SCAT_BUFR_TABLE_D.TXT') )
+
 if 'noaa_mos' in INP_BUFR_FILE:
     BUFRMSG = decoding_example(INP_BUFR_FILE)
 else:
     # the custom generic_scat tables are only usefull when decoding
-    # scatteromet BUFR files
-    BUFRMSG = decoding_example(INP_BUFR_FILE)
-#    BUFRMSG = decoding_example(INP_BUFR_FILE,
-#                               custom_bufr_tables=CUSTOM_BUFR_TABLES)
+    # scatterometer BUFR files
+#    BUFRMSG = decoding_example(INP_BUFR_FILE)
+    BUFRMSG = decoding_example(INP_BUFR_FILE,
+                               custom_bufr_tables=CUSTOM_BUFR_TABLES)
     
 #BUFRMSG = decoding_example(INP_BUFR_FILE)
 display_results(BUFRMSG)
