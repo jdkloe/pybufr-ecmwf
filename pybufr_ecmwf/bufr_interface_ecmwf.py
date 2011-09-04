@@ -408,7 +408,8 @@ class BUFRInterfaceECMWF:
         (or whatever the number in STD_OUT is)
         This is needed because otherwise the fortran and python/c
         output get written to 2 different output buffers, and will
-        be mixed in inpredictable ways
+        be mixed in inpredictable ways (which makes it impossible
+        to define unit test cases ...)
         """
         if os.environ.has_key('STD_OUT'):
             outp_fileunit = os.environ['STD_OUT']

@@ -641,6 +641,75 @@ class CheckBufrTable(unittest.TestCase):
         #  #]
     #  #]
 
+class CheckCustomTables(unittest.TestCase):
+    """
+    a class to check the creation and use of custom BUFR table files
+    """
+    # common settings for the following tests
+    example_programs_dir   = "example_programs"
+    def test_create_custom_bufr_tables(self):
+        #  #[
+        """
+        test the creation of custom BUFR table files
+        """
+        B_table_file = 'B_my_test_BUFR_table.txt'
+        D_table_file = 'D_my_test_BUFR_table.txt'
+        
+        # run the provided example code and verify the output
+        testprog = "create_bufr_tables.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
+
+        # verify the content of the created table files
+        expected_B_table_file = os.path.join('example_programs',
+                                             'expected_test_outputs',
+                                             B_table_file+'.expected')
+        expected_D_table_file = os.path.join('example_programs',
+                                             'expected_test_outputs',
+                                             D_table_file+'.expected')
+            
+        B_table_txt = open(B_table_file).readlines()
+        D_table_txt = open(D_table_file).readlines()
+
+        expected_B_table_txt = open(expected_B_table_file).readlines()
+        expected_D_table_txt = open(expected_D_table_file).readlines()
+
+        self.assertEqual(B_table_txt, expected_B_table_txt)
+        self.assertEqual(D_table_txt, expected_D_table_txt)
+
+        os.remove(B_table_file)
+        os.remove(D_table_file)
+        #  #]
+    def test_use_custom_bufr_tables(self):
+        #  #[
+        """
+        test the use of the custom BUFR table files
+        """
+        test_BUFR_file = 'TESTCUSTOM.BUFR'
+        B_table_file = 'B_my_test_BUFR_table.txt'
+        D_table_file = 'D_my_test_BUFR_table.txt'
+        
+        # create the custom BUFR tables
+        testprog = "create_bufr_tables.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        # don't repeat this check, this has been checked above already
+        # self.assertEqual(success, True)                
+
+        # run the provided example code and verify the output
+        testprog = "use_custom_tables_for_encoding.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' ' + test_BUFR_file
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
+        
+        # clean up
+        os.remove(B_table_file)
+        os.remove(D_table_file)
+        os.remove(test_BUFR_file)
+        #  #]
+
 class CheckBufr(unittest.TestCase):
     #  #[
     """

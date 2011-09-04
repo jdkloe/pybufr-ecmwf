@@ -1,0 +1,27 @@
+--------------------------------------------------
+BUFR encoding example
+--------------------------------------------------
+Table names expected by the library:
+B0000000000098015001.TXT
+D0000000000098015001.TXT
+Tables to be used:
+B_my_test_BUFR_table.txt
+D_my_test_BUFR_table.txt
+adding  3  descriptors
+unexpanded nr of descriptors =  3
+The current list is:  [ 48001  48002 348001]
+------------------------
+ printing BUFR template 
+------------------------
+delayed replication factors:  []
+ktdlst =  [ 48001  48002 348001]
+ktdexp =  [48001 48002 48001 48002]
+exp_descr_list_length =  4
+bufren call finished
+words = 
+[1380341058   71041024    1441792 ...,          0          0          0]
+encoded size:  15  words or  60  bytes
+succesfully written BUFR encoded data to file:  TESTCUSTOM.BUFR
+--------------------------------------------------
+done
+--------------------------------------------------

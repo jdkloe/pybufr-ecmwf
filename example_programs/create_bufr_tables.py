@@ -48,7 +48,7 @@ BT.add_to_B_table(descr_048002)
 
 reference       = '348001'
 descriptor_list = [descr_048001, descr_048002]
-comment         = 'a small test D entry'
+comment         = 'a small test D entry' # not written to file
 parent          = BT
 descr_348001 = CompositeDescriptor(reference, descriptor_list, comment, parent)
 

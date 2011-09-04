@@ -1,0 +1,10 @@
+==================================================
+B-table:
+==================================================
+reference: [048001] name: [my test variable A] unit: [m/s] unit_scale: [3] unit_reference: [1250] data_width: [4] 
+reference: [048002] name: [my test variable B] unit: [kg/m] unit_scale: [12] unit_reference: [3456] data_width: [5] 
+==================================================
+D-table:
+==================================================
+reference: [348001] refers to: 048001;048002
+==================================================
