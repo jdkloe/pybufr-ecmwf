@@ -31,6 +31,7 @@ import shutil      # portable file copying functions
 import subprocess  # support running additional executables
 import stat        # handling of file stat data
 import urllib      # handling of url downloads
+import datetime    # date handling functions
 
 #  #]
 #  #[ exception definitions
@@ -452,6 +453,46 @@ def adapt_f2py_signature_file(signature_file):
 
     sfd.close()
     #  #]
+def extract_version():
+    #  #[
+    """ a little function to extract the module version from
+    the setup.py script, and if present, extract the mercurial
+    revision from the hg repository, and store it in a place where
+    the user can access it.
+    """
+
+    # assume we are inside the pybufr_ecmwf module dir
+    # when this function is executed.
+    
+    # retrieve the software version
+    software_version = 'unknown'
+    for line in open('../setup.py').readlines():
+        if 'version =' in line:
+            software_version = line.split('=')[1].replace(',','').strip()
+
+    # retrieve the mercurial revision
+    cmd = 'hg log -l 1'
+    (lines_stdout, lines_stderr) = run_shell_command(cmd)
+    hg_version = 'undefined'
+    for line in lines_stdout:
+        if 'changeset:' in line:
+            hg_version = line.split()[1]
+
+    # retrieve the install date (i.e. todays date)
+    # current date formatted as: 07-aug-2009
+    install_date = datetime.date.today().strftime("%d-%b-%Y")
+
+    # store the result
+    version_file = 'version.py'
+    fd = open(version_file,'wt')
+    fd.write('software_version = '+software_version+'\n')
+    fd.write('hg_version = '+hg_version+'\n')
+    fd.write('install_date = '+install_date+'\n')
+    fd.write('version = '+software_version+'; '+\
+             hg_version+'; '+install_date+'\n')
+    
+    fd.close
+    #  #]
 
 class InstallBUFRInterfaceECMWF:
     #  #[
@@ -549,6 +590,8 @@ class InstallBUFRInterfaceECMWF:
                   "Execute the clean.py tool if you wish to start again "+\
                   "from scratch."
 
+        print 'storing version info'
+        extract_version()
         #  #]
     def clean(self):
         #  #[
