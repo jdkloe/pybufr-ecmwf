@@ -1,3 +1,17 @@
+Release 0.3 (22-Apr-2011):
+
+The top level interface for reading a BUFR message is in place now.
+Still the code only works properly when you use the BUFR tables
+provided by the ECMWF BUFR library.
+Compilation with python3 seems to have some difficulties.
+The dependency on numpy is no problem anymore, since that one is now
+fully ported to python3, but the f2py tool that comes with numpy
+seems broken somehow, and crashes during the build process.
+The problem has been reported to the numpy developers (see
+http://projects.scipy.org/numpy/ticket/1932), so for the moment
+I'll wait for a bugfix from the numpy team before continuing
+the python3 porting effort.
+
 Release 0.2 (21-Oct-2010):
 
 A next wrapper interface is in place now, and a start for the top-level

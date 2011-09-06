@@ -1,0 +1,8 @@
+Different licenses apply to different files in this package.
+
+This package includes an unaltered copy of the ECMWF BUFR library
+source code in the ecmwf_bufr_lib_sources directory.
+This code remains copyright ECMWF and is LGPL licensed.
+
+All other files in this package are copyright J. de Kloe, 
+and are GPLv2 licensed.
