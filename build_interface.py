@@ -468,7 +468,8 @@ def extract_version():
     software_version = 'unknown'
     for line in open('../setup.py').readlines():
         if 'version =' in line:
-            software_version = line.split('=')[1].replace(',','').strip()
+            v1 = line.split('=')[1].replace(',','')
+            software_version = v1.replace("'",'').strip()
 
     # retrieve the mercurial revision
     cmd = 'hg log -l 1'
@@ -485,11 +486,11 @@ def extract_version():
     # store the result
     version_file = 'version.py'
     fd = open(version_file,'wt')
-    fd.write('software_version = '+software_version+'\n')
-    fd.write('hg_version = '+hg_version+'\n')
-    fd.write('install_date = '+install_date+'\n')
-    fd.write('version = '+software_version+'; '+\
-             hg_version+'; '+install_date+'\n')
+    fd.write("software_version = '"+software_version+"'\n")
+    fd.write("hg_version = '"+hg_version+"'\n")
+    fd.write("install_date = '"+install_date+"'\n")
+    fd.write("version = '"+software_version+'; '+\
+             hg_version+'; '+install_date+"'\n")
     
     fd.close
     #  #]
