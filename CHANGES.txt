@@ -1,3 +1,12 @@
+Release 0.4 (06-Sep-2011):
+
+Several fixes have been added in the handling of the BUFR tables, which
+now should also work if you provide custom BUFR table names or a custom
+BUFR tables directory (as parameter or through the BUFR_TABLES environment
+setting) to the module.
+In addition functionality to create new BUFR tables from scratch has been
+added, including an example script to demonstrate this.
+
 Release 0.3 (22-Apr-2011):
 
 The top level interface for reading a BUFR message is in place now.
