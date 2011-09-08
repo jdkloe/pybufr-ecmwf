@@ -77,13 +77,20 @@ def ensure_permissions(filename, mode):
         given file are as expected """
     file_stat = os.stat(filename)
     current_mode = stat.S_IMODE(file_stat.st_mode)
+    new_mode = None
     if mode == 'r':
         new_mode = current_mode | int("444", 8)
     if mode == 'w':
         new_mode = current_mode | int("222", 8)
     if mode == 'x':
         new_mode = current_mode | int("111", 8)
-    os.chmod(filename, new_mode)
+    if mode == 'rx':
+        new_mode = current_mode | int("555", 8)
+    if new_mode:
+        os.chmod(filename, new_mode)
+    else:
+        print 'ERROR in ensure_permissions: unknown mode string: ',mode
+        raise ProgrammingError
     #  #]
 def run_shell_command(cmd, libpath = None, catch_output = True,
                       module_path = './', verbose = True):
@@ -453,6 +460,33 @@ def adapt_f2py_signature_file(signature_file):
 
     sfd.close()
     #  #]
+def descend_dirpath_and_find(input_dir,glob_pattern):
+    #  #[
+    """
+    a little helper routine that steps down the different components
+    of the provided directory path, and tests for the presence of
+    a file that matches the given glob pattern.
+    If a match is found, the directory in which the match is present,
+    and a list of matching files is returned.
+    If no match is found a tuple with two None values is returned.
+    """
+    absdirname = os.path.abspath(input_dir)
+    # print 'start: absdirname = ',absdirname
+    while absdirname != "/":
+        files = os.listdir(absdirname)
+        pattern = os.path.join(absdirname, glob_pattern)
+        filelist = glob.glob(pattern)
+        if len(filelist) > 0:
+            # print 'descend_dirpath_and_find succeeded: result'
+            # print '(absdirname, filelist) = ',(absdirname, filelist)
+            return (absdirname, filelist)
+        base = os.path.split(absdirname)[0]
+        absdirname = base
+        # print 'next: absdirname = ',absdirname
+
+    # print 'descend_dirpath_and_find failed: no result found'
+    return (None, None)
+    #  #]
 def extract_version():
     #  #[
     """ a little function to extract the module version from
@@ -466,7 +500,13 @@ def extract_version():
     
     # retrieve the software version
     software_version = 'unknown'
-    for line in open('../setup.py').readlines():
+    (setuppath, setupfiles) = descend_dirpath_and_find(os.getcwd(), 'setup.py')
+    if not setuppath:
+        print 'ERROR: could not locate setup.py script needed to extract'
+        print 'ERROR: the current software version'
+        raise ProgrammingError
+        
+    for line in open(os.path.join(setuppath, setupfiles[0])).readlines():
         if 'version =' in line:
             v1 = line.split('=')[1].replace(',','')
             software_version = v1.replace("'",'').strip()
@@ -493,6 +533,7 @@ def extract_version():
              hg_version+'; '+install_date+"'\n")
     
     fd.close
+    ensure_permissions(version_file,'rx')
     #  #]
 
 class InstallBUFRInterfaceECMWF:
@@ -1003,6 +1044,9 @@ class InstallBUFRInterfaceECMWF:
         self.g77_present       = self.check_presence("g77")
         self.f90_present       = self.check_presence("f90")
         self.f77_present       = self.check_presence("f77")
+        self.pgf90_present     = self.check_presence("pgf90")
+        self.pgf77_present     = self.check_presence("pgf77")
+        self.ifort_present     = self.check_presence("ifort")
 
         self.use_custom_fc = False
         self.use_g95       = False
@@ -1010,11 +1054,15 @@ class InstallBUFRInterfaceECMWF:
         self.use_g77       = False
         self.use_f90       = False
         self.use_f77       = False
+        self.use_pgf90     = False
+        self.use_pgf77     = False
+        self.use_ifort     = False
 
         fortran_compiler_selected = False
         if (self.preferred_fortran_compiler != None):
             implementedfortran_compilers = ["custom", "g95", "gfortran",
-                                            "g77", "f90", "f77"]
+                                            "g77", "f90", "f77", "pgf90",
+                                            "pgf77", "ifort"]
             if not (self.preferred_fortran_compiler in
                     implementedfortran_compilers):
                 print "ERROR: unknown preferred fortran compiler specified:", \
@@ -1047,6 +1095,18 @@ class InstallBUFRInterfaceECMWF:
                 if (self.f77_present):
                     self.use_f77 = True
                     fortran_compiler_selected = True
+            elif (self.preferred_fortran_compiler == "pgf90"):
+                if (self.pgf90_present):
+                    self.use_pgf90 = True
+                    fortran_compiler_selected = True
+            elif (self.preferred_fortran_compiler == "pgf77"):
+                if (self.pgf77_present):
+                    self.use_pgf77 = True
+                    fortran_compiler_selected = True
+            elif (self.preferred_fortran_compiler == "ifort"):
+                if (self.ifort_present):
+                    self.use_ifort = True
+                    fortran_compiler_selected = True
             else:
                 print "Warning: this line should never be reached."
                 print "check the list of available fortran compilers,"
@@ -1059,17 +1119,17 @@ class InstallBUFRInterfaceECMWF:
                 print "preferred fortran compiler ["+\
                       self.preferred_fortran_compiler+"] seems not available..."
                 print "falling back to default fortran compiler"
-                raise UserWarning
+                #raise UserWarning
             
         if (not fortran_compiler_selected):
             if (self.custom_fc_present):
                 self.use_custom_fc = True
                 fortran_compiler_selected = True
-            elif (self.g95_present):
-                self.use_g95 = True
-                fortran_compiler_selected = True
             elif (self.gfortran_present):
                 self.use_gfortran = True
+                fortran_compiler_selected = True
+            elif (self.g95_present):
+                self.use_g95 = True
                 fortran_compiler_selected = True
             elif (self.g77_present):
                 self.use_g77 = True
@@ -1080,7 +1140,15 @@ class InstallBUFRInterfaceECMWF:
             elif (self.f77_present):
                 self.use_f77 = True
                 fortran_compiler_selected = True
-
+            elif (self.pgf90_present):
+                self.use_pgf90 = True
+                fortran_compiler_selected = True
+            elif (self.pgf77_present):
+                self.use_pgf77 = True
+                fortran_compiler_selected = True
+            elif (self.ifort_present):
+                self.use_ifort = True
+                fortran_compiler_selected = True
 
         if (not fortran_compiler_selected):
             print "ERROR: no valid fortran compiler found,"
@@ -1167,6 +1235,12 @@ class InstallBUFRInterfaceECMWF:
                   " use_f90       = ", self.use_f90
             print "f77_present       = ", self.f77_present, \
                   " use_f77       = ", self.use_f77
+            print "pgf90_present     = ", self.pgf90_present, \
+                  " use_pgf90     = ", self.use_pgf90
+            print "pgf77_present     = ", self.pgf77_present, \
+                  " use_pgf77     = ", self.use_pgf77
+            print "ifort_present       = ", self.ifort_present, \
+                  " use_ifort     = ", self.use_ifort
 
             print "custom_cc_present = ", self.custom_cc_present, \
                   " use_custom_cc = ", self.use_custom_cc
@@ -1275,6 +1349,7 @@ class InstallBUFRInterfaceECMWF:
             # Default compiler switches
             fflags = "-O -Dlinux"
             fflags = fflags+" -i4"
+            fflags = fflags+" -fPIC"
             #cname = "_gnu"
         elif (self.use_f90):
             # this catches installations that have some commercial fortran
@@ -1284,6 +1359,7 @@ class InstallBUFRInterfaceECMWF:
             # Default compiler switches
             fflags = "-O -Dlinux"
             fflags = fflags+" -i4"
+            fflags = fflags+" -fPIC"
             #cname = "_???"
         elif (self.use_f77):
             # this catches installations that have some commercial fortran
@@ -1293,6 +1369,28 @@ class InstallBUFRInterfaceECMWF:
             # Default compiler switches
             fflags = "-O -Dlinux"
             fflags = fflags+" -i4"
+            fflags = fflags+" -fPIC"
+            #cname = "_???"
+        elif (self.use_pgf90):
+            fcmp = "pgf90"
+            # Default compiler switches
+            fflags = "-O -Dlinux"
+            fflags = fflags+" -i4"
+            fflags = fflags+" -fPIC"
+            #cname = "_???"
+        elif (self.use_pgf77):
+            fcmp = "pgf77"
+            # Default compiler switches
+            fflags = "-O -Dlinux"
+            fflags = fflags+" -i4"
+            fflags = fflags+" -fPIC"
+            #cname = "_???"
+        elif (self.use_ifort):
+            fcmp = "ifort"
+            # Default compiler switches
+            fflags = "-O -Dlinux"
+            fflags = fflags+" -i4"
+            fflags = fflags+" -fPIC"
             #cname = "_???"
         else:
             print "ERROR in bufr_interface_ecmwf.install:"
@@ -1739,7 +1837,8 @@ file for convenience
             debug_f2py_c_api_option = " --debug-capi "
 
         if (self.fortran_compiler != None):
-            cmd = "f2py  --build-dir "+self.wrapper_build_dir+\
+            cmd = f2py_tool_name+\
+                  " --build-dir "+self.wrapper_build_dir+\
                   debug_f2py_c_api_option+\
                   " --f90exec="+fortran_compiler+\
                   " --f90flags='"+fortran_compiler_flags+"'"+\
@@ -1753,7 +1852,8 @@ file for convenience
             # TODO: Maybe later I could sort out how to use the python f2py
             # module in stead of the executable, and clean-up the compiler
             # flags before starting the tool
-            cmd = "f2py  --build-dir "+self.wrapper_build_dir+\
+            cmd = f2py_tool_name+\
+                  " --build-dir "+self.wrapper_build_dir+\
                   debug_f2py_c_api_option+\
                   " --f90flags='"+fortran_compiler_flags+"'"+\
                   " --f77flags='"+fortran_compiler_flags+"'"+\
