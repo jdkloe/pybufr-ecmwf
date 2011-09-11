@@ -647,6 +647,26 @@ class InstallBUFRInterfaceECMWF:
         print 'storing version info'
         extract_version()
         #  #]
+    def clean(self):
+        #  #[
+        """ a method to clean-up things that I don't want to have
+        included in the binary/rpm distributions."""
+
+        # this is a bit of a dirty hack.
+        # It removes the subdir ecmwf_bufr_lib and everything below
+        # to prevent it to be included in the binary/rpm distributions
+        # There should be a nicer way to do this, but I have not
+        # yet found it ...
+
+        dirs_to_remove = [self.ecmwf_bufr_lib_dir,
+                          self.wrapper_build_dir]
+
+        for dir_to_remove in dirs_to_remove:
+            if os.path.exists(dir_to_remove):
+                cmd = r'\rm -rf '+dir_to_remove
+                print "executing command: ", cmd
+                os.system(cmd)
+        #  #]
     def find_copy_of_library(self):
         #  #[
         """ a method to search some standard places, to see whether
