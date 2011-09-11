@@ -56,6 +56,36 @@ class ProgrammingError(Exception):
 URL_ECMWF_WEBSITE = "http://www.ecmwf.int/"
 URL_BUFR_PAGE     = URL_ECMWF_WEBSITE+"products/data/"+\
                     "software/download/bufr.html"
+
+# the first one found will be used, unless a preferred one is specified.
+POSSIBLE_F_COMPILERS = ['gfortran', 'g95', 'g77',
+                        'f90', 'f77', 'ifort', 'pgf90', 'pgf77']
+POSSIBLE_C_COMPILERS = ['gcc', 'icc', 'cc']
+# define common compiler flags for each compiler
+# (also used for the custom case)
+FFLAGS_COMMON = ['-O', '-Dlinux', '-fPIC']
+CFLAGS_COMMON = ['-O', '-fPIC']
+# define specific compiler flags for each compiler
+# needed to build the ECMWF BUFR library
+FFLAGS_NEEDED = {'g95': ['-i4', '-r8', '-fno-second-underscore'],
+                 'gfortran': ['-fno-second-underscore', ],
+                 'g77': ['-i4', ],
+                 'f90': ['-i4', ],
+                 'f77': ['-i4', ],
+                 'pgf90': ['-i4', ],
+                 'pgf77': ['-i4', ],
+                 'ifort': ['-i4', ],
+                 }
+CFLAGS_NEEDED = {'gcc': [],
+                 'icc': [],
+                 'cc':  [],
+                 }
+
+for k in FFLAGS_NEEDED.keys():
+    FFLAGS_NEEDED[k].extend(FFLAGS_COMMON)
+for k in CFLAGS_NEEDED.keys():
+    CFLAGS_NEEDED[k].extend(CFLAGS_COMMON)
+
 #  #]
 
 # some helper functions
@@ -89,7 +119,7 @@ def ensure_permissions(filename, mode):
     if new_mode:
         os.chmod(filename, new_mode)
     else:
-        print 'ERROR in ensure_permissions: unknown mode string: ',mode
+        print 'ERROR in ensure_permissions: unknown mode string: ', mode
         raise ProgrammingError
     #  #]
 def run_shell_command(cmd, libpath = None, catch_output = True,
@@ -460,7 +490,7 @@ def adapt_f2py_signature_file(signature_file):
 
     sfd.close()
     #  #]
-def descend_dirpath_and_find(input_dir,glob_pattern):
+def descend_dirpath_and_find(input_dir, glob_pattern):
     #  #[
     """
     a little helper routine that steps down the different components
@@ -473,7 +503,6 @@ def descend_dirpath_and_find(input_dir,glob_pattern):
     absdirname = os.path.abspath(input_dir)
     # print 'start: absdirname = ',absdirname
     while absdirname != "/":
-        files = os.listdir(absdirname)
         pattern = os.path.join(absdirname, glob_pattern)
         filelist = glob.glob(pattern)
         if len(filelist) > 0:
@@ -508,12 +537,12 @@ def extract_version():
         
     for line in open(os.path.join(setuppath, setupfiles[0])).readlines():
         if 'version =' in line:
-            v1 = line.split('=')[1].replace(',','')
-            software_version = v1.replace("'",'').strip()
+            quoted_version = line.split('=')[1].replace(',','')
+            software_version = quoted_version.replace("'",'').strip()
 
     # retrieve the mercurial revision
     cmd = 'hg log -l 1'
-    (lines_stdout, lines_stderr) = run_shell_command(cmd)
+    lines_stdout = run_shell_command(cmd)[0]
     hg_version = 'undefined'
     for line in lines_stdout:
         if 'changeset:' in line:
@@ -525,14 +554,13 @@ def extract_version():
 
     # store the result
     version_file = 'version.py'
-    fd = open(version_file,'wt')
-    fd.write("software_version = '"+software_version+"'\n")
-    fd.write("hg_version = '"+hg_version+"'\n")
-    fd.write("install_date = '"+install_date+"'\n")
-    fd.write("version = '"+software_version+'; '+\
+    fds = open(version_file,'wt')
+    fds.write("software_version = '"+software_version+"'\n")
+    fds.write("hg_version = '"+hg_version+"'\n")
+    fds.write("install_date = '"+install_date+"'\n")
+    fds.write("version = '"+software_version+'; '+\
              hg_version+'; '+install_date+"'\n")
-    
-    fd.close
+    fds.close()
     ensure_permissions(version_file,'rx')
     #  #]
 
@@ -583,24 +611,8 @@ class InstallBUFRInterfaceECMWF:
         self.wrapper_module_name = "ecmwfbufr"
 
         # init other module attributes to None
-        self.custom_fc_present = None
-        self.g95_present       = None
-        self.gfortran_present  = None
-        self.g77_present       = None
-        self.f90_present       = None
-        self.f77_present       = None
-        self.use_custom_fc     = None
-        self.use_g95           = None
-        self.use_gfortran      = None
-        self.use_g77           = None
-        self.use_f90           = None
-        self.use_f77           = None
-        self.custom_cc_present = None
-        self.gcc_present       = None
-        self.cc_present        = None
-        self.use_custom_cc     = None
-        self.use_gcc           = None
-        self.use_cc            = None
+        self.fortran_compiler_to_use = None
+        self.c_compiler_to_use = None
         #  #]
     def build(self):
         #  #[
@@ -634,26 +646,6 @@ class InstallBUFRInterfaceECMWF:
 
         print 'storing version info'
         extract_version()
-        #  #]
-    def clean(self):
-        #  #[
-        """ a method to clean-up things that I don't want to have
-        included in the binary/rpm distributions."""
-
-        # this is a bit of a dirty hack.
-        # It removes the subdir ecmwf_bufr_lib and everything below
-        # to prevent it to be included in the binary/rpm distributions
-        # There should be a nicer way to do this, but I have not
-        # yet found it ...
-
-        dirs_to_remove = [self.ecmwf_bufr_lib_dir,
-                          self.wrapper_build_dir]
-
-        for dir_to_remove in dirs_to_remove:
-            if os.path.exists(dir_to_remove):
-                cmd = r'\rm -rf '+dir_to_remove
-                print "executing command: ", cmd
-                os.system(cmd)
         #  #]
     def find_copy_of_library(self):
         #  #[
@@ -704,7 +696,6 @@ class InstallBUFRInterfaceECMWF:
         # return to the original location 
         os.chdir(cwd)
         #  #]
-
     def use_fallback_library_copy(self):
         #  #[
         """ fallback option: copy the (possibly outdated version)
@@ -1036,121 +1027,50 @@ class InstallBUFRInterfaceECMWF:
         
         #  #]
 
-        #  #[ find a suitable fortran and c compiler to use
+        #  #[ find a suitable fortran compiler to use
+
+        #if (self.verbose):
+        print 'selection fortran compiler'
+        print '==>input: self.fortran_compiler = ', self.fortran_compiler
+        print '==>input: self.preferred_fortran_compiler = ', \
+              self.preferred_fortran_compiler
+        
+        # first check a possible custom executable, passed in
+        # through the setup.cfg file or on the commandline
+        is_present = self.check_presence(self.fortran_compiler)
+        if is_present:
+            self.fortran_compiler_to_use = 'custom'
+        
         # the first one found will be used, unless a preferred one is specified.
-        self.custom_fc_present = self.check_presence(self.fortran_compiler)
-        self.g95_present       = self.check_presence("g95")
-        self.gfortran_present  = self.check_presence("gfortran")
-        self.g77_present       = self.check_presence("g77")
-        self.f90_present       = self.check_presence("f90")
-        self.f77_present       = self.check_presence("f77")
-        self.pgf90_present     = self.check_presence("pgf90")
-        self.pgf77_present     = self.check_presence("pgf77")
-        self.ifort_present     = self.check_presence("ifort")
+        for f_compiler in POSSIBLE_F_COMPILERS:
+            if (self.preferred_fortran_compiler == f_compiler):
+                if self.check_presence(f_compiler):
+                    self.fortran_compiler_to_use = f_compiler
+                    break # stop the for loop
 
-        self.use_custom_fc = False
-        self.use_g95       = False
-        self.use_gfortran  = False
-        self.use_g77       = False
-        self.use_f90       = False
-        self.use_f77       = False
-        self.use_pgf90     = False
-        self.use_pgf77     = False
-        self.use_ifort     = False
-
-        fortran_compiler_selected = False
-        if (self.preferred_fortran_compiler != None):
-            implementedfortran_compilers = ["custom", "g95", "gfortran",
-                                            "g77", "f90", "f77", "pgf90",
-                                            "pgf77", "ifort"]
-            if not (self.preferred_fortran_compiler in
-                    implementedfortran_compilers):
-                print "ERROR: unknown preferred fortran compiler specified:", \
-                      self.preferred_fortran_compiler
-                print "valid options are: ", \
-                      ", ".join(s for s in implementedfortran_compilers)
-                raise NotImplementedError
+        if (self.fortran_compiler_to_use is None):
+            # a sanity check
+            if (self.preferred_fortran_compiler is not None):
+                if not (self.preferred_fortran_compiler in
+                        POSSIBLE_F_COMPILERS):
+                    print "ERROR: unknown preferred fortran compiler "+\
+                          "specified:", \
+                          self.preferred_fortran_compiler
+                    print "valid options are: ", \
+                          ", ".join(s for s in POSSIBLE_F_COMPILERS)
+                    raise NotImplementedError
                 
-            if (self.preferred_fortran_compiler == "custom"):
-                if (self.custom_fc_present):
-                    self.use_custom_fc = True
-                    fortran_compiler_selected = True
-            elif (self.preferred_fortran_compiler == "g95"):
-                if (self.g95_present):
-                    self.use_g95 = True
-                    fortran_compiler_selected = True
-            elif (self.preferred_fortran_compiler == "gfortran"):
-                if (self.gfortran_present):
-                    self.use_gfortran = True
-                    fortran_compiler_selected = True
-            elif (self.preferred_fortran_compiler == "g77"):
-                if (self.g77_present):
-                    self.use_g77 = True
-                    fortran_compiler_selected = True
-            elif (self.preferred_fortran_compiler == "f90"):
-                if (self.f90_present):
-                    self.use_f90 = True
-                    fortran_compiler_selected = True
-            elif (self.preferred_fortran_compiler == "f77"):
-                if (self.f77_present):
-                    self.use_f77 = True
-                    fortran_compiler_selected = True
-            elif (self.preferred_fortran_compiler == "pgf90"):
-                if (self.pgf90_present):
-                    self.use_pgf90 = True
-                    fortran_compiler_selected = True
-            elif (self.preferred_fortran_compiler == "pgf77"):
-                if (self.pgf77_present):
-                    self.use_pgf77 = True
-                    fortran_compiler_selected = True
-            elif (self.preferred_fortran_compiler == "ifort"):
-                if (self.ifort_present):
-                    self.use_ifort = True
-                    fortran_compiler_selected = True
-            else:
-                print "Warning: this line should never be reached."
-                print "check the list of available fortran compilers,"
-                print "it seems not consistent."
-                print "Please report this bug if you encounter it"
-                print "ERROR in BUFRInterfaceECMWF.install()"
-                raise ProgrammingError
-                
-            if (not fortran_compiler_selected):
-                print "preferred fortran compiler ["+\
-                      self.preferred_fortran_compiler+"] seems not available..."
-                print "falling back to default fortran compiler"
-                #raise UserWarning
+            print "preferred fortran compiler ["+\
+                  self.preferred_fortran_compiler+"] seems not available..."
+            print "falling back to default fortran compiler"
             
-        if (not fortran_compiler_selected):
-            if (self.custom_fc_present):
-                self.use_custom_fc = True
-                fortran_compiler_selected = True
-            elif (self.gfortran_present):
-                self.use_gfortran = True
-                fortran_compiler_selected = True
-            elif (self.g95_present):
-                self.use_g95 = True
-                fortran_compiler_selected = True
-            elif (self.g77_present):
-                self.use_g77 = True
-                fortran_compiler_selected = True
-            elif (self.f90_present):
-                self.use_f90 = True
-                fortran_compiler_selected = True
-            elif (self.f77_present):
-                self.use_f77 = True
-                fortran_compiler_selected = True
-            elif (self.pgf90_present):
-                self.use_pgf90 = True
-                fortran_compiler_selected = True
-            elif (self.pgf77_present):
-                self.use_pgf77 = True
-                fortran_compiler_selected = True
-            elif (self.ifort_present):
-                self.use_ifort = True
-                fortran_compiler_selected = True
+            for f_compiler in POSSIBLE_F_COMPILERS:
+                is_present = self.check_presence(f_compiler)
+                if is_present:
+                    self.fortran_compiler_to_use = f_compiler
+                    break # stop the for loop
 
-        if (not fortran_compiler_selected):
+        if (self.fortran_compiler_to_use is None):
             print "ERROR: no valid fortran compiler found,"
             print "installation is not possible"
             print "Please install a fortran compiler first."
@@ -1160,97 +1080,73 @@ class InstallBUFRInterfaceECMWF:
             print " and: http://www.g95.org/         )"
             raise EnvironmentError
 
-        self.custom_cc_present = self.check_presence(self.c_compiler)
-        self.gcc_present       = self.check_presence("gcc")
-        self.cc_present        = self.check_presence("cc")
+        #if (self.verbose):
+        print 'selection fortran compiler'
+        print '==>result: self.fortran_compiler_to_use = ', \
+              self.fortran_compiler_to_use
 
-        self.use_custom_cc = False
-        self.use_gcc       = False
-        self.use_cc        = False
+        #  #]
+
+        #  #[ find a suitable c compiler to use
+
+        #if (self.verbose):
+        print 'selection c compiler'
+        print '==>input: self.c_compiler = ', self.c_compiler
+        print '==>input: self.preferred_c_compiler = ', \
+              self.preferred_c_compiler
+
+        # first check a possible custom executable, passed in
+        # through the setup.cfg file or on the commandline
+        is_present = self.check_presence(self.c_compiler)
+        if is_present:
+            self.c_compiler_to_use = 'custom'
         
-        c_compiler_selected = False
-        if (self.preferred_c_compiler != None):
-            implementedc_compilers = ["custom", "gcc", "cc"]
-            if not (self.preferred_c_compiler in implementedc_compilers):
-                print "ERROR: unknown preferred c compiler specified.", \
-                      self.preferred_c_compiler
-                print "valid options are: ", \
-                      ", ".join(s for s in implementedc_compilers)
-                raise NotImplementedError
+        # the first one found will be used, unless a preferred one is specified.
+        for c_compiler in POSSIBLE_C_COMPILERS:
+            if (self.preferred_c_compiler == c_compiler):
+                if self.check_presence(c_compiler):
+                    self.c_compiler_to_use = c_compiler
+                    break # stop the for loop
 
-            if (self.preferred_c_compiler == "custom"):
-                if (self.custom_cc_present):
-                    self.use_custom_cc = True
-                    c_compiler_selected = True
-            elif (self.preferred_c_compiler == "gcc"):
-                if (self.gcc_present):
-                    self.use_gcc = True
-                    c_compiler_selected = True
-            elif (self.preferred_c_compiler == "cc"):
-                if (self.cc_present):
-                    self.use_cc = True
-                    c_compiler_selected = True
-            else:
-                print "Warning: this line should never be reached."
-                print "check the list of available c compilers,"
-                print "it seems not consistent."
-                print "Please report this bug if you encounter it"
-                print "ERROR in BUFRInterfaceECMWF.install()"
-                raise ProgrammingError
+        if (self.c_compiler_to_use is None):
+            # a sanity check
+            if (self.preferred_c_compiler is not None):
+                if not (self.preferred_c_compiler in POSSIBLE_C_COMPILERS):
+                    print "ERROR: unknown preferred c compiler "+\
+                          "specified:", \
+                          self.preferred_c_compiler
+                    print "valid options are: ", \
+                          ", ".join(s for s in POSSIBLE_C_COMPILERS)
+                    raise NotImplementedError
                 
-            if (not c_compiler_selected):
+            if (self.preferred_c_compiler is None):
+                print "no preferred c compiler given"
+            else:
                 print "preferred c compiler ["+\
-                      self.preferred_c_compiler+"] seems not available..."
-                print "falling back to default c compiler"
+                      str(self.preferred_c_compiler)+"] seems not available..."
+            print "falling back to default c compiler"
+            
+            for c_compiler in POSSIBLE_C_COMPILERS:
+                is_present = self.check_presence(c_compiler)
+                if is_present:
+                    self.c_compiler_to_use = c_compiler
+                    break # stop the for loop
 
-        if (not c_compiler_selected):
-            if (self.custom_cc_present):
-                self.use_custom_cc = True
-                c_compiler_selected = True
-            elif (self.gcc_present):
-                self.use_gcc = True
-                c_compiler_selected = True
-            elif (self.cc_present):
-                self.use_cc = True
-                c_compiler_selected = True
-
-        if (not c_compiler_selected):
-            print "ERROR: no valid c compiler found, installation is"
-            print "not possible. Please install a c compiler first."
+        if (self.c_compiler_to_use is None):
+            print "ERROR: no valid c compiler found,"
+            print "installation is not possible"
+            print "Please install a c compiler first."
             print "A good options is the free GNU compiler gcc"
             print "which may be downloaded free of charge."
             print "(see: http://gcc.gnu.org/ )"
             raise EnvironmentError
 
-        if (self.verbose):
-            print "custom_fc_present = ", self.custom_fc_present, \
-                  " use_custom_fc = ", self.use_custom_fc
-            print "g95_present       = ", self.g95_present, \
-                  " use_g95       = ", self.use_g95
-            print "gfortran_present  = ", self.gfortran_present, \
-                  " use_gfortran  = ", self.use_gfortran
-            print "g77_present       = ", self.g77_present, \
-                  " use_g77       = ", self.use_g77
-            print "f90_present       = ", self.f90_present, \
-                  " use_f90       = ", self.use_f90
-            print "f77_present       = ", self.f77_present, \
-                  " use_f77       = ", self.use_f77
-            print "pgf90_present     = ", self.pgf90_present, \
-                  " use_pgf90     = ", self.use_pgf90
-            print "pgf77_present     = ", self.pgf77_present, \
-                  " use_pgf77     = ", self.use_pgf77
-            print "ifort_present       = ", self.ifort_present, \
-                  " use_ifort     = ", self.use_ifort
-
-            print "custom_cc_present = ", self.custom_cc_present, \
-                  " use_custom_cc = ", self.use_custom_cc
-            print "gcc_present       = ", self.gcc_present, \
-                  " use_gcc       = ", self.use_gcc
-            print "cc_present        = ", self.cc_present, \
-                  " use_cc        = ", self.use_cc
-            
-        #  #]
+        #if (self.verbose):
+        print 'selection c compiler'
+        print '==>result: self.c_compiler_to_use = ', self.c_compiler_to_use
         
+        #  #]
+
         #  #[ add the custom LD_LIBRARY_PATH settings
         libpath = ""
         if (self.fortran_ld_library_path != None):
@@ -1315,113 +1211,29 @@ class InstallBUFRInterfaceECMWF:
 
         fcmp = ''
         fflags = ''
-        
-        if (self.use_custom_fc):
+
+        if (self.fortran_compiler_to_use == 'custom'):
             fcmp = self.fortran_compiler
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            # add any custom flags given by the user
-            if (self.fortran_flags != None):
-                fflags = fflags + ' ' + self.fortran_flags
-        elif (self.use_g95):
-            fcmp = "g95"
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            # additional g95 specific switches
-            fflags = fflags+" -i4"
-            fflags = fflags+" -fno-second-underscore"
-            fflags = fflags+" -r8"
-            fflags = fflags+" -fPIC"
-            #cname = "_g95"
-        elif (self.use_gfortran):
-            fcmp = "gfortran"
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            # additional gfortran specific switches
-            fflags = fflags+" -fno-second-underscore"
-            fflags = fflags+" -fPIC"
-            #fflags = fflags" -fdefault-integer-4"
-            # an explicit 4-byte default integer options seems not to exists
-            # for gfortran, so lets just hope that is the default ...
-            #cname = "_gfortran"
-        elif (self.use_g77):
-            fcmp = "g77"
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            fflags = fflags+" -i4"
-            fflags = fflags+" -fPIC"
-            #cname = "_gnu"
-        elif (self.use_f90):
-            # this catches installations that have some commercial fortran
-            # installed, which usually are symlinked to the name
-            # f90 for convenience
-            fcmp = "f90"
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            fflags = fflags+" -i4"
-            fflags = fflags+" -fPIC"
-            #cname = "_???"
-        elif (self.use_f77):
-            # this catches installations that have some commercial fortran
-            # installed, which usually are symlinked to the name
-            # f77 for convenience
-            fcmp = "f77"
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            fflags = fflags+" -i4"
-            fflags = fflags+" -fPIC"
-            #cname = "_???"
-        elif (self.use_pgf90):
-            fcmp = "pgf90"
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            fflags = fflags+" -i4"
-            fflags = fflags+" -fPIC"
-            #cname = "_???"
-        elif (self.use_pgf77):
-            fcmp = "pgf77"
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            fflags = fflags+" -i4"
-            fflags = fflags+" -fPIC"
-            #cname = "_???"
-        elif (self.use_ifort):
-            fcmp = "ifort"
-            # Default compiler switches
-            fflags = "-O -Dlinux"
-            fflags = fflags+" -i4"
-            fflags = fflags+" -fPIC"
-            #cname = "_???"
+            fflags = ' '.join(flags for flags in FFLAGS_COMMON[fcmp] )
         else:
-            print "ERROR in bufr_interface_ecmwf.install:"
-            print "No suitable fortran compiler found"
-            raise EnvironmentError
+            fcmp = self.fortran_compiler_to_use
+            fflags = ' '.join(flags for flags in FFLAGS_NEEDED[fcmp] )
 
-        ccmp = ''
-        cflags = ''
-
-        if (self.use_custom_cc):
+        # add any custom flags given by the user
+        if (self.fortran_flags != None):
+            fflags = fflags + ' ' + self.fortran_flags
+            
+        if (self.c_compiler_to_use == 'custom'):
             ccmp = self.c_compiler
-            cflags = "-fPIC"
-            # add any custom flags given by the user
-            if (self.c_flags != None):
-                cflags = cflags+' '+self.c_flags
-        elif (self.use_gcc):
-            ccmp = "gcc"
-            # Default compiler switches
-            cflags = "-fPIC"
-        elif (self.use_cc):
-            # this catches installations that have some commercial c-compiler
-            # installed, which usually are symlinked to the name
-            # cc for convenience
-            ccmp = "cc"
-            # Default compiler switches
-            cflags = "-fPIC"
+            cflags = ' '.join(flags for flags in CFLAGS_COMMON[ccmp] )
         else:
-            print "ERROR in bufr_interface_ecmwf.install:"
-            print "No suitable c compiler found"
-            raise EnvironmentError
+            ccmp = self.c_compiler_to_use
+            cflags = ' '.join(flags for flags in CFLAGS_NEEDED[ccmp] )
 
+        # add any custom flags given by the user
+        if (self.c_flags != None):
+            cflags = cflags+' '+self.c_flags
+            
         # no check implemented on the "ar" and "ranlib" commands yet
         # (easy to add if we woould need it)
 
@@ -1469,7 +1281,7 @@ class InstallBUFRInterfaceECMWF:
         cfd.write("AR         = "+arcmd+"\n")
         cfd.write("ARFLAGS    = rv\n")
         cfd.write("CC         = "+ccmp+"\n")
-        cfd.write("CFLAGS     = -O "+cflags+"\n")
+        cfd.write("CFLAGS     = "+cflags+"\n")
         cfd.write("FASTCFLAGS = "+cflags+"\n")
         cfd.write("FC         = "+fcmp+"\n")
         cfd.write("FFLAGS     = "+fflags+"\n")
