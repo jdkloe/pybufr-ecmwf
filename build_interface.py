@@ -339,6 +339,24 @@ def insert_pb_interface_definition(sfd):
     # I get the not very helpfull error message:
     #   "SystemError: NULL result without error in PyObject_Call"
     # Anybody out there who has an idea how this can be solved?
+
+    # note2:
+    # the problem seems to be the definition of fortint
+    # used to pass an index to the table of file descriptors
+    # used by these pb routines.
+    # This file:
+    #  pybufr_ecmwf/ecmwf_bufr_lib/bufr_000387/pbio/fortint.h
+    # defines fortint as int in case the switch INTEGER_IS_INT is set
+    # or otherwise it defines fortint as long
+    # on my 64-bit machine:
+    #    int  has a size of 4 bytes
+    #    long has a size of 8 bytes
+    # depending on these size, the fortran code needs to use
+    # integer*4 or integer*8 !
+    #
+    # note for myself:
+    # See my Set_config.linux_compiler in aeolus/BUFR_install
+    # for an example of how this can be solved.
     
     indentation = 8*' '
     lines_to_add = \
