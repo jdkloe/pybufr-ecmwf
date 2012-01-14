@@ -216,7 +216,8 @@ class BUFRInterfaceECMWF:
         self.tables_have_been_setup = False
         self.table_b_file_to_use = None
         self.table_d_file_to_use = None
-
+        self.ecmwf_bufr_tables_dir = None
+        
         # lists used by the python extraction of the descriptors
         self.py_num_subsets = 0
         self.py_unexp_descr_list = None
@@ -226,7 +227,6 @@ class BUFRInterfaceECMWF:
 
         #  #]        
     def get_expected_ecmwf_bufr_table_names(self,
-                                            ecmwf_bufr_tables_dir,
                                             center, subcenter,
                                             LocalVersion, MasterTableVersion,
                                             EditionNumber, MasterTableNumber):
@@ -255,17 +255,17 @@ class BUFRInterfaceECMWF:
         #-------------------------------------------------------------
         bufrtable_naming_convention = conv_undefined
 
-        testfile = os.path.join(ecmwf_bufr_tables_dir, testfile_short)
+        testfile = os.path.join(self.ecmwf_bufr_tables_dir, testfile_short)
         if (os.path.exists(testfile)):
             #print "Using short BUFRtables naming convention ..."
             bufrtable_naming_convention = conv_short
 
-        testfile = os.path.join(ecmwf_bufr_tables_dir, testfile_medium)
+        testfile = os.path.join(self.ecmwf_bufr_tables_dir, testfile_medium)
         if (os.path.exists(testfile)):
             #print "Using medium length BUFRtables naming convention ..."
             bufrtable_naming_convention = conv_medium
 
-        testfile = os.path.join(ecmwf_bufr_tables_dir, testfile_long)
+        testfile = os.path.join(self.ecmwf_bufr_tables_dir, testfile_long)
         if (os.path.exists(testfile)):
             #print "Using long BUFRtables naming convention ..."
             bufrtable_naming_convention = conv_long
@@ -529,7 +529,6 @@ class BUFRInterfaceECMWF:
         which in turn are transferred to the ECMWF library using an
         appropriate environment setting
         """
-        
         if (not self.sections012_decoded):
             errtxt = "Sorry, setting up BUFR tables is only possible after "+\
                      "sections 0,1,2 of a BUFR message have been decoded "+\
@@ -546,8 +545,8 @@ class BUFRInterfaceECMWF:
 
         # make sure the path is absolute, otherwise the ECMWF library
         # might fail when it attempts to use it ...
-        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
-        # print 'ecmwf_bufr_tables_dir = ',ecmwf_bufr_tables_dir
+        self.ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+        # print 'self.ecmwf_bufr_tables_dir = ',self.ecmwf_bufr_tables_dir
 
         # allow the user to set a tables directory using the BUFR_TABLES
         # environment variable
@@ -569,17 +568,32 @@ class BUFRInterfaceECMWF:
             # print '==> tables_dir = ',tables_dir
             self.user_tables_dir = os.path.abspath(tables_dir)
 
-        # prohibit the use of the temporary folder below /tmp used
-        # by this module to create symlinks to the actual tables
-        # because this will mess up the symlinking and produce
-        # circular symlink references pointing to nowhere ...
-        if self.user_tables_dir == self.private_bufr_tables_dir:
-            print 'ERROR: it is not allowed to explicitely provide '
-            print 'the table directory below /tmp used by the pybufr-ecmwf'
-            print 'software (which it uses to create symlinks to user'
-            print 'provided BUFR tables) as input.'
-            print 'Please choose another table directory.'
-            sys.exit(1)
+        # The tables_dir_has_been_defined setting should be preserved
+        # between different instances of BUFRInterfaceECMWF.
+        # At the second call of setup_tables() the BUFR_TABLES environment
+        # variable has already been set by this module, even if the user
+        # did not set it, so then this check should not be done.
+        # Therefore it has to be a class variable, not an instance variable.
+        tables_dir_has_been_defined = False
+        if hasattr(self.__class__,'tables_dir_has_been_defined'):
+            tables_dir_has_been_defined = \
+                   self.__class__.tables_dir_has_been_defined
+            
+        if not tables_dir_has_been_defined:
+            # prohibit the use of the temporary folder below /tmp used
+            # by this module to create symlinks to the actual tables
+            # because this will mess up the symlinking and produce
+            # circular symlink references pointing to nowhere ...
+            if self.user_tables_dir is not None:
+                if self.user_tables_dir == self.private_bufr_tables_dir:
+                    print 'ERROR: it is not allowed to explicitely provide '+\
+                          'the table directory below /tmp used by the '+\
+                          'pybufr-ecmwf software (which it uses to create '+\
+                          'symlinks to user provided BUFR tables) as input.'
+                    print 'Please choose another table directory.'
+                    sys.exit(1)
+
+            self.__class__.tables_dir_has_been_defined = True
             
         EditionNumber      = self.ksec0[3-1]
 
@@ -602,7 +616,6 @@ class BUFRInterfaceECMWF:
 
         (expected_name_table_b, expected_name_table_d) = \
               self.get_expected_ecmwf_bufr_table_names(
-                       ecmwf_bufr_tables_dir,
                        center, subcenter,
                        LocalVersion, MasterTableVersion,
                        EditionNumber, MasterTableNumber)
@@ -618,13 +631,13 @@ class BUFRInterfaceECMWF:
             userpath_table_d = os.path.join(self.user_tables_dir,
                                             expected_name_table_d)
             
-        fullpath_table_b = os.path.join(ecmwf_bufr_tables_dir,
+        fullpath_table_b = os.path.join(self.ecmwf_bufr_tables_dir,
                                         expected_name_table_b)
-        fullpath_table_d = os.path.join(ecmwf_bufr_tables_dir,
+        fullpath_table_d = os.path.join(self.ecmwf_bufr_tables_dir,
                                         expected_name_table_d)
-        fullpath_default_table_b = os.path.join(ecmwf_bufr_tables_dir,
+        fullpath_default_table_b = os.path.join(self.ecmwf_bufr_tables_dir,
                                                 'B_default.TXT')
-        fullpath_default_table_d = os.path.join(ecmwf_bufr_tables_dir,
+        fullpath_default_table_d = os.path.join(self.ecmwf_bufr_tables_dir,
                                                 'D_default.TXT')
         # print 'Test:'
         # print 'userpath_table_b:',userpath_table_b

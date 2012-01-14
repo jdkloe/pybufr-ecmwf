@@ -38,7 +38,8 @@ class RawBUFRFile:
     library which for some obscure reason cannot be interfaced
     easily to python using the f2py tool.
     """
-    def __init__(self, verbose = False):
+    def __init__(self, verbose = False,
+                 warn_about_bufr_size = True):
         #  #[
         self.bufr_fd  = None
         self.filename = None
@@ -49,6 +50,7 @@ class RawBUFRFile:
         self.nr_of_bufr_messages = 0
         self.last_used_msg = 0
         self.verbose = verbose
+        self.warn_about_bufr_size = warn_about_bufr_size
         #  #]
     def print_properties(self, prefix = "BUFRFile"):
         #  #[
@@ -355,10 +357,11 @@ class RawBUFRFile:
         
         # see: p.L3-3 (p.5) of the file Layer3-English-only.pdf
         #      mentioned above.
-        if msg_size > 15000:
-            print "WARNING: by convention BUFR messages should not be larger"
-            print "         than 15kb to allow transmission over the GTS."
-            print "         Size of current message is: ", msg_size, " bytes"
+        if self.warn_about_bufr_size:
+            if msg_size > 15000:
+                print "WARNING: by convention BUFR messages should not be "+\
+                      "larger than 15kb to allow transmission over the GTS. "+\
+                      "Size of current message is: ", msg_size, " bytes"
 
         return (msg_size, section_sizes, section_start_locations)
         #  #]        

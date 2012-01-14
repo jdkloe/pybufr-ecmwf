@@ -115,10 +115,10 @@ class BUFRReader:
     a class that combines reading and decoding of a BUFR file
     to allow easier reading and usage of BUFR files
     """
-    def __init__(self, input_bufr_file):
+    def __init__(self, input_bufr_file, warn_about_bufr_size=True):
         #  #[
         # get an instance of the RawBUFRFile class
-        self.rbf = RawBUFRFile()
+        self.rbf = RawBUFRFile(warn_about_bufr_size=warn_about_bufr_size)
     
         # open the file for reading, count nr of BUFR messages in it
         # and store its content in memory, together with
@@ -148,7 +148,7 @@ class BUFRReader:
         self.bufr_obj.decode_sections_012()
         self.bufr_obj.setup_tables()
         self.bufr_obj.decode_data()
-
+        
         self.msg_loaded = self.rbf.last_used_msg
         #  #]
     def get_num_subsets(self):

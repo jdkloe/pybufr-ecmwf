@@ -25,7 +25,7 @@ from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 
 #  #]
 
-def print_bufr_content1(input_bufr_file, output_fd, separator):
+def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
     #  #[ implementation 1
     """
     example implementation using the BUFRReader class
@@ -34,11 +34,13 @@ def print_bufr_content1(input_bufr_file, output_fd, separator):
     
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = BUFRReader(input_bufr_file)
-    
+    bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
+
+    msg_nr = 0
     while True:
         try:
             bob.get_next_msg()
+            msg_nr += 1
         except EOFError:
             break
 
@@ -56,12 +58,16 @@ def print_bufr_content1(input_bufr_file, output_fd, separator):
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data[subs, :])+
                             "\n")
-        
+        print 'converted BUFR msg nr. ',msg_nr
+        if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
+            print 'skipping remainder of this BUFR file'
+            break
+
     # close the file
     bob.close()
     #  #]
 
-def print_bufr_content2(input_bufr_file, output_fd, separator):
+def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
     #  #[ implementation 2
     """
     example implementation using the BUFRReader class
@@ -72,9 +78,11 @@ def print_bufr_content2(input_bufr_file, output_fd, separator):
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file)
     
+    msg_nr = 0
     while True:
         try:
             bob.get_next_msg()
+            msg_nr += 1
         except EOFError:
             break
         
@@ -98,11 +106,16 @@ def print_bufr_content2(input_bufr_file, output_fd, separator):
                             separator.join(str(val) for val in data_list)+
                             "\n")
 
+        print 'converted BUFR msg nr. ',msg_nr
+        if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
+            print 'skipping remainder of this BUFR file'
+            break
+
     # close the file
     bob.close()
     #  #]
 
-def print_bufr_content3(input_bufr_file, output_fd, separator):
+def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
     #  #[ implementation 3
     """
     example implementation using the BUFRInterfaceECMWF class
@@ -153,6 +166,10 @@ def print_bufr_content3(input_bufr_file, output_fd, separator):
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data_list)+
                             "\n")
+        print 'converted BUFR msg nr. ',msg_nr
+        if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
+            print 'skipping remainder of this BUFR file'
+            break
     
     # close the BUFR file
     rbf.close()
@@ -168,13 +185,14 @@ def usage():
     print sys.argv[0] + ' [OPTIONS]'
     print ''
     print 'With [OPTIONS] being one or more of these possibilities: '
-    print '-a or --ascii   selects ascii output'
-    print '-c or --csv     selects csv output'
-    print '-i or --infile  defines the input BUFR file to be used [required]'
-    print '-o or --outfile defines the output file to be used'
-    print '                if this option is omitted, stdout will be used'
-    print '-1 or -2 or -3  test implementation 1, 2 or 3 [default is 1]'
-    print '-h              display this help text'
+    print '-a or --ascii    selects ascii output'
+    print '-c or --csv      selects csv output'
+    print '-i or --infile   defines the input BUFR file to be used [required]'
+    print '-o or --outfile  defines the output file to be used'
+    print '                 if this option is omitted, stdout will be used'
+    print '-1 or -2 or -3   test implementation 1, 2 or 3 [default is 1]'
+    print '-m or --maxmsgnr defines max number of BUFR messages to convert'
+    print '-h               display this help text'
     #  #]
 
 def main():
@@ -186,8 +204,9 @@ def main():
     try:
         # command line handling; the ':' and '=' note that the
         # options must have a value following it
-        short_options = 'aci:o:h123'
-        long_options  = ['ascii', 'csv', 'infile=', 'outfile=', 'help']
+        short_options = 'aci:o:m:h123'
+        long_options  = ['ascii', 'csv', 'infile=', 'outfile=',
+                         'maxmsgnr=', 'help']
         (options, other_args) = getopt.getopt(sys.argv[1:],
                                               short_options, long_options)
     except getopt.GetoptError, err:
@@ -205,6 +224,7 @@ def main():
     input_bufr_file   = None
     output_file       = None
     implementation_nr = 1
+    max_msg_nr        = -1
     
     for (opt, value) in options:
         if   ( (opt == '-h') or (opt == '--help') ):
@@ -223,6 +243,8 @@ def main():
             implementation_nr = 2
         elif (opt == '-3'):
             implementation_nr = 3
+        elif ( (opt == '-m') or (opt == '--maxmsgnr') ):
+            max_msg_nr        = int(value)
         else:
             print "Unhandled option: "+opt
             usage()
@@ -251,11 +273,14 @@ def main():
         separator = ',' # csv case
 
     if   (implementation_nr == 1):
-        print_bufr_content1(input_bufr_file, output_fd, separator)
+        print_bufr_content1(input_bufr_file, output_fd,
+                            separator, max_msg_nr)
     elif (implementation_nr == 2):
-        print_bufr_content2(input_bufr_file, output_fd, separator)
+        print_bufr_content2(input_bufr_file, output_fd,
+                            separator, max_msg_nr)
     elif (implementation_nr == 3):        
-        print_bufr_content3(input_bufr_file, output_fd, separator)
+        print_bufr_content3(input_bufr_file, output_fd,
+                            separator, max_msg_nr)
 
     if output_file:
         # close the output file
