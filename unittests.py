@@ -103,6 +103,43 @@ from pybufr_ecmwf import ecmwfbufr
 
 #  #]
 
+def call_cmd(cmd):
+    #  #[
+    """ a wrapper around run_shell_command for easier testing.
+    It sets the environment setting PYTHONPATH to allow the
+    code to find the current pybufr-ecmwf library"""
+
+    # get the list of already defined env settings
+    env = os.environ
+    if (env.has_key('PYTHONPATH')):
+        settings = env['PYTHONPATH'].split(':')
+        if not MY_MODULE_PATH in settings:
+            env['PYTHONPATH'] = MY_MODULE_PATH+':'+env['PYTHONPATH']
+    else:
+        env['PYTHONPATH'] = MY_MODULE_PATH
+
+    # print 'TESTJOS: env[PYTHONPATH] = ',env['PYTHONPATH']
+    # print 'TESTJOS: env[BUFR_TABLES] = ',env.get('BUFR_TABLES','undefined')
+    # print 'TESTJOS: cmd = ',cmd
+    
+    # remove the env setting to
+    # /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES/
+    # that may have been left by a previous test
+    if (env.has_key('BUFR_TABLES')):
+        del(env['BUFR_TABLES'])
+
+    # execute the test and catch all output
+    subpr = subprocess.Popen(cmd,
+                             shell  = True,
+                             env    = env,
+                             stdout = subprocess.PIPE,
+                             stderr = subprocess.PIPE)
+    lines_stdout = subpr.stdout.readlines()
+    lines_stderr = subpr.stderr.readlines()
+
+    return (lines_stdout, lines_stderr)
+    #  #]
+
 def call_cmd_and_verify_output(cmd):
     #  #[
     """ a wrapper around run_shell_command for easier testing.
@@ -165,33 +202,8 @@ def call_cmd_and_verify_output(cmd):
     expected_stdout = basename+".expected_stdout"
     expected_stderr = basename+".expected_stderr"
 
-    # get the list of already defined env settings
-    env = os.environ
-    if (env.has_key('PYTHONPATH')):
-        settings = env['PYTHONPATH'].split(':')
-        if not MY_MODULE_PATH in settings:
-            env['PYTHONPATH'] = MY_MODULE_PATH+':'+env['PYTHONPATH']
-    else:
-        env['PYTHONPATH'] = MY_MODULE_PATH
-
-    # remove the env setting to
-    # /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES/
-    # they may have been left by a previous test
-    if (env.has_key('BUFR_TABLES')):
-        del(env['BUFR_TABLES'])
-
-    # print 'TESTJOS: env[PYTHONPATH] = ',env['PYTHONPATH']
-    # print 'TESTJOS: env[BUFR_TABLES] = ',env.get('BUFR_TABLES','undefined')
-    # print 'TESTJOS: cmd = ',cmd
-    
     # execute the test and catch all output
-    subpr = subprocess.Popen(cmd,
-                             shell  = True,
-                             env    = env,
-                             stdout = subprocess.PIPE,
-                             stderr = subprocess.PIPE)
-    lines_stdout = subpr.stdout.readlines()
-    lines_stderr = subpr.stderr.readlines()
+    (lines_stdout, lines_stderr) = call_cmd(cmd)
 
     # write the actual outputs to file
     file_descr = open(actual_stdout, 'wt')
@@ -212,6 +224,8 @@ def call_cmd_and_verify_output(cmd):
             print "stdout differs from what was expected!!!"
             print "to find out what happended execute this diff command:"
             print "xdiff ", actual_stdout, ' ', expected_stdout
+            # for l in lines_stdout:          print 'output:      ['+l+']'
+            # for l in expected_lines_stdout: print 'exp. output: ['+l+']'
             success = False
             
         if not (lines_stderr == expected_lines_stderr):
@@ -420,11 +434,10 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
 
         # make sure the path is absolute, otherwise the ECMWF library
         # might fail when it attempts to use it ...
-        ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
+        bufrobj.ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
         
         (btable, dtable) = \
                  bufrobj.get_expected_ecmwf_bufr_table_names(\
-                             ecmwf_bufr_tables_dir,
                              center,
                              subcenter,
                              local_version,
@@ -642,6 +655,7 @@ class CheckBufrTable(unittest.TestCase):
     #  #]
 
 class CheckCustomTables(unittest.TestCase):
+    #  #[
     """
     a class to check the creation and use of custom BUFR table files
     """
@@ -693,9 +707,8 @@ class CheckCustomTables(unittest.TestCase):
         # create the custom BUFR tables
         testprog = "create_bufr_tables.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        success = call_cmd_and_verify_output(cmd)
-        # don't repeat this check, this has been checked above already
-        # self.assertEqual(success, True)                
+        result = call_cmd(cmd)
+        # don't check this call, this has been checked above already
 
         # run the provided example code and verify the output
         testprog = "use_custom_tables_for_encoding.py"
@@ -709,7 +722,8 @@ class CheckCustomTables(unittest.TestCase):
         os.remove(D_table_file)
         os.remove(test_BUFR_file)
         #  #]
-
+    #  #]
+    
 class CheckBufr(unittest.TestCase):
     #  #[
     """
