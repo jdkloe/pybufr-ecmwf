@@ -70,7 +70,7 @@ def encoding_example(output_bufr_file):
     scope (since most of these variables are not constants at all))
     """
     
-    bufr = BUFRInterfaceECMWF()
+    bufr = BUFRInterfaceECMWF(verbose=True)
     
     # fill sections 0, 1, 2 and 3
     num_subsets = 4

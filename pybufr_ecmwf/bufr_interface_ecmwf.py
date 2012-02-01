@@ -85,7 +85,7 @@ class BUFRInterfaceECMWF:
 
     #  #]
     def __init__(self, encoded_message=None, section_sizes=None,
-                 section_start_locations=None):
+                 section_start_locations=None, verbose=False):
         #  #[
         """
         initialise all module parameters needed for encoding and decoding
@@ -100,6 +100,8 @@ class BUFRInterfaceECMWF:
         # reading method get_raw_bufr_msg defined in raw_bufr_file.py
         self.section_sizes = section_sizes
         self.section_start_locations = section_start_locations
+
+        self.verbose = verbose
 
         # switches
         self.sections012_decoded      = False
@@ -469,7 +471,8 @@ class BUFRInterfaceECMWF:
         
         kerr = 0
 
-        print "calling: ecmwfbufr.bus012():"
+        if self.verbose:
+            print "calling: ecmwfbufr.bus012():"
         self.store_fortran_stdout()
         ecmwfbufr.bus012(self.encoded_message, # input
                          self.ksup,  # output
@@ -504,7 +507,8 @@ class BUFRInterfaceECMWF:
 
         kerr = 0
        
-        print "calling: ecmwfbufr.bus012():"
+        if verbose:
+            print "calling: ecmwfbufr.bus012():"
         self.store_fortran_stdout()
         ecmwfbufr.bus0123(self.encoded_message, # input
                           self.ksup,  # output
@@ -721,13 +725,13 @@ class BUFRInterfaceECMWF:
         # full names, containing full path, are not nice to print
         # in the unit tests since they will differ on different
         # machines, so print the bare filename only
-        print 'Table names expected by the library:'
-        print os.path.split(destination_b)[1]
-        print os.path.split(destination_d)[1]
-        
-        print 'Tables to be used:'
-        print os.path.split(source_b)[1]
-        print os.path.split(source_d)[1]
+        if self.verbose:
+            print 'Table names expected by the library:'
+            print os.path.split(destination_b)[1]
+            print os.path.split(destination_d)[1]
+            print 'Tables to be used:'
+            print os.path.split(source_b)[1]
+            print os.path.split(source_d)[1]
         
         # make sure any old symbolic link is removed
         # (since it may point to an unwanted location)

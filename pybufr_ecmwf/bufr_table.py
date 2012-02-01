@@ -575,8 +575,8 @@ class BufrTable:
     saved_D_table = None
     
     def __init__(self,
-                 autolink_tablesdir = "tmp_BUFR_TABLES",
-                 tables_dir = None,
+                 autolink_tablesdir="tmp_BUFR_TABLES",
+                 tables_dir=None,
                  verbose=True):
         #  #[
         self.table_b   = {} # dict of desciptor-objects (f=0)
@@ -848,7 +848,8 @@ class BufrTable:
                 self.__class__.currently_loaded_B_table = tablefile
                 self.__class__.saved_B_table = self.table_b
             else:
-                print 'B-table already loaded: ',tablefile
+                if self.verbose:
+                    print 'B-table already loaded: ',tablefile
                 self.table_b = self.__class__.saved_B_table
         elif base[0].upper() == 'D':
             if (self.__class__.currently_loaded_D_table != tablefile):
@@ -856,10 +857,11 @@ class BufrTable:
                 self.__class__.currently_loaded_D_table = tablefile
                 self.__class__.saved_D_table = self.table_d
             else:
-                print 'D-table already loaded: ',tablefile
+                if self.verbose:
+                    print 'D-table already loaded: ',tablefile
                 self.table_d = self.__class__.saved_D_table
         else:
-            print "ERROR: don;t know what table this is"
+            print "ERROR: don't know what table this is"
             print "(path, base) = ", (path, base)
             raise IOError
         #  #]

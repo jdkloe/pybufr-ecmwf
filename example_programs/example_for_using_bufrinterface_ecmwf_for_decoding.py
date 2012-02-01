@@ -107,7 +107,8 @@ def decoding_example(input_bufr_file, custom_bufr_tables=None):
     print '------------------------------'
     bufr = BUFRInterfaceECMWF(encoded_message=words,
                               section_sizes=section_sizes,
-                              section_start_locations=section_start_locations)
+                              section_start_locations=section_start_locations,
+                              verbose=True)
 
     print "calling: decode_sections_012():"
     bufr.decode_sections_012()
