@@ -194,7 +194,39 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         subpr.wait()
         return
     #  #]
-def fortran_compile_test(fcmp, fflags, libpath):
+def fortran_compile_and_execute(fcmp, fflags, f_code, f_executable, f_libpath):
+    #  #[
+    f_file = f_executable+".F90"
+    tfd = open(f_file, 'wt')
+    tfd.write(f_code)
+    tfd.close()
+    
+    # contruct the compile command
+    cmd = fcmp+' '+fflags+' -o '+f_executable+' '+f_file
+    
+    # now issue the compile command
+    if (f_libpath == ""):
+        print "Executing command: ", cmd
+        os.system(cmd)
+    else:
+        run_shell_command(cmd, libpath = f_libpath, catch_output = False)
+
+    # now execute the just generated test program to verify if we succeeded
+    # add a './' to ensure the executable is also found for users that
+    # do not have '.' in their default search path
+    cmd = os.path.join('.', f_executable)
+    if (f_libpath == ""):
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
+    else:
+        (lines_stdout, lines_stderr) = \
+                       run_shell_command(cmd, libpath = f_libpath)
+
+    # clean up
+    os.remove(f_file)
+    
+    return (lines_stdout, lines_stderr)
+    #  #]
+def fortran_compile_test(fcmp, fflags, f_libpath):
     #  #[
     """ a method to check if we really have some fortran compiler
     installed (it writes a few lines of fortran, tries to compile
@@ -216,34 +248,11 @@ end program pybufr_test_program
 
     # generate a testfile with a few lines of Fortran90 code
     fortran_test_executable = "pybufr_fortran_test_program"
-    fortran_test_file       = fortran_test_executable+".F90"
-    tfd = open(fortran_test_file, 'wt')
-    tfd.write(fortran_test_code)
-    tfd.close()
+    (lines_stdout, lines_stderr) = \
+                   fortran_compile_and_execute(fcmp, fflags, fortran_test_code,
+                                               fortran_test_executable,
+                                               f_libpath)
     
-    # contruct the compile command
-    #cmd = fcmp+' '+fflags+' -o '+fortran_test_executable+' '+\
-    #      fortran_test_file
-    cmd = fcmp+' '+fflags+' -o '+fortran_test_executable+\
-          ' '+fortran_test_file
-    
-    # now issue the compile command
-    if (libpath == ""):
-        print "Executing command: ", cmd
-        os.system(cmd)
-    else:
-        run_shell_command(cmd, libpath = libpath, catch_output = False)
-
-    # now execute the just generated test program to verify if we succeeded
-    # add a './' to ensure the executable is also found for users that
-    # do not have '.' in their default search path
-    cmd = os.path.join('.', fortran_test_executable)
-    if (libpath == ""):
-        (lines_stdout, lines_stderr) = run_shell_command(cmd)
-    else:
-        (lines_stdout, lines_stderr) = \
-                       run_shell_command(cmd, libpath = libpath)
-        
     expected_output = [' Hello pybufr module:\n',
                        ' Fortran compilation seems to work fine ...\n']
     if ( (expected_output[0] not in lines_stdout) or
@@ -259,18 +268,49 @@ end program pybufr_test_program
     
     # clean up
     os.remove(fortran_test_executable)
-    os.remove(fortran_test_file)
-    
     #  #]
-def c_compile_test(ccmp, cflags, libpath):
+def c_compile_and_execute(ccmp, cflags, c_code, c_executable, c_libpath):
+    #  #[
+    # Note: for now the flags are not used in these test because these
+    # are specific for generating a shared-object file, and will fail to
+    # generate a simple executable for testing
+    # libpath may point to a custom LD_LIBRARY_PATH setting
+    # needed to run the compiler
+    c_file = c_executable+".c"
+    tfd = open(c_file, 'wt')
+    tfd.write(c_code)
+    tfd.close()
+    
+    # contruct the compile command
+    cmd = ccmp+' '+cflags+' -o '+c_executable+' '+c_file
+    
+    # now issue the compile command
+    if (c_libpath == ""):
+        print "Executing command: ", cmd
+        os.system(cmd)
+    else:
+        run_shell_command(cmd, libpath = c_libpath, catch_output = False)
+        
+    # now execute the just generated program
+    # add a './' to ensure the executable is also found for users that
+    # do not have '.' in their default search path
+    cmd = os.path.join('.', c_executable)
+    if (c_libpath == ""):
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
+    else:
+        (lines_stdout, lines_stderr) = \
+                       run_shell_command(cmd, libpath = c_libpath)
+
+    # clean up
+    os.remove(c_file)
+
+    return (lines_stdout, lines_stderr)
+    #  #]                          
+def c_compile_test(ccmp, cflags, c_libpath):
     #  #[
     """ a method to check if we really have some c compiler
     installed (it writes a few lines of c, tries to compile
     it, and compares the output with the expected output) """
-    
-    # Note: for now the flags are not used in these test because these
-    # are specific for generating a shared-object file, and will fail to
-    # generate a simple executable for testing
     
     c_test_code = \
 r"""
@@ -285,30 +325,9 @@ int main()
 
     # generate a testfile with a few lines of Fortran90 code
     c_test_executable = "pybufr_c_test_program"
-    c_test_file       = c_test_executable+".c"
-    tfd = open(c_test_file, 'wt')
-    tfd.write(c_test_code)
-    tfd.close()
-    
-    # contruct the compile command
-    cmd = ccmp+' '+cflags+' -o '+c_test_executable+' '+c_test_file
-    
-    # now issue the compile command
-    if (libpath == ""):
-        print "Executing command: ", cmd
-        os.system(cmd)
-    else:
-        run_shell_command(cmd, libpath = libpath, catch_output = False)
-        
-    # now execute the just generated test program to verify if we succeeded
-    # add a './' to ensure the executable is also found for users that
-    # do not have '.' in their default search path
-    cmd = os.path.join('.', c_test_executable)
-    if (libpath == ""):
-        (lines_stdout, lines_stderr) = run_shell_command(cmd)
-    else:
-        (lines_stdout, lines_stderr) = \
-                       run_shell_command(cmd, libpath = libpath)
+    (lines_stdout, lines_stderr) = \
+                       c_compile_and_execute(ccmp, cflags, c_test_code,
+                                             c_test_executable, c_libpath)
         
     expected_output = ['Hello pybufr module:\n',
                        'c compilation seems to work fine ...\n']
@@ -324,7 +343,64 @@ int main()
     
     # clean up
     os.remove(c_test_executable)
-    os.remove(c_test_file)
+    #  #]
+def retrieve_integer_sizes(ccmp, cflags, c_libpath,
+                           fcmp, fflags, f_libpath):
+    #  #[
+    #CSIZEINT=`../support/GetByteSizeInt`
+    #CSIZELONG=`../support/GetByteSizeLong`
+    #F90SIZEINT=`../support/GetByteSizeDefaultInteger`
+
+    c_code_get_bytesize_int = \
+r"""
+#include <stdio.h>
+int main()
+{
+  int testinteger;
+  printf("%i\n",sizeof(testinteger));
+  return 0;
+}
+"""
+    c_executable_get_bytesize_int = 'GetByteSizeInt'
+    (lines_stdout, lines_stderr) = \
+                   c_compile_and_execute(ccmp, cflags, c_code_get_bytesize_int,
+                                         c_executable_get_bytesize_int,
+                                         c_libpath)
+    print 'GetByteSizeInt: ',lines_stdout[0]
+    
+    c_code_get_bytesize_long = \
+r"""
+#include <stdio.h>
+int main()
+{
+  long testinteger;
+  printf("%i\n",sizeof(testinteger));
+  return 0;
+}
+"""
+    c_executable_get_bytesize_long = 'GetByteSizeLong'
+    (lines_stdout, lines_stderr) = \
+                   c_compile_and_execute(ccmp, cflags, c_code_get_bytesize_long,
+                                         c_executable_get_bytesize_long,
+                                         c_libpath)
+    print 'GetByteSizeLong: ',lines_stdout[0]
+    
+    f90_code_get_bytsize_default_integer = \
+r"""
+program GetByteSizeDefaultInteger
+  integer :: default_integer, nbytes_default_integer
+  inquire(iolength=nbytes_default_integer) default_integer  
+  print *,nbytes_default_integer
+end program GetByteSizeDefaultInteger
+"""
+    f90_executable_get_bytsize_default_integer = 'GetByteSizeDefaultInteger'
+    (lines_stdout, lines_stderr) = \
+        fortran_compile_and_execute(fcmp, fflags,
+                                    f90_code_get_bytsize_default_integer,
+                                    f90_executable_get_bytsize_default_integer,
+                                    f_libpath)
+    print 'GetByteSizeDefaultInteger: ',lines_stdout[0]
+    sys.exit(1)
     #  #]
 def insert_pb_interface_definition(sfd):
     #  #[
@@ -351,7 +427,7 @@ def insert_pb_interface_definition(sfd):
     # on my 64-bit machine:
     #    int  has a size of 4 bytes
     #    long has a size of 8 bytes
-    # depending on these size, the fortran code needs to use
+    # depending on these sizes, the fortran code needs to use
     # integer*4 or integer*8 !
     #
     # note for myself:
@@ -1332,6 +1408,9 @@ class InstallBUFRInterfaceECMWF:
         destination = os.path.join(self.ecmwf_bufr_lib_dir, "config_file")
         shutil.copyfile(source, destination)
         #  #]
+
+        retrieve_integer_sizes(ccmp, cflags, libpath,
+                               fcmp, fflags, libpath)
         
         #  #[ compile little pieces of Fortran and c to test the compilers
         fortran_compile_test(fcmp, fflags, libpath)
