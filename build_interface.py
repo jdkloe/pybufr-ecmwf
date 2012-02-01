@@ -366,7 +366,7 @@ int main()
                    c_compile_and_execute(ccmp, cflags, c_code_get_bytesize_int,
                                          c_executable_get_bytesize_int,
                                          c_libpath)
-    print 'GetByteSizeInt: ',lines_stdout[0]
+    ByteSizeInt = lines_stdout[0].strip()
     
     c_code_get_bytesize_long = \
 r"""
@@ -383,7 +383,7 @@ int main()
                    c_compile_and_execute(ccmp, cflags, c_code_get_bytesize_long,
                                          c_executable_get_bytesize_long,
                                          c_libpath)
-    print 'GetByteSizeLong: ',lines_stdout[0]
+    ByteSizeLong = lines_stdout[0].strip()
     
     f90_code_get_bytsize_default_integer = \
 r"""
@@ -399,10 +399,15 @@ end program GetByteSizeDefaultInteger
                                     f90_code_get_bytsize_default_integer,
                                     f90_executable_get_bytsize_default_integer,
                                     f_libpath)
-    print 'GetByteSizeDefaultInteger: ',lines_stdout[0]
-    sys.exit(1)
+    ByteSizeDefaultInteger = lines_stdout[0].strip()
+
+    # print 'GetByteSizeInt:  ',ByteSizeInt
+    # print 'GetByteSizeLong: ',ByteSizeLong
+    # print 'GetByteSizeDefaultInteger: ',ByteSizeDefaultInteger
+
+    return (ByteSizeInt, ByteSizeLong, ByteSizeDefaultInteger)
     #  #]
-def insert_pb_interface_definition(sfd):
+def insert_pb_interface_definition(sfd, integer_sizes):
     #  #[
     """ the pb interface routines are written in c, so f2py
     will not automatically generate their signature. This 
@@ -433,34 +438,47 @@ def insert_pb_interface_definition(sfd):
     # note for myself:
     # See my Set_config.linux_compiler in aeolus/BUFR_install
     # for an example of how this can be solved.
+
+    (ByteSizeInt, ByteSizeLong, ByteSizeDefaultInteger) = integer_sizes
+
+    #intlen = None
+    #if ByteSizeDefaultInteger == ByteSizeInt:
+    #    intlen = ByteSizeInt # = 4 bytes
+    #if ByteSizeDefaultInteger == ByteSizeLong:
+    #    intlen = ByteSizeLong # = 8 bytes    
+
+    # dit onderdrukt the segmentation fault op mijn 64-bits machine
+    # maar geeft onzinnige uitkomsten...
+    intlen = ByteSizeLong # = 8 bytes    
+    print 'Using intlen = ',intlen,' to build the pbio interface'
     
     indentation = 8*' '
     lines_to_add = \
          ["subroutine pbopen(cFileUnit,BufrFileName,mode,bufr_error_flag)",
           #"   intent(c) pbopen"
           #"   intent(c)"
-          "   integer*4,        intent(out) :: cFileUnit",
+          "   integer*"+intlen+",        intent(out) :: cFileUnit",
           "   character(len=*), intent(in)  :: BufrFileName",
           "   character(len=1), intent(in)  :: mode",
-          "   integer*4,        intent(out) :: bufr_error_flag",
+          "   integer*"+intlen+",        intent(out) :: bufr_error_flag",
           "end subroutine pbopen",
           "subroutine pbclose(cFileUnit,bufr_error_flag)",
-          "   integer*4,        intent(inplace) :: cFileUnit",
-          "   integer*4,        intent(inplace) :: bufr_error_flag ",
+          "   integer*"+intlen+",        intent(inplace) :: cFileUnit",
+          "   integer*"+intlen+",        intent(inplace) :: bufr_error_flag ",
           "end subroutine pbclose",
           "subroutine pbbufr(cFileUnit,Buffer,BufferSizeBytes,MsgSizeBytes,&",
           "                  bufr_error_flag)",
-          "   integer*4,              intent(inplace) :: cFileUnit",
-          "   integer*4,dimension(*), intent(inplace) :: Buffer",
-          "   integer*4,              intent(inplace) :: BufferSizeBytes",
-          "   integer*4,              intent(inplace) :: MsgSizeBytes",
-          "   integer*4,              intent(inplace) :: bufr_error_flag ",
+          "   integer*"+intlen+",              intent(inplace) :: cFileUnit",
+          "   integer*"+intlen+",dimension(*), intent(inplace) :: Buffer",
+          "   integer*"+intlen+",              intent(inplace) :: BufferSizeBytes",
+          "   integer*"+intlen+",              intent(inplace) :: MsgSizeBytes",
+          "   integer*"+intlen+",              intent(inplace) :: bufr_error_flag ",
           "end subroutine pbbufr",
           "subroutine pbwrite(cFileUnit,Buffer,MsgSizeBytes,bufr_return_value)",
-          "   integer*4,              intent(inplace) :: cFileUnit",
-          "   integer*4,dimension(*), intent(inplace) :: Buffer",
-          "   integer*4,              intent(inplace) :: MsgSizeBytes",
-          "   integer*4,              intent(inplace) :: bufr_return_value",
+          "   integer*"+intlen+",              intent(inplace) :: cFileUnit",
+          "   integer*"+intlen+",dimension(*), intent(inplace) :: Buffer",
+          "   integer*"+intlen+",              intent(inplace) :: MsgSizeBytes",
+          "   integer*"+intlen+",              intent(inplace) :: bufr_return_value",
           "end subroutine pbwrite"]
 
     print "Inserting hardcoded interface to pbbufr routines in "+\
@@ -469,7 +487,7 @@ def insert_pb_interface_definition(sfd):
         sfd.write(indentation+lta+'\n')
         
     #  #]
-def adapt_f2py_signature_file(signature_file):
+def adapt_f2py_signature_file(signature_file, integer_sizes):
     #  #[
     """
     some code to adapt the signature file generated by the f2py tool.
@@ -578,7 +596,7 @@ def adapt_f2py_signature_file(signature_file):
             # NOTE: the pb interface routines are written in c, so f2py
             # will not automatically generate their signature. This next
             # subroutine call explicitely adds these signatures.
-            insert_pb_interface_definition(sfd)
+            insert_pb_interface_definition(sfd, integer_sizes)
 
         sfd.write(mod_line)
 
@@ -1409,12 +1427,14 @@ class InstallBUFRInterfaceECMWF:
         shutil.copyfile(source, destination)
         #  #]
 
-        retrieve_integer_sizes(ccmp, cflags, libpath,
-                               fcmp, fflags, libpath)
-        
         #  #[ compile little pieces of Fortran and c to test the compilers
         fortran_compile_test(fcmp, fflags, libpath)
         c_compile_test(ccmp, cflags, libpath)
+        #  #]
+
+        #  #[ retrieve integer sizes for c and fortran
+        self.integer_sizes = retrieve_integer_sizes(ccmp, cflags, libpath,
+                                                    fcmp, fflags, libpath)
         #  #]
 
         #  #[ now use the make command to build the library
@@ -1758,7 +1778,8 @@ file for convenience
         # and replace them by their numerical values
         # (maybe there is a more clever way to do this in f2py, but I have
         #  not yet found another way ...)
-        adapt_f2py_signature_file(signatures_fullfilename)
+        adapt_f2py_signature_file(signatures_fullfilename,
+                                  self.integer_sizes)
 
         # it might be usefull for debugging to include this option: --debug-capi
         debug_f2py_c_api_option = ""
