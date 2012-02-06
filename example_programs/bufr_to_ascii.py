@@ -58,7 +58,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data[subs, :])+
                             "\n")
-        print 'converted BUFR msg nr. ',msg_nr
+        print 'converted BUFR msg nr. ', msg_nr
         if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
             print 'skipping remainder of this BUFR file'
             break
@@ -106,7 +106,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
                             separator.join(str(val) for val in data_list)+
                             "\n")
 
-        print 'converted BUFR msg nr. ',msg_nr
+        print 'converted BUFR msg nr. ', msg_nr
         if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
             print 'skipping remainder of this BUFR file'
             break
@@ -180,7 +180,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data_list)+
                             "\n")
-        print 'converted BUFR msg nr. ',msg_nr
+        print 'converted BUFR msg nr. ', msg_nr
         if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
             print 'skipping remainder of this BUFR file'
             break

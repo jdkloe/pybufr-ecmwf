@@ -666,8 +666,8 @@ class CheckCustomTables(unittest.TestCase):
         """
         test the creation of custom BUFR table files
         """
-        B_table_file = 'B_my_test_BUFR_table.txt'
-        D_table_file = 'D_my_test_BUFR_table.txt'
+        b_table_file = 'B_my_test_BUFR_table.txt'
+        d_table_file = 'D_my_test_BUFR_table.txt'
         
         # run the provided example code and verify the output
         testprog = "create_bufr_tables.py"
@@ -676,51 +676,51 @@ class CheckCustomTables(unittest.TestCase):
         self.assertEqual(success, True)                
 
         # verify the content of the created table files
-        expected_B_table_file = os.path.join('example_programs',
+        expected_b_table_file = os.path.join('example_programs',
                                              'expected_test_outputs',
-                                             B_table_file+'.expected')
-        expected_D_table_file = os.path.join('example_programs',
+                                             b_table_file+'.expected')
+        expected_d_table_file = os.path.join('example_programs',
                                              'expected_test_outputs',
-                                             D_table_file+'.expected')
+                                             d_table_file+'.expected')
             
-        B_table_txt = open(B_table_file).readlines()
-        D_table_txt = open(D_table_file).readlines()
+        b_table_txt = open(b_table_file).readlines()
+        d_table_txt = open(d_table_file).readlines()
 
-        expected_B_table_txt = open(expected_B_table_file).readlines()
-        expected_D_table_txt = open(expected_D_table_file).readlines()
+        expected_b_table_txt = open(expected_b_table_file).readlines()
+        expected_d_table_txt = open(expected_d_table_file).readlines()
 
-        self.assertEqual(B_table_txt, expected_B_table_txt)
-        self.assertEqual(D_table_txt, expected_D_table_txt)
+        self.assertEqual(b_table_txt, expected_b_table_txt)
+        self.assertEqual(d_table_txt, expected_d_table_txt)
 
-        os.remove(B_table_file)
-        os.remove(D_table_file)
+        os.remove(b_table_file)
+        os.remove(d_table_file)
         #  #]
     def test_use_custom_bufr_tables(self):
         #  #[
         """
         test the use of the custom BUFR table files
         """
-        test_BUFR_file = 'TESTCUSTOM.BUFR'
-        B_table_file = 'B_my_test_BUFR_table.txt'
-        D_table_file = 'D_my_test_BUFR_table.txt'
+        test_bufr_file = 'TESTCUSTOM.BUFR'
+        b_table_file = 'B_my_test_BUFR_table.txt'
+        d_table_file = 'D_my_test_BUFR_table.txt'
         
         # create the custom BUFR tables
         testprog = "create_bufr_tables.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        result = call_cmd(cmd)
+        call_cmd(cmd)
         # don't check this call, this has been checked above already
 
         # run the provided example code and verify the output
         testprog = "use_custom_tables_for_encoding.py"
         cmd = os.path.join(self.example_programs_dir, testprog)
-        cmd = cmd + ' ' + test_BUFR_file
+        cmd = cmd + ' ' + test_bufr_file
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         
         # clean up
-        os.remove(B_table_file)
-        os.remove(D_table_file)
-        os.remove(test_BUFR_file)
+        os.remove(b_table_file)
+        os.remove(d_table_file)
+        os.remove(test_bufr_file)
         #  #]
     #  #]
     
@@ -734,7 +734,7 @@ class CheckBufr(unittest.TestCase):
     testdatadir            = 'example_programs/testdata'
     testinputfile          = os.path.join(testdatadir,
                                           'Testfile.BUFR')
-    def test_run_decoding_example1_ascii(self):
+    def test_run_decode_example1_ascii(self):
         #  #[
         """
         test the decoding example program and produce ascii output
@@ -748,7 +748,7 @@ class CheckBufr(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
-    def test_run_decoding_example1_csv(self):
+    def test_run_decode_example1_csv(self):
         #  #[
         """
         test the decoding example program, and produce csv output
@@ -762,7 +762,7 @@ class CheckBufr(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
-    def test_run_decoding_example2_ascii(self):
+    def test_run_decode_example2_ascii(self):
         #  #[
         """
         test the decoding example program and produce ascii output
@@ -776,7 +776,7 @@ class CheckBufr(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
         #  #]
-    def test_run_decoding_example3_ascii(self):
+    def test_run_decode_example3_ascii(self):
         #  #[
         """
         test the decoding example program and produce ascii output
