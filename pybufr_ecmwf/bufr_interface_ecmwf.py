@@ -507,7 +507,7 @@ class BUFRInterfaceECMWF:
 
         kerr = 0
        
-        if verbose:
+        if self.verbose:
             print "calling: ecmwfbufr.bus012():"
         self.store_fortran_stdout()
         ecmwfbufr.bus0123(self.encoded_message, # input

@@ -466,14 +466,14 @@ def insert_pb_interface_definition(sfd, integer_sizes):
           "   integer*"+intlen+",        intent(inplace) :: cFileUnit",
           "   integer*"+intlen+",        intent(inplace) :: bufr_error_flag ",
           "end subroutine pbclose",
-          "subroutine pbbufr(cFileUnit,Buffer,BufferSizeBytes,MsgSizeBytes,&",
-          "                  bufr_error_flag)",
-          "   integer*"+intlen+",              intent(inplace) :: cFileUnit",
-          "   integer*"+intlen+",dimension(*), intent(inplace) :: Buffer",
-          "   integer*"+intlen+",              intent(inplace) :: BufferSizeBytes",
-          "   integer*"+intlen+",              intent(inplace) :: MsgSizeBytes",
-          "   integer*"+intlen+",              intent(inplace) :: bufr_error_flag ",
-          "end subroutine pbbufr",
+#          "subroutine pbbufr(cFileUnit,Buffer,BufferSizeBytes,MsgSizeBytes,&",
+#          "                  bufr_error_flag)",
+#          "   integer*"+intlen+",              intent(inplace) :: cFileUnit",
+#          "   integer*"+intlen+",dimension(*), intent(inplace) :: Buffer",
+#          "   integer*"+intlen+",              intent(inplace) :: BufferSizeBytes",
+#          "   integer*"+intlen+",              intent(inplace) :: MsgSizeBytes",
+#          "   integer*"+intlen+",              intent(inplace) :: bufr_error_flag ",
+#          "end subroutine pbbufr",
           "subroutine pbwrite(cFileUnit,Buffer,MsgSizeBytes,bufr_return_value)",
           "   integer*"+intlen+",              intent(inplace) :: cFileUnit",
           "   integer*"+intlen+",dimension(*), intent(inplace) :: Buffer",
@@ -481,7 +481,7 @@ def insert_pb_interface_definition(sfd, integer_sizes):
           "   integer*"+intlen+",              intent(inplace) :: bufr_return_value",
           "end subroutine pbwrite"]
 
-    print "Inserting hardcoded interface to pbbufr routines in "+\
+    print "Inserting hardcoded interface to pbio routines in "+\
           "signatures file ..."
     for lta in lines_to_add:
         sfd.write(indentation+lta+'\n')
@@ -561,6 +561,7 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
     print "Fixing array size definitions in signatures definition ..."
     sfd = open(signature_file, "wt")
     inside_subroutine = False
+    inside_pbbufr_sign = False
     for line in lines:
         
         mod_line = line
@@ -569,6 +570,11 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
             inside_subroutine = False
         elif ('subroutine' in mod_line):
             inside_subroutine = True
+
+        if ('subroutine pbbufr(kunit' in mod_line):
+            inside_pbbufr_sign = True
+        elif ('end subroutine pbbufr' in mod_line):
+            inside_pbbufr_sign = False
             
         if (inside_subroutine):
             if (' ::' in mod_line):
@@ -582,7 +588,13 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
                 # should be done by ECMWF rather then by us I think...)
                 (part1, part2) = mod_line.split(' ::')
                 mod_line = part1+',intent(inplace) ::'+part2
-            
+
+        if inside_pbbufr_sign:
+            # fix a bug in the pbbufr.F fortran code that causes f2py to
+            # fail on interfacing to this routine
+            if 'integer dimension(1),intent(inplace) :: karray' in mod_line:
+                mod_line = mod_line.replace('dimension(1)', 'dimension(*)')
+                
         if 'dimension' in mod_line:
             #print "adapting line: ", mod_line
             for edit in edits.keys():
@@ -1715,7 +1727,8 @@ file for convenience
         #   >>> 
 
         # just take them all (this works for me)
-        source_file_list = source_dir+"/bufrdc/*.F"
+        source_file_list = source_dir+"/bufrdc/*.F "+\
+                           source_dir+"/pbio/pbbufr.F"
 
         # apply ld_library path settings
         libpath = ""

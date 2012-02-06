@@ -132,13 +132,27 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
     # extract the number of BUFR messages from the file
     num_msgs = rbf.get_num_bufr_msgs()
 
+    # print 'num_msgs = ',num_msgs
+
     for msg_nr in range(1, num_msgs+1):
         encoded_message, section_sizes, section_start_locations = \
                          rbf.get_raw_bufr_msg(msg_nr)
         bufr_obj = BUFRInterfaceECMWF(encoded_message, section_sizes,
                                       section_start_locations)
+        #                              verbose=True)
         bufr_obj.decode_sections_012()
         bufr_obj.setup_tables()
+        # print 'num_subsets: ', bufr_obj.get_num_subsets()
+        # print 'num_elements: ',bufr_obj.get_num_elements()
+        # bufr_obj.decode_sections_0123()
+        # bufr_obj.print_sections_0123_metadata()
+
+        # d = '/home/jos/werk/pybufr_ecmwf_interface/'+\
+        #     'BUFR_test_files/radar/bufrtables/'
+        # bufr_obj.setup_tables(table_b_to_use = d+'B0000000000085011012.TXT',
+         #                      table_d_to_use = d+'D0000000000085011012.TXT')
+        # bufr_obj.print_sections_012()
+        # bufr_obj.fill_descriptor_list()
         bufr_obj.decode_data()
 
         # Create header lines from variable names and units

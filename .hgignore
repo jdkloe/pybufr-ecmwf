@@ -26,6 +26,9 @@ Testfile3Msgs.BUFR
 .*/.*/Testfile3Msgs.BUFR
 pybufr_ecmwf/ecmwfbufr_parameters.py
 pybufr_ecmwf/version.py
+pybufr_ecmwf/GetByteSizeDefaultInteger
+pybufr_ecmwf/GetByteSizeInt
+pybufr_ecmwf/GetByteSizeLong
 MANIFEST
 example_programs/testdata/Testoutputfile.*.BUFR
 
