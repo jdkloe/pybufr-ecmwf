@@ -203,7 +203,8 @@ class RawBUFRFile:
 
         # self.verbose = True
         if (self.verbose):
-            print 'getting message size of start location: ', start_location
+            print 'getting size of BUFR message at start location: ', \
+                  start_location
         try:
             raw_edition_number = self.data[start_location+8-1]
             edition_number = ord(raw_edition_number)
@@ -227,7 +228,10 @@ class RawBUFRFile:
                 raw_bytes = chr(0)+self.data[start_section0+5-1:
                                              start_section0+7]
                 msg_size = struct.unpack(dataformat, raw_bytes)[0]
-
+                #if self.verbose:
+                #    print 'section 0, byte 5: ', ord(raw_bytes[1])
+                #    print 'section 0, byte 6: ', ord(raw_bytes[2])
+                #    print 'section 0, byte 7: ', ord(raw_bytes[3])
             if edition_number <= 1:
                 size_section0 = 4
                 # i.e. only the 4 characters 'BUFR'
@@ -238,7 +242,8 @@ class RawBUFRFile:
 
             if (self.verbose):
                 print 'size_section0 = ', size_section0, \
-                      'start_section0 = ', start_section0
+                      'start_section0 = ', start_section0, \
+                      '[', hex(start_section0), ']'
             #  #]
             #  #[ retrieve size of section 1
             offset = size_section0
@@ -249,7 +254,8 @@ class RawBUFRFile:
             size_section1 = struct.unpack(dataformat, raw_bytes)[0]
             if (self.verbose):
                 print 'size_section1 = ', size_section1, \
-                      ' start_section1 = ', start_section1
+                      ' start_section1 = ', start_section1, \
+                      '[', hex(start_section1), ']'
             #  #]
             #  #[ retrieve size of section 2
             
@@ -280,7 +286,8 @@ class RawBUFRFile:
 
             if (self.verbose):
                 print 'size_section2 = ',size_section2, \
-                      ' start_section2 = ', start_section2
+                      ' start_section2 = ', start_section2, \
+                      '[', hex(start_section2), ']'
             #  #]
             #  #[ retrieve size of section 3
             offset = size_section0 + size_section1 + size_section2
@@ -292,7 +299,8 @@ class RawBUFRFile:
 
             if (self.verbose):
                 print 'size_section3 = ',size_section3, \
-                      ' start_section3 = ', start_section3
+                      ' start_section3 = ', start_section3, \
+                      '[', hex(start_section3), ']'
             #  #]
             #  #[ retrieve size of section 4
             offset = size_section0 + size_section1 + \
@@ -301,11 +309,20 @@ class RawBUFRFile:
             # get length of section 4 from bytes 1 to 3
             raw_bytes = chr(0)+self.data[start_section4+1-1:
                                          start_section4+3]
+            #if self.verbose:
+            #    print 'section 4, byte 1: ', \
+            #          ord(raw_bytes[1]), hex(ord(raw_bytes[1]))
+            #    print 'section 4, byte 2: ', \
+            #          ord(raw_bytes[2]), hex(ord(raw_bytes[1]))
+            #    print 'section 4, byte 3: ', \
+            #          ord(raw_bytes[3]), hex(ord(raw_bytes[1]))
+
             size_section4 = struct.unpack(dataformat, raw_bytes)[0]
 
             if (self.verbose):
                 print 'size_section4 = ',size_section4, \
-                      ' start_section4 = ', start_section4
+                      ' start_section4 = ', start_section4, \
+                      '[', hex(start_section4), ']'
             #  #]
             #  #[ retrieve size of section 5
             offset = size_section0 + size_section1 + \

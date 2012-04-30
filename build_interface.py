@@ -966,6 +966,12 @@ class InstallBUFRInterfaceECMWF:
         """ a method to download the most recent version of the
         ECMWF BUFR library tarball from the ECMWF website """
 
+
+        print 'downloading the latest library version has been disabled'
+        print 'because this build script is not yet compatible with'
+        print 'recent changes in the ECMWF BUFR library source code.'
+        return False
+
         if (self.verbose):
             print "trying to download: ", most_recent_bufr_tarfile_name
 

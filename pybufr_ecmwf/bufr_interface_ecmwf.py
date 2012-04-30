@@ -829,7 +829,7 @@ class BUFRInterfaceECMWF:
         # but is is the only way to get an accurate value of the actual
         # number of expanded data descriptors, which in turn is needed
         # to limit the memory that we need to pre-allocate for the
-        # cvals and values arrays (and especially the cvals array can becone
+        # cvals and values arrays (and especially the cvals array can become
         # rather huge ...)
 
         # does not work
@@ -842,6 +842,12 @@ class BUFRInterfaceECMWF:
         # len(self.py_expanded_descr_list)
         # len(self.py_unexp_descr_list)
         # self.py_num_subsets
+
+        # print 'len(self.py_unexp_descr_list) = ',len(self.py_unexp_descr_list)
+        # print 'self.py_unexp_descr_list = ',self.py_unexp_descr_list
+        # print 'len(self.py_expanded_descr_list) = ',\
+        #       len(self.py_expanded_descr_list)
+        # print 'self.py_expanded_descr_list = ',self.py_expanded_descr_list
 
         # calculate the needed size of the values and cvals arrays
         actual_nr_of_subsets = self.get_num_subsets()
@@ -896,7 +902,7 @@ class BUFRInterfaceECMWF:
         # print 'TESTJOS: len(self.cunits)=',len(self.cunits)
         # print 'TESTJOS: len(self.values)=',len(self.values)
         # print 'TESTJOS: len(self.cvals)=',len(self.cvals)
-
+        
         self.store_fortran_stdout()
         ecmwfbufr.bufrex(self.encoded_message, # input
                          self.ksup,   # output
@@ -912,6 +918,14 @@ class BUFRInterfaceECMWF:
                          kerr)        # output
         lines = self.get_fortran_stdout()
         self.display_fortran_stdout(lines)
+
+        # print 'TESTJOS: self.ksup  = ',self.ksup
+        # print 'TESTJOS: self.ksec0 = ',self.ksec0
+        # print 'TESTJOS: self.ksec1 = ',self.ksec1
+        # print 'TESTJOS: self.ksec2 = ',self.ksec2
+        # print 'TESTJOS: self.ksec3 = ',self.ksec3
+        # print 'TESTJOS: self.ksec4 = ',self.ksec4
+        
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bufrex'))
 
