@@ -260,17 +260,41 @@ class RawBUFRFile:
             #  #[ retrieve size of section 2
             
             # see if the optional section 2 is present or not
-            # this is indicated by bit 1 of byte 8 of section 1
-            byte8 = ord(self.data[start_location+offset+8-1])
+            # this is indicated by bit 1 of byte 10 of section 1
+            # bit 1 is the most significant bit, and corresponds
+            # to the byte having an integer value of 128
+
+            # NOTE: the documentation is inconsistent on this flag...
+            # The WMO document WMO_BUFR_Guide_Layer3-English-only.pdf
+            # states in the table on page L3-8 (the 10th page in the pdf)
+            # that byte 8 signals presence of section 2.
+            # The ECMWF document bufr_user_guide.pdf states in the
+            # table on page 7 that byte 10 signals the presence of section 2,
+            # however, in the text below it states that byte 8 should be used!
+            #
+            # Looking at the actual fortran code in the ECMWF BUFR library
+            # the situation seems more subtle, and depends on the
+            # BUFR edition version used...
+            # 
+            # Edition      0 1 2 3 4       available in ksec0(3) and ksec1(2)
+            # sec1 length  3 3 3 3 3 bytes copied to ksec1(1)
+            # master table 1 1 1 1 1 bytes copied to ksec1(2) if edition<1
+            #                              else it is copied to ksec1(14)
+            # orig. table  2 2 2 2 4 bytes copied to ksec1(3) and ksec1(16) 
+            # seq. number  1 1 1 1 1 bytes copied to ksec1(4)
+            # sec2presence 1 1 1 1 1 bytes copied to ksec1(5)
+            
+            if edition_number < 4:
+                byte_to_use = 8
+            else:
+                byte_to_use = 10
+
+            sec2_presence_flag = ord(self.data[start_location+\
+                                               offset+byte_to_use-1])
             section2_present = False
 
-            # NOTE: formally, only bit one signals the presence of
-            # section2, but I have some example ERS files that use other
-            # bits (i.e. that have byte8==8)
-            # So for now, assume section2 is present if any of the bits
-            # of byte8 is set.
-            #if (byte8 & 1):
-            if (byte8 > 0):
+            #if (sec2_presence_flag & 1):
+            if (sec2_presence_flag > 0):
                 section2_present = True
                 
             # retrieve size of section 2
