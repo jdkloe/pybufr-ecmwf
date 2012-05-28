@@ -832,9 +832,6 @@ class BUFRInterfaceECMWF:
         # cvals and values arrays (and especially the cvals array can become
         # rather huge ...)
 
-        # does not work
-        #self.fill_descriptor_list()
-        # todo: replace by the newly written extract_raw_descriptor_list()
         self.extract_raw_descriptor_list()
         self.expand_raw_descriptor_list()
 
@@ -874,8 +871,8 @@ class BUFRInterfaceECMWF:
         self.kvals  = actual_nr_of_descriptors*\
                       actual_nr_of_subsets
 
-        #              actual_nr_of_descriptors*\
-        #              actual_nr_of_subsets
+        # debug
+        #self.kvals = self.kvals*120
 
         # print 'TESTJOS: actual_nr_of_descriptors = ',actual_nr_of_descriptors
         # print 'TESTJOS: actual_nr_of_subsets = ',actual_nr_of_subsets
@@ -1094,11 +1091,18 @@ class BUFRInterfaceECMWF:
         for the current BUFR message
         """
 
+        if (not self.data_decoded):
+            errtxt = "Sorry, the number of elements is only available after "+\
+                     "a BUFR message has been decoded with a call to "+\
+                     "decode_data"
+            raise EcmwfBufrLibError(errtxt)
+    
         if (not self.sections012_decoded):
             errtxt = "Sorry, the number of elements is only available after "+\
                      "a BUFR message has been decoded with a call to "+\
                      "decode_sections_012"
             raise EcmwfBufrLibError(errtxt)
+
         return self.ksup[4]
         #  #]
     def get_value(self, i, j):
