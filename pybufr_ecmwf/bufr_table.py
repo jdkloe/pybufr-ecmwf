@@ -577,7 +577,8 @@ class BufrTable:
     def __init__(self,
                  autolink_tablesdir="tmp_BUFR_TABLES",
                  tables_dir=None,
-                 verbose=True):
+                 verbose=True,
+                 report_warnings=True):
         #  #[
         self.table_b   = {} # dict of desciptor-objects (f=0)
         self.specials  = {} # dict of specials  (f=1)
@@ -585,6 +586,7 @@ class BufrTable:
         self.table_d   = {} # dict of composite-descriptor-objects (f=3)
 
         self.verbose = verbose
+        self.report_warnings = report_warnings
         
         self.autolink_tables = True
         if (tables_dir is not None):
@@ -1261,6 +1263,7 @@ class BufrTable:
         if self.verbose:
             print "remaining blocks: ", remaining_blocks
             print "decoded blocks:   ", handled_blocks
+        if self.report_warnings:
             if remaining_blocks > 0:
                 print "---------------------------------------------------"
                 print "Reporting problematic blocks:"
@@ -1272,6 +1275,7 @@ class BufrTable:
                                  self.decode_blocks(report_unhandled = True)
                 print "---------------------------------------------------"
 
+        if self.verbose:
             print '-------------'
             print 'Loaded: ', self.num_d_blocks,' table D entries'
             print '-------------'
@@ -1383,12 +1387,12 @@ class BufrTable:
         del(self.list_of_d_entry_lineblocks)
         self.list_of_d_entry_lineblocks = []
 
-        print 'self.table_b = ', self.table_b
-        print 'self.table_d = ', self.table_d
-        print 'self.specials = ', self.specials
-        print 'self.modifiers = ', self.modifiers
-        print 'self.list_of_d_entry_lineblocks = ', \
-              self.list_of_d_entry_lineblocks
+        # print 'self.table_b = ', self.table_b
+        # print 'self.table_d = ', self.table_d
+        # print 'self.specials = ', self.specials
+        # print 'self.modifiers = ', self.modifiers
+        # print 'self.list_of_d_entry_lineblocks = ', \
+        #       self.list_of_d_entry_lineblocks
 
         #sys.exit(1)
         #  #]
@@ -1500,7 +1504,8 @@ class BufrTable:
 if __name__ == "__main__":
     #  #[ test program
     print "Starting test program:"
-    BT = BufrTable(autolink_tablesdir = "tmp_BUFR_TABLES")
+    BT = BufrTable(autolink_tablesdir = "tmp_BUFR_TABLES",
+                   verbose=False)
     # load BUFR tables using the automatically linked
     # tables defined on the lines above
     
@@ -1514,10 +1519,36 @@ if __name__ == "__main__":
     # this last one seems only to have a B table but no D table!!!!
     
     PATH = "ecmwf_bufrtables"
-    for table_code in TABLE_CODES:
-        BT.load(os.path.join(PATH, "B"+table_code+".TXT"))
-        BT.load(os.path.join(PATH, "D"+table_code+".TXT"))
-
+    bufr_b_tables = glob.glob(os.path.join(PATH, "B0*.TXT"))
+    for bufr_b_table in bufr_b_tables:
+        bufr_b_name = os.path.split(bufr_b_table)[1]
+        bufr_d_name = 'D'+bufr_b_name[1:]
+        bufr_d_table = os.path.join(PATH, bufr_d_name)
+        print '='*50
+        print 'loading: '+bufr_b_table
+        print '='*50
+        saved_sys_stdout = sys.stdout
+        try:
+            sys.stdout = open('comments_during_load_of_'+bufr_b_name,'wt')
+            BT.load(bufr_b_table)
+            sys.stdout.close()
+            sys.stdout = saved_sys_stdout
+        except:
+            sys.stdout = saved_sys_stdout
+            print 'ERROR: load failed !!!'
+        
+        print '='*50
+        print 'loading: '+bufr_d_table
+        print '='*50
+        saved_sys_stdout = sys.stdout
+        try:
+            sys.stdout = open('comments_during_load_of_'+bufr_d_name,'wt')
+            BT.load(bufr_d_table)
+            sys.stdout.close()
+            sys.stdout = saved_sys_stdout
+        except:
+            sys.stdout = saved_sys_stdout
+            print 'ERROR: load failed !!!'
         BT.unload_tables()
     
     # test application of modification commands:

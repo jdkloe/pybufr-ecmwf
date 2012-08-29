@@ -1263,7 +1263,7 @@ class BUFRInterfaceECMWF:
     def expand_raw_descriptor_list(self):
         #  #[
         bt = BufrTable(tables_dir=self.private_bufr_tables_dir,
-                       verbose=False)
+                       verbose=False, report_warnings=False)
         # setup_tables already has created the symlinks to the BUFR tables
         # so don't use this autolink feature for now
         # bt = BufrTable(autolink_tablesdir=self.private_bufr_tables_dir,
