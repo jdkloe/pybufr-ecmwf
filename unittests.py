@@ -800,6 +800,10 @@ os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
 print "Running unit tests:"
 unittest.main()
 
+# and cleanup afterwards as well
+os.system('\\rm -rf tmp_BUFR_TABLES')
+os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
+
     
 # still todo:
 #

@@ -1044,6 +1044,21 @@ class BufrTable:
 
         return postpone
         #  #]
+    def custom_split(self,line):
+        #  #[ replacement for split()
+        # needed because sometimes D-descriptors do not have
+        # spaces in between the items on the start line
+        # (it fails if more than 100 elements are present in one D-entry
+        #  which currently is the case for "340005100 001007")
+        part1 = line[:7]
+        part2 = line[7:11]
+        part3 = line[11:18]
+        parts = []
+        if part1.strip() != '': parts.append(part1)
+        if part2.strip() != '': parts.append(part2)
+        if part3.strip() != '': parts.append(part3)
+        return parts
+        #  #]
     def decode_blocks(self, report_unhandled = False):
         #  #[ decode table D blocks of lines
         """
@@ -1054,7 +1069,7 @@ class BufrTable:
         handled_blocks = 0
         list_of_handled_blocks = []
         for d_entry_block in self.list_of_d_entry_lineblocks:
-            #print "d_entry_block=", d_entry_block
+            # print "d_entry_block=", d_entry_block
 
             # ensure i and line are defined,
             # even if d_entry_block is an empty list
@@ -1063,7 +1078,9 @@ class BufrTable:
             
             for (j, (i, line)) in enumerate(d_entry_block):
                 #print j, "considering line ["+line+"]"
-                parts = line[:18].split()
+                # this fails if more than 100 elements in one D-entry
+                # parts = line[:18].split()
+                parts = self.custom_split(line)
                 if j == 0: # startline
                     #print "is a start line"
                     reference     = int(parts[0], 10)
@@ -1184,8 +1201,13 @@ class BufrTable:
         this_lineblock = None
         for (i, line) in enumerate(open(dfile, 'rt')):
             line_copy = line.replace('\r', '').replace('\n', '')
-            #print "considering line ["+l+"]"
-            parts = line_copy[:18].split()
+            # print "considering line ",i,":["+line_copy+"]"
+
+            # this fails if more than 100 elements in one D-entry
+            # parts = line_copy[:18].split()
+            parts = self.custom_split(line_copy)
+            # print 'parts: ',parts
+            
             start_line = False
             continuation_line = False
             if (len(parts) == 3):
@@ -1203,7 +1225,7 @@ class BufrTable:
                 raise IOError
             
             if start_line:
-                #print "is a start line"
+                # print "is a start line"
                 if (this_lineblock != None):
                     # save the just read block in the list
                     self.list_of_d_entry_lineblocks.append(this_lineblock)
@@ -1212,7 +1234,7 @@ class BufrTable:
                 this_lineblock.append((i, line_copy))
                 
             if continuation_line:
-                #print "is a continuation line"
+                # print "is a continuation line"
                 this_lineblock.append((i, line_copy))
 
         # save the last block as well
