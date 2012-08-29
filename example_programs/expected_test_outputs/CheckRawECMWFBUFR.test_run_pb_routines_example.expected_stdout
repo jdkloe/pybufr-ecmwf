@@ -3,3 +3,31 @@ pb usage example
 --------------------------------------------------
 input_bufr_file = [example_programs/testdata/Testfile3CorruptedMsgs.BUFR]
 calling: ecmwfbufr.pbopen()
+c_file_unit =  0
+bufr_error_flag =  0
+calling: ecmwfbufr.pbbufr()
+BUFR message:  0
+msg_size_bytes =  36
+buffer[0:4] =  [1380341058    1179648      53760   16779276]
+bufr_error_flag =  0
+calling: ecmwfbufr.pbbufr()
+BUFR message:  1
+msg_size_bytes =  36
+buffer[0:4] =  [1380341058    1179648      53760   16779276]
+bufr_error_flag =  0
+calling: ecmwfbufr.pbbufr()
+BUFR message:  2
+msg_size_bytes =  36
+buffer[0:4] =  [1380341058    1179648      53760   16779276]
+bufr_error_flag =  0
+calling: ecmwfbufr.pbbufr()
+BUFR message:  3
+msg_size_bytes =  0
+buffer[0:4] =  [0 0 0 0]
+bufr_error_flag =  0
+calling: ecmwfbufr.pbclose()
+bufr_error_flag =  0
+succesfully read data from file:  example_programs/testdata/Testfile3CorruptedMsgs.BUFR
+--------------------------------------------------
+done
+--------------------------------------------------

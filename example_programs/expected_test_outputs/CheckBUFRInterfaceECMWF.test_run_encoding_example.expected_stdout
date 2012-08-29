@@ -5,8 +5,8 @@ Table names expected by the library:
 B0000000000098015001.TXT
 D0000000000098015001.TXT
 Tables to be used:
-B_default.TXT
-D_default.TXT
+B0000000000098015001.TXT
+D0000000000098015001.TXT
 adding  2  descriptors
 adding delayed replication for  2  descriptors
 replicating them at most  2  times
