@@ -1243,9 +1243,10 @@ class InstallBUFRInterfaceECMWF:
                     print "valid options are: ", \
                           ", ".join(s for s in POSSIBLE_F_COMPILERS)
                     raise NotImplementedError
-                
+            
             print "preferred fortran compiler ["+\
-                  self.preferred_fortran_compiler+"] seems not available..."
+                  str(self.preferred_fortran_compiler)+\
+                  "] seems not available..."
             print "falling back to default fortran compiler"
             
             for f_compiler in POSSIBLE_F_COMPILERS:
@@ -1402,7 +1403,7 @@ class InstallBUFRInterfaceECMWF:
             
             if (self.fortran_compiler_to_use == 'custom'):
                 fcmp = self.fortran_compiler
-                fflags = ' '.join(flags for flags in FFLAGS_COMMON[fcmp] )
+                fflags = ' '.join(flags for flags in FFLAGS_COMMON )
             else:
                 fcmp = self.fortran_compiler_to_use
                 fflags = ' '.join(flags for flags in FFLAGS_NEEDED[fcmp] )
@@ -1413,7 +1414,7 @@ class InstallBUFRInterfaceECMWF:
             
             if (self.c_compiler_to_use == 'custom'):
                 ccmp = self.c_compiler
-                cflags = ' '.join(flags for flags in CFLAGS_COMMON[ccmp] )
+                cflags = ' '.join(flags for flags in CFLAGS_COMMON )
             else:
                 ccmp = self.c_compiler_to_use
                 cflags = ' '.join(flags for flags in CFLAGS_NEEDED[ccmp] )
@@ -1995,22 +1996,22 @@ if __name__ == "__main__":
     # instantiate the class, and build library if needed
     # (4 different tests defined for this step, with 4 different compilers)
     
-    #TESTCASE = 1 # test default g95
+    #TESTCASE = 1 # test default (=gfortran now)
     TESTCASE = 2 # test default gfortran
-    #TESTCASE = 3 # test custom gfortran
+    #TESTCASE = 3 # test custom gfortran [broken for now]
     #TESTCASE = 4 # test custom g95-32 bit
     #TESTCASE = 5 # test custom g95-64 bit
     
     if (TESTCASE == 1):
-        # tested at my laptop at home with a g95 v.0.92 (32-bit)
-        # in my search PATH
-        # successfully tested 19-Mar-2010
+        # tested at my laptop at home with a systemwide
+        # gfortran v4.7.0 installed
+        # successfully tested 29-Aug-2012
         BI = InstallBUFRInterfaceECMWF(verbose = True)
         #BI = InstallBUFRInterfaceECMWF(verbose = True, debug_f2py_c_api = True)
     elif (TESTCASE == 2):
         # tested at my laptop at home with a systemwide
-        # gfortran v4.3.2 installed
-        # successfully tested 19-Mar-2010
+        # gfortran v4.7.0 installed
+        # successfully tested 29-Aug-2012
         BI = InstallBUFRInterfaceECMWF(verbose = True,
                                        preferred_fortran_compiler = 'gfortran')
     elif (TESTCASE == 3):
@@ -2020,6 +2021,7 @@ if __name__ == "__main__":
         # tested at my laptop at home with a gfortran v4.4.0 installed
         # in a user account
         # successfully tested 19-Mar-2010
+        # NOTE: this gfortran is no longer installed, so no new testresults
         BI = InstallBUFRInterfaceECMWF(verbose = True,
                     fortran_compiler = "/home/jos/bin/gfortran_personal",
                     fortran_ld_library_path = "/home/jos/bin/gcc-trunk/lib64",
@@ -2027,14 +2029,14 @@ if __name__ == "__main__":
     elif (TESTCASE == 4):
         # tested at my laptop at home with a g95 v0.92 (32-bit) installed
         # in a user account
-        # successfully tested 19-Mar-2010
+        # successfully tested 29-Aug-2012
         BI = InstallBUFRInterfaceECMWF(verbose = True,
                     fortran_compiler = "/home/jos/bin/g95_32",
                     fortran_flags = "-fno-second-underscore -fPIC -i4 -r8")
     elif (TESTCASE == 5):
         # tested at my laptop at home with a g95 v0.92 (64-bit)
         # installed in a user account
-        # successfully tested 19-Mar-2010
+        # successfully tested 29-Aug-2012
         BI = InstallBUFRInterfaceECMWF(verbose = True,
                     fortran_compiler = "/home/jos/bin/g95_64",
                     fortran_flags = "-fno-second-underscore -fPIC -i4 -r8")
