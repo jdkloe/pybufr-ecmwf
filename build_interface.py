@@ -974,10 +974,10 @@ class InstallBUFRInterfaceECMWF:
         ECMWF BUFR library tarball from the ECMWF website """
 
 
-        print 'downloading the latest library version has been disabled'
-        print 'because this build script is not yet compatible with'
-        print 'recent changes in the ECMWF BUFR library source code.'
-        return False
+        #print 'downloading the latest library version has been disabled'
+        #print 'because this build script is not yet compatible with'
+        #print 'recent changes in the ECMWF BUFR library source code.'
+        #return False
 
         if (self.verbose):
             print "trying to download: ", most_recent_bufr_tarfile_name
@@ -1110,6 +1110,19 @@ class InstallBUFRInterfaceECMWF:
             else:
                 print "path exists: ", source_dir
                 print "assuming the package is already unpacked..."
+
+            # extract numerical BUFR library version
+            # this should be something like: bufrdc_000389
+            try:
+                bufr_dir = os.path.split(source_dir)[1]
+                bufrdir_version = int(bufr_dir.split('_')[1])
+                # print 'bufr_dir = ',bufr_dir
+                # print 'bufrdir_version = ',bufrdir_version
+            except:
+                print 'ERROR: could not extract numerical BUFR library'
+                print 'version number ...'
+                print 'Please report this bug.'
+                raise ProgrammingError
         #  #]
 
             #  #[ add 2 small routines to redirect the stdout
@@ -1462,6 +1475,78 @@ class InstallBUFRInterfaceECMWF:
             shutil.copyfile(source, destination)
             #  #]
 
+        if (not remake) and (bufrdir_version>387):
+            #  #[ generate fortran2c config file for newer bufr versions
+            # fortran2c_compiler contains the extra libraries needed
+            # to link the objects created with the current fortran
+            # compiler with a main program created with the
+            # current c-compiler
+            fortran2c_name = 'fortran2c_compiler'
+            fortran2c_target = os.path.join(source_dir, "config",
+                                            fortran2c_name)
+            fortran2c_source = None
+            if self.fortran_compiler_to_use=='g95':
+                fortran2c_source = os.path.join(source_dir, "config",
+                                                'fortran2c_g95')
+                shutil.copyfile(fortran2c_source, fortran2c_target)
+
+            if self.fortran_compiler_to_use=='gfortran':
+                fortran2c_source = os.path.join(source_dir, "config",
+                                                'fortran2c_gfortran')
+                # just copying the provided file fails for me
+                # (gfortran 4.7.x also needs -lm during the link stage)
+                #shutil.copyfile(fortran2c_source, fortran2c_target)
+                fd = open(fortran2c_target,'wt')
+                fd.write('FORTRAN2C = -lgfortran -lm')
+                fd.close()
+                
+            if self.fortran_compiler_to_use=='pgf90':
+                fortran2c_source = os.path.join(source_dir, "config",
+                                                'fortran2c')
+                shutil.copyfile(fortran2c_source, fortran2c_target)
+
+            if fortran2c_source is None:
+                fortran2c_source = os.path.join(source_dir, "config",
+                                                'fortran2c_gnu')
+                shutil.copyfile(fortran2c_source, fortran2c_target)
+                
+            #  #]
+            #  #[ generate the makefile for newer bufr versions
+            # bufr library versions 000388 and newer have changed the
+            # build and install procedure. They have a new 'build_library'
+            # script that tries to guess system parameters and then
+            # creates the Makefile from Makefile.in by applying a series
+            # of 'sed' commands. However, this script is interactive and
+            # asks the use several questions. Therefore this python
+            # script bypasses this build_library script and tries to do
+            # the same for linux without user intervention
+
+            # makefiles are craeted from Makefile.in
+            # in these directories:
+            makefile_dirs = ['.', 'bufrdc', 'bufrtables', 'pbio', 'fortranC',
+                             'examples', 'synop2bufr',
+                             'synop2bufr/station_list']
+            install_dir = 'dummy' # seems never used in the makefiles
+            replacements = [('%reals%',      r64),
+                            ('%install_dir%',install_dir),
+                            ('%arch%',       arch),
+                            ('%comp%',       cname),
+                            ('%plat%',       a64),
+                            ('%depl%',       'bufr')]
+            for makefile_dir in makefile_dirs:
+                makefile = os.path.join(source_dir,makefile_dir,'Makefile')
+                makefile_template = makefile+'.in'
+                print 'creating: ',makefile
+                fd_makefile = open(makefile,'wt')
+                for line in open(makefile_template).readlines():
+                    line_new = line
+                    # print 'adapting line: ',line
+                    for (old,new) in replacements:
+                        line_new = line_new.replace(old,new)
+                    fd_makefile.write(line_new)
+                fd_makefile.close()
+            #  #]
+
         #  #[ compile little pieces of Fortran and c to test the compilers
         fortran_compile_test(fcmp, fflags, libpath)
         c_compile_test(ccmp, cflags, libpath)
@@ -1506,12 +1591,15 @@ class InstallBUFRInterfaceECMWF:
         #  #]
 
         if not remake:
-            #  #[ move the bufr tables
-            # move the directory holding the provided
+            #  #[ copy the bufr tables
+            # copy the directory holding the provided
             # BUFR tables, to a more convenient location
+            # (don't move it since this will mess-up the build system
+            # for library versions 000388 and above when trying
+            # to do a rebuild.)
             fullname_table_dir = os.path.join(source_dir, "bufrtables")
             table_dir = "ecmwf_bufrtables"
-            shutil.move(fullname_table_dir, table_dir)
+            shutil.copytree(fullname_table_dir, table_dir)
             
             # remove some excess files from the bufr tables directory
             # that we don't need any more (symlinks, tools)
