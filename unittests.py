@@ -722,6 +722,12 @@ class CheckCustomTables(unittest.TestCase):
         os.remove(d_table_file)
         os.remove(test_bufr_file)
         #  #]
+    def tearDown(self):
+        # cleanup after running the tests from this class
+        # print 'tearDown running'
+        os.system('\\rm -rf tmp_BUFR_TABLES')
+        os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/'+\
+                  'tmp_BUFR_TABLES')
     #  #]
     
 class CheckBufr(unittest.TestCase):
@@ -800,11 +806,8 @@ os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
 print "Running unit tests:"
 unittest.main()
 
-# and cleanup afterwards as well
-os.system('\\rm -rf tmp_BUFR_TABLES')
-os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
 
-    
+
 # still todo:
 #
 # add test calls to:
