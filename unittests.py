@@ -722,12 +722,14 @@ class CheckCustomTables(unittest.TestCase):
         os.remove(d_table_file)
         os.remove(test_bufr_file)
         #  #]
+    #pylint: disable-msg=C0103
     def tearDown(self):
         # cleanup after running the tests from this class
         # print 'tearDown running'
         os.system('\\rm -rf tmp_BUFR_TABLES')
         os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/'+\
                   'tmp_BUFR_TABLES')
+    #pylint: enable-msg=C0103
     #  #]
     
 class CheckBufr(unittest.TestCase):

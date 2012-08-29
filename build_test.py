@@ -433,6 +433,9 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         #    raise InterfaceBuildError
         # build_interface.InterfaceBuildError
         #
+
+        # this bug in f2py has been reported here:
+        #        http://projects.scipy.org/numpy/ticket/1932
         
         sys.exit(1)        
         
