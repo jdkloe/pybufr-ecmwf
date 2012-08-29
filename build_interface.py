@@ -404,8 +404,38 @@ end program GetByteSizeDefaultInteger
     (lines_stdout, lines_stderr) = \
         fortran_compile_and_execute(fcmp, fflags, f90_code,
                                     f90_executable, f_libpath)
-    bytesizedefaultinteger = lines_stdout[0].strip()
+    try:
+        bytesizedefaultinteger = lines_stdout[0].strip()
+    except:
+        bytesizedefaultinteger = None
 
+    if bytesizedefaultinteger is None:
+        # try again, now defining nbytes_default_integer explicitely
+        # as 8-byte integer, which seems needed if you compile
+        # with g95-64 bit version combined with the -i4 option
+        f90_code = \
+r"""
+program GetByteSizeDefaultInteger
+  integer :: default_integer
+  integer*8 :: nbytes_default_integer
+  inquire(iolength=nbytes_default_integer) default_integer  
+  print *,nbytes_default_integer
+end program GetByteSizeDefaultInteger
+"""
+        f90_executable = 'GetByteSizeDefaultInteger'
+        (lines_stdout, lines_stderr) = \
+                       fortran_compile_and_execute(fcmp, fflags, f90_code,
+                                                   f90_executable, f_libpath)
+        try:
+            bytesizedefaultinteger = lines_stdout[0].strip()
+        except:
+            bytesizedefaultinteger = None
+
+    if bytesizedefaultinteger is None:
+        txt = 'ERROR: could not retrieve bytesizedefaultinteger '+\
+              'for this fortran compiler: '+fcmp
+        raise ProgrammingError(txt)
+    
     # print 'GetByteSizeInt:  ',bytesizeint
     # print 'GetByteSizeLong: ',bytesizelong
     # print 'GetByteSizeDefaultInteger: ',bytesizedefaultinteger
