@@ -44,10 +44,10 @@ else:
     # look into that routine for more details.
     SCRIPTS_TO_CHECK.extend(EX_FILES)
     
-MODULES_TO_CHECK = []
+# MODULES_TO_CHECK = []
 # my current pylint version crashes with a runtime error when I
 # try to check this module, so its disabled for now
-#MODULES_TO_CHECK = ['pybufr_ecmwf', ]
+MODULES_TO_CHECK = ['pybufr_ecmwf', ]
 
 def check(msg, pycode, additional_args):
     #  #[
