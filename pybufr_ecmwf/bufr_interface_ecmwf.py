@@ -115,12 +115,17 @@ class BUFRInterfaceECMWF:
         #       and check whether they pass the library maximum or not.
         #       (and choose sensible defaults if not provided)
 
-        # define the needed sizes. These are only used by busel,
-        # not by the call to bufrex (where they would cause
-        # serious memory usage)
-        self.max_nr_descriptors          = 20 # 44
+        # define the needed sizes.
+        # At the moment these are only used during encoding.
+        #self.max_nr_descriptors          = 20 # 44
         self.max_nr_expanded_descriptors = 50
 
+        self.actual_nr_of_expanded_descriptors = None
+        
+        self.nr_of_descriptors_startval = 50
+        self.nr_of_descriptors_maxval   = 500000
+        self.nr_of_descriptors_multiplyer = 10
+        
         #
         # note: these maximum constants are only used by the decoder,
         # and will be redefined during encoding
@@ -139,12 +144,12 @@ class BUFRInterfaceECMWF:
         # copy to names that are more common in the ECMWF software
 
         # self.krdlen = self.max_nr_delayed_replication_factors
-        self.kelem  = self.max_nr_expanded_descriptors
 
         # filling this one is delayed in case of decoding
         # since the nr of subsets is only known after decoding
         # sections 0 upto 3. 
-        #self.kvals  = self.max_nr_expanded_descriptors*self.max_nr_subsets
+        # self.kvals  = self.max_nr_expanded_descriptors*self.max_nr_subsets
+        self.kvals = None
         # self.jbufl  = self.max_bufr_msg_size
         # self.jsup   = size_ksup
     
@@ -159,17 +164,17 @@ class BUFRInterfaceECMWF:
 
         # arrays to hold the descriptors
         self.ktdlen = 0 # will hold nr of descriptors
-        self.ktdlst = np.zeros(self.max_nr_descriptors, dtype = np.int)
+        self.ktdlst = None # will hold unexpanded descriptor list
         self.ktdexl = 0 # will hold nr of expanded descriptors
-        self.ktdexp = np.zeros(self.max_nr_expanded_descriptors, dtype = np.int)
+        self.ktdexp = None # will hold expanded descriptor list
 
         # the list of max nr of delayed replications is filled
         # inside the register_and_expand_descriptors method
         self.kdata = None
         
         # arrays to hold the actual numerical and string values
-        self.cnames = np.zeros((self.kelem, 64), dtype = np.character)
-        self.cunits = np.zeros((self.kelem, 24), dtype = np.character)
+        self.cnames = None
+        self.cunits = None
 
         # note: these next 2 arrays might become very large, especially
         # the cvals array, so in order to keep them as small as possible
@@ -624,7 +629,7 @@ class BUFRInterfaceECMWF:
                        LocalVersion, MasterTableVersion,
                        EditionNumber, MasterTableNumber)
         
-        # print '(expected_name_table_b, expected_name_table_d) = ',\
+        # print 'DEBUG: (expected_name_table_b, expected_name_table_d) = ', \
         #       (expected_name_table_b, expected_name_table_d)
 
         userpath_table_b = None
@@ -807,9 +812,6 @@ class BUFRInterfaceECMWF:
         #  #]
     def decode_data(self):
         #  #[
-
-        kerr = 0
-
         if (not self.sections012_decoded):
             errtxt = "Sorry, in order to allow automatic allocation of the "+\
                      "values and cvals arrays the number of subsets is "+\
@@ -839,21 +841,33 @@ class BUFRInterfaceECMWF:
         # len(self.py_expanded_descr_list)
         # len(self.py_unexp_descr_list)
         # self.py_num_subsets
+        
+        # HOWEVER, in case of delayed replication py_expanded_descr_list
+        # cannot be filled yet and will be set to None.
 
-        # print 'len(self.py_unexp_descr_list) = ',len(self.py_unexp_descr_list)
-        # print 'self.py_unexp_descr_list = ',self.py_unexp_descr_list
-        # print 'len(self.py_expanded_descr_list) = ',\
-        #       len(self.py_expanded_descr_list)
-        # print 'self.py_expanded_descr_list = ',self.py_expanded_descr_list
-
+        # print 'DEBUG: len(self.py_unexp_descr_list) = ', \
+        #       len(self.py_unexp_descr_list)
+        # print 'DEBUG: self.py_unexp_descr_list = ', \
+        #       self.py_unexp_descr_list
+        # if self.py_expanded_descr_list:
+        #     print 'DEBUG: len(self.py_expanded_descr_list) = ',\
+        #           len(self.py_expanded_descr_list)
+        # else:
+        #     print 'DEBUG: self.py_expanded_descr_list = ',\
+        #           self.py_expanded_descr_list
+        # print 'DEBUG: self.py_expanded_descr_list = ', \
+        #       self.py_expanded_descr_list
+        # self.fill_descriptor_list()
+        # self.print_descriptors()
+        
         # calculate the needed size of the values and cvals arrays
-        actual_nr_of_subsets = self.get_num_subsets()
+        nr_of_subsets = self.get_num_subsets()
 
         # double check: see if both methods to extract num_subsets
         # yield the same number:
-        if actual_nr_of_subsets != self.py_num_subsets:
+        if nr_of_subsets != self.py_num_subsets:
             errtxt = "a programming error occurred! "+\
-                     "get_num_subsets() yielded "+str(actual_nr_of_subsets)+\
+                     "get_num_subsets() yielded "+str(nr_of_subsets)+\
                      " subsets, but extract_raw_descriptor_list() yielded "+\
                      str(self.py_num_subsets)+" subsets. "+\
                      "These numbers should be identical !!"
@@ -865,40 +879,79 @@ class BUFRInterfaceECMWF:
         # final expanded descriptor list. This final list may be
         # smaller in some cases (for example for ERS2 data) than
         # the maximum intermediate size needed....
-        actual_nr_of_descriptors = len(self.py_expanded_descr_list)
+        if self.py_expanded_descr_list:
+            nr_of_descriptors = len(self.py_expanded_descr_list)
+        else:
+            nr_of_descriptors = self.nr_of_descriptors_startval
+
+        increment_arraysize = True
+        while increment_arraysize:
+            try:
+                self.try_decode_data(nr_of_descriptors, nr_of_subsets)
+                increment_arraysize = False
+            except EcmwfBufrLibError as e:
+                nr_of_descriptors = nr_of_descriptors * \
+                                    self.nr_of_descriptors_multiplyer
+                if nr_of_descriptors>self.nr_of_descriptors_maxval:
+                    self.display_fortran_stdout(lines)
+                    raise e
+                else:
+                    print 'retrying with: nr_of_descriptors = ', \
+                          nr_of_descriptors
+        # done
+        self.actual_nr_of_expanded_descriptors = self.ksup[4]
+        
+        # if self.py_expanded_descr_list:
+        #     self.actual_nr_of_expanded_descriptors = \
+        #                        len(self.py_expanded_descr_list)
+        # else:
+        #     count = 0
+        #     for cname in self.cnames:
+        #         # glue the ndarray of characters together to form strings
+        #         cname_str = "".join(cname).strip()
+        #         if cname_str != '':
+        #             count += 1
+        #     self.actual_nr_of_expanded_descriptors = count
+        # print 'DEBUG: self.actual_nr_of_expanded_descriptors = ', \
+        #       self.actual_nr_of_expanded_descriptors
+        # print 'self.ksup[4] = ', self.ksup[4] # real num of exp. elements
+        # print 'self.ksup[6] = ', self.ksup[6] # real num of elements in cvals
+        #  #]
+    def try_decode_data(self, nr_of_descriptors, nr_of_subsets):
+        #  #[ try decoding for a given array length
+
+        kerr = 0
 
         # calc. needed array sizes
-        self.kvals  = actual_nr_of_descriptors*\
-                      actual_nr_of_subsets
-
+        self.kvals  = nr_of_descriptors*nr_of_subsets
+        self.actual_kelem = nr_of_descriptors
+        
         # debug
         #self.kvals = self.kvals*120
+        
+        # print 'DEBUG: nr_of_descriptors = ', nr_of_descriptors
+        # print 'DEBUG: nr_of_subsets = ', nr_of_subsets
+        # print 'DEBUG: self.kvals = ',self.kvals
 
-        # print 'TESTJOS: actual_nr_of_descriptors = ',actual_nr_of_descriptors
-        # print 'TESTJOS: actual_nr_of_subsets = ',actual_nr_of_subsets
-        # print 'TESTJOS: self.kvals = ',self.kvals
-
-        # print 'TESTJOS: breakpoint'
+        # print 'DEBUG: breakpoint'
         #sys.exit(1)
 
         # allocate space for decoding
         # note: float64 is the default, but it doesn't hurt to make it explicit
         self.values = np.zeros(      self.kvals, dtype = np.float64)
         self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
-        self.cnames = np.zeros((actual_nr_of_descriptors, 64),
-                               dtype = np.character)
-        self.cunits = np.zeros((actual_nr_of_descriptors, 24),
-                               dtype = np.character)
+        self.cnames = np.zeros((nr_of_descriptors, 64), dtype = np.character)
+        self.cunits = np.zeros((nr_of_descriptors, 24), dtype = np.character)
 
-        # print 'TESTJOS: len(self.ksec0)=',len(self.ksec0)
-        # print 'TESTJOS: len(self.ksec1)=',len(self.ksec1)
-        # print 'TESTJOS: len(self.ksec2)=',len(self.ksec2)
-        # print 'TESTJOS: len(self.ksec3)=',len(self.ksec3)
-        # print 'TESTJOS: len(self.ksec4)=',len(self.ksec4)
-        # print 'TESTJOS: len(self.cnames)=',len(self.cnames)
-        # print 'TESTJOS: len(self.cunits)=',len(self.cunits)
-        # print 'TESTJOS: len(self.values)=',len(self.values)
-        # print 'TESTJOS: len(self.cvals)=',len(self.cvals)
+        # print 'DEBUG: len(self.ksec0)=',len(self.ksec0)
+        # print 'DEBUG: len(self.ksec1)=',len(self.ksec1)
+        # print 'DEBUG: len(self.ksec2)=',len(self.ksec2)
+        # print 'DEBUG: len(self.ksec3)=',len(self.ksec3)
+        # print 'DEBUG: len(self.ksec4)=',len(self.ksec4)
+        # print 'DEBUG: len(self.cnames)=',len(self.cnames)
+        # print 'DEBUG: len(self.cunits)=',len(self.cunits)
+        # print 'DEBUG: len(self.values)=',len(self.values)
+        # print 'DEBUG: len(self.cvals)=',len(self.cvals)
         
         self.store_fortran_stdout()
         ecmwfbufr.bufrex(self.encoded_message, # input
@@ -914,14 +967,14 @@ class BUFRInterfaceECMWF:
                          self.cvals,  # output
                          kerr)        # output
         lines = self.get_fortran_stdout()
-        self.display_fortran_stdout(lines)
+        # self.display_fortran_stdout(lines)
 
-        # print 'TESTJOS: self.ksup  = ',self.ksup
-        # print 'TESTJOS: self.ksec0 = ',self.ksec0
-        # print 'TESTJOS: self.ksec1 = ',self.ksec1
-        # print 'TESTJOS: self.ksec2 = ',self.ksec2
-        # print 'TESTJOS: self.ksec3 = ',self.ksec3
-        # print 'TESTJOS: self.ksec4 = ',self.ksec4
+        # print 'DEBUG: self.ksup  = ',self.ksup
+        # print 'DEBUG: self.ksec0 = ',self.ksec0
+        # print 'DEBUG: self.ksec1 = ',self.ksec1
+        # print 'DEBUG: self.ksec2 = ',self.ksec2
+        # print 'DEBUG: self.ksec3 = ',self.ksec3
+        # print 'DEBUG: self.ksec4 = ',self.ksec4
         
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr,'bufrex'))
@@ -1132,9 +1185,8 @@ class BUFRInterfaceECMWF:
                      str(j)+" is not possible (remember the arrays are "+\
                      "counted starting with 0)"
             raise EcmwfBufrLibError(errtxt)
-
-        actual_nr_of_descriptors = len(self.py_expanded_descr_list)
-        selection = actual_nr_of_descriptors*j + i
+        
+        selection = self.actual_kelem*j + i
         value = self.values[selection]
         return value
         #  #]
@@ -1159,10 +1211,7 @@ class BUFRInterfaceECMWF:
                      "counted starting with 0)"
             raise EcmwfBufrLibError(errtxt)
 
-        actual_nr_of_descriptors = len(self.py_expanded_descr_list)
-        selection = actual_nr_of_descriptors*\
-                    np.array(range(nsubsets))+i
-
+        selection = self.actual_kelem*np.array(range(nsubsets))+i
         values = self.values[selection]
         return values
         #  #]
@@ -1264,6 +1313,7 @@ class BUFRInterfaceECMWF:
         #  #[
         bt = BufrTable(tables_dir=self.private_bufr_tables_dir,
                        verbose=False, report_warnings=False)
+        #               verbose=True, report_warnings=False)
         # setup_tables already has created the symlinks to the BUFR tables
         # so don't use this autolink feature for now
         # bt = BufrTable(autolink_tablesdir=self.private_bufr_tables_dir,
@@ -1333,7 +1383,7 @@ class BUFRInterfaceECMWF:
         lines = self.get_fortran_stdout()
         self.display_fortran_stdout(lines)
         if (kerr != 0):
-            raise EcmwfBufrLibError(self.explain_error(kerr, 'bufrex'))
+            raise EcmwfBufrLibError(self.explain_error(kerr, 'busel'))
 
         # It is not clear to me why busel seems to correctly produce
         # the descriptor lists (both bare and expanded), but yet it does
@@ -1508,7 +1558,7 @@ class BUFRInterfaceECMWF:
         self.sections0123_decoded = True
         #  #]
     def register_and_expand_descriptors(self, BT):
-        #  #[
+        #  #[ delayed replication works only for encoding
         """
         expand the descriptor list, generating the expanded list
         from the raw list by calling buxdes, with some additional
@@ -1527,7 +1577,15 @@ class BUFRInterfaceECMWF:
         self.ktdlst = np.array(BT.unexpanded_descriptor_list, dtype=np.int)
         print "unexpanded nr of descriptors = ", self.ktdlen
         print "The current list is: ", self.ktdlst
-        
+
+        # define a list to store the expanded descriptor list
+        self.ktdexp = np.zeros(self.max_nr_expanded_descriptors, dtype = np.int)
+
+        # define space for decoding text strings
+        kelem  = self.max_nr_expanded_descriptors
+        self.cnames = np.zeros((kelem, 64), dtype = np.character)
+        self.cunits = np.zeros((kelem, 24), dtype = np.character)
+
         # call BUXDES
         # buxdes: expand the descriptor list
         #         and fill the array ktdexp and the variable ktdexp

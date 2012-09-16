@@ -46,8 +46,8 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
 
         # add header strings
         if bob.msg_loaded == 1:
-            list_of_names = ['']
-            list_of_units = ['']
+            list_of_names = []
+            list_of_units = []
             list_of_names.extend(bob.get_names())
             list_of_units.extend(bob.get_units())
             output_fd.write(separator.join(list_of_names) + "\n")

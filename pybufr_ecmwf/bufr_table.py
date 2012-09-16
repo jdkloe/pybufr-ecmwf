@@ -215,7 +215,8 @@ class ModifiedDescriptor:
     #  #]
     
 # todo: look-up the possibilities in the documentation
-class ModificationCommand(Descriptor):
+# see WMO_BUFR_Guide_Layer3-English-only.pdf p.70
+class ModificationCommand(Descriptor): # F=2 [table C entry]
     #  #[
     """
     a base class for modification commands to descriptors
@@ -340,7 +341,7 @@ class ModificationCommand(Descriptor):
     #  #]
 
 # todo: look-up the possibilities in the documentation
-class SpecialCommand(Descriptor):
+class SpecialCommand(Descriptor): # F=1
     #  #[
     """
     a base class for special descriptors (i.e. replicators)
@@ -505,7 +506,7 @@ class CompositeDescriptor(Descriptor): #[table D entry]
                             expanded_descriptor_list.\
                                      append(repl_descr.reference)
                 
-                # print 'TESTJOS: breakpoint'
+                # print 'DEBUG: breakpoint'
                 # sys.exit(1)
                 
             else:
@@ -694,7 +695,11 @@ class BufrTable:
                           descr.reference
                 tmp_list = self.expand_descriptor_list(\
                                 self.table_d[descr.reference].descriptor_list)
-                expanded_descriptor_list.extend(tmp_list)
+                if tmp_list:
+                    expanded_descriptor_list.extend(tmp_list)
+                else:
+                    # this exception occurs in case of delayed replication
+                    return None
                 if self.verbose:
                     print 'done expanding: %6.6i' % \
                           descr.reference
@@ -709,14 +714,26 @@ class BufrTable:
                     print 'xx = ',xx,' = num. descr. to replicate'
                     print 'yyy = ',yyy,' = repl. count'
 
-                # note: for now only handle normal replication
-                # since I have no testfile at hand with delayed replication.
-                # In case of delayed replication, the replication operator
-                # is followed by a maximum replication count, and I believe
-                # the expansion of the descriptor list should assume the
-                # maximum (but this is to be confirmed)
+                # note: we van only handle normal replication here
+                # Delayed replication can only be expanded if the data
+                # is available as well, and cannot be done based on
+                # a descriptor list alone.
                 replication_count = yyy
                 num_descr_to_skip = xx
+
+                if yyy==0:
+                    # delayed replication is a problem since we don't
+                    # know the actual replication count untill section 4
+                    # is unpacked.
+                    # This descriptor list expansion routine should also
+                    # run if only sections 0-3 are unpacked,
+                    # so we have no choice but to leave the delayed
+                    # replication unhandled here
+                    print 'Sorry, expanding delayed replications is not'
+                    print 'possible based on a descriptor list alone.'
+                    print 'expand_descriptor_list failed ...'
+                    return None
+                    
 
                 # note that i points to the replication operator
                 descr_list_to_be_replicated = \
