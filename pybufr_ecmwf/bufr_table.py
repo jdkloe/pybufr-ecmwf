@@ -729,9 +729,10 @@ class BufrTable:
                     # run if only sections 0-3 are unpacked,
                     # so we have no choice but to leave the delayed
                     # replication unhandled here
-                    print 'Sorry, expanding delayed replications is not'
-                    print 'possible based on a descriptor list alone.'
-                    print 'expand_descriptor_list failed ...'
+                    if self.verbose:
+                        print 'Sorry, expanding delayed replications is not'
+                        print 'possible based on a descriptor list alone.'
+                        print 'expand_descriptor_list failed ...'
                     return None
                     
 

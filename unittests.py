@@ -92,6 +92,7 @@ def get_and_set_the_module_path(syspath):
     #  #]
 
 (sys.path, MY_MODULE_PATH) = get_and_set_the_module_path(sys.path)
+# print '(sys.path, MY_MODULE_PATH) = ',(sys.path, MY_MODULE_PATH)
 
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile

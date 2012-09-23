@@ -11,6 +11,7 @@ import os, glob #, sys
 
 # delete these dirs
 DIRS_GLOB_PATTERNS = ['pybufr_ecmwf/ecmwf_bufr_lib/bufr_000*',
+                      'pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_000*',
                       'ecmwf_bufr_lib/bufr_000*']
 DIRS_TO_DELETE = ['pybufr_ecmwf/example_programs/tmp_BUFR_TABLES',
                   'pybufr_ecmwf/tmp_BUFR_TABLES', 'tmp_BUFR_TABLES',

@@ -34,6 +34,7 @@ if len(sys.argv)>1:
     for filetocheck in sys.argv[1:]:
         if os.path.exists(filetocheck):
             SCRIPTS_TO_CHECK.append(filetocheck)
+    MODULES_TO_CHECK = []
 else:
     EX_PROGR_PATH = 'example_programs'
     EX_FILES = glob.glob(os.path.join(EX_PROGR_PATH,'*.py'))
@@ -44,10 +45,10 @@ else:
     # look into that routine for more details.
     SCRIPTS_TO_CHECK.extend(EX_FILES)
     
-# MODULES_TO_CHECK = []
-# my current pylint version crashes with a runtime error when I
-# try to check this module, so its disabled for now
-MODULES_TO_CHECK = ['pybufr_ecmwf', ]
+    # my current pylint version crashes with a runtime error when I
+    # try to check this module, so its disabled for now
+    MODULES_TO_CHECK = []
+    #MODULES_TO_CHECK = ['pybufr_ecmwf', ]
 
 def check(msg, pycode, additional_args):
     #  #[

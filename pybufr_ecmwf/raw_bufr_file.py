@@ -227,7 +227,13 @@ class RawBUFRFile:
                 # current BUFR message
                 raw_bytes = chr(0)+self.data[start_section0+5-1:
                                              start_section0+7]
-                msg_size = struct.unpack(dataformat, raw_bytes)[0]
+                try:
+                    msg_size = struct.unpack(dataformat, raw_bytes)[0]
+                except:
+                    # 0 signals this is not a valid BUFR msg, might be a false
+                    # start BUFR string, or a corrupted or truncated file
+                    return (0, section_sizes, section_start_locations)
+
                 #if self.verbose:
                 #    print 'section 0, byte 5: ', ord(raw_bytes[1])
                 #    print 'section 0, byte 6: ', ord(raw_bytes[2])
@@ -251,7 +257,13 @@ class RawBUFRFile:
             # get length of section 1 from bytes 1 to 3
             raw_bytes = chr(0)+self.data[start_section1+1-1:
                                          start_section1+3]
-            size_section1 = struct.unpack(dataformat, raw_bytes)[0]
+            try:
+                size_section1 = struct.unpack(dataformat, raw_bytes)[0]
+            except:
+                # 0 signals this is not a valid BUFR msg, might be a false
+                # start BUFR string, or a corrupted or truncated file
+                return (0, section_sizes, section_start_locations)
+
             if (self.verbose):
                 print 'size_section1 = ', size_section1, \
                       ' start_section1 = ', start_section1, \
@@ -304,7 +316,12 @@ class RawBUFRFile:
                 # get length of section 2 from bytes 1 to 3
                 raw_bytes = chr(0)+self.data[start_section2+1-1:
                                              start_section2+3]
-                size_section2 = struct.unpack(dataformat, raw_bytes)[0]
+                try:
+                    size_section2 = struct.unpack(dataformat, raw_bytes)[0]
+                except:
+                    # 0 signals this is not a valid BUFR msg, might be a false
+                    # start BUFR string, or a corrupted or truncated file
+                    return (0, section_sizes, section_start_locations)
             else:
                 size_section2 = 0
 
@@ -319,7 +336,12 @@ class RawBUFRFile:
             # get length of section 3 from bytes 1 to 3
             raw_bytes = chr(0)+self.data[start_section3+1-1:
                                          start_section3+3]
-            size_section3 = struct.unpack(dataformat, raw_bytes)[0]
+            try:
+                size_section3 = struct.unpack(dataformat, raw_bytes)[0]
+            except:
+                # 0 signals this is not a valid BUFR msg, might be a false
+                # start BUFR string, or a corrupted or truncated file
+                return (0, section_sizes, section_start_locations)
 
             if (self.verbose):
                 print 'size_section3 = ',size_section3, \
@@ -341,7 +363,12 @@ class RawBUFRFile:
             #    print 'section 4, byte 3: ', \
             #          ord(raw_bytes[3]), hex(ord(raw_bytes[1]))
 
-            size_section4 = struct.unpack(dataformat, raw_bytes)[0]
+            try:
+                size_section4 = struct.unpack(dataformat, raw_bytes)[0]
+            except:
+                # 0 signals this is not a valid BUFR msg, might be a false
+                # start BUFR string, or a corrupted or truncated file
+                return (0, section_sizes, section_start_locations)
 
             if (self.verbose):
                 print 'size_section4 = ',size_section4, \
@@ -559,7 +586,12 @@ class RawBUFRFile:
         # assume little endian for now when converting
         # raw bytes/characters to integers and vice-versa
         dataformat = "<"+str(size_words)+"i"
-        words = np.array(struct.unpack(dataformat, raw_data_bytes))
+        try:
+            words = np.array(struct.unpack(dataformat, raw_data_bytes))
+        except:
+            # 0 signals this is not a valid BUFR msg, might be a false
+            # start BUFR string, or a corrupted or truncated file
+            return (0, section_sizes, section_start_locations)
 
         return (words, section_sizes, section_start_locations)
         #  #]

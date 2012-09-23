@@ -65,6 +65,8 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
 
     # close the file
     bob.close()
+    if msg_nr == 0:
+        print 'no BUFR messages found, are you sure this is a BUFR file?'
     #  #]
 
 def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
@@ -113,6 +115,8 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
 
     # close the file
     bob.close()
+    if msg_nr == 0:
+        print 'no BUFR messages found, are you sure this is a BUFR file?'
     #  #]
 
 def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
@@ -187,6 +191,8 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
     
     # close the BUFR file
     rbf.close()
+    if num_msgs == 0:
+        print 'no BUFR messages found, are you sure this is a BUFR file?'
 
     #  #]
 

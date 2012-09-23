@@ -39,10 +39,10 @@ import struct      # allow converting c datatypes and structs
 # import the raw wrapper interface to the ECMWF BUFR library
 try:
     from . import ecmwfbufr
-except ImportError:
+except ImportError as e:
     print 'import of ecmwfbufr failed.'
     print 'sys.path = ',sys.path
-    raise ImportError
+    raise e
 
 from . import ecmwfbufr_parameters
 from .bufr_template import BufrTemplate
@@ -896,8 +896,9 @@ class BUFRInterfaceECMWF:
                     self.display_fortran_stdout(lines)
                     raise e
                 else:
-                    print 'retrying with: nr_of_descriptors = ', \
-                          nr_of_descriptors
+                    if self.verbose:
+                        print 'retrying with: nr_of_descriptors = ', \
+                              nr_of_descriptors
         # done
         self.actual_nr_of_expanded_descriptors = self.ksup[4]
         

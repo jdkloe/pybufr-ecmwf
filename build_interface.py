@@ -406,7 +406,7 @@ end program GetByteSizeDefaultInteger
                                     f90_executable, f_libpath)
     try:
         bytesizedefaultinteger = lines_stdout[0].strip()
-    except:
+    except IndexError:
         bytesizedefaultinteger = None
 
     if bytesizedefaultinteger is None:
@@ -428,7 +428,7 @@ end program GetByteSizeDefaultInteger
                                                    f90_executable, f_libpath)
         try:
             bytesizedefaultinteger = lines_stdout[0].strip()
-        except:
+        except IndexError:
             bytesizedefaultinteger = None
 
     if bytesizedefaultinteger is None:
@@ -1706,10 +1706,11 @@ class InstallBUFRInterfaceECMWF:
         #     1          JSEC4=2,JELEM=320000,JSUBS=400,JCVAL=150 ,JBUFL=512000,
         #     2          JBPW = 32,JTAB =3000,JCTAB=3000,JCTST=9000,JCTEXT=9000,
         #     3          JWORK=4096000,JKEY=46, JTMAX=10,JTCLAS=64,JTEL=255)
-        
-        # TODO: read this file from python, in stead of hardcoding the
-        #       numbers below and provide them as module parameters for
-        #       pybufr_ecmwf.py
+        #
+        # therefore read and parse the fortran file in the next few
+        # python lines, and write the result in a python file
+        # called ecmwfbufr_parameters.py to allow easy importing.
+        #
         #max_nr_descriptors          =  20 # 300
         #max_nr_expanded_descriptors = 140 # 160000
         #max_nr_subsets              = 361 # 25
