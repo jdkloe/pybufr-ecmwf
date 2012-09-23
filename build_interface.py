@@ -86,6 +86,12 @@ for k in FFLAGS_NEEDED.keys():
 for k in CFLAGS_NEEDED.keys():
     CFLAGS_NEEDED[k].extend(CFLAGS_COMMON)
 
+# python2 version
+SO_FILE = 'ecmwfbufr.so'
+if sys.version_info.major==3:
+    # python3 version
+    SO_FILE = 'ecmwfbufr.cpython-32mu.so'
+
 #  #]
 
 # some helper functions
@@ -766,7 +772,7 @@ class InstallBUFRInterfaceECMWF:
         # define the names of the library and shared object files
         # that will be created by this class
         self.bufr_lib_file = "libbufr.a"
-        self.wrapper_name = "ecmwfbufr.so"
+        self.wrapper_name = SO_FILE
 
         self.wrapper_build_dir   = "f2py_build"
         self.wrapper_module_name = "ecmwfbufr"
@@ -2015,7 +2021,7 @@ file for convenience
     #  #]
 
 if __name__ == "__main__":
-    print "Building ecmwfbufr.so interface:\n"
+    print "Building ecmwfbufr interface:\n"
     #  #[ make sure we are in the right directory
     BUILD_DIR = 'pybufr_ecmwf'
     os.chdir(BUILD_DIR)
@@ -2073,11 +2079,10 @@ if __name__ == "__main__":
                     fortran_flags = "-fno-second-underscore -fPIC -i4 -r8")
     #  #]
 
-    # Build ecmwfbufr.so interface
+    # Build ecmwfbufr interface
     BI.build()
     
     #  #[ check for success
-    SO_FILE = "ecmwfbufr.so"
     if os.path.exists(SO_FILE):
         print "successfully build:", SO_FILE
     else:
