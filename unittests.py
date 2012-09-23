@@ -54,10 +54,10 @@ def get_and_set_the_module_path(syspath):
     """
     possible_so_files_1 = glob.glob(os.path.join('.',
                                                  'pybufr_ecmwf',
-                                                 'ecmwfbufr.so'))
+                                                 'ecmwfbufr*.so'))
     possible_so_files_2 = glob.glob(os.path.join('.', 'build', 'lib*',
                                                  'pybufr_ecmwf',
-                                                 'ecmwfbufr.so'))
+                                                 'ecmwfbufr*.so'))
     # print 'possible_so_files_1 = ',possible_so_files_1
     # print 'possible_so_files_2 = ',possible_so_files_2
     # sys.exit(1)
@@ -67,7 +67,7 @@ def get_and_set_the_module_path(syspath):
     elif len(possible_so_files_2)>0:
         module_path = glob.glob(os.path.join('.', 'build', 'lib*'))[0]
     else:
-        errtxt = 'could not find ecmwfbufr.so; '+\
+        errtxt = 'could not find ecmwfbufr*.so; '+\
                  'the interface seems not yet build!'
         raise InterfaceBuildError(errtxt)
 
@@ -418,7 +418,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         master_table_number  =   0 # = ksec1(14)
         bufrobj = BUFRInterfaceECMWF()
 
-        # inspect the location of the ecmwfbufr.so file, and derive
+        # inspect the location of the ecmwfbufr*.so file, and derive
         # from this the location of the BUFR tables that are delivered
         # with the ECMWF BUFR library software
         ecmwfbufr_path = os.path.split(ecmwfbufr.__file__)[0]
