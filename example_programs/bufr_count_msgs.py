@@ -34,7 +34,7 @@ def count_msgs(input_bufr_file):
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
     # an array of pointers to the start and end of each BUFR message
-    rbf.open(input_bufr_file, 'r')
+    rbf.open(input_bufr_file, 'rb')
     
     # extract the number of BUFR messages from the file
     num_msgs = rbf.get_num_bufr_msgs()

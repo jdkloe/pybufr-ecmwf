@@ -95,7 +95,7 @@ def decoding_example(input_bufr_file, custom_bufr_tables=None):
     # read the binary data using the BUFRFile class
     print 'loading testfile: ', input_bufr_file
     rbf = RawBUFRFile(verbose=False)
-    rbf.open(input_bufr_file, 'r')
+    rbf.open(input_bufr_file, 'rb')
     (words, section_sizes, section_start_locations) = \
             rbf.get_next_raw_bufr_msg()
     rbf.close()

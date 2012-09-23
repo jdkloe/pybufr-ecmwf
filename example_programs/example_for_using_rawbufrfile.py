@@ -33,7 +33,7 @@ def raw_file_reading_example(input_bufr_file):
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
     # an array of pointers to the start and end of each BUFR message
-    rbf.open(input_bufr_file, 'r')
+    rbf.open(input_bufr_file, 'rb')
     
     # print the internal data of the class instance
     rbf.print_properties(prefix = "RawBUFRFile (opened for reading)")
@@ -76,7 +76,7 @@ def raw_file_writing_example(output_bufr_file, msg1, msg2):
     bf1 = RawBUFRFile()
     
     # open the test file for writing
-    bf1.open(output_bufr_file, 'w')
+    bf1.open(output_bufr_file, 'wb')
     
     # write a few raw (encoded) BUFR messages
     bf1.write_raw_bufr_msg(msg1)
@@ -101,7 +101,7 @@ def raw_file_appending_example(output_bufr_file, msg3):
     bf2 = RawBUFRFile()
     
     # open the test file for appending
-    bf2.open(output_bufr_file, 'a')
+    bf2.open(output_bufr_file, 'ab')
     
     # write a third raw (encoded) BUFR messages
     bf2.write_raw_bufr_msg(msg3)

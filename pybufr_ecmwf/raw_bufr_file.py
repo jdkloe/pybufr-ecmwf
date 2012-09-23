@@ -86,9 +86,9 @@ class RawBUFRFile:
         self.filemode = mode
         
         # filename should include the path specification as well
-        assert(mode in ['r', 'w', 'a'])
+        assert(mode in ['rb', 'wb', 'ab'])
 
-        if (mode == 'r'):
+        if (mode == 'rb'):
             if (os.path.exists(filename)):
                 self.filesize = os.path.getsize(filename)
             else:
@@ -98,9 +98,9 @@ class RawBUFRFile:
                           self.filemode, " failed"
                     print "This file was not found or is not accessible."
                 raise IOError
-        elif (mode == 'w'):
+        elif (mode == 'wb'):
             self.filesize = 0
-        elif (mode == 'a'):
+        elif (mode == 'ab'):
             # when appending it is allowed to have a non-existing
             # file, in which case one will be generated, so test for
             # this condition
@@ -109,7 +109,7 @@ class RawBUFRFile:
                 # already present in this file, by temporary opening
                 # it in reading mode
                 tmp_bf = RawBUFRFile()
-                tmp_bf.open(filename, 'r')
+                tmp_bf.open(filename, 'rb')
                 #tmp_bf.print_properties(prefix = "tmp_bf (opened for reading)")
                 count = tmp_bf.get_num_bufr_msgs()
                 tmp_bf.close()
@@ -135,7 +135,7 @@ class RawBUFRFile:
                       self.filemode, " failed"
             raise IOError
 
-        if (mode == 'r'):
+        if (mode == 'rb'):
             try:
                 self.data = self.bufr_fd.read()
             except:
@@ -206,7 +206,7 @@ class RawBUFRFile:
             print 'getting size of BUFR message at start location: ', \
                   start_location
         try:
-            raw_edition_number = self.data[start_location+8-1]
+            raw_edition_number = self.data[start_location+8-1:start_location+8]
             edition_number = ord(raw_edition_number)
             if (self.verbose):
                 print 'edition_number = ', edition_number
@@ -255,8 +255,8 @@ class RawBUFRFile:
             offset = size_section0
             start_section1 = start_location + offset
             # get length of section 1 from bytes 1 to 3
-            raw_bytes = chr(0)+self.data[start_section1+1-1:
-                                         start_section1+3]
+            raw_bytes = b'\x00'+self.data[start_section1+1-1:
+                                          start_section1+3]
             try:
                 size_section1 = struct.unpack(dataformat, raw_bytes)[0]
             except:
@@ -301,8 +301,10 @@ class RawBUFRFile:
             else:
                 byte_to_use = 10
 
-            sec2_presence_flag = ord(self.data[start_location+\
-                                               offset+byte_to_use-1])
+            sec2_presence_flag = \
+                 ord(self.data[start_location+offset+byte_to_use-1:
+                               start_location+offset+byte_to_use])
+                               
             section2_present = False
 
             #if (sec2_presence_flag & 1):
@@ -334,8 +336,8 @@ class RawBUFRFile:
             offset = size_section0 + size_section1 + size_section2
             start_section3 = start_location + offset
             # get length of section 3 from bytes 1 to 3
-            raw_bytes = chr(0)+self.data[start_section3+1-1:
-                                         start_section3+3]
+            raw_bytes = b'\x00'+self.data[start_section3+1-1:
+                                          start_section3+3]
             try:
                 size_section3 = struct.unpack(dataformat, raw_bytes)[0]
             except:
@@ -353,8 +355,8 @@ class RawBUFRFile:
                      size_section2 + size_section3
             start_section4 = start_location + offset
             # get length of section 4 from bytes 1 to 3
-            raw_bytes = chr(0)+self.data[start_section4+1-1:
-                                         start_section4+3]
+            raw_bytes = b'\x00'+self.data[start_section4+1-1:
+                                          start_section4+3]
             #if self.verbose:
             #    print 'section 4, byte 1: ', \
             #          ord(raw_bytes[1]), hex(ord(raw_bytes[1]))
@@ -459,8 +461,8 @@ class RawBUFRFile:
         #  a multiple of 4 bytes)
         # Do the same check on the end of the file.
 
-        txt_start  = "BUFR"
-        txt_end    = "7777"
+        txt_start  = b'BUFR'
+        txt_end    = b'7777'
         list_of_start_locations = []
         list_of_end_locations   = []
 
@@ -567,7 +569,7 @@ class RawBUFRFile:
         # bytes fit into the array of words (otherwise the last
         # few might be truncated from the data, which will crash
         # the struct.unpack() call below)
-        size_words = (size_bytes+3)/4
+        size_words = (size_bytes+3)//4
         padding_bytes = size_words*4-size_bytes
 
         if (self.verbose):

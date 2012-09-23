@@ -26,7 +26,7 @@ by providing several helper classes.
 # License: GPL v2.
 #  #]
 #  #[ imported modules
-#import os, sys
+import sys # os
 import numpy   # array functionality
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF
@@ -123,7 +123,7 @@ class BUFRReader:
         # open the file for reading, count nr of BUFR messages in it
         # and store its content in memory, together with
         # an array of pointers to the start and end of each BUFR message
-        self.rbf.open(input_bufr_file, 'r')
+        self.rbf.open(input_bufr_file, 'rb')
     
         # extract the number of BUFR messages from the file
         self.num_msgs = self.rbf.get_num_bufr_msgs()
@@ -214,9 +214,12 @@ class BUFRReader:
         list_of_names = []
         for cname in self.bufr_obj.cnames:
             # glue the ndarray of characters together to form strings
-            cname_str = "".join(cname).strip()
+            cname_str = b''.join(cname).strip()
             # append the string to the list and quote them
-            list_of_names.append('"'+cname_str+'"')
+            if sys.version_info.major == 3:
+                list_of_names.append('"'+cname_str.decode()+'"')
+            else:
+                list_of_names.append('"'+cname_str+'"')
 
         return list_of_names
         #  #]
@@ -228,9 +231,12 @@ class BUFRReader:
         list_of_units = []
         for cunit in self.bufr_obj.cunits:
             # glue the ndarray of characters together to form strings
-            cunit_str = "".join(cunit).strip()
+            cunit_str = b''.join(cunit).strip()
             # append the string to the list and quote them
-            list_of_units.append('"'+cunit_str+'"')
+            if sys.version_info.major == 3:
+                list_of_units.append('"'+cunit_str.decode()+'"')
+            else:
+                list_of_units.append('"'+cunit_str+'"')
 
         return list_of_units
         #  #]        

@@ -1276,7 +1276,7 @@ class BUFRInterfaceECMWF:
         list_of_raw_data_bytes = []
         for (i, word) in enumerate(self.encoded_message):
             list_of_raw_data_bytes.append(struct.pack(dataformat, word))
-        raw_data_bytes = ''.join(rdb for rdb in list_of_raw_data_bytes)
+        raw_data_bytes = b''.join(rdb for rdb in list_of_raw_data_bytes)
 
         # note: the headers seem to use big-endian encoding
         # even on little endian machines, for the msg size.
@@ -1285,8 +1285,8 @@ class BUFRInterfaceECMWF:
         start_section3 = self.section_start_locations[3]
         # print 'start_section3 = ',start_section3
         # extract the number of subsets from bytes 5 and 6
-        raw_bytes = chr(0)*2+raw_data_bytes[start_section3+5-1:
-                                            start_section3+6]
+        raw_bytes = b'\x00'*2+raw_data_bytes[start_section3+5-1:
+                                             start_section3+6]
         self.py_num_subsets = struct.unpack(dataformat, raw_bytes)[0]
         # print 'self.py_num_subsets = ',self.py_num_subsets
 
@@ -1301,9 +1301,9 @@ class BUFRInterfaceECMWF:
             raw_bytes = raw_data_bytes[start_section3+8-1+i*2:
                                        start_section3+8+1+i*2]
             #print 'raw_bytes = '+'.'.join(str(ord(b)) for b in raw_bytes)
-            f = (ord(raw_bytes[0]) & (128+64))/64
-            x = ord(raw_bytes[0]) & (64-1)
-            y = ord(raw_bytes[1])
+            f = (ord(raw_bytes[0:1]) & (128+64))//64
+            x = ord(raw_bytes[0:1]) & (64-1)
+            y = ord(raw_bytes[1:2])
             #print 'extracted descriptor: f,x,y = %1.1i.%2.2i.%3.3i' % (f,x,y)
             self.py_unexp_descr_list.append('%1.1i%2.2i%3.3i' % (f,x,y))
 

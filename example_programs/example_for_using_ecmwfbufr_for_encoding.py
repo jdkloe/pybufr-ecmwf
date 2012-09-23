@@ -383,7 +383,7 @@ def encoding_example(output_bufr_file):
     # get an instance of the RawBUFRFile class
     bf1 = RawBUFRFile()
     # open the file for writing
-    bf1.open(output_bufr_file, 'w')
+    bf1.open(output_bufr_file, 'wb')
     # write the encoded BUFR message
     bf1.write_raw_bufr_msg(encoded_message)
     # close the file

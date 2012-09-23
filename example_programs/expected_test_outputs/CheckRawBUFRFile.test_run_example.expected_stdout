@@ -2,7 +2,7 @@
 reading example
 --------------------------------------------------
 RawBUFRFile (opened for reading): filename =  example_programs/testdata/Testfile3CorruptedMsgs.BUFR
-RawBUFRFile (opened for reading): filemode =  r
+RawBUFRFile (opened for reading): filemode =  rb
 RawBUFRFile (opened for reading): filesize =  19800
 RawBUFRFile (opened for reading): len(data) =  19800
 RawBUFRFile (opened for reading): list_of_bufr_pointers =  [(0, 6598, [4, 18, 0, 10, 6562, 4], [0, 4, 22, 22, 32, 6594]), (6600, 13198, [4, 18, 0, 10, 6562, 4], [0, 4, 22, 22, 32, 6594]), (13200, 19798, [4, 18, 0, 10, 6562, 4], [0, 4, 22, 22, 32, 6594])]
@@ -17,7 +17,7 @@ msg  3  got  1650  words
 writing example
 --------------------------------------------------
 RawBUFRFile (opened for writing): filename =  example_programs/testdata/Testoutputfile3u.BUFR
-RawBUFRFile (opened for writing): filemode =  w
+RawBUFRFile (opened for writing): filemode =  wb
 RawBUFRFile (opened for writing): filesize =  13200
 RawBUFRFile (opened for writing): data =  None
 RawBUFRFile (opened for writing): list_of_bufr_pointers =  []
@@ -26,7 +26,7 @@ RawBUFRFile (opened for writing): nr_of_bufr_messages =  2
 appending example
 --------------------------------------------------
 RawBUFRFile2 (opened for appending): filename =  example_programs/testdata/Testoutputfile3u.BUFR
-RawBUFRFile2 (opened for appending): filemode =  a
+RawBUFRFile2 (opened for appending): filemode =  ab
 RawBUFRFile2 (opened for appending): filesize =  19800
 RawBUFRFile2 (opened for appending): data =  None
 RawBUFRFile2 (opened for appending): list_of_bufr_pointers =  []

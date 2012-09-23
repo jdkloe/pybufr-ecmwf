@@ -138,7 +138,12 @@ def call_cmd(cmd):
     lines_stdout = subpr.stdout.readlines()
     lines_stderr = subpr.stderr.readlines()
 
-    return (lines_stdout, lines_stderr)
+    if sys.version_info.major == 3:
+        text_lines_stdout = [l.decode() for l in lines_stdout]
+        text_lines_stderr = [l.decode() for l in lines_stderr]
+        return (text_lines_stdout, text_lines_stderr)
+    else:
+        return (lines_stdout, lines_stderr)
     #  #]
 
 def call_cmd_and_verify_output(cmd):
@@ -545,10 +550,10 @@ class CheckRawBUFRFile(unittest.TestCase):
                           bufrfile.open, self.corruptedtestinputfile, 'q')
         
         # check behaviour when filename is not a string
-        self.assertRaises(TypeError, bufrfile.open, 123, 'r')
+        self.assertRaises(TypeError, bufrfile.open, 123, 'rb')
         
         # check behaviour when file does not exist
-        self.assertRaises(IOError, bufrfile.open, 'dummy', 'r',
+        self.assertRaises(IOError, bufrfile.open, 'dummy', 'rb',
                           silent = True)
         
         # check behaviour when reading a file without proper permission
@@ -565,7 +570,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         # force the file to be unaccessible
         os.chmod(testfile, 0000)
         # do the test
-        self.assertRaises(IOError, bufrfile.open, testfile, 'r',
+        self.assertRaises(IOError, bufrfile.open, testfile, 'rb',
                           silent = True)
         # cleanup
         if (os.path.exists(testfile)):
@@ -587,7 +592,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         # force the file to be readonly
         os.chmod(testfile, 0444)
         # do the test
-        self.assertRaises(IOError, bufrfile.open, testfile, 'w',
+        self.assertRaises(IOError, bufrfile.open, testfile, 'wb',
                           silent = True)
         # cleanup
         if (os.path.exists(testfile)):
@@ -601,7 +606,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         test opening and closing a BUFR file
         """
         bufrfile = RawBUFRFile(verbose = False)
-        bufrfile.open(self.corruptedtestinputfile, 'r')
+        bufrfile.open(self.corruptedtestinputfile, 'rb')
         bufrfile.close()
         
         # check that a second close fails
