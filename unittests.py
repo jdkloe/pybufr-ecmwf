@@ -744,10 +744,17 @@ class CheckBufr(unittest.TestCase):
     a class to check the bufr.py file
     """
     # common settings for the following tests
-    example_programs_dir   = "example_programs"
-    testdatadir            = 'example_programs/testdata'
-    testinputfile          = os.path.join(testdatadir,
-                                          'Testfile.BUFR')
+    example_programs_dir = "example_programs"
+    testdatadir          = 'example_programs/testdata'
+    testinputfile        = os.path.join(testdatadir,
+                                        'Testfile.BUFR')
+    testinputfile_unpadded = os.path.join(testdatadir,
+                                          'ISXH58EUSR199812162225')
+    testinputfile_gras   = os.path.join(testdatadir,
+        'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR')
+    testinputfile_o3m    = os.path.join(testdatadir,
+        'S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr')
+
     def test_run_decode_example1_ascii(self):
         #  #[
         """
@@ -831,6 +838,48 @@ class CheckBufr(unittest.TestCase):
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
+        #  #]
+    def test_run_decode_unpadded_testfile_csv(self):
+        #  #[
+        """
+        test the decoding example program and produce csv output
+        """
+        
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' -1 -c -i ' + self.testinputfile_unpadded
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)               
+        #  #]
+    def test_run_decode_gras_testfile_csv(self):
+        #  #[
+        """
+        test the decoding example program and produce csv output
+        """
+        
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' -1 -c -i ' + self.testinputfile_gras
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)               
+        #  #]
+    def test_run_decode_o3m_testfile_csv(self):
+        #  #[
+        """
+        test the decoding example program and produce csv output
+        """
+        
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = cmd + ' -1 -c -i ' + self.testinputfile_o3m
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)               
         #  #]
     #  #]
 

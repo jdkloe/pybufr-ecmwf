@@ -582,6 +582,21 @@ class RawBUFRFile:
         end_index = end_index+padding_bytes
         
         raw_data_bytes = self.data[start_index:end_index]
+
+        # make sure the raw datastream is padded with zero bytes
+        # to a multiple of 4 bytes. The ECMWF software may crash
+        # if this is not the case ...
+        nbytes = len(raw_data_bytes)
+        nbytes_rounded = 4*(nbytes//4)
+        if nbytes != nbytes_rounded:
+            # print 'padding problem found! fixing it ...'
+            # print 'nbytes = ',nbytes
+            # print 'nbytes_rounded = ',nbytes_rounded
+            num_zeros_to_add = nbytes_rounded+4-nbytes
+            # print 'num_zeros_to_add = ',num_zeros_to_add
+            str_to_add = ''.join(b'\x00' for i in range(num_zeros_to_add))
+            raw_data_bytes = raw_data_bytes + str_to_add
+
         if (self.verbose):
             print "len(raw_data_bytes) = ", len(raw_data_bytes)
 

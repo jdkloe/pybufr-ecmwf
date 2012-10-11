@@ -1,0 +1,33 @@
+The testfiles provided in this directory are intended only for
+testing the pybufr-ecmwf module. They data should not be used
+for other purposes.
+
+The origin of these files is as follows:
+
+==>ISXH58EUSR199812162225.
+ERS2 scatterometer BUFR file
+taken from the ERS2 data stream recieved at KNMI from ESA.
+(see our local mos archive, file:
+ /obsrs/sat/ers/scat/esa/1998/Global_ERS_Backup_19981216.tar.gz)
+See also: http://www.knmi.nl/scatterometer/ers_prod/
+
+==>Testfile.BUFR
+constructed from ISXH58EUSR199812162225
+by:  padding it with 2 zero bytes
+and: loading it in Fortran and writing it back to BUFR again
+(this explains a minor rounding difference in the direction column)
+
+==>Testfile3CorruptedMsgs.BUFR
+this file was manually constructed by glueing 3 copies of the 
+file Testfile.BUFR together, followd by some manual editing to
+deliberately create a corrupted file.
+
+==>S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR
+this testfile was provided to me by Yasin Selcuk Berber (thanks a lot!)
+This file was generated under the auspices of the ROM SAF project of EUMETSAT.
+See also: http://www.romsaf.org/
+
+==>S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr
+this testfile was provided to me by Yasin Selcuk Berber (thanks a lot!)
+This file was generated under the auspices of the O3M SAF project of EUMETSAT.
+See also: http://o3msaf.fmi.fi/disclaimer.html
