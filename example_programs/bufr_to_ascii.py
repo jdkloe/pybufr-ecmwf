@@ -90,8 +90,8 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
         
         # add header strings
         if bob.msg_loaded == 1:
-            list_of_names = ['']
-            list_of_units = ['']
+            list_of_names = []
+            list_of_units = []
             list_of_names.extend(bob.get_names())
             list_of_units.extend(bob.get_units())
             output_fd.write(separator.join(list_of_names) + "\n")
@@ -161,8 +161,8 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
 
         # Create header lines from variable names and units
         if msg_nr == 1:
-            list_of_names = ['']
-            list_of_units = ['']
+            list_of_names = []
+            list_of_units = []
             for (cname, cunit) in zip(bufr_obj.cnames, bufr_obj.cunits):
                 # glue the ndarray of characters together to form strings
                 cname_str = "".join(cname).strip()
