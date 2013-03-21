@@ -54,6 +54,11 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
             output_fd.write(separator.join(list_of_units) + "\n")
         
         data = bob.get_values_as_2d_array()
+        # print 'DEBUG: data.shape = ', data.shape
+        if data.shape[0]*data.shape[1] == 0:
+            print 'NO DATA FOUND! this seems an empty BUFR message !'
+            continue
+
         for subs in range(len(data[:, 0])):
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data[subs, :])+

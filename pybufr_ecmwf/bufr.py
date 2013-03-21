@@ -201,6 +201,9 @@ class BUFRReader:
         num_elements = self.bufr_obj.get_num_elements()
         result = numpy.zeros([num_subsets, num_elements], dtype=float)
 
+        # print 'DEBUG: num_subsets = ', num_subsets
+        # print 'DEBUG: num_elements = ', num_elements
+
         for descr_nr in range(num_elements):
             result[:, descr_nr] = self.bufr_obj.get_values(descr_nr)
 

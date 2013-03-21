@@ -11,39 +11,36 @@ model to automatically test on all these files
 # synop/* [works fine]
 ---------------------------
 # tested ./bufr_to_ascii.py on these bufr files:
-# ascat/* fails [table loading problem]
-# qscat/* dito
-# ers12/* dito
-# MSS*    dito
-# synop/* dito
 
-# at home
-#setenv TESTDATADIR /home/jos/werk/pybufr_ecmwf_interface/BUFR_test_files2
-# at KNMI
-#setenv TESTDATADIR /nobackup/users/kloedej/BUFR_test_files
+see my private ./BUFR_test_all_files.py script.
 
-#cd example_programs
-#setenv PYTHONPATH ../
-# ./bufr_count_msgs.py $TESTDATADIR/ascat/ascat_20100920_003901_metopa_20335_eps_o_125_ovw.l2_bufr
-# 545
-# ./bufr_count_msgs.py $TESTDATADIR/ascat/ascat_20100920_003901_metopa_20335_eps_o_250_ovw.l2_bufr
-# 204
-# ./bufr_count_msgs.py $TESTDATADIR/ascat/ascat_20100920_003901_metopa_20335_eps_t_coa_ovw.l2_bufr
-# 545
-# ./bufr_count_msgs.py $TESTDATADIR/qscat/QS_D07060_S1821_E2002_B4009191_025.genws
-# 1624
-# ./bufr_count_msgs.py $TESTDATADIR/ers12/pscat2000013121.pp
-# 22
-# ./bufr_count_msgs.py $TESTDATADIR/MSS_S327121011_200_PAAL31_EGRR_231200
-# 1
-# ./bufr_count_msgs.py $TESTDATADIR/noaa_mos/sn.0001.bin 
-# 8
-# ./bufr_count_msgs.py $TESTDATADIR/noaa_mos/sn.0082.bin 
-# 10
-# bufr_count_msgs.py $TESTDATADIR/synop/greek.gts.bufr
-# 64
-# bufr_count_msgs.py $TESTDATADIR/synop/greek.gts.bufr.gts 
-# 63
+results for files in pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_000400/data:
+Totals:
+count_passed =  139
+count_failed =  1
+
+the problematic file is: btem_111.bufr
+and the error is:
+exit_status =  1
+['IndexError: index 0 is out of bounds for axis 1 with size 0', '']
+
+results for files in BUFR_test_files:
+Totals:
+count_passed =  65
+count_failed =  19
+
+problematic files are the sn.00*.bin files from noaa (15 files)
+because I don't have the matching BUFR tables
+BUFR_test_files/noaa_mos/sn.0001.bin
+exit_status =  1
+['KeyError: 2200', '']
+
+and a few rader BUFR files, fail for the same reason
+
+Finally a qscat file fails with a key error:
+BUFR_test_files/qscat/QS_D07060_S1821_E2002_B4009191_025.genws
+exit_status =  1
+['KeyError: 312221', '']
 
 ---------------------------
 todo: add a little script to allow easy compilation and use of the

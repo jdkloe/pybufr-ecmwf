@@ -1,3 +1,11 @@
+Updated to build and use the new BUFRDC series of the ECMWF library
+including the latest version 000400.
+
+Release 0.5 (25-Sep-2012):
+
+Contains mainly small bug fixes and updates the build script to the 
+latest library version.
+
 Release 0.4 (06-Sep-2011):
 
 Several fixes have been added in the handling of the BUFR tables, which
