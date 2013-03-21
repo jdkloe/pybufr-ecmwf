@@ -16,13 +16,8 @@ see my private ./BUFR_test_all_files.py script.
 
 results for files in pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_000400/data:
 Totals:
-count_passed =  139
-count_failed =  1
-
-the problematic file is: btem_111.bufr
-and the error is:
-exit_status =  1
-['IndexError: index 0 is out of bounds for axis 1 with size 0', '']
+count_passed =  140
+count_failed =  0
 
 results for files in BUFR_test_files:
 Totals:

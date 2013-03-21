@@ -45,11 +45,14 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
             break
 
         # add header strings
+        # print 'DEBUG: bob.msg_loaded ',bob.msg_loaded
         if bob.msg_loaded == 1:
             list_of_names = []
             list_of_units = []
             list_of_names.extend(bob.get_names())
             list_of_units.extend(bob.get_units())
+            # print 'DEBUG: ',separator.join(list_of_names)
+            # print 'DEBUG: ',separator.join(list_of_units)
             output_fd.write(separator.join(list_of_names) + "\n")
             output_fd.write(separator.join(list_of_units) + "\n")
         
