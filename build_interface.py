@@ -641,10 +641,15 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
         if 'dimension' in mod_line:
             #print "adapting line: ", mod_line
             for edit in edits.keys():
-                txt = '('+edit.lower()+')'
+                txt = '(('+edit.lower()+'))'
                 value = edits[edit]
                 if txt in mod_line:
-                    mod_line = mod_line.replace(txt, str(value))
+                    mod_line = mod_line.replace(txt, '('+str(value)+')')
+                else:
+                    txt = '('+edit.lower()+')'
+                    if txt in mod_line:
+                        mod_line = mod_line.replace(txt, '('+str(value)+')')
+                    
             #print "to           : ", mod_line
 
         if (mod_line.strip() == "end interface"):
@@ -730,7 +735,41 @@ def extract_version():
     fds.close()
     ensure_permissions(version_file,'rx')
     #  #]
+def symlink_to_all_files(source_dir, dest_dir):
+    #  #[ create symlinks in dest_dir for all links in source_dir
+    filelist_B = glob.glob(os.path.join(source_dir, 'B*'))
+    filelist_C = glob.glob(os.path.join(source_dir, 'C*'))
+    filelist_D = glob.glob(os.path.join(source_dir, 'D*'))
+    filelist = filelist_B
+    filelist.extend(filelist_C)
+    filelist.extend(filelist_D)
 
+    # first copy the real files
+    for f in filelist:
+        filename = os.path.split(f)[1]
+        if not os.path.islink(f):
+            shutil.copy(f, os.path.join(dest_dir, filename))
+
+    # then create all symlinks
+    links = []
+    for f in filelist:
+        filename = os.path.split(f)[1]
+        if os.path.islink(f):
+            realname = os.path.realpath(f)
+            realfilename = os.path.split(realname)[1]
+            links.append((realfilename, filename))
+            
+    cwd = os.getcwd()
+    os.chdir(dest_dir)
+    for (realfilename, filename) in links:
+        os.symlink(realfilename,filename)
+    os.chdir(cwd)
+
+    # print filelist
+    # sys.exit(1)
+    
+    #  #]
+    
 class InstallBUFRInterfaceECMWF:
     #  #[
     """
@@ -1647,21 +1686,23 @@ class InstallBUFRInterfaceECMWF:
             # to do a rebuild.)
             fullname_table_dir = os.path.join(source_dir, "bufrtables")
             table_dir = "ecmwf_bufrtables"
-            shutil.copytree(fullname_table_dir, table_dir)
+            #shutil.copytree(fullname_table_dir, table_dir)
+            os.mkdir(table_dir)
+            symlink_to_all_files(fullname_table_dir, table_dir)
             
             # remove some excess files from the bufr tables directory
             # that we don't need any more (symlinks, tools)
             tdfiles = os.listdir(table_dir)
-            for tdfile in tdfiles:
-                fullname = os.path.join(table_dir, tdfile)
-                if os.path.islink(fullname):
-                    os.unlink(fullname)
-                else:
-                    ext = os.path.splitext(tdfile)[1]
-                    if not ext.upper() == ".TXT":
-                        os.remove(fullname)
-                    else:
-                        ensure_permissions(fullname, 'r')
+            #for tdfile in tdfiles:
+            #    fullname = os.path.join(table_dir, tdfile)
+            #    if os.path.islink(fullname):
+            #        os.unlink(fullname)
+            #    else:
+            #        ext = os.path.splitext(tdfile)[1]
+            #        if not ext.upper() == ".TXT":
+            #            os.remove(fullname)
+            #        else:
+            #            ensure_permissions(fullname, 'r')
 
             # select the newest set of tables and symlink them
             # to a default name
@@ -1692,8 +1733,15 @@ class InstallBUFRInterfaceECMWF:
                 
                 os.symlink(os.path.abspath(newest_b_table),
                            os.path.abspath(default_b_table))
-                os.symlink(os.path.abspath(newest_c_table),
-                           os.path.abspath(default_c_table))
+                # workaround, needed because in bufrdc 000400 the C table
+                # with the newest version number seems missing ...
+                # (C0000019000098013001.TXT)
+                # this doesn't hurt, since it is not used by the software
+                # anyway (at least not with the routines that have
+                # interfaces to python)
+                if os.path.exists(os.path.abspath(newest_c_table)):
+                    os.symlink(os.path.abspath(newest_c_table),
+                               os.path.abspath(default_c_table))
                 os.symlink(os.path.abspath(newest_d_table),
                            os.path.abspath(default_d_table))
             else:
@@ -1722,7 +1770,7 @@ class InstallBUFRInterfaceECMWF:
         #max_nr_subsets              = 361 # 25
 
         parameter_file = os.path.join(source_dir, 'bufrdc', 'parameter.F')
-        print 'inspecting parameter_file: ', parameter_file
+        print 'inspecting parameter file: ', parameter_file
         key_val_pairs = []
         for line in open(parameter_file).readlines():
             if 'JSUP' in line:
@@ -1733,16 +1781,27 @@ class InstallBUFRInterfaceECMWF:
                 key_val_pairs.extend(items)
             # we explicitely compile using 32 bits integers, so
             # force the use of JBPW=32
-            if 'JBPW =  32' in line:
+            if 'JBPW' in line:
                 items = line[6:].split(',')
                 key_val_pairs.extend(items)
             if 'JWORK' in line:
                 items = line[6:].split(')')[0].split(',')
                 key_val_pairs.extend(items)
 
+        # JBPW_DEF was introduced with BUFRDC version 000400
+        fortint_include_file = os.path.join(source_dir, 'bufrdc', 'fortint.h')
+        if os.path.exists(fortint_include_file):
+            print 'inspecting header file: ', fortint_include_file
+            for line in open(fortint_include_file).readlines():
+                # force the use of JBPW=32
+                if 'JBPW_DEF' in line:
+                    items = line.split()
+                    key_val_pairs.append('JBPW = '+items[2])
+            
         # print 'key_val_pairs: '
         # print '\n'.join(txt.strip() for txt in key_val_pairs)
-
+        # sys.exit(1)
+        
         parameter_dict = {}
         for kvp in key_val_pairs:
             if not (kvp.strip()==''):
