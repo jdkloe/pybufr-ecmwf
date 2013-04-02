@@ -87,10 +87,10 @@ for k in CFLAGS_NEEDED.keys():
     CFLAGS_NEEDED[k].extend(CFLAGS_COMMON)
 
 # python2 version
-SO_FILE = 'ecmwfbufr.so'
+SO_FILE_PATTERN = 'ecmwfbufr.so'
 if sys.version_info.major == 3:
     # python3 version
-    SO_FILE = 'ecmwfbufr.cpython-32mu.so'
+    SO_FILE_PATTERN = 'ecmwfbufr.cpython*.so'
 
 #  #]
 
@@ -813,7 +813,6 @@ class InstallBUFRInterfaceECMWF:
         # define the names of the library and shared object files
         # that will be created by this class
         self.bufr_lib_file = "libbufr.a"
-        self.wrapper_name = SO_FILE
 
         self.wrapper_build_dir   = "f2py_build"
         self.wrapper_module_name = "ecmwfbufr"
@@ -840,8 +839,13 @@ class InstallBUFRInterfaceECMWF:
             self.install()
             print "compilation of BUFR library finished"
             bufr_was_build = True
+
+        try:
+            wrapper_name = glob.glob(SO_FILE_PATTERN)[0]
+        except:
+            wrapper_name = 'undefined'
             
-        if (os.path.exists(self.wrapper_name)):
+        if (os.path.exists(wrapper_name)):
             print "python wrapper seems present"
         else:
             print "Entering wrapper generation sequence:"
@@ -2069,7 +2073,12 @@ file for convenience
         
         # finally, again check for the presence of the wrapper
         # to see if the build was successfull
-        if (os.path.exists(self.wrapper_name)):
+        try:
+            wrapper_name = glob.glob(SO_FILE_PATTERN)[0]
+        except:
+            wrapper_name = 'undefined'
+            
+        if (os.path.exists(wrapper_name)):
             print "a python wrapper to the ECMWF BUFR library "+\
                   "has been generated"
             return
@@ -2144,10 +2153,15 @@ if __name__ == "__main__":
     BI.build()
     
     #  #[ check for success
-    if os.path.exists(SO_FILE):
-        print "successfully build:", SO_FILE
+    try:
+        wrapper_name = glob.glob(SO_FILE_PATTERN)[0]
+    except:
+        wrapper_name = 'undefined'
+        
+    if os.path.exists(wrapper_name):
+        print "successfully build:", wrapper_name
     else:
-        print "cannot find file:", SO_FILE
+        print "cannot find a file with pattern:", SO_FILE_PATTERN
         print "something seems wrong here ..."
         raise InterfaceBuildError
     #  #]
