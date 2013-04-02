@@ -88,7 +88,7 @@ for k in CFLAGS_NEEDED.keys():
 
 # python2 version
 SO_FILE = 'ecmwfbufr.so'
-if sys.version_info.major==3:
+if sys.version_info.major == 3:
     # python3 version
     SO_FILE = 'ecmwfbufr.cpython-32mu.so'
 
@@ -377,9 +377,8 @@ int main()
 }
 """
     c_executable = 'GetByteSizeInt'
-    (lines_stdout, lines_stderr) = \
-                   c_compile_and_execute(ccmp, cflags, c_code,
-                                         c_executable, c_libpath)
+    lines_stdout = c_compile_and_execute(ccmp, cflags, c_code,
+                                         c_executable, c_libpath)[0]
     bytesizeint = lines_stdout[0].strip()
     
     c_code = \
@@ -393,9 +392,8 @@ int main()
 }
 """
     c_executable = 'GetByteSizeLong'
-    (lines_stdout, lines_stderr) = \
-                   c_compile_and_execute(ccmp, cflags, c_code,
-                                         c_executable, c_libpath)
+    lines_stdout = c_compile_and_execute(ccmp, cflags, c_code,
+                                         c_executable, c_libpath)[0]
     bytesizelong = lines_stdout[0].strip()
     
     f90_code = \
@@ -407,9 +405,9 @@ program GetByteSizeDefaultInteger
 end program GetByteSizeDefaultInteger
 """
     f90_executable = 'GetByteSizeDefaultInteger'
-    (lines_stdout, lines_stderr) = \
+    lines_stdout = \
         fortran_compile_and_execute(fcmp, fflags, f90_code,
-                                    f90_executable, f_libpath)
+                                    f90_executable, f_libpath)[0]
     try:
         bytesizedefaultinteger = lines_stdout[0].strip()
     except IndexError:
@@ -429,9 +427,9 @@ program GetByteSizeDefaultInteger
 end program GetByteSizeDefaultInteger
 """
         f90_executable = 'GetByteSizeDefaultInteger'
-        (lines_stdout, lines_stderr) = \
-                       fortran_compile_and_execute(fcmp, fflags, f90_code,
-                                                   f90_executable, f_libpath)
+        lines_stdout = \
+                     fortran_compile_and_execute(fcmp, fflags, f90_code,
+                                                 f90_executable, f_libpath)[0]
         try:
             bytesizedefaultinteger = lines_stdout[0].strip()
         except IndexError:
@@ -737,32 +735,36 @@ def extract_version():
     #  #]
 def symlink_to_all_files(source_dir, dest_dir):
     #  #[ create symlinks in dest_dir for all links in source_dir
-    filelist_B = glob.glob(os.path.join(source_dir, 'B*'))
-    filelist_C = glob.glob(os.path.join(source_dir, 'C*'))
-    filelist_D = glob.glob(os.path.join(source_dir, 'D*'))
-    filelist = filelist_B
-    filelist.extend(filelist_C)
-    filelist.extend(filelist_D)
+    '''
+    a helper routine to create symbolic links to all available
+    BUFR tables in the dest_dir directory.
+    '''
+    filelist_b = glob.glob(os.path.join(source_dir, 'B*'))
+    filelist_c = glob.glob(os.path.join(source_dir, 'C*'))
+    filelist_d = glob.glob(os.path.join(source_dir, 'D*'))
+    filelist = filelist_b
+    filelist.extend(filelist_c)
+    filelist.extend(filelist_d)
 
     # first copy the real files
-    for f in filelist:
-        filename = os.path.split(f)[1]
-        if not os.path.islink(f):
-            shutil.copy(f, os.path.join(dest_dir, filename))
+    for fnm in filelist:
+        filename = os.path.split(fnm)[1]
+        if not os.path.islink(fnm):
+            shutil.copy(fnm, os.path.join(dest_dir, filename))
 
     # then create all symlinks
     links = []
-    for f in filelist:
-        filename = os.path.split(f)[1]
-        if os.path.islink(f):
-            realname = os.path.realpath(f)
+    for fnm in filelist:
+        filename = os.path.split(fnm)[1]
+        if os.path.islink(fnm):
+            realname = os.path.realpath(fnm)
             realfilename = os.path.split(realname)[1]
             links.append((realfilename, filename))
             
     cwd = os.getcwd()
     os.chdir(dest_dir)
     for (realfilename, filename) in links:
-        os.symlink(realfilename,filename)
+        os.symlink(realfilename, filename)
     os.chdir(cwd)
 
     # print filelist
@@ -1692,7 +1694,7 @@ class InstallBUFRInterfaceECMWF:
             
             # remove some excess files from the bufr tables directory
             # that we don't need any more (symlinks, tools)
-            tdfiles = os.listdir(table_dir)
+            #tdfiles = os.listdir(table_dir)
             #for tdfile in tdfiles:
             #    fullname = os.path.join(table_dir, tdfile)
             #    if os.path.islink(fullname):

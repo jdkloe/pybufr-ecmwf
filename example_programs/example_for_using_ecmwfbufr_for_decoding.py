@@ -163,12 +163,12 @@ def decoding_example(input_bufr_file):
     print '------------------------------'
     print "printing content of section 0:"
     print "sec0 : ", ksec0
-    print "sec0[hex] : ",[hex(i) for i in ksec0]
+    # print "sec0[hex] : ",[hex(i) for i in ksec0]
     ecmwfbufr.buprs0(ksec0)
     print '------------------------------'
     print "printing content of section 1:"
     print "sec1 : ", ksec1
-    print "sec1[hex] : ",[hex(i) for i in ksec1]
+    # print "sec1[hex] : ",[hex(i) for i in ksec1]
     ecmwfbufr.buprs1(ksec1)
     key = np.zeros(46, dtype = np.int)
     sec2_len = ksec2[0]
