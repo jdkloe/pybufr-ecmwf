@@ -103,6 +103,16 @@ from pybufr_ecmwf import ecmwfbufr
 #import ecmwfbufr # import the wrapper module
 
 #  #]
+#  #[ some constants
+EXAMPLE_PROGRAMS_DIR = 'example_programs'
+TEST_DIR = 'test'
+TESTDATADIR  = os.path.join(TEST_DIR, 'testdata')
+EXP_OUTP_DIR = os.path.join(TEST_DIR, 'expected_test_outputs')
+ACT_OUTP_DIR = os.path.join(TEST_DIR, 'actual_test_outputs')
+
+if not os.path.exists(ACT_OUTP_DIR):
+    os.mkdir(ACT_OUTP_DIR)
+#  #]
 
 def call_cmd(cmd):
     #  #[
@@ -200,13 +210,16 @@ def call_cmd_and_verify_output(cmd):
     # pylint: enable-msg=W0212
 
     # construct filenames for the actual and expected outputs
-    basename = os.path.join("test/expected_test_outputs",
-                            classname_of_calling_function+"."+\
-                            name_of_calling_function)
-    actual_stdout   = basename+".actual_stdout"
-    actual_stderr   = basename+".actual_stderr"
-    expected_stdout = basename+".expected_stdout"
-    expected_stderr = basename+".expected_stderr"
+    basename_exp = os.path.join(EXP_OUTP_DIR,
+                                classname_of_calling_function+"."+\
+                                name_of_calling_function)
+    basename_act = os.path.join(ACT_OUTP_DIR,
+                                classname_of_calling_function+"."+\
+                                name_of_calling_function)
+    actual_stdout   = basename_act+".actual_stdout"
+    actual_stderr   = basename_act+".actual_stderr"
+    expected_stdout = basename_exp+".expected_stdout"
+    expected_stderr = basename_exp+".expected_stderr"
 
     # execute the test and catch all output
     (lines_stdout, lines_stderr) = call_cmd(cmd)
@@ -258,9 +271,6 @@ def call_cmd_and_verify_output(cmd):
     #  #]
 
 print "Starting test program:"
-
-EXAMPLE_PROGRAMS_DIR   = 'example_programs'
-TESTDATADIR            = 'test/testdata'
 
 class CheckRawECMWFBUFR(unittest.TestCase):
     #  #[ 3 tests
@@ -878,6 +888,15 @@ class CheckBufr(unittest.TestCase):
         #  #]
     #  #]
 
+class CheckAddedFortranCode(unittest.TestCase):
+    #  #[
+    def test_retrieve_settings(self):
+        testprog = "test_retrieve_settings.py"
+        cmd = os.path.join(TEST_DIR, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+    #  #]
+    
 # cleanup old tmp_BUFR_TABLES dir that may have been created by a previous run
 os.system('\\rm -rf tmp_BUFR_TABLES')
 os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')

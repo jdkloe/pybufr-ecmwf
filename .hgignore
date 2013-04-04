@@ -17,8 +17,8 @@ syntax: regexp
 \#.*$
 
 # ignore the generated stderr/stdout actual files
-expected_test_outputs/.*.actual_stdout$
-expected_test_outputs/.*.actual_stderr$
+test/actual_test_outputs/.*.actual_stdout$
+test/actual_test_outputs/.*.actual_stderr$
 
 # Ignore these generated files and symlinks:
 Testfile3Msgs.BUFR
