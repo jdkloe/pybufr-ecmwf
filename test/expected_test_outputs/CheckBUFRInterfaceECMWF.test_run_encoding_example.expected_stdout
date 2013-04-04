@@ -1,10 +1,19 @@
 --------------------------------------------------
 BUFR encoding example
 --------------------------------------------------
-------------------------------
-reinitialising all arrays...
-------------------------------
-------------------------------
+Table names expected by the library:
+B0000000000098015001.TXT
+D0000000000098015001.TXT
+Tables to be used:
+B0000000000098015001.TXT
+D0000000000098015001.TXT
+adding  2  descriptors
+adding delayed replication for  2  descriptors
+replicating them at most  2  times
+adding replication for  2  descriptors
+replicating them  3  times
+unexpanded nr of descriptors =  9
+The current list is:  [301011 301012 102000  31001   7004  12001 102003   5001   6001]
 ------------------------
  printing BUFR template 
 ------------------------
@@ -12,13 +21,12 @@ delayed replication factors:  [2 2 2 2]
 ktdlst =  [301011 301012 102000  31001   7004  12001 102003   5001   6001]
 ktdexp =  [ 4001  4002  4003  4004  4005 31001  7004 12001  7004 12001  5001  6001
   5001  6001  5001  6001]
-ktdexl =  0
 exp_descr_list_length =  16
 bufren call finished
-words=
+words = 
 [1380341058   79298560    1441792 ...,          0          0          0]
 encoded size:  47  words or  188  bytes
-succesfully written BUFR encoded data to file:  example_programs/testdata/Testoutputfile2u.BUFR
+succesfully written BUFR encoded data to file:  test/testdata/Testoutputfile1u.BUFR
 --------------------------------------------------
 done
 --------------------------------------------------

@@ -200,7 +200,7 @@ def call_cmd_and_verify_output(cmd):
     # pylint: enable-msg=W0212
 
     # construct filenames for the actual and expected outputs
-    basename = os.path.join("example_programs/expected_test_outputs",
+    basename = os.path.join("test/expected_test_outputs",
                             classname_of_calling_function+"."+\
                             name_of_calling_function)
     actual_stdout   = basename+".actual_stdout"
@@ -259,18 +259,20 @@ def call_cmd_and_verify_output(cmd):
 
 print "Starting test program:"
 
+EXAMPLE_PROGRAMS_DIR   = 'example_programs'
+TESTDATADIR            = 'test/testdata'
+
 class CheckRawECMWFBUFR(unittest.TestCase):
     #  #[ 3 tests
     """
     a class to check the ecmwf_bufr_lib interface 
     """
-    example_programs_dir   = 'example_programs'
-    testdatadir            = 'example_programs/testdata'
-    testinputfile          = os.path.join(testdatadir,
+    # common settings for the following tests
+    testinputfile          = os.path.join(TESTDATADIR,
                                           'Testfile.BUFR')
-    corruptedtestinputfile = os.path.join(testdatadir,
+    corruptedtestinputfile = os.path.join(TESTDATADIR,
                                           'Testfile3CorruptedMsgs.BUFR')
-    testoutputfile2u       = os.path.join(testdatadir,
+    testoutputfile2u       = os.path.join(TESTDATADIR,
                                           'Testoutputfile2u.BUFR')
 
     def test_run_decoding_example(self):
@@ -280,7 +282,7 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         """
         # run the provided example code and verify the output
         testprog = "example_for_using_ecmwfbufr_for_decoding.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' ' + self.testinputfile
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
@@ -335,7 +337,7 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         """
         # run the provided example code and verify the output
         testprog = "example_for_using_ecmwfbufr_for_encoding.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' ' + self.testoutputfile2u
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
@@ -362,7 +364,7 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "example_for_using_pb_routines.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' ' + self.corruptedtestinputfile
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
@@ -374,11 +376,10 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
     """
     a class to check the bufr_interface_ecmwf class
     """
-    example_programs_dir   = "example_programs"
-    testdatadir            = 'example_programs/testdata'
-    testinputfile          = os.path.join(testdatadir,
+    # common settings for the following tests
+    testinputfile          = os.path.join(TESTDATADIR,
                                           'Testfile.BUFR')
-    testoutputfile1u       = os.path.join(testdatadir,
+    testoutputfile1u       = os.path.join(TESTDATADIR,
                                           'Testoutputfile1u.BUFR')
     def test_init(self):
         #  #[
@@ -464,7 +465,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "example_for_using_bufrinterface_ecmwf_for_decoding.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
@@ -478,7 +479,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
 
         # run the provided example code and verify the output
         testprog = "example_for_using_bufrinterface_ecmwf_for_encoding.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' ' + self.testoutputfile1u
         
         success = call_cmd_and_verify_output(cmd)
@@ -492,7 +493,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
 
         # run the provided example code and verify the output
         testprog = "bufr_extract_data_category.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' ' + self.testinputfile
         
         success = call_cmd_and_verify_output(cmd)
@@ -507,13 +508,11 @@ class CheckRawBUFRFile(unittest.TestCase):
     a class to check the raw_bufr_file class
     """
     # common settings for the following tests
-    example_programs_dir   = "example_programs"
-    testdatadir            = 'example_programs/testdata'
-    testinputfile          = os.path.join(testdatadir,
+    testinputfile          = os.path.join(TESTDATADIR,
                                           'Testfile.BUFR')
-    corruptedtestinputfile = os.path.join(testdatadir,
+    corruptedtestinputfile = os.path.join(TESTDATADIR,
                                           'Testfile3CorruptedMsgs.BUFR')
-    testoutputfile3u       = os.path.join(testdatadir,
+    testoutputfile3u       = os.path.join(TESTDATADIR,
                                           'Testoutputfile3u.BUFR')
 
     def test_init(self):
@@ -665,8 +664,6 @@ class CheckCustomTables(unittest.TestCase):
     """
     a class to check the creation and use of custom BUFR table files
     """
-    # common settings for the following tests
-    example_programs_dir   = "example_programs"
     def test_create_custom_bufr_tables(self):
         #  #[
         """
@@ -677,15 +674,15 @@ class CheckCustomTables(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "create_bufr_tables.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
 
         # verify the content of the created table files
-        expected_b_table_file = os.path.join('example_programs',
+        expected_b_table_file = os.path.join('test',
                                              'expected_test_outputs',
                                              b_table_file+'.expected')
-        expected_d_table_file = os.path.join('example_programs',
+        expected_d_table_file = os.path.join('test',
                                              'expected_test_outputs',
                                              d_table_file+'.expected')
             
@@ -698,8 +695,8 @@ class CheckCustomTables(unittest.TestCase):
         self.assertEqual(b_table_txt, expected_b_table_txt)
         self.assertEqual(d_table_txt, expected_d_table_txt)
 
-        os.remove(b_table_file)
-        os.remove(d_table_file)
+#        os.remove(b_table_file)
+#        os.remove(d_table_file)
         #  #]
     def test_use_custom_bufr_tables(self):
         #  #[
@@ -712,13 +709,13 @@ class CheckCustomTables(unittest.TestCase):
         
         # create the custom BUFR tables
         testprog = "create_bufr_tables.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         call_cmd(cmd)
         # don't check this call, this has been checked above already
 
         # run the provided example code and verify the output
         testprog = "use_custom_tables_for_encoding.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' ' + test_bufr_file
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
@@ -744,15 +741,13 @@ class CheckBufr(unittest.TestCase):
     a class to check the bufr.py file
     """
     # common settings for the following tests
-    example_programs_dir = "example_programs"
-    testdatadir          = 'example_programs/testdata'
-    testinputfile        = os.path.join(testdatadir,
+    testinputfile        = os.path.join(TESTDATADIR,
                                         'Testfile.BUFR')
-    testinputfile_unpadded = os.path.join(testdatadir,
+    testinputfile_unpadded = os.path.join(TESTDATADIR,
                                           'ISXH58EUSR199812162225')
-    testinputfile_gras   = os.path.join(testdatadir,
+    testinputfile_gras   = os.path.join(TESTDATADIR,
         'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR')
-    testinputfile_o3m    = os.path.join(testdatadir,
+    testinputfile_o3m    = os.path.join(TESTDATADIR,
         'S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr')
 
     def test_run_decode_example1_ascii(self):
@@ -763,7 +758,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -1 -a -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
@@ -777,7 +772,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -1 -c -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
@@ -791,7 +786,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -2 -a -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
@@ -805,7 +800,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -2 -c -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
@@ -819,7 +814,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -3 -a -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
@@ -833,7 +828,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -3 -c -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
@@ -847,7 +842,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -1 -c -i ' + self.testinputfile_unpadded
 
         success = call_cmd_and_verify_output(cmd)
@@ -861,7 +856,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -1 -c -i ' + self.testinputfile_gras
 
         success = call_cmd_and_verify_output(cmd)
@@ -875,7 +870,7 @@ class CheckBufr(unittest.TestCase):
         
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
-        cmd = os.path.join(self.example_programs_dir, testprog)
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -1 -c -i ' + self.testinputfile_o3m
 
         success = call_cmd_and_verify_output(cmd)

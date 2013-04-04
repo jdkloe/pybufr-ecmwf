@@ -1,7 +1,7 @@
 --------------------------------------------------
 BUFR decoding example
 --------------------------------------------------
-loading testfile:  example_programs/testdata/Testfile.BUFR
+loading testfile:  test/testdata/Testfile.BUFR
 ------------------------------
 calling: decode_sections_012():
 calling: ecmwfbufr.bus012():
@@ -217,7 +217,7 @@ FORTRAN STDOUT:     49  000000                                                  
 FORTRAN STDOUT:     50  000000                                                                  
 FORTRAN STDOUT:     51  000000                                                                  
 FORTRAN STDOUT:     52  000000                                                                  
-succesfully decoded data from file:  example_programs/testdata/Testfile.BUFR
+succesfully decoded data from file:  test/testdata/Testfile.BUFR
 --------------------------------------------------
 done
 --------------------------------------------------

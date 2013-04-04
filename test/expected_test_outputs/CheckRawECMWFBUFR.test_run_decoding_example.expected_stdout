@@ -130,7 +130,7 @@ ktdexp =  [ 1007 25060  1033  1034  1012  4001  4002  4003  4004  4005  4006 270
 ------------------------------
 printing content of section 3:
 sec3 :  [ 10   0 361 192]
-succesfully decoded data from file:  example_programs/testdata/Testfile.BUFR
+succesfully decoded data from file:  test/testdata/Testfile.BUFR
 --------------------------------------------------
 done
 --------------------------------------------------
