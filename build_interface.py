@@ -1795,39 +1795,12 @@ class InstallBUFRInterfaceECMWF:
         
         if not remake:
             #  #[ create signature file
-            # source_files = ["buxdes.F",
-            #                "bufren.F",
-            #                "bufrex.F",
-            #                "btable.F",
-            #                "get_name_unit.F",
-            #                "bus012.F",
-            #                "busel.F",
-            #                "buprs0.F",
-            #                "buprs1.F",
-            #                "buprs2.F",
-            #                "buprs3.F",
-            #                "buukey.F",
-            #                "bupkey.F",
-            #                "buprq.F"]
-            # source_file_list = ' '.join(os.path.join(source_dir, "bufrdc", f)
-            #                            for f in source_files)
-            # compilation of the wrapper seems to work when I use
-            # this selected set of fortran files, but when I try to import the
-            # module in python I get the following error (don't know yet why):
-            #   >>> import ecmwfbufr
-            #   Traceback (most recent call last):
-            #     File "<stdin>", line 1, in <module>
-            #   ImportError: ./ecmwfbufr.so:
-            #   undefined symbol: _gfortran_concat_string
-            #   >>> 
-
             # just take them all (this works for me)
             source_file_list = source_dir+"/bufrdc/*.F "+\
                                source_dir+"/pbio/pbbufr.F"
 
             # call f2py and create a signature file that defines the
             # interfacing to the fortran routines in this library
-            # print 'TESTJOS: cwd = ', os.getcwd()
             cmd = f2py_tool_name+\
                       " --build-dir "+self.wrapper_build_dir+\
                       " -m "+self.wrapper_module_name+\
@@ -1927,71 +1900,24 @@ class InstallBUFRInterfaceECMWF:
         #  #]
     def extract_constants(self):
         #  #[ extract some hardcoded constants for reuse by the python code
-
-        # note: this block of constant parameters defining all array sizes
-        #       in the interfaces to this ecmwf library seems not available
-        #       through the f2py interface
-        #       It is defined in file:
-        #           ecmwf_bufr_lib/bufr_000380/bufrdc/parameter.F
-        #
-        #      PARAMETER(JSUP =   9,JSEC0=   3,JSEC1= 40,JSEC2=4096,JSEC3=   4,
-        #     1          JSEC4=2,JELEM=320000,JSUBS=400,JCVAL=150 ,JBUFL=512000,
-        #     2          JBPW = 32,JTAB =3000,JCTAB=3000,JCTST=9000,JCTEXT=9000,
-        #     3          JWORK=4096000,JKEY=46, JTMAX=10,JTCLAS=64,JTEL=255)
-        #
-        # therefore read and parse the fortran file in the next few
-        # python lines, and write the result in a python file
-        # called ecmwfbufr_parameters.py to allow easy importing.
-        #
-        #max_nr_descriptors          =  20 # 300
-        #max_nr_expanded_descriptors = 140 # 160000
-        #max_nr_subsets              = 361 # 25
-
-        source_dir = self.get_source_dir()[0]
-        parameter_file = os.path.join(source_dir, 'bufrdc', 'parameter.F')
-        print 'inspecting parameter file: ', parameter_file
-        key_val_pairs = []
-        for line in open(parameter_file).readlines():
-            if 'JSUP' in line:
-                items = line[6:].split('(')[1].split(',')
-                key_val_pairs.extend(items)
-            if 'JSEC4' in line:
-                items = line[6:].split(',')
-                key_val_pairs.extend(items)
-            # we explicitely compile using 32 bits integers, so
-            # force the use of JBPW=32
-            if 'JBPW' in line:
-                items = line[6:].split(',')
-                key_val_pairs.extend(items)
-            if 'JWORK' in line:
-                items = line[6:].split(')')[0].split(',')
-                key_val_pairs.extend(items)
-
-        # JBPW_DEF was introduced with BUFRDC version 000400
-        fortint_include_file = os.path.join(source_dir, 'bufrdc', 'fortint.h')
-        if os.path.exists(fortint_include_file):
-            print 'inspecting header file: ', fortint_include_file
-            for line in open(fortint_include_file).readlines():
-                # force the use of JBPW=32
-                if 'JBPW_DEF' in line:
-                    items = line.split()
-                    key_val_pairs.append('JBPW = '+items[2])
-            
-        # print 'key_val_pairs: '
-        # print '\n'.join(txt.strip() for txt in key_val_pairs)
-        # sys.exit(1)
+        # the ecmwfbufr interfacing is used to retrieve them,
+        # so this code is run when all interface building is done
+        saved_cwd = os.getcwd()
+        os.chdir('..')
+        from helpers import get_and_set_the_module_path
+        (sys.path, MY_MODULE_PATH) = get_and_set_the_module_path(sys.path)
+        from pybufr_ecmwf import ecmwfbufr
         
+        constants = ecmwfbufr.retrieve_settings()
+        os.chdir(saved_cwd)
+
+        keys = ['JSUP', 'JSEC0', 'JSEC1', 'JSEC2', 'JSEC3',
+                'JSEC4', 'JELEM', 'JSUBS', 'JCVAL', 'JBUFL',
+                'JBPW', 'JTAB', 'JCTAB', 'JCTST', 'JCTEXT',
+                'JWORK', 'JKEY', 'JTMAX', 'JTCLAS', 'JTEL']
         parameter_dict = {}
-        for kvp in key_val_pairs:
-            if not (kvp.strip()==''):
-                try:
-                    rawkey, rawval = kvp.split('=')
-                    key = rawkey.strip() # remove whitespace
-                    val = rawval.strip() # remove whitespace
-                    parameter_dict[key] = int(val)
-                except ValueError:
-                    print 'error interpreting: ['+kvp+']'
-        print 'parameter_dict = ', parameter_dict
+        for (i, key) in enumerate(keys):
+            parameter_dict[key] = constants[i]
 
         python_parameter_file = 'ecmwfbufr_parameters.py'
         print 'creating parameter python file: ', python_parameter_file
