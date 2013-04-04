@@ -30,7 +30,7 @@ pybufr_ecmwf/GetByteSizeDefaultInteger
 pybufr_ecmwf/GetByteSizeInt
 pybufr_ecmwf/GetByteSizeLong
 MANIFEST
-example_programs/testdata/Testoutputfile.*.BUFR
+test/testdata/Testoutputfile.*.BUFR
 
 # ignore the pylint output text files
 pylint_.*.txt$
