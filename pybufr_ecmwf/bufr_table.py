@@ -35,7 +35,7 @@ by providing several helper classes.
 #
 #  #]
 #  #[ imported modules
-import os
+import os, stat
 import sys
 import glob
 #  #]
@@ -1531,45 +1531,112 @@ if __name__ == "__main__":
     # tables defined on the lines above
     
     # test the available bufr tables
-    TABLE_CODES = ["0000000000098000000",
-                   "0000000000098002001", "0000000000098006000",
-                   "0000000000098006001", "0000000000098013001",
-                   "0000000000098014001"]
+    #TABLE_CODES = ["0000000000098000000",
+    #               "0000000000098002001", "0000000000098006000",
+    #               "0000000000098006001", "0000000000098013001",
+    #               "0000000000098014001"]
     #, "0000000000000014000",
     #, "0000000000254011001"
     # this last one seems only to have a B table but no D table!!!!
     
+    handled_orig_names = []
+
     PATH = "ecmwf_bufrtables"
-    bufr_b_tables = glob.glob(os.path.join(PATH, "B0*.TXT"))
+    bufr_b_tables = glob.glob(os.path.join(PATH, "B*.TXT"))
+    # bufr_b_tables = glob.glob(os.path.join(PATH, "B*.distinct"))
     for bufr_b_table in bufr_b_tables:
+
         bufr_b_name = os.path.split(bufr_b_table)[1]
-        bufr_d_name = 'D'+bufr_b_name[1:]
-        bufr_d_table = os.path.join(PATH, bufr_d_name)
-        print '='*50
-        print 'loading: '+bufr_b_table
-        print '='*50
-        saved_sys_stdout = sys.stdout
-        try:
-            sys.stdout = open('comments_during_load_of_'+bufr_b_name,'wt')
-            BT.load(bufr_b_table)
-            sys.stdout.close()
-            sys.stdout = saved_sys_stdout
-        except:
-            sys.stdout = saved_sys_stdout
-            print 'ERROR: load failed !!!'
+        code = bufr_b_name[1:]
+        bufr_c_name = 'C'+code
+        bufr_d_name = 'D'+code
         
-        print '='*50
-        print 'loading: '+bufr_d_table
-        print '='*50
-        saved_sys_stdout = sys.stdout
-        try:
-            sys.stdout = open('comments_during_load_of_'+bufr_d_name,'wt')
-            BT.load(bufr_d_table)
-            sys.stdout.close()
-            sys.stdout = saved_sys_stdout
-        except:
-            sys.stdout = saved_sys_stdout
-            print 'ERROR: load failed !!!'
+        bufr_c_table = os.path.join(PATH, bufr_c_name)
+        bufr_d_table = os.path.join(PATH, bufr_d_name)
+
+        check_b_table = False
+        check_c_table = False
+        check_d_table = False
+
+        if os.path.exists(bufr_b_table):
+            realname_bufr_b_table = \
+                     os.path.split(os.path.realpath(bufr_b_table))[1]
+            if realname_bufr_b_table not in handled_orig_names:
+                print 'appending: ',realname_bufr_b_table
+                handled_orig_names.append(realname_bufr_b_table)
+                check_b_table = True
+        else:
+            print 'ERROR: B table missing for code: ',code
+
+        if os.path.exists(bufr_c_table):
+            realname_bufr_c_table = \
+                     os.path.split(os.path.realpath(bufr_c_table))[1]
+            if realname_bufr_c_table not in handled_orig_names:
+                print 'appending: ',realname_bufr_c_table
+                handled_orig_names.append(realname_bufr_c_table)
+                check_c_table = True
+        else:
+            print 'ERROR: C table missing for code: ',code
+
+        if os.path.exists(bufr_d_table):
+            realname_bufr_d_table = \
+                     os.path.split(os.path.realpath(bufr_d_table))[1]
+            if realname_bufr_d_table not in handled_orig_names:
+                print 'appending: ',realname_bufr_d_table
+                handled_orig_names.append(realname_bufr_d_table)
+                check_d_table = True
+        else:
+            print 'ERROR: D table missing for code: ',code
+
+
+        if check_b_table:
+            print '='*50
+            print 'loading: '+bufr_b_table
+            print '='*50
+            comments_file_b = 'comments_during_load_of_'+bufr_b_name
+            saved_sys_stdout = sys.stdout
+            try:
+                sys.stdout = open(comments_file_b,'wt')
+                BT.load(bufr_b_table)
+                sys.stdout.close()
+                sys.stdout = saved_sys_stdout
+            except:
+                sys.stdout = saved_sys_stdout
+                print 'ERROR: load failed !!!'
+            if os.path.exists(comments_file_b):
+                # get the filesize
+                statresult = os.stat(comments_file_b)
+                filesize = statresult[stat.ST_SIZE]
+                if filesize == 0:
+                    os.remove(comments_file_b)
+
+
+        if check_c_table:
+            print '='*50
+            print 'C-table checking not yet implemented'
+            print '='*50
+
+        if check_d_table:
+            print '='*50
+            print 'loading: '+bufr_d_table
+            print '='*50
+            comments_file_d = 'comments_during_load_of_'+bufr_d_name
+            saved_sys_stdout = sys.stdout
+            try:
+                sys.stdout = open(comments_file_d,'wt')
+                BT.load(bufr_d_table)
+                sys.stdout.close()
+                sys.stdout = saved_sys_stdout
+            except:
+                sys.stdout = saved_sys_stdout
+                print 'ERROR: load failed !!!'
+            if os.path.exists(comments_file_d):
+                # get the filesize
+                statresult = os.stat(comments_file_d)
+                filesize = statresult[stat.ST_SIZE]
+                if filesize == 0:
+                    os.remove(comments_file_d)
+
         BT.unload_tables()
     
     # test application of modification commands:
@@ -1578,9 +1645,23 @@ if __name__ == "__main__":
     # load the ADM-Aeolus L2B-product BUFR table
     PATH = "alt_bufr_tables"
     TABLE_CODE = "0000000000098015001"
-    BT.load(os.path.join(PATH, "B"+TABLE_CODE+".TXT"))
-    BT.load(os.path.join(PATH, "D"+TABLE_CODE+".TXT"))
+
+    bufr_b_table = os.path.join(PATH, "B"+TABLE_CODE+".TXT")
+    bufr_d_table = os.path.join(PATH, "D"+TABLE_CODE+".TXT")
     
+    print '='*50
+    print 'loading: '+bufr_b_table
+    print '='*50
+    BT.load(bufr_b_table)
+    
+    print '='*50
+    print 'loading: '+bufr_d_table
+    print '='*50
+    BT.load(bufr_d_table)
+
+    print '='*50
+    print 'doing some custom modification tests'
+    print '='*50
     CODES = ["207001", # = modifier
              "005001", # = LATITUDE (HIGH ACCURACY)  [DEGREE]
              "006001", # = LONGITUDE (HIGH ACCURACY) [DEGREE]
