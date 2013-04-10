@@ -568,6 +568,12 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
     #          JTCLAS=64,
     #          JTEL=255)
     
+    # WARNING:
+    # these numbers really should NOT be hardcoded here
+    # but extracted from the fortran code.
+    # However, at this point in time the interface to
+    # fortran is not yet available, so for now use this
+    # quick and dirty workaround...
     edits = {}
     edits['JSUP']  = 9
     edits['JSEC0'] = 3
@@ -602,6 +608,7 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
     print "Fixing array size definitions in signatures definition ..."
     sfd = open(signature_file, "wt")
     inside_subroutine = False
+    inside_retrieve_settings = False
     inside_pbbufr_sign = False
     for line in lines:
         
@@ -612,10 +619,15 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
         elif ('subroutine' in mod_line):
             inside_subroutine = True
 
-        if ('subroutine pbbufr(kunit' in mod_line):
-            inside_pbbufr_sign = True
-        elif ('end subroutine pbbufr' in mod_line):
+        if ('end subroutine retrieve_settings' in mod_line):
+            inside_retrieve_settings = False
+        elif ('subroutine retrieve_settings' in mod_line):
+            inside_retrieve_settings = True
+            
+        if ('end subroutine pbbufr' in mod_line):
             inside_pbbufr_sign = False
+        elif ('subroutine pbbufr' in mod_line):
+            inside_pbbufr_sign = True
             
         if (inside_subroutine):
             if (' ::' in mod_line):
@@ -630,7 +642,12 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
                 if not 'intent(out)' in mod_line:
                     # do this only for code that has no explicit intent(out)
                     (part1, part2) = mod_line.split(' ::')
-                    mod_line = part1+',intent(inplace) ::'+part2
+                    if inside_retrieve_settings:
+                        # explicitely add intent(out)
+                        # this seems needed for the python3 case!
+                        mod_line = part1+',intent(out) ::'+part2
+                    else:
+                        mod_line = part1+',intent(inplace) ::'+part2
 
         if inside_pbbufr_sign:
             # fix a bug in the pbbufr.F fortran code that causes f2py to
