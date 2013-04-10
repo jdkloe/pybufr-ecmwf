@@ -173,14 +173,14 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
             list_of_units = []
             for (cname, cunit) in zip(bufr_obj.cnames, bufr_obj.cunits):
                 # glue the ndarray of characters together to form strings
-                cname_str = "".join(cname).strip()
-                cunit_str = "".join(cunit).strip()
+                cname_str = b"".join(cname).strip()
+                cunit_str = b"".join(cunit).strip()
                 # append the strings to the head list and quote them
-                list_of_names.append('"'+cname_str+'"')
-                list_of_units.append('"'+cunit_str+'"')
+                list_of_names.append(b'"'+cname_str+b'"')
+                list_of_units.append(b'"'+cunit_str+b'"')
 
-            output_fd.write(separator.join(list_of_names) + "\n")
-            output_fd.write(separator.join(list_of_units) + "\n")
+            output_fd.write(separator.join(list_of_names) + b"\n")
+            output_fd.write(separator.join(list_of_units) + b"\n")
 
         nsubsets = bufr_obj.get_num_subsets()
         for subs in range(nsubsets):

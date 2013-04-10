@@ -1068,10 +1068,16 @@ class BUFRInterfaceECMWF:
         print "[index] cname [cunit] : "
         for (i, cnm) in enumerate(self.cnames):
             cun = self.cunits[i]
-            txtn = ''.join(c for c in cnm)
-            txtu = ''.join(c for c in cun)
-            if (txtn.strip() != ''):
-                print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
+            txtn = b''.join(c for c in cnm)
+            txtu = b''.join(c for c in cun)
+            if (txtn.strip() != b''):
+                if sys.version_info.major == 2:
+                    print b'[%3.3i]:%s [%s]' % (i, txtn, txtu)
+                else:
+                    # this python3 exception at least prevents the code
+                    # from crashing with an ugly runtime error, but
+                    # the printed result is still gibberish
+                    print(str(i).encode()+txtn+txtu)
         #  #]
     def explain_error(self, kerr, subroutine_name):
         #  #[ explain error codes returned by the bufrlib routines
@@ -1237,8 +1243,8 @@ class BUFRInterfaceECMWF:
                      "(remember the arrays are counted starting with 0)"
             raise EcmwfBufrLibError(errtxt)
 
-        txtn = ''.join(c for c in self.cnames[i])
-        txtu = ''.join(c for c in self.cunits[i])
+        txtn = b''.join(c for c in self.cnames[i])
+        txtu = b''.join(c for c in self.cunits[i])
 
         return (txtn.strip(), txtu.strip())
         #  #]

@@ -102,6 +102,8 @@ def call_cmd(cmd):
                              stderr = subprocess.PIPE)
     lines_stdout = subpr.stdout.readlines()
     lines_stderr = subpr.stderr.readlines()
+    subpr.stdout.close()
+    subpr.stderr.close()
 
     if sys.version_info.major == 3:
         text_lines_stdout = [l.decode() for l in lines_stdout]
@@ -190,8 +192,12 @@ def call_cmd_and_verify_output(cmd):
     
     # try to read the expected outputs
     try:
-        expected_lines_stdout = open(expected_stdout, 'rt').readlines()
-        expected_lines_stderr = open(expected_stderr, 'rt').readlines()
+        fd_stdout = open(expected_stdout, 'rt')
+        fd_stderr = open(expected_stderr, 'rt')
+        expected_lines_stdout = fd_stdout.readlines()
+        expected_lines_stderr = fd_stderr.readlines()
+        fd_stdout.close()
+        fd_stderr.close()
     
         # compare the actual and expected outputs
         if not (lines_stdout == expected_lines_stdout):

@@ -663,7 +663,7 @@ class RawBUFRFile:
                                                  for j in range(4) \
                                                  if data[j].isalnum())
                 # safety check
-                assert(data[:4] == 'BUFR')
+                assert(data[:4] == b'BUFR')
 
         self.nr_of_bufr_messages = self.nr_of_bufr_messages + 1
         self.filesize = self.filesize + size_bytes

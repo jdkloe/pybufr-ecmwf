@@ -217,8 +217,8 @@ def decoding_example(input_bufr_file):
     print "cnames [cunits] : "
     for (i, cnm) in enumerate(cnames):
         cun = cunits[i]
-        txtn = ''.join(c for c in cnm)
-        txtu = ''.join(c for c in cun)
+        txtn = b''.join(c for c in cnm)
+        txtu = b''.join(c for c in cun)
         if (txtn.strip() != ''):
             print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
 
