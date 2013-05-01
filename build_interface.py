@@ -33,6 +33,8 @@ import stat        # handling of file stat data
 import urllib      # handling of url downloads
 import datetime    # date handling functions
 
+from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
+
 #  #]
 #  #[ exception definitions
 class NetworkError(Exception):
@@ -88,7 +90,7 @@ for k in CFLAGS_NEEDED.keys():
 
 # python2 version
 SO_FILE_PATTERN = 'ecmwfbufr.so'
-if sys.version_info.major == 3:
+if python3:
     # python3 version
     SO_FILE_PATTERN = 'ecmwfbufr.cpython*.so'
 
@@ -1921,7 +1923,6 @@ class InstallBUFRInterfaceECMWF:
         # so this code is run when all interface building is done
         saved_cwd = os.getcwd()
         os.chdir('..')
-        from helpers import get_and_set_the_module_path
         (sys.path, MY_MODULE_PATH) = get_and_set_the_module_path(sys.path)
         from pybufr_ecmwf import ecmwfbufr
         

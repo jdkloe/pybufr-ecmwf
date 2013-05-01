@@ -47,6 +47,8 @@ except ImportError as e:
 from . import ecmwfbufr_parameters
 from .bufr_template import BufrTemplate
 from .bufr_table import BufrTable
+from .helpers import python3
+
 #  #]
 #  #[ exception definitions
 # see: http://docs.python.org/library/exceptions.html
@@ -941,8 +943,8 @@ class BUFRInterfaceECMWF:
         # note: float64 is the default, but it doesn't hurt to make it explicit
         self.values = np.zeros(      self.kvals, dtype = np.float64)
         self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
-        self.cnames = np.zeros((nr_of_descriptors, 64), dtype = np.character)
-        self.cunits = np.zeros((nr_of_descriptors, 24), dtype = np.character)
+        self.cnames = np.zeros((nr_of_descriptors, 64), dtype = '|S1')
+        self.cunits = np.zeros((nr_of_descriptors, 24), dtype = '|S1')
 
         # print 'DEBUG: len(self.ksec0)=',len(self.ksec0)
         # print 'DEBUG: len(self.ksec1)=',len(self.ksec1)
@@ -1066,18 +1068,20 @@ class BUFRInterfaceECMWF:
             raise EcmwfBufrLibError(errtxt)
 
         print "[index] cname [cunit] : "
-        for (i, cnm) in enumerate(self.cnames):
-            cun = self.cunits[i]
-            txtn = b''.join(c for c in cnm)
-            txtu = b''.join(c for c in cun)
-            if (txtn.strip() != b''):
-                if sys.version_info.major == 2:
-                    print b'[%3.3i]:%s [%s]' % (i, txtn, txtu)
-                else:
-                    # this python3 exception at least prevents the code
-                    # from crashing with an ugly runtime error, but
-                    # the printed result is still gibberish
-                    print(str(i).encode()+txtn+txtu)
+
+        for i in range(self.actual_kelem):
+            cnm = self.cnames[i,:]
+        # for (i, cnm) in enumerate(self.cnames):
+            cun = self.cunits[i,:]
+            if python3:
+                txtn = ''.join(c.decode() for c in cnm)
+                txtu = ''.join(c.decode() for c in cun)
+            else:
+                txtn = ''.join(c for c in cnm)
+                txtu = ''.join(c for c in cun)
+            if (txtn.strip() != ''):
+                print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
+
         #  #]
     def explain_error(self, kerr, subroutine_name):
         #  #[ explain error codes returned by the bufrlib routines
@@ -1243,9 +1247,13 @@ class BUFRInterfaceECMWF:
                      "(remember the arrays are counted starting with 0)"
             raise EcmwfBufrLibError(errtxt)
 
-        txtn = b''.join(c for c in self.cnames[i])
-        txtu = b''.join(c for c in self.cunits[i])
-
+        if python3:
+            txtn = ''.join(c.decode() for c in self.cnames[i])
+            txtu = ''.join(c.decode() for c in self.cunits[i])
+        else:
+            txtn = ''.join(c for c in self.cnames[i])
+            txtu = ''.join(c for c in self.cunits[i])
+            
         return (txtn.strip(), txtu.strip())
         #  #]
     def extract_raw_descriptor_list(self):
@@ -1590,8 +1598,8 @@ class BUFRInterfaceECMWF:
 
         # define space for decoding text strings
         kelem  = self.max_nr_expanded_descriptors
-        self.cnames = np.zeros((kelem, 64), dtype = np.character)
-        self.cunits = np.zeros((kelem, 24), dtype = np.character)
+        self.cnames = np.zeros((kelem, 64), dtype = '|S1')
+        self.cunits = np.zeros((kelem, 24), dtype = '|S1')
 
         # call BUXDES
         # buxdes: expand the descriptor list
@@ -1679,7 +1687,7 @@ class BUFRInterfaceECMWF:
         # allocate space for decoding
         # note: float64 is the default, but it doesn't hurt to make it explicit
         #self.values = np.zeros(      self.kvals, dtype = np.float64)
-        self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
+        self.cvals  = np.zeros((self.kvals, 80), dtype = '|S1')
 
         # define the output buffer
         num_bytes = 5000

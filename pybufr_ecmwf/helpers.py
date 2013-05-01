@@ -2,6 +2,7 @@
 
 """
 a module containing helpers to handle sys.path juggling
+and python3 string handling cases
 """
 
 import os, sys    # operating system functions
@@ -52,3 +53,12 @@ def get_and_set_the_module_path(syspath):
     return (syspath, abs_module_path)
     #  #]
 
+
+python3=False
+try:
+    if sys.version_info.major == 3:
+        python3=True
+except AttributeError:
+    # python 2.6 and before has no major attibute in sys.version_info
+    # so these will fall back to the default python3
+    pass

@@ -30,6 +30,7 @@ import sys # os
 import numpy   # array functionality
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF
+from .helpers import python3
 #  #]
 #  #[ exception definitions
 class NoMsgLoadedError(Exception):
@@ -219,7 +220,7 @@ class BUFRReader:
             # glue the ndarray of characters together to form strings
             cname_str = b''.join(cname).strip()
             # append the string to the list and quote them
-            if sys.version_info.major == 3:
+            if python3:
                 list_of_names.append('"'+cname_str.decode()+'"')
             else:
                 list_of_names.append('"'+cname_str+'"')
@@ -236,7 +237,7 @@ class BUFRReader:
             # glue the ndarray of characters together to form strings
             cunit_str = b''.join(cunit).strip()
             # append the string to the list and quote them
-            if sys.version_info.major == 3:
+            if python3:
                 list_of_units.append('"'+cunit_str.decode()+'"')
             else:
                 list_of_units.append('"'+cunit_str+'"')

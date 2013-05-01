@@ -44,7 +44,7 @@ import os, sys    # operating system functions
 import unittest   # import the unittest functionality
 import subprocess # support running additional executables
 from build_interface import InterfaceBuildError
-from helpers import get_and_set_the_module_path
+from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
 
 (sys.path, MY_MODULE_PATH) = get_and_set_the_module_path(sys.path)
 # print '(sys.path, MY_MODULE_PATH) = ',(sys.path, MY_MODULE_PATH)
@@ -105,7 +105,7 @@ def call_cmd(cmd):
     subpr.stdout.close()
     subpr.stderr.close()
 
-    if sys.version_info.major == 3:
+    if python3:
         text_lines_stdout = [l.decode() for l in lines_stdout]
         text_lines_stderr = [l.decode() for l in lines_stderr]
         return (text_lines_stdout, text_lines_stderr)
