@@ -2058,12 +2058,12 @@ if __name__ == "__main__":
     
     #  #[ check for success
     try:
-        wrapper_name = glob.glob(SO_FILE_PATTERN)[0]
+        SO_WRAPPER_NAME = glob.glob(SO_FILE_PATTERN)[0]
     except:
-        wrapper_name = 'undefined'
+        SO_WRAPPER_NAME = 'undefined'
         
-    if os.path.exists(wrapper_name):
-        print "successfully build:", wrapper_name
+    if os.path.exists(SO_WRAPPER_NAME):
+        print "successfully build:", SO_WRAPPER_NAME
     else:
         print "cannot find a file with pattern:", SO_FILE_PATTERN
         print "something seems wrong here ..."

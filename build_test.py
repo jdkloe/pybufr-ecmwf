@@ -436,8 +436,10 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # this bug in f2py has been reported here:
         #        http://projects.scipy.org/numpy/ticket/1932
-        
-        sys.exit(1)        
+        # and here:
+        #       https://github.com/numpy/numpy/issues/3192
+         
+        sys.exit(1)
         
         # restore the original directory
         os.chdir(saved_cwd)
