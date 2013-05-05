@@ -528,7 +528,18 @@ class CheckRawBUFRFile(unittest.TestCase):
                           bufrfile.open, self.corruptedtestinputfile, 'q')
         
         # check behaviour when filename is not a string
-        self.assertRaises(TypeError, bufrfile.open, 123, 'rb')
+        if python3:
+            # Note: the python3 case for this assert prints some info
+            # to stdout in case the test succeeds, which doesn't give the
+            # nice dotted lines when running unit tests that all pass...
+            # Therefore suppress stdout for this line.
+            devnull = open(os.devnull, 'w')
+            stdout_saved = sys.stdout
+            sys.stdout = devnull
+            self.assertRaises(OSError, bufrfile.open, 123, 'rb')
+            sys.stdout = stdout_saved
+        else:
+            self.assertRaises(TypeError, bufrfile.open, 123, 'rb')
         
         # check behaviour when file does not exist
         self.assertRaises(IOError, bufrfile.open, 'dummy', 'rb',
@@ -665,11 +676,19 @@ class CheckCustomTables(unittest.TestCase):
                                              'expected_test_outputs',
                                              d_table_file+'.expected')
             
-        b_table_txt = open(b_table_file).readlines()
-        d_table_txt = open(d_table_file).readlines()
+        fdb = open(b_table_file)
+        fdd = open(d_table_file)
+        b_table_txt = fdb.readlines()
+        d_table_txt = fdd.readlines()
+        fdb.close()
+        fdd.close()
 
-        expected_b_table_txt = open(expected_b_table_file).readlines()
-        expected_d_table_txt = open(expected_d_table_file).readlines()
+        fdb = open(expected_b_table_file)
+        fdd = open(expected_d_table_file)
+        expected_b_table_txt = fdb.readlines()
+        expected_d_table_txt = fdd.readlines()
+        fdb.close()
+        fdd.close()        
 
         self.assertEqual(b_table_txt, expected_b_table_txt)
         self.assertEqual(d_table_txt, expected_d_table_txt)

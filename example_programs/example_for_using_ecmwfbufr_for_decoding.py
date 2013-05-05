@@ -39,6 +39,8 @@ from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
 
+from pybufr_ecmwf.helpers import python3
+
 #  #]
 
 def ensure_symlink_exists(source, destination):
@@ -217,8 +219,13 @@ def decoding_example(input_bufr_file):
     print "cnames [cunits] : "
     for (i, cnm) in enumerate(cnames):
         cun = cunits[i]
-        txtn = b''.join(c for c in cnm)
-        txtu = b''.join(c for c in cun)
+        if python3:
+            txtn = ''.join(c.decode() for c in cnm)
+            txtu = ''.join(c.decode() for c in cun)
+        else:
+            txtn = ''.join(c for c in cnm)
+            txtu = ''.join(c for c in cun)
+
         if (txtn.strip() != ''):
             print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
 
@@ -240,7 +247,7 @@ def decoding_example(input_bufr_file):
         index_lon = max_nr_expanded_descriptors*(subs-1)+25
         lat[subs] = values[index_lat]
         lon[subs] = values[index_lon]
-        if (30*(subs/30) == subs):
+        if (30*(subs//30) == subs):
             print "subs = ", subs, "lat = ", lat[subs], " lon = ", lon[subs]
             print "min/max lat", min(lat), max(lat)
             print "min/max lon", min(lon), max(lon)

@@ -182,8 +182,8 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
                     cunit_str = ''.join(cunit).strip()
 
                 # append the strings to the head list and quote them
-                list_of_names.append(b'"'+cname_str+b'"')
-                list_of_units.append(b'"'+cunit_str+b'"')
+                list_of_names.append('"'+cname_str+'"')
+                list_of_units.append('"'+cunit_str+'"')
 
             output_fd.write(separator.join(list_of_names) + '\n')
             output_fd.write(separator.join(list_of_units) + '\n')
