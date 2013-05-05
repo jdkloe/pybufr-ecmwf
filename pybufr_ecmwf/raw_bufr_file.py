@@ -27,7 +27,7 @@ in the ECMWF BUFR library to work in a portable way)
 import os          # operating system functions
 import numpy as np # import numerical capabilities
 import struct      # allow converting c datatypes and structs
-
+from .helpers import python3
 #  #]
 
 class RawBUFRFile:
@@ -225,8 +225,12 @@ class RawBUFRFile:
             if edition_number > 1:
                 # get bytes 5 to 7 which should hold the total length of the
                 # current BUFR message
-                raw_bytes = chr(0)+self.data[start_section0+5-1:
-                                             start_section0+7]
+                if python3:
+                    raw_bytes = b'\0'+self.data[start_section0+5-1:
+                                                start_section0+7]
+                else:
+                    raw_bytes = chr(0)+self.data[start_section0+5-1:
+                                                 start_section0+7]
                 try:
                     msg_size = struct.unpack(dataformat, raw_bytes)[0]
                 except:
@@ -594,7 +598,11 @@ class RawBUFRFile:
             # print 'nbytes_rounded = ',nbytes_rounded
             num_zeros_to_add = nbytes_rounded+4-nbytes
             # print 'num_zeros_to_add = ',num_zeros_to_add
-            str_to_add = ''.join(b'\x00' for i in range(num_zeros_to_add))
+            if python3:
+                str_to_add = b''.join(b'\x00' for i in range(num_zeros_to_add))
+            else:
+                str_to_add = ''.join(b'\x00' for i in range(num_zeros_to_add))
+
             raw_data_bytes = raw_data_bytes + str_to_add
 
         if (self.verbose):

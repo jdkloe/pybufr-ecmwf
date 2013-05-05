@@ -198,6 +198,14 @@ def call_cmd_and_verify_output(cmd):
         expected_lines_stderr = fd_stderr.readlines()
         fd_stdout.close()
         fd_stderr.close()
+
+        # since the python3 version changes much printing properties,
+        # make life easier by ignoring whitespace for this case
+        if python3:
+            lines_stdout = [l.strip() for l in lines_stdout]
+            lines_stderr = [l.strip() for l in lines_stderr]
+            expected_lines_stdout = [l.strip() for l in expected_lines_stdout]
+            expected_lines_stderr = [l.strip() for l in expected_lines_stderr]
     
         # compare the actual and expected outputs
         if not (lines_stdout == expected_lines_stdout):

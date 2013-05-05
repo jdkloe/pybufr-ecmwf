@@ -55,7 +55,7 @@ def display_results(bufr):
     lon_array = bufr.get_values(25)
 
     for subs in range(nsubsets):
-        if (30*(subs/30) == subs):
+        if (30*(subs//30) == subs):
             print " lat_array["+str(subs)+"] = "+str(lat_array[subs])+\
                   " lon_array["+str(subs)+"] = "+str(lon_array[subs])
 

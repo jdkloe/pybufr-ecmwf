@@ -22,6 +22,7 @@ import getopt # a simpler version of argparse, which was introduced in
 from pybufr_ecmwf.bufr import BUFRReader
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
+from pybufr_ecmwf.helpers import python3
 
 #  #]
 
@@ -173,14 +174,19 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
             list_of_units = []
             for (cname, cunit) in zip(bufr_obj.cnames, bufr_obj.cunits):
                 # glue the ndarray of characters together to form strings
-                cname_str = b"".join(cname).strip()
-                cunit_str = b"".join(cunit).strip()
+                if python3:
+                    cname_str = ''.join(c.decode() for c in cname).strip()
+                    cunit_str = ''.join(c.decode() for c in cunit).strip()
+                else:
+                    cname_str = ''.join(cname).strip()
+                    cunit_str = ''.join(cunit).strip()
+
                 # append the strings to the head list and quote them
                 list_of_names.append(b'"'+cname_str+b'"')
                 list_of_units.append(b'"'+cunit_str+b'"')
 
-            output_fd.write(separator.join(list_of_names) + b"\n")
-            output_fd.write(separator.join(list_of_units) + b"\n")
+            output_fd.write(separator.join(list_of_names) + '\n')
+            output_fd.write(separator.join(list_of_units) + '\n')
 
         nsubsets = bufr_obj.get_num_subsets()
         for subs in range(nsubsets):
