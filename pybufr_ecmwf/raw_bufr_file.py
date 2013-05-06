@@ -431,10 +431,15 @@ class RawBUFRFile:
         
         # see: p.L3-3 (p.5) of the file Layer3-English-only.pdf
         #      mentioned above.
+        # 
+        # this limit was raised from 15kb to 500kb on 7-Nov-2007
+        # see: http://www.wmo.int/pages/prog/www/ois/Operational_Information/ \
+        #             Newsletters/2000_2009/2005/Sept05/GTS.html
+
         if self.warn_about_bufr_size:
-            if msg_size > 15000:
+            if msg_size > 500000:
                 print "WARNING: by convention BUFR messages should not be "+\
-                      "larger than 15kb to allow transmission over the GTS. "+\
+                      "larger than 500kb to allow transmission over the GTS. "+\
                       "Size of current message is: ", msg_size, " bytes"
 
         return (msg_size, section_sizes, section_start_locations)
