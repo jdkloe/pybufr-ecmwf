@@ -304,7 +304,7 @@ class BuildExt(_build_ext):
                                         do_download_library_sources )
         
         # Build ecmwfbufr.so interface
-        ibi.build()   
+        ibi.build()
 
         # remove all object files to prevent them from ending up
         # in the binary or rpm distribution packages
@@ -368,7 +368,7 @@ ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr',
 setup(cmdclass = {'build'    : Build,
                   'build_ext': BuildExt},
       name = PACKAGE_NAME,
-      version = '0.6',
+      version = '0.7dev',
       description = DESCR,
       long_description = LONG_DESCR,
       author = 'Jos de Kloe',

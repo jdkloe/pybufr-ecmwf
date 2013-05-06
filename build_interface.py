@@ -930,9 +930,11 @@ class InstallBUFRInterfaceECMWF:
         # from within a dir like: build/lib.linux-x86_64-2.6/pybufr_ecmwf/
         # so:
         # ==>walk upward the directory path untill we find a file
-        # called setup.py
+        # called setup.cfg
         # ==>then search in pybufr_ecmwf/ecmwf_bufr_lib/ for a copy
 
+        # todo: apply descend_dirpath_and_find here to shorten the code a bit
+        
         cwd = os.getcwd()
         absdirname = os.path.abspath(cwd)
         while absdirname != "/":
@@ -1242,7 +1244,12 @@ class InstallBUFRInterfaceECMWF:
             #  #]
 
             #  #[ add a few small fortran routines
-            add_fortran_dir = '../additional_fortran_code'
+            (sw_root, add_fortran_dir_list) = \
+                      descend_dirpath_and_find(os.getcwd(),
+                                               'additional_fortran_code')
+
+            add_fortran_dir = add_fortran_dir_list[0]
+
             additional_fortran_files = ['handle_stdout.F',
                                         'retrieve_settings.F']
             for fortr_file in additional_fortran_files:
@@ -1922,9 +1929,13 @@ class InstallBUFRInterfaceECMWF:
         # the ecmwfbufr interfacing is used to retrieve them,
         # so this code is run when all interface building is done
         saved_cwd = os.getcwd()
+        # print 'saved_cwd = ', saved_cwd
         os.chdir('..')
         (sys.path, MY_MODULE_PATH) = get_and_set_the_module_path(sys.path)
-        from pybufr_ecmwf import ecmwfbufr
+        # print 'sys.path, MY_MODULE_PATH = ',sys.path, MY_MODULE_PATH
+        
+        #from pybufr_ecmwf import ecmwfbufr
+        import ecmwfbufr
         
         constants = ecmwfbufr.retrieve_settings()
         os.chdir(saved_cwd)

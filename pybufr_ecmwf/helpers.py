@@ -35,7 +35,9 @@ def get_and_set_the_module_path(syspath):
 
     abs_module_path = os.path.abspath(module_path)
     # print 'appending path: ', abs_module_path
-    syspath.append(abs_module_path)
+    #syspath.append(abs_module_path)
+    syspath.insert(0,abs_module_path)
+    syspath.insert(0,os.path.join(abs_module_path, 'pybufr_ecmwf'))
 
     if module_path != './':
         # remove the current dir from the path
