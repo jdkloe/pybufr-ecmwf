@@ -1,0 +1,6 @@
+loading B table from file:  pybufr_ecmwf/ecmwf_bufrtables/B2550000000098006001.TXT
+-------------
+Loaded:  985  table B entries
+-------------
+obj:  reference: [1001] name: [WMO BLOCK NUMBER] unit: [NUMERIC] unit_scale: [0] unit_reference: [0] data_width: [7] 
+obj.name:  WMO BLOCK NUMBER

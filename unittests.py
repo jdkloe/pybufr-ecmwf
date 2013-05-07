@@ -647,6 +647,12 @@ class CheckBufrTable(unittest.TestCase):
         self.assertEqual(repr_aaa, repr_ccc)
         
         #  #]
+    def test_get_name(self):
+        # run the provided example code and verify the output
+        testprog = 'convert_code_to_descriptor_name.py'
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
     #  #]
 
 class CheckCustomTables(unittest.TestCase):
