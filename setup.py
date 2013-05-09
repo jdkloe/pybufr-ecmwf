@@ -22,6 +22,8 @@ from distutils.errors import DistutilsSetupError
 # to allow subclassing them
 from distutils.command.build import build as _build
 from distutils.command.build_ext import build_ext as _build_ext
+#from distutils.command.install import install as _install
+from distutils.command.install_lib import install_lib as _install_lib
 
 # patch distutils if it can't cope with the "classifiers" or
 # "download_url" keywords
@@ -52,7 +54,7 @@ if version < '2.2.3':
 # modify the build class to allow some custom commandline
 # and setup.cfg options to the build stage
 class Build(_build):
-    #  #[
+    #  #[ custom build
     """Adapted Python binary builder."""
     user_options = _build.user_options
     user_options.append(("preferred-fortran-compiler=", None,
@@ -111,7 +113,7 @@ class Build(_build):
 # modify the build_ext class to allow some custom commandline
 # and setup.cfg options to the build_ext stage
 class BuildExt(_build_ext):
-    #  #[
+    #  #[ custom build_ext
     """Specialized Python extension builder."""
     # implement whatever needs to be different...
     # see the original build_ext.py in:
@@ -319,6 +321,23 @@ class BuildExt(_build_ext):
         #  #]
     #  #]
 
+# modify the install_lib class to ensure the symlinks in the
+# ecmwf_bufrtables dir are installed as symlinks and not copied as files
+# (which would cause an excessive 1.5 GB of unneeded diskspace to be used)
+class Install_lib(_install_lib):
+    #  #[ custom install_lib
+    ''' a derived class that preserves symlinks when installing a
+    python library '''
+    def copy_tree(self, infile, outfile, preserve_mode=1, preserve_times=1,
+                  preserve_symlinks=1, level=1):
+        """ Run copy_tree with preserve_symlinks=1 as default """ 
+        _install_lib.copy_tree(self, infile, outfile, preserve_mode,
+                               preserve_times, preserve_symlinks, level)
+    #  #]
+    
+#class Install(_install):
+#    pass
+
 # enable the disabled pylint warnings again
 #pylint: enable-msg=W0201,R0902,R0904
 
@@ -365,8 +384,9 @@ ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr',
                            ["pybufr_ecmwf/build_interface.py"])
 #ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr', [])
 
-setup(cmdclass = {'build'    : Build,
-                  'build_ext': BuildExt},
+setup(cmdclass = {'build'       : Build,
+                  'build_ext'   : BuildExt,
+                  'install_lib' : Install_lib},
       name = PACKAGE_NAME,
       version = '0.7dev',
       description = DESCR,
