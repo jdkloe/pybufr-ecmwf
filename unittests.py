@@ -344,6 +344,27 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "example_for_using_pb_routines.py"
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' ' + self.testinputfile
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)                
+        #  #]
+    def test_run_pb_routines_example2(self):
+        #  #[
+        """
+        run the pb routines example program
+        """
+        
+        # NOTE: for debugging the pb-routines it is possible
+        # to set the PBIO_PBOPEN environment setting to a value
+        # of 1. From this it is clear that the pbopen code is
+        # executed, and the problem is in the interfacingm which
+        # leads to this error:
+        #
+        # SystemError: NULL result without error in PyObject_Call
+        
+        # run the provided example code and verify the output
+        testprog = "example_for_using_pb_routines.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' ' + self.corruptedtestinputfile
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)                
@@ -632,7 +653,7 @@ class CheckBufrTable(unittest.TestCase):
     a class to check the bufr_table.py file
     """
     def test_singleton(self):
-        #  #[
+        #  #[ test the bufr_table.Singleton class
         """
         check the implementation of the singletom class in bufr.py
         """
@@ -648,11 +669,21 @@ class CheckBufrTable(unittest.TestCase):
         
         #  #]
     def test_get_name(self):
+        #  #[ test convert_code_to_descriptor_name.py
         # run the provided example code and verify the output
         testprog = 'convert_code_to_descriptor_name.py'
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         success = call_cmd_and_verify_output(cmd)
-        self.assertEqual(success, True)                
+        self.assertEqual(success, True)
+        #  #]
+    def test_get_descriptor(self):
+        #  #[ test find_descriptor_code.py
+        # run the provided example code and verify the output
+        testprog = 'find_descriptor_code.py'
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
     #  #]
 
 class CheckCustomTables(unittest.TestCase):

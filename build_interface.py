@@ -450,35 +450,10 @@ end program GetByteSizeDefaultInteger
     #  #]
 def insert_pb_interface_definition(sfd, integer_sizes):
     #  #[
-    """ the pb interface routines are written in c, so f2py
+    """ the pb interface routines are mostly written in c, so f2py
     will not automatically generate their signature. This 
     subroutine explicitely adds these signatures.
     """
-    
-    # note:
-    # it seems I am doing something wrong here, since this interface
-    # is not yet functional. When trying to execute ecmwfbufr.pbopen()
-    # I get the not very helpfull error message:
-    #   "SystemError: NULL result without error in PyObject_Call"
-    # Anybody out there who has an idea how this can be solved?
-
-    # note2:
-    # the problem seems to be the definition of fortint
-    # used to pass an index to the table of file descriptors
-    # used by these pb routines.
-    # This file:
-    #  pybufr_ecmwf/ecmwf_bufr_lib/bufr_000387/pbio/fortint.h
-    # defines fortint as int in case the switch INTEGER_IS_INT is set
-    # or otherwise it defines fortint as long
-    # on my 64-bit machine:
-    #    int  has a size of 4 bytes
-    #    long has a size of 8 bytes
-    # depending on these sizes, the fortran code needs to use
-    # integer*4 or integer*8 !
-    #
-    # note for myself:
-    # See my Set_config.linux_compiler in aeolus/BUFR_install
-    # for an example of how this can be solved.
 
     #(ByteSizeInt, ByteSizeLong, ByteSizeDefaultInteger) = integer_sizes
     bytesizelong = integer_sizes[1]
@@ -489,8 +464,6 @@ def insert_pb_interface_definition(sfd, integer_sizes):
     #if ByteSizeDefaultInteger == ByteSizeLong:
     #    intlen = ByteSizeLong # = 8 bytes    
 
-    # dit onderdrukt the segmentation fault op mijn 64-bits machine
-    # maar geeft onzinnige uitkomsten...
     intlen = bytesizelong # = 8 bytes    
     print 'Using intlen = ', intlen, ' to build the pbio interface'
     
@@ -508,6 +481,8 @@ def insert_pb_interface_definition(sfd, integer_sizes):
           "   integer*"+intlen+",        intent(inplace) :: cFileUnit",
           "   integer*"+intlen+",        intent(inplace) :: bufr_error_flag ",
           "end subroutine pbclose",
+# this one is implemented in Fortran, and is handled by
+# adapt_f2py_signature_file defined next, so manual fix is needed for it.
 #  "subroutine pbbufr(cFileUnit,Buffer,BufferSizeBytes,MsgSizeBytes,&",
 #  "                  bufr_error_flag)",
 #  "   integer*"+intlen+",              intent(inplace) :: cFileUnit",
@@ -522,7 +497,14 @@ def insert_pb_interface_definition(sfd, integer_sizes):
           "   integer*"+intlen+",              intent(inplace) :: MsgSizeBytes",
           "   integer*"+intlen+\
           ",              intent(inplace) :: bufr_return_value",
-          "end subroutine pbwrite"]
+          "end subroutine pbwrite",
+          "subroutine pbseek(cFileUnit,offset,whence,bufr_return_value)",
+          "   integer*"+intlen+", intent(in)  :: cFileUnit",
+          "   integer*"+intlen+", intent(in)  :: offset",
+          "   integer*"+intlen+", intent(in)  :: whence",
+          "   integer*"+intlen+", intent(out) :: bufr_return_value",
+          "end subroutine pbseek",
+          ]
 
     print "Inserting hardcoded interface to pbio routines in "+\
           "signatures file ..."

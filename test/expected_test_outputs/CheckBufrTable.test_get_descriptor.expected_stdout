@@ -1,0 +1,12 @@
+loading B table from file:  pybufr_ecmwf/ecmwf_bufrtables/B2550000000098006001.TXT
+-------------
+Loaded:  985  table B entries
+-------------
+seaching for descriptors that contain substring:  WMO
+descriptor: 001001 name: WMO BLOCK NUMBER
+descriptor: 001002 name: WMO STATION NUMBER
+descriptor: 001003 name: WMO REGION NUMBER/GEOGRAPHICAL AREA
+descriptor: 001004 name: WMO REGION SUB-AREA
+descriptor: 001020 name: WMO REGION SUB-AREA
+descriptor: 001026 name: WMO STORM NAME
+descriptor: 001027 name: WMO LONG STORM NAME
