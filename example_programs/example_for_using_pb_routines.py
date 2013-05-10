@@ -106,7 +106,7 @@ def pb_example(input_bufr_file):
 
         print "raw words [0:4] = ", databuffer[0:4]
         if python3:
-            print("raw bytes [0:4] = ", rawbytes[0:4].decode())
+            print "raw bytes [0:4] = ", rawbytes[0:4].decode()
         else:
             print "raw bytes [0:4] = ", rawbytes[0:4]
         # print "raw bytes [0:4] = ", [ord(b) for b in rawbytes[0:4]]
