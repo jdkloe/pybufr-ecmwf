@@ -4,6 +4,7 @@ include pybufr_ecmwf/alt_bufr_tables/*.TXT
 include *.py
 include */*.py
 include setup.*
+include additional_fortran_code/*.F
 include example_programs/testdata/*.BUFR
 include example_programs/expected_test_outputs/Check*
 include ecmwf_bufr_lib_sources/*.gz
