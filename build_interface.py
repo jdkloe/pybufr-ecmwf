@@ -1028,7 +1028,11 @@ class InstallBUFRInterfaceECMWF:
         line_pattern = r'<TD .*><A HREF="(.*)" .*>(.*)</A>(.*)</TD>'
 
         bufr_lib_versions = []
-        for line in lines:
+        for tmp_line in lines:
+            if python3:
+                line = tmp_line.decode()
+            else:
+                line = tmp_line
             if (".tar.gz" in line):
                 #print line
                 match_object = re.match(line_pattern, line)
