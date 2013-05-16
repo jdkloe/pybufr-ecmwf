@@ -1421,10 +1421,14 @@ class InstallBUFRInterfaceECMWF:
             # Even if the code runs, it will fail miserably and cause
             # segmentation faults if you are lucky, or just plain nonsense
             # if you are out of luck ....
+            # (see the files  bufrdc_000400/bufrdc/fortint.h and
+            #  bufrdc_000400/pbio/fortint.h which hardcode JBPW_DEF to be 32
+            # (JBPW defines number of bits per word to be used)
             
-            # these 4 settings determine the name of the config file used by the
-            # Make command; look in ecmwf_bufr_lib/bufr_000380/config/ to see
-            # all available versions.
+            # The following 4 settings determine the name of the config file
+            # used by the Make command; look in the file
+            # ecmwf_bufr_lib/bufr_000380/config/ to see all available versions.
+
             # ARCH="linux"
             # CNAME="_compiler"
             # R64="" 
@@ -1445,7 +1449,7 @@ class InstallBUFRInterfaceECMWF:
             # (that one has this setting as default and does not have a
             #  commandline option to set it)
             
-            # is seems the c compiler step needs the "-DFOPEN64" switch to be
+            # it seems the c compiler step needs the "-DFOPEN64" switch to be
             # set (at least it is present in most config files in the package)
             # but it is never used in the source code itself, so I guess it is
             # obsolete.
@@ -1585,7 +1589,7 @@ class InstallBUFRInterfaceECMWF:
             # script bypasses this build_library script and tries to do
             # the same for linux without user intervention
 
-            # makefiles are craeted from Makefile.in
+            # makefiles are created from Makefile.in
             # in these directories:
             makefile_dirs = ['.', 'bufrdc', 'bufrtables', 'pbio', 'fortranC',
                              'examples', 'synop2bufr',
