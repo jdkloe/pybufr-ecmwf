@@ -47,18 +47,40 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
 
         # add header strings
         # print 'DEBUG: bob.msg_loaded ',bob.msg_loaded
+        list_of_names = []
+        list_of_units = []
+        list_of_names.extend(bob.get_names())
+        list_of_units.extend(bob.get_units())
+        list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
+        
         if bob.msg_loaded == 1:
-            list_of_names = []
-            list_of_units = []
-            list_of_names.extend(bob.get_names())
-            list_of_units.extend(bob.get_units())
-            # print 'DEBUG: ',separator.join(list_of_names)
-            # print 'DEBUG: ',separator.join(list_of_units)
             output_fd.write(separator.join(list_of_names) + "\n")
             output_fd.write(separator.join(list_of_units) + "\n")
-        
+            list_of_names_first_msg = list_of_names
+            list_of_unexp_descr_first_msg = bob.bufr_obj.py_unexp_descr_list
+
         data = bob.get_values_as_2d_array()
-        # print 'DEBUG: data.shape = ', data.shape
+        
+        if (list_of_unexp_descr != list_of_unexp_descr_first_msg):
+            print '\n\n'
+            print 'WARNING: it seems different types of BUFR messages'
+            print 'are mixed in this BUFR file, meaning that the list of'
+            print 'descriptor names and units printed on the first 2 output'
+            print 'lines will not match with all lines of data.'
+            print 'To prevent confusion, therefore decoding is halted'
+            print 'It is recommended to first sort BUFR messages by type'
+            print 'before converting them to ascii or csv.'
+            print 'The example script soft_bufr_msgs.py can be used'
+            print 'sort a BUFR file.'
+            print '\n\n'
+            print 'Detailed info:'
+            print 'list_of_unexp_descr != list_of_unexp_descr_first_msg !'
+            print 'list_of_unexp_descr           = ', \
+                  list_of_unexp_descr
+            print 'list_of_unexp_descr_first_msg = ', \
+                  list_of_unexp_descr_first_msg
+            sys.exit(0)
+        
         if data.shape[0]*data.shape[1] == 0:
             print 'NO DATA FOUND! this seems an empty BUFR message !'
             continue
