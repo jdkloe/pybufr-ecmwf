@@ -648,8 +648,9 @@ class BufrTable:
                 elif (type(tmp_descr) == int):
                     int_descr = tmp_descr
                 else:
-                    print 'ERROR: type(tmp_descr): ', type(tmp_descr)
-                    print 'tmp_descr = ', tmp_descr
+                    print 'ERROR: unknowm type: type(tmp_descr): ', \
+                          type(tmp_descr)
+                    print 'for tmp_descr = ', tmp_descr
                 f_val = int(int_descr/100000.)
                 if f_val == 0:
                     # this one should already be in the table_b dictionary
@@ -836,7 +837,6 @@ class BufrTable:
 #            print "Tried to load: ", bfile
 #            print "BUFR_TABLES dir = ", tables_dir
 #            raise IOError
-
 
         # first see if the user specified a valid full path/file combination
         # and use it if it exists
@@ -1140,23 +1140,22 @@ class BufrTable:
                 # all continuation lines have been processed so store
                 # the result.
                 # first a safety check
-                if len(descriptor_list) == count:
-                    #print "************************storing result"
-                    d_descr = CompositeDescriptor(reference, descriptor_list,
-                                                  comment, self)
-                    if not self.table_d.has_key(reference):
-                        #print "adding descr. key ", reference
-                        self.table_d[reference] = d_descr
-                    else:
-                        print "ERROR: multiple table D descriptors "+\
-                              "with identical reference"
-                        print "number found. This should never happen !!!"
-                        print "problematic descriptor is: ", d_descr
-                        print "Please report this problem, together with"
-                        print "a copy of the bufr table you tried to read."
-                        print "Ignoring this entry for now....."
-                else:
+                if len(descriptor_list)<count:
                     print "ERROR: unexpected format in table D file..."
+                    print "problematic descriptor is: ", reference
+                    print "linecount: ", i
+                    print "line: ["+line+"]"
+                    print "This D-table entry defines less descriptors than"
+                    print "specified in the start line."
+                    print "This error is unrecoverable."
+                    print "Please report this problem, together with"
+                    print "a copy of the bufr table you tried to read."
+                    print "len(descriptor_list) = ", len(descriptor_list)
+                    print "count = ", count
+                    raise IOError
+                
+                if len(descriptor_list)>count:
+                    print "WARNING: unexpected format in table D file..."
                     print "problematic descriptor is: ", reference
                     print "linecount: ", i
                     print "line: ["+line+"]"
@@ -1166,26 +1165,27 @@ class BufrTable:
                     print "a copy of the bufr table you tried to read."
                     print "len(descriptor_list) = ", len(descriptor_list)
                     print "count = ", count
-                    if len(descriptor_list)<count:
-                        raise IOError
-                    else:
-                        if self.verbose:
-                            print "ignoring excess descriptors for now..."
-                        #print "************************storing result"
-                        d_descr = CompositeDescriptor(reference,
-                                                      descriptor_list,
-                                                      comment, self)
-                        if not self.table_d.has_key(reference):
-                            #print "adding descr. key ", reference
-                            self.table_d[reference] = d_descr
-                        else:
-                            print "ERROR: multiple table D descriptors with "+\
-                                  "identical reference"
-                            print "number found. This should never happen !!!"
-                            print "problematic descriptor is: ", d_descr
-                            print "Please report this problem, together with"
-                            print "a copy of the bufr table you tried to read."
-                            print "Ignoring this entry for now....."
+                    print "This is a formatting problem in the BUFR"
+                    print "Table but will not affect decoding."
+                    print "ignoring excess descriptors for now..."
+                    
+                
+                #print "************************storing result"
+                d_descr = CompositeDescriptor(reference, descriptor_list,
+                                              comment, self)
+                if not self.table_d.has_key(reference):
+                    #print "adding descr. key ", reference
+                    self.table_d[reference] = d_descr
+                else:
+                    print "WARNING: multiple table D descriptors "+\
+                          "with identical reference"
+                    print "number found. This should never happen !!!"
+                    print "problematic descriptor is: ", d_descr
+                    print "Please report this problem, together with"
+                    print "a copy of the bufr table you tried to read."
+                    print "This is a formatting problem in the BUFR"
+                    print "Table but will not affect decoding."
+                    print "Ignoring this entry for now....."
                         
                 # mark this block as done
                 list_of_handled_blocks.append(d_entry_block)
