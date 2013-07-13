@@ -999,7 +999,13 @@ class BufrTable:
                     success = False
                     nr_of_ignored_probl_entries += 1
                     if (txt_name.strip() == "RESERVED"):
-                        print "Ignoring a reserved entry: "+txt_reference
+                        # it seems part of the BUFR TABLE file format defined
+                        # by ECMWF to allow RESERVED lines in the B tables
+                        # (according to an email exchange about my bug report
+                        #  on this subject)
+                        # therefore do not warn for this condition anynore
+                        # print "Ignoring a reserved entry: "+txt_reference
+                        pass
                     else:
                         print "ERROR: unexpected format in table B file..."
                         print "Could not convert one of the numeric "+\
