@@ -19,7 +19,7 @@ except ImportError:
     print "probably you don't have pylint installed or your python"
     print "module path needs to be set properly"
     sys.exit(1)
-    
+
 # this commandline option:
 #        '--init-hook=\'import sys;sys.path.append(\"pybufr_ecmwf\")\'',
 # is equivalent to:
@@ -44,7 +44,7 @@ else:
     # it is used inside check_pylint_numpy_handling() defined above.
     # look into that routine for more details.
     SCRIPTS_TO_CHECK.extend(EX_FILES)
-    
+
     # my current pylint version crashes with a runtime error when I
     # try to check this module, so its disabled for now
     MODULES_TO_CHECK = []
@@ -78,7 +78,7 @@ def check(msg, pycode, additional_args):
         else:
             print "exception occurred; exit status: ", sysexit.args[0]
             return (1, pycode)
-        
+
     #  #]
 
 def check_pylint_numpy_handling():
@@ -98,7 +98,7 @@ def check_pylint_numpy_handling():
     if (success == 0):
         use_numpy_checks = True
         return use_numpy_checks
-    
+
     (success, pycode) = check('checking script: ',
                               'pylint/pylint_numpy_test.py',
                               additional_args=['--ignored-classes=numpy'])
@@ -142,7 +142,7 @@ def check_all_py_files():
         print 'to allow correct running of the pylint checker, using this'
         print 'command: ./build_interface.py'
         sys.exit(1)
-        
+
     result = []
 
     for mod_to_check in MODULES_TO_CHECK:
@@ -152,10 +152,10 @@ def check_all_py_files():
     for script in SCRIPTS_TO_CHECK:
         result.append(check('checking script: ',
                             script, additional_args))
-        
+
     num_not_ok = sum([r[0] for r in result])
     num_ok     = len(result) - num_not_ok
-    
+
     print "done; nr of modules/scripts checked: ", len(result)
     print "number of well validated modules/scripts: ", num_ok
     print "number of problematic    modules/scripts: ", num_not_ok

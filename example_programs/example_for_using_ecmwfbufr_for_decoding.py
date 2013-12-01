@@ -9,7 +9,7 @@ used for decoding a BUFR message.
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 21-Jan-2010    
+# Written by: J. de Kloe, KNMI, Initial version 21-Jan-2010
 #
 # License: GPL v2.
 
@@ -63,7 +63,7 @@ def check_error_flag(name, kerr):
         print "kerr = ", kerr
         sys.exit(1)
     #  #]
-        
+
 def decoding_example(input_bufr_file):
     #  #[
     """
@@ -76,27 +76,27 @@ def decoding_example(input_bufr_file):
     rbf.open(input_bufr_file, 'rb')
     words = rbf.get_next_raw_bufr_msg()[0]
     rbf.close()
-    
+
     # define the needed constants
     max_nr_descriptors          =     20 # 300
     max_nr_expanded_descriptors =    140 # 160000
     max_nr_subsets              =    361 # 25
-    
+
     ktdlen = max_nr_descriptors
     # krdlen = max_nr_delayed_replication_factors
     kelem  = max_nr_expanded_descriptors
     kvals  = max_nr_expanded_descriptors*max_nr_subsets
     # jbufl  = max_bufr_msg_size
     # jsup   = length_ksup
-    
+
     # handle BUFR tables
     print '------------------------------'
-    
+
     # define our own location for storing (symlinks to) the BUFR tables
     private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
     if (not os.path.exists(private_bufr_tables_dir)):
         os.mkdir(private_bufr_tables_dir)
-    
+
     # make the needed symlinks to bufr tables
 
     # inspect the location of the ecmwfbufr.so file, and derive
@@ -122,15 +122,15 @@ def decoding_example(input_bufr_file):
     needed_d_table    = "D0000000000210000001.TXT"
     available_b_table = "B0000000000098013001.TXT"
     available_d_table = "D0000000000098013001.TXT"
-    
+
     source      = os.path.join(ecmwf_bufr_tables_dir, available_b_table)
     destination = os.path.join(private_bufr_tables_dir, needed_b_table)
     ensure_symlink_exists(source, destination)
-    
+
     source      = os.path.join(ecmwf_bufr_tables_dir, available_d_table)
     destination = os.path.join(private_bufr_tables_dir, needed_d_table)
     ensure_symlink_exists(source, destination)
-            
+
     # make sure the BUFR tables can be found
     # also, force a slash at the end, otherwise the library fails
     # to find the tables
@@ -156,7 +156,7 @@ def decoding_example(input_bufr_file):
     ksec1  = np.zeros(        40, dtype = np.int)
     ksec2  = np.zeros(      4096, dtype = np.int)
     kerr   = 0
-    
+
     print "calling: ecmwfbufr.bus012():"
     ecmwfbufr.bus012(words, ksup, ksec0, ksec1, ksec2, kerr)
     check_error_flag('ecmwfbufr.bus012', kerr)
@@ -192,7 +192,7 @@ def decoding_example(input_bufr_file):
     # ksec0  = np.zeros(         3, dtype = np.int)
     # ksec1  = np.zeros(        40, dtype = np.int)
     # ksec2  = np.zeros(      4096, dtype = np.int)
-    
+
     print '------------------------------'
     ksec3  = np.zeros(          4, dtype = np.int)
     ksec4  = np.zeros(          2, dtype = np.int)
@@ -201,12 +201,12 @@ def decoding_example(input_bufr_file):
     values = np.zeros(      kvals, dtype = np.float64) # this is the default
     cvals  = np.zeros((kvals, 80), dtype = np.character)
     kerr   = 0
-    
+
     print "calling: ecmwfbufr.bufrex():"
     ecmwfbufr.bufrex(words, ksup, ksec0, ksec1, ksec2, ksec3, ksec4,
                      cnames, cunits, values, cvals, kerr)
     check_error_flag('ecmwfbufr.bufrex', kerr)
-        
+
     # print a selection of the decoded numbers
     print '------------------------------'
     print "Decoded BUFR message:"
@@ -232,12 +232,12 @@ def decoding_example(input_bufr_file):
     print "values : ", values
     txt = ''.join(str(v)+';' for v in values[:20] if v>0.)
     print "values[:20] : ", txt
-    
+
     nsubsets  = ksec3[2] # 361 # number of subsets in this BUFR message
 
     #not yet used:
     #nelements = ksup[4] # 44 # size of one expanded subset
-    
+
     lat = np.zeros(nsubsets)
     lon = np.zeros(nsubsets)
     for subs in range(nsubsets):
@@ -251,10 +251,10 @@ def decoding_example(input_bufr_file):
             print "subs = ", subs, "lat = ", lat[subs], " lon = ", lon[subs]
             print "min/max lat", min(lat), max(lat)
             print "min/max lon", min(lon), max(lon)
-            
+
     print '------------------------------'
-    # busel: fill the descriptor list arrays (only needed for printing)   
-    
+    # busel: fill the descriptor list arrays (only needed for printing)
+
     # warning: this routine has no inputs, and acts on data stored
     #          during previous library calls
     # Therefore it only produces correct results when either bus0123
@@ -262,13 +262,13 @@ def decoding_example(input_bufr_file):
     # However, it is not clear to me why it seems to correctly produce
     # the descriptor lists (both bare and expanded), but yet it does
     # not seem to fill the ktdlen and ktdexl values.
-    
+
     ktdlen = 0
     ktdlst = np.zeros(max_nr_descriptors, dtype = np.int)
     ktdexl = 0
     ktdexp = np.zeros(max_nr_expanded_descriptors, dtype = np.int)
     kerr   = 0
-    
+
     print "calling: ecmwfbufr.busel():"
     ecmwfbufr.busel(ktdlen, # actual number of data descriptors
                     ktdlst, # list of data descriptors
@@ -280,20 +280,20 @@ def decoding_example(input_bufr_file):
     print 'busel result:'
     print "ktdlen = ", ktdlen
     print "ktdexl = ", ktdexl
-    
+
     selection1 = np.where(ktdlst > 0)
     ktdlen = len(selection1[0])
     selection2 = np.where(ktdexp > 0)
     ktdexl = len(selection2[0])
-    
+
     print 'fixed lengths:'
     print "ktdlen = ", ktdlen
     print "ktdexl = ", ktdexl
-    
+
     print 'descriptor lists:'
     print "ktdlst = ", ktdlst[:ktdlen]
     print "ktdexp = ", ktdexp[:ktdexl]
-    
+
     print '------------------------------'
     print "printing content of section 3:"
     print "sec3 : ", ksec3

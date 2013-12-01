@@ -48,29 +48,29 @@ def pb_example(input_bufr_file):
     # unit and error_flag are of type fortint*
     # name and mode are of type string
     (c_file_unit, bufr_error_flag) = ecmwfbufr.pbopen(input_bufr_file, 'R')
-    
-    # this will be the call if intent(inplace) is used in the 
+
+    # this will be the call if intent(inplace) is used in the
     # insert_pb_interface_definition method of BUFRInterfaceECMWF
     # in stead of intent(in) and intent(out):
     # ecmwfbufr.pbopen(c_file_unit, input_bufr_file,
     #                  'R', bufr_error_flag)
-    
+
     print "c_file_unit = ", c_file_unit
     print "pbopen: bufr_error_flag = ", bufr_error_flag
-    
+
     # pbbufr test
-    
+
     buffer_size_words = 12000
     buffer_size_bytes = buffer_size_words*4
     file_pos = 0
     file_size = os.path.getsize(input_bufr_file)
     msg_count = 0
-    
+
     while True:
         msg_size_bytes = 0
         bufr_error_flag = 0
         msg_count += 1
-        
+
         print "calling: ecmwfbufr.pbbufr()"
         databuffer = np.zeros(buffer_size_words, dtype=np.int)
         ecmwfbufr.pbbufr(c_file_unit, databuffer, buffer_size_bytes,
@@ -79,7 +79,7 @@ def pb_example(input_bufr_file):
 
         # this always gives zero so is not very useful
         # print "pbbufr result: msg_size_bytes = ", msg_size_bytes
-         
+
         rawbytes = databuffer.tostring()
 
         if python3:
@@ -87,16 +87,16 @@ def pb_example(input_bufr_file):
         else:
             end_section = rawbytes.find('7777')
 
-        print 'end_section = ',end_section
-        if end_section==-1:
+        print 'end_section = ', end_section
+        if end_section == -1:
             break
-        
+
         # retrieve these sizes manually, since they seem not
         # provided by the current interface (don't know why)
         msg_size_bytes = end_section+4
         msg_size_words = int(msg_size_bytes/4)
-        if msg_size_bytes>msg_size_words*4:
-            msg_size_words+=1
+        if msg_size_bytes > msg_size_words*4:
+            msg_size_words += 1
         print "msg_size_bytes = ", msg_size_bytes
         print "msg_size_words = ", msg_size_words
 
@@ -111,7 +111,7 @@ def pb_example(input_bufr_file):
             print "raw bytes [0:4] = ", rawbytes[0:4]
         # print "raw bytes [0:4] = ", [ord(b) for b in rawbytes[0:4]]
         print "pbbufr: bufr_error_flag = ", bufr_error_flag
-        
+
         # warning: on my system only the first 36 bytes (9 words)
         # of each BUFR message are read in this way, so for now
         # this pb-interface seems useless, even if it compiles
@@ -121,9 +121,9 @@ def pb_example(input_bufr_file):
         file_pos += offset
         if file_pos >= file_size:
             break
-        
+
         # pbseek currently does not work as intended. Don't know why.
-        
+
         #whence = 1 # define offset to be calculated from current position
         # all inputs and outputs must be of type fortint* !
         #bufr_error_flag = ecmwfbufr.pbseek(c_file_unit, offset, whence)
@@ -133,9 +133,9 @@ def pb_example(input_bufr_file):
         #   -1 = end-of-file
         #   otherwise,  = byte offset from start of file.
         # However, this seems not to work correctly at the moment...
-        
+
     # pbclose test
-    
+
     bufr_error_flag = 0
     print "calling: ecmwfbufr.pbclose()"
     ecmwfbufr.pbclose(c_file_unit, bufr_error_flag)

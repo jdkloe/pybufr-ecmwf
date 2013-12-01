@@ -35,7 +35,7 @@ def sort_msgs(input_bufr_file):
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
     files_dict = {}
-    
+
     msg_nr = 0
     while True:
         try:
@@ -44,24 +44,24 @@ def sort_msgs(input_bufr_file):
         except EOFError:
             break
 
-        print 'handling message nr ',msg_nr
+        print 'handling message nr ', msg_nr
         list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
         output_filename = '_'.join(d for d in list_of_unexp_descr)
         if files_dict.has_key(output_filename):
-            fd = files_dict[output_filename][0]
+            fdescr = files_dict[output_filename][0]
             files_dict[output_filename][1] += 1 # increment count
         else:
-            fd = open(output_filename,'wb')
+            fdescr = open(output_filename,'wb')
             count = 1
-            files_dict[output_filename] = [fd, count]
-        fd.write(bob.bufr_obj.encoded_message)
-    
+            files_dict[output_filename] = [fdescr, count]
+        fdescr.write(bob.bufr_obj.encoded_message)
+
     generated_files = files_dict.keys()
     for k in files_dict.keys():
         count = files_dict[k][1]
-        print 'file ',k,' contains ',count,' messages'
+        print 'file ', k, ' contains ', count, ' messages'
         files_dict[k][0].close()
-        
+
     return generated_files
     #  #]
 
@@ -71,6 +71,6 @@ if len(sys.argv)<2:
     sys.exit(1)
 
 INPUT_BUFR_FILE  = sys.argv[1]
-generated_files = sort_msgs(INPUT_BUFR_FILE)
-# print 'generated_files = ',generated_files
+GEN_FILES = sort_msgs(INPUT_BUFR_FILE)
+# print 'generated_files = ', GEN_FILES
 #  #]

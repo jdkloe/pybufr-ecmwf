@@ -9,7 +9,7 @@ to stdout or written to file, either in ascii or csv format.
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 24-Sep-2010    
+# Written by: J. de Kloe, KNMI, Initial version 24-Sep-2010
 #
 # License: GPL v2.
 
@@ -32,7 +32,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
     example implementation using the BUFRReader class
     combined with the get_values_as_2d_array method
     """
-    
+
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
@@ -52,15 +52,14 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
         list_of_names.extend(bob.get_names())
         list_of_units.extend(bob.get_units())
         list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
-        
+
         if bob.msg_loaded == 1:
             output_fd.write(separator.join(list_of_names) + "\n")
             output_fd.write(separator.join(list_of_units) + "\n")
-            list_of_names_first_msg = list_of_names
             list_of_unexp_descr_first_msg = bob.bufr_obj.py_unexp_descr_list
 
         data = bob.get_values_as_2d_array()
-        
+
         if (list_of_unexp_descr != list_of_unexp_descr_first_msg):
             print '\n\n'
             print 'WARNING: it seems different types of BUFR messages'
@@ -80,7 +79,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
             print 'list_of_unexp_descr_first_msg = ', \
                   list_of_unexp_descr_first_msg
             sys.exit(0)
-        
+
         if data.shape[0]*data.shape[1] == 0:
             print 'NO DATA FOUND! this seems an empty BUFR message !'
             continue
@@ -106,11 +105,11 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
     example implementation using the BUFRReader class
     combined with the get_value method
     """
-    
+
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file)
-    
+
     msg_nr = 0
     while True:
         try:
@@ -118,7 +117,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
             msg_nr += 1
         except EOFError:
             break
-        
+
         # add header strings
         if bob.msg_loaded == 1:
             list_of_names = []
@@ -158,12 +157,12 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
 
     # get an instance of the RawBUFRFile class
     rbf = RawBUFRFile()
-    
+
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
     # an array of pointers to the start and end of each BUFR message
     rbf.open(input_bufr_file, 'rb')
-    
+
     # extract the number of BUFR messages from the file
     num_msgs = rbf.get_num_bufr_msgs()
 
@@ -224,7 +223,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
         if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
             print 'skipping remainder of this BUFR file'
             break
-    
+
     # close the BUFR file
     rbf.close()
     if num_msgs == 0:
@@ -281,7 +280,7 @@ def main():
     output_file       = None
     implementation_nr = 1
     max_msg_nr        = -1
-    
+
     for (opt, value) in options:
         if   ( (opt == '-h') or (opt == '--help') ):
             usage()
@@ -334,7 +333,7 @@ def main():
     elif (implementation_nr == 2):
         print_bufr_content2(input_bufr_file, output_fd,
                             separator, max_msg_nr)
-    elif (implementation_nr == 3):        
+    elif (implementation_nr == 3):
         print_bufr_content3(input_bufr_file, output_fd,
                             separator, max_msg_nr)
 

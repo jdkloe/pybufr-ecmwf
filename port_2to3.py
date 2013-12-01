@@ -44,10 +44,10 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         env['PYTHONPATH'] = env['PYTHONPATH']+':'+module_path
     else:
         env['PYTHONPATH'] = module_path
-            
+
     if (verbose):
         print "Executing command: ", cmd
-        
+
     if (catch_output):
         # print 'env[PYTHONPATH] = ',env['PYTHONPATH']
         subpr = subprocess.Popen(cmd,
@@ -55,21 +55,21 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
                                  env    = env,
                                  stdout = subprocess.PIPE,
                                  stderr = subprocess.PIPE)
-        
+
         # wait until the child process is done
         # subpr.wait() # seems not necessary when catching stdout and stderr
-            
+
         lines_stdout = subpr.stdout.readlines()
         lines_stderr = subpr.stderr.readlines()
-        
+
         #print "lines_stdout: ", lines_stdout
         #print "lines_stderr: ", lines_stderr
-        
+
         return (lines_stdout, lines_stderr)
-    
+
     else:
         subpr = subprocess.Popen(cmd, shell = True, env = env)
-        
+
         # wait until the child process is done
         subpr.wait()
         return
@@ -79,7 +79,7 @@ def port_2to3():
     #  #[
     '''
     a routine try to automatically convert the whole source code
-    of this module to python3 
+    of this module to python3
     '''
     # first see if python3 and the 2to3 tool are available
     tools_to_check = ['2to3', 'python3', 'hg']
@@ -91,7 +91,7 @@ def port_2to3():
     # However, if you have only python3 installed then (on my fedora14
     # system) 2to3 is installed in: /usr/lib64/python3.1/Tools/scripts/2to3
     # In my case 2to3 is part of the python3-tools package.
-    
+
     for tool_to_check in tools_to_check:
         cmd = 'which '+tool_to_check
         (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
@@ -103,7 +103,7 @@ def port_2to3():
             sys.exit(1)
         else:
             print 'tool found: ', tool_to_check
-            
+
     # create the testdir
     if os.path.exists(PY3_CONVERTED_PATH):
         print 'ERROR: testdir: ', PY3_CONVERTED_PATH, ' already exists'
@@ -111,7 +111,7 @@ def port_2to3():
         print 'this conversion script'
         sys.exit(1)
     os.mkdir(PY3_CONVERTED_PATH)
-    
+
     # clone the repository to the testdir
     print 'cloning the repository'
     cmd = 'hg clone . '+PY3_CONVERTED_PATH
@@ -145,11 +145,11 @@ def port_2to3():
                 path_and_file = os.path.join(dirpath, filename)
                 print 'fixing: ', path_and_file
 
-                fdb = open(path_and_file,'rt')
+                fdb = open(path_and_file) #, 'rt')
                 lines = fdb.readlines()
                 fdb.close()
 
-                fda = open(path_and_file,'wt')
+                fda = open(path_and_file, 'w')
                 for line in lines:
                     if '#!' in line:
                         print 'shebang line found: ', line.replace('\n','')
@@ -157,13 +157,13 @@ def port_2to3():
                     else:
                         fda.write(line)
                 fda.close()
-                
+
     # commit the modified code to allow usage by my automatic test
     # system, which copies the module by taking a clone of the repository.
     cmd = 'cd '+PY3_CONVERTED_PATH+';'+\
           'hg commit -m "automatic commit by the port_2to3.py tool"'
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
-    
+
     print 'conversion done'
     #  #]
 

@@ -80,7 +80,7 @@ class Build(_build):
                          "the ECMWF BUFR library or not"))
 
     def initialize_options(self):
-        #  #[ initialise the additional options 
+        #  #[ initialise the additional options
         """ initialise custom defined options """
         self.preferred_fortran_compiler = None
         self.preferred_c_compiler = None
@@ -91,7 +91,7 @@ class Build(_build):
         self.c_ld_library_path = None
         self.c_flags = None
         self.download_library_sources = None
-        
+
         _build.initialize_options(self)
         #  #]
     def run(self):
@@ -149,7 +149,7 @@ class BuildExt(_build_ext):
                          "the ECMWF BUFR library or not"))
 
     def initialize_options(self):
-        #  #[ initialise the additional options 
+        #  #[ initialise the additional options
         """ initialise custom defined options """
         self.preferred_fortran_compiler = None
         self.preferred_c_compiler = None
@@ -160,7 +160,7 @@ class BuildExt(_build_ext):
         self.c_ld_library_path = None
         self.c_flags = None
         self.download_library_sources = None
-        
+
         _build_ext.initialize_options(self)
         #  #]
     def finalize_options (self):
@@ -221,7 +221,7 @@ class BuildExt(_build_ext):
         #      self.download_library_sources
 
         # this run command in turn runs the build_extension method
-        #_build_ext.run(self) 
+        #_build_ext.run(self)
         #  #]
     def build_extension(self, ext):
         #  #[ the actual build
@@ -240,7 +240,7 @@ class BuildExt(_build_ext):
         #self.c_ld_library_path = None
         #self.c_flags = None
         #self.download_library_sources = None
-        
+
         #fullname = self.get_ext_fullname(ext.name)
         #print "trying to build extension: ", fullname
         log.info("building '%s' extension", ext.name)
@@ -256,16 +256,16 @@ class BuildExt(_build_ext):
         build_dir = os.path.abspath(build_dir)
         #print "self.build_lib = ", self.build_lib
         print "initiating build in dir: ", build_dir
-        
+
         #if os.path.isdir(build_dir):
         #    sys.path.append(build_dir)
         if os.path.isdir(build_dir):
             sys.path.append(build_dir)
         else:
-            raise DistutilsSetupError, \
-                  ("could not find directory in which the module should"
-                   "be build. Something seems wrong in setup.py."
-                   "Please report this to the developer of this module.")
+            raise DistutilsSetupError( \
+                  "could not find directory in which the module should"
+                  "be build. Something seems wrong in setup.py."
+                  "Please report this to the developer of this module.")
 
         # this enters the automatic build system, which is what I don't
         # want at the moment, since it seems not to handle fortran
@@ -273,6 +273,23 @@ class BuildExt(_build_ext):
 
         cwd = os.getcwd()
         os.chdir(build_dir)
+
+        # find parent dir that holds build_interface.py and
+        # force path to include that dir
+        base_build_dir = None
+        tmp_dir = build_dir
+        while base_build_dir is None:
+            files = os.listdir(tmp_dir)
+            if 'build_interface.py' in files:
+                base_build_dir = tmp_dir
+            else:
+                tmp_dir, subdir = os.path.split(tmp_dir)
+                if subdir == '':
+                    break
+
+        if base_build_dir is not None:
+            print 'base_build_dir = ', base_build_dir
+            sys.path.insert(0, os.path.abspath(base_build_dir))
 
         from build_interface import InstallBUFRInterfaceECMWF
         # this will fail, because it loads the __init__.py inside
@@ -304,14 +321,14 @@ class BuildExt(_build_ext):
                                         debug_f2py_c_api = False,
                                         download_library_sources = \
                                         do_download_library_sources )
-        
+
         # Build ecmwfbufr.so interface
         ibi.build()
 
         # remove all object files to prevent them from ending up
         # in the binary or rpm distribution packages
         ibi.clean()
-        
+
         os.chdir(cwd)
 
         #print "self.distribution.dist_files = ", self.distribution.dist_files
@@ -324,17 +341,17 @@ class BuildExt(_build_ext):
 # modify the install_lib class to ensure the symlinks in the
 # ecmwf_bufrtables dir are installed as symlinks and not copied as files
 # (which would cause an excessive 1.5 GB of unneeded diskspace to be used)
-class Install_lib(_install_lib):
-    #  #[ custom install_lib
+class CustomInstallLib(_install_lib):
+    #  #[ customised install_lib
     ''' a derived class that preserves symlinks when installing a
     python library '''
     def copy_tree(self, infile, outfile, preserve_mode=1, preserve_times=1,
                   preserve_symlinks=1, level=1):
-        """ Run copy_tree with preserve_symlinks=1 as default """ 
+        """ Run copy_tree with preserve_symlinks=1 as default """
         _install_lib.copy_tree(self, infile, outfile, preserve_mode,
                                preserve_times, preserve_symlinks, level)
     #  #]
-    
+
 #class Install(_install):
 #    pass
 
@@ -345,7 +362,7 @@ DESCR = "a python interface around the ECMWF-BUFR library."
 LONG_DESCR = """a python interface around the Fortran90 ECMWF-BUFR library
 constructed using the f2py interface generation tool.
 The equivalent subroutines to the ones in the ECMWF-BUFR
-library are made available to python, but also a set of wrapper 
+library are made available to python, but also a set of wrapper
 routines/classes is implemented to
 create also a more object-oriented/pythonic interface.
 Building the interface is still a bit rough, and may require some
@@ -386,7 +403,7 @@ ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr',
 
 setup(cmdclass = {'build'       : Build,
                   'build_ext'   : BuildExt,
-                  'install_lib' : Install_lib},
+                  'install_lib' : CustomInstallLib},
       name = PACKAGE_NAME,
       version = '0.72',
       description = DESCR,

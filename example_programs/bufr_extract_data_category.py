@@ -9,7 +9,7 @@ to stdout.
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 25-Nov-2010    
+# Written by: J. de Kloe, KNMI, Initial version 25-Nov-2010
 #
 # License: GPL v2.
 
@@ -30,12 +30,12 @@ def print_bufr_data_category(input_bufr_file):
     """
     # get an instance of the RawBUFRFile class
     rbf = RawBUFRFile()
-    
+
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
     # an array of pointers to the start and end of each BUFR message
     rbf.open(input_bufr_file, 'rb')
-    
+
     # extract the number of BUFR messages from the file
     num_msgs = rbf.get_num_bufr_msgs()
 
@@ -45,7 +45,7 @@ def print_bufr_data_category(input_bufr_file):
         bufr_obj.decode_sections_012()
         data_category = bufr_obj.ksec1[11-1]
         print 'BUFR msg %i has data category %i' % (msg_nr, data_category)
-        
+
     # close the file
     rbf.close()
     #  #]

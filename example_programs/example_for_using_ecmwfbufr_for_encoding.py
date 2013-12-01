@@ -9,7 +9,7 @@ used for encoding a BUFR message.
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 21-Jan-2010    
+# Written by: J. de Kloe, KNMI, Initial version 21-Jan-2010
 #
 # License: GPL v2.
 
@@ -60,14 +60,14 @@ def encoding_example(output_bufr_file):
     max_nr_descriptors          =     20 # 300
     max_nr_expanded_descriptors =    140 # 160000
     max_nr_subsets              =    361 # 25
-    
+
     ktdlen = max_nr_descriptors
     # krdlen = max_nr_delayed_replication_factors
     kelem  = max_nr_expanded_descriptors
     kvals  = max_nr_expanded_descriptors*max_nr_subsets
     # jbufl  = max_bufr_msg_size
     # jsup   = length_ksup
-    
+
     #  initialise all arrays
     print '------------------------------'
     print 'reinitialising all arrays...'
@@ -88,7 +88,7 @@ def encoding_example(output_bufr_file):
     ktdexl = 0
     ktdexp = np.zeros(max_nr_expanded_descriptors, dtype = np.int)
     kerr   = 0
-    
+
     # handle BUFR tables
     print '------------------------------'
 
@@ -96,7 +96,7 @@ def encoding_example(output_bufr_file):
     private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
     if (not os.path.exists(private_bufr_tables_dir)):
         os.mkdir(private_bufr_tables_dir)
-    
+
     # make the needed symlinks to bufr tables
 
     # inspect the location of the ecmwfbufr.so file, and derive
@@ -117,7 +117,7 @@ def encoding_example(output_bufr_file):
     # make sure the path is absolute, otherwise the ECMWF library
     # might fail when it attempts to use it ...
     ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
-    
+
     needed_b_table    = "B0000000000098015001.TXT"
     needed_d_table    = "D0000000000098015001.TXT"
     available_b_table = "B0000000000098013001.TXT"
@@ -126,11 +126,11 @@ def encoding_example(output_bufr_file):
     source      = os.path.join(ecmwf_bufr_tables_dir,  available_b_table)
     destination = os.path.join(private_bufr_tables_dir, needed_b_table)
     ensure_symlink_exists(source, destination)
-        
+
     source      = os.path.join(ecmwf_bufr_tables_dir, available_d_table)
     destination = os.path.join(private_bufr_tables_dir, needed_d_table)
     ensure_symlink_exists(source, destination)
-            
+
     # make sure the BUFR tables can be found
     # also, force a slash at the end, otherwise the library fails
     # to find the tables
@@ -148,7 +148,7 @@ def encoding_example(output_bufr_file):
     # suppres the default ECMWF welcome message which
     # is not yet redirected to the above defined fileunit
     os.environ['PRINT_TABLE_NAMES'] = 'FALSE'
-    
+
     # fill sections 0,1,2 and 3
     bufr_edition              =   4
     bufr_code_centre          =  98 # ECMWF
@@ -159,18 +159,18 @@ def encoding_example(output_bufr_file):
     bufr_table_master_version =  15
     bufr_code_subcentre       =   0 # L2B processing facility
     bufr_compression_flag     =   0 # 64=compression/0=no compression
-    
+
     (year, month, day, hour, minute) = time.localtime()[:5]
     #(year, month, day, hour, minute, second,
     # weekday, julianday, isdaylightsavingstime) = time.localtime()
-    
+
     num_subsets = 4
-    
+
     # fill section 0
     ksec0[1-1] = 0
     ksec0[2-1] = 0
     ksec0[3-1] = bufr_edition
-    
+
     # fill section 1
     ksec1[ 1-1] =  22                       # length sec1 bytes
     #                                        [filled by the encoder]
@@ -180,7 +180,7 @@ def encoding_example(output_bufr_file):
     ksec1[ 4-1] =   1                       # update sequence
     ksec1[ 5-1] =   0                       # (PRESENCE SECT 2)
     #                                        (0/128 = no/yes)
-    ksec1[ 6-1] = bufr_obstype              # message type 
+    ksec1[ 6-1] = bufr_obstype              # message type
     ksec1[ 7-1] = bufr_subtype_l1b          # subtype
     ksec1[ 8-1] = bufr_table_local_version  # version of local table
     ksec1[ 9-1] = (year-2000)               # Without offset year - 2000
@@ -193,53 +193,53 @@ def encoding_example(output_bufr_file):
     ksec1[16-1] = bufr_code_subcentre       # originating subcentre
     ksec1[17-1] =   0
     ksec1[18-1] =   0
-    
+
     # a test for ksec2 is not yet defined
-    
+
     # fill section 3
     ksec3[1-1] = 0
     ksec3[2-1] = 0
     ksec3[3-1] = num_subsets                # no of data subsets
     ksec3[4-1] = bufr_compression_flag      # compression flag
-    
+
     # define a descriptor list
     ktdlen = 9 # length of unexpanded descriptor list
     ktdlst = np.zeros(ktdlen, dtype = np.int)
-    
+
     # define descriptor 1
     dd_d_date_yyyymmdd = 301011 # date
     # this defines the sequence:
     # 004001 ! year
     # 004002 ! month
     # 004003 ! day
-    
+
     # define descriptor 2
-    dd_d_time_hhmm = 301012 # time 
+    dd_d_time_hhmm = 301012 # time
     # this defines the sequence:
-    # 004004 ! hour 
-    # 004005 ! minute 
-    
+    # 004004 ! hour
+    # 004005 ! minute
+
     # define descriptor 3
-    dd_pressure = int('007004', 10) # pressure [pa]  
-    
+    dd_pressure = int('007004', 10) # pressure [pa]
+
     # WARNING: filling the descriptor variable with 007004 will fail
     # because python will interpret this as an octal value, and thus
     # automatically convert 007004 to the decimal value 3588
-    
+
     # define descriptor 4
-    dd_temperature = int('012001', 10) # [dry-bulb] temperature [K]  
-    
+    dd_temperature = int('012001', 10) # [dry-bulb] temperature [K]
+
     # define descriptor 5
     dd_latitude_high_accuracy = int('005001', 10)
-    # latitude (high accuracy) [degree] 
-    
+    # latitude (high accuracy) [degree]
+
     # define descriptor 6
     dd_longitude_high_accuracy = int('006001', 10)
-    # longitude (high accuracy) [degree] 
-    
+    # longitude (high accuracy) [degree]
+
     # define the delayed replication code
     delayed_descr_repl_factor = int('031001', 10)
-    
+
     def get_replication_code(num_descriptors, num_repeats):
         """
         calculate the replication note needed to describe
@@ -254,25 +254,25 @@ def encoding_example(output_bufr_file):
 
     ktdlst[0] = dd_d_date_yyyymmdd
     ktdlst[1] = dd_d_time_hhmm
-    
+
     # delay replication for the next 2 descriptors
     ktdlst[2] = get_replication_code(2, 0)
     ktdlst[3] = delayed_descr_repl_factor # = 031001
-    
+
     ktdlst[4] = dd_pressure
     ktdlst[5] = dd_temperature
-    
+
     # replicate the next 2 descriptors 3 times
     ktdlst[6] = get_replication_code(2, 3)
 
     ktdlst[7] = dd_latitude_high_accuracy
     ktdlst[8] = dd_longitude_high_accuracy
-    
+
     # call BUXDES
     # buxdes: expand the descriptor list
     #         and fill the array ktdexp and the variable ktdexp
     #         [only usefull when creating a bufr msg with table D entries
-    
+
     # iprint = 0 # default is to be silent
     iprint = 1
     if (iprint == 1):
@@ -290,7 +290,7 @@ def encoding_example(output_bufr_file):
         # in the kdata array. (or do I misunderstand the BUFR format here?)
         kdata[i] = 2 # i+1
     print "delayed replication factors: ", kdata
-    
+
     ecmwfbufr.buxdes(iprint, ksec1, ktdlst, kdata,
                      ktdexl, ktdexp, cnames, cunits, kerr)
     print "ktdlst = ", ktdlst
@@ -308,11 +308,11 @@ def encoding_example(output_bufr_file):
     # retrieve the length of the expanded descriptor list
     exp_descr_list_length = len(np.where(ktdexp>0)[0])
     print "exp_descr_list_length = ", exp_descr_list_length
-    
+
     # fill the values array with some dummy varying data
     num_values = exp_descr_list_length*num_subsets
     values = np.zeros(num_values, dtype = np.float64) # this is the default
-    
+
     for subset in range(num_subsets):
         # note that python starts counting with 0, unlike fortran,
         # so there is no need to take (subset-1)
@@ -349,7 +349,7 @@ def encoding_example(output_bufr_file):
 
             i = i+1
             values[i] =  5.25   +    0.1*subset+i+repl # longitude
-     
+
     # call BUFREN
     #   bufren: encode a bufr message
     #sizewords = 200
@@ -359,7 +359,7 @@ def encoding_example(output_bufr_file):
     num_bytes = 5000
     num_words = num_bytes/4
     words = np.zeros(num_words, dtype = np.int)
-    
+
     ecmwfbufr.bufren(ksec0, ksec1, ksec2, ksec3, ksec4,
                      ktdlst, kdata, exp_descr_list_length,
                      values, cvals, words, kerr)
@@ -368,18 +368,18 @@ def encoding_example(output_bufr_file):
     if (kerr != 0):
         print "kerr = ", kerr
         sys.exit(1)
-        
+
     print "words="
     print words
 
     nonzero_locations = np.where(words!=0)
     #print 'nonzero_locations = ',nonzero_locations[0]
-    
+
     numwords = nonzero_locations[0][-1] + 1
     print "encoded size: ", numwords, " words or ", numwords*4, " bytes"
 
     encoded_message = words[:numwords]
-    
+
     # get an instance of the RawBUFRFile class
     bf1 = RawBUFRFile()
     # open the file for writing
@@ -389,7 +389,7 @@ def encoding_example(output_bufr_file):
     # close the file
     bf1.close()
     #  #]
-    
+
 #  #[ run the example
 if len(sys.argv)<2:
     print 'please give a BUFR file as first argument'

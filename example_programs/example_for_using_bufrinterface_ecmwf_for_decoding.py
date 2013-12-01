@@ -9,7 +9,7 @@ used for decoding a BUFR message.
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 25-Feb-2010    
+# Written by: J. de Kloe, KNMI, Initial version 25-Feb-2010
 #
 # License: GPL v2.
 
@@ -28,7 +28,7 @@ def display_results(bufr):
     """
     a collation of prints to demonstrate that the message was properly decoded
     """
-    
+
     # print a selection of the decoded numbers
     print '------------------------------'
     print "Metadata for decoded BUFR message:"
@@ -68,7 +68,7 @@ def display_results(bufr):
     print '------------------------------'
 
     bufr.fill_descriptor_list()
-    
+
     print 'busel result:'
     print "ktdlen = ", bufr.ktdlen
     print "ktdexl = ", bufr.ktdexl
@@ -79,7 +79,7 @@ def display_results(bufr):
     print "descriptor list length: ", len(descriptor_list)
     print "expanded descriptor list: ", expanded_discriptor_list
     print "expanded descriptor list length: ", len(expanded_discriptor_list)
-    
+
     print '------------------------------'
     print "printing content of section 3:"
     bufr.print_descriptors()
@@ -103,7 +103,7 @@ def decoding_example(input_bufr_file, custom_bufr_tables=None):
     if words is None:
         print 'No valid BUFR messages found'
         sys.exit(0)
-    
+
     print '------------------------------'
     bufr = BUFRInterfaceECMWF(encoded_message=words,
                               section_sizes=section_sizes,
@@ -141,7 +141,7 @@ def decoding_example(input_bufr_file, custom_bufr_tables=None):
 if len(sys.argv)<2:
     print 'please give a BUFR file as first argument'
     sys.exit(1)
-    
+
 INP_BUFR_FILE = sys.argv[1]
 
 print "-"*50
@@ -163,7 +163,7 @@ else:
 #    BUFRMSG = decoding_example(INP_BUFR_FILE)
     BUFRMSG = decoding_example(INP_BUFR_FILE,
                                custom_bufr_tables=CUSTOM_BUFR_TABLES)
-    
+
 #BUFRMSG = decoding_example(INP_BUFR_FILE)
 display_results(BUFRMSG)
 print 'succesfully decoded data from file: ', INP_BUFR_FILE

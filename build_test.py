@@ -7,7 +7,7 @@ fortran compilers.
 
 #  #[ plan:
 # search for available fortran (and c?) compilers
-# 
+#
 # for each compiler
 # -clone the repository
 # -edit the setup.cfg file to choose the compiler
@@ -16,7 +16,7 @@ fortran compilers.
 # -run the unit tests
 # -convert source code to python3
 # -do the build test again
-# 
+#
 #  #]
 #  #[ imported modules
 import os, sys, glob
@@ -51,7 +51,7 @@ def run_shell_command(cmd_to_run):
 if not os.path.exists(REPODIR):
     print 'ERROR: could not find REPODIR: '+REPODIR
     sys.exit(1)
-    
+
 if not os.path.exists(TESTDIR):
     os.mkdir(TESTDIR)
 
@@ -82,61 +82,61 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         # not needed, the clone command creates the dir
         # print 'creating dir: ', temp_build_dir
         # os.mkdir(temp_build_dir)
-    
+
         # -clone the repository
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
         print "Executing command: ", cmd
         os.system(cmd)
-        
+
         # step into the test dir
         saved_cwd = os.getcwd()
         os.chdir(temp_build_dir)
-        
+
         print 'saved_cwd   = ', saved_cwd
         print 'os.getcwd() = ', os.getcwd()
-        
+
         # -build the software
         sys.path.append(os.getcwd())
         # print 'sys.path = ', sys.path
-        
+
         from build_interface import InstallBUFRInterfaceECMWF
         BI = InstallBUFRInterfaceECMWF(verbose = True,
                                        preferred_fortran_compiler = fc,
                                        download_library_sources=False)
-        
+
         # make sure we are in the right directory
         BUILD_DIR = 'pybufr_ecmwf'
         os.chdir(BUILD_DIR)
-        
+
         BI.build()
         del(BI)
-        
+
         # restore the original directory
         os.chdir(saved_cwd)
-        
+
         # -verify the presence of the generated ecmwfbufr.so file
         so_files = glob.glob(os.path.join(temp_build_dir, BUILD_DIR,
                                           'ecmwfbufr.so'))
-        
+
         this_result = []
         this_result.append('test results for manual build for: '+fc)
         if len(so_files)>0:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')
-    
+
         # -run the unit tests
         cmd = 'cd '+temp_build_dir+';'+\
               './unittests.py'
         # os.system(cmd)
-        (lines_stdout, lines_stderr) = run_shell_command(cmd)    
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
         for l in lines_stdout:
             this_result.append('STDOUT: '+l.replace('\n', ''))
         for l in lines_stderr:
             this_result.append('STDERR: '+l.replace('\n', ''))
 
         TESTRESULTS.append(this_result)
-    
+
         #  #]
     if (DO_SETUP_BUILD_TESTS):
         #  #[ build using the setup tool and check the result
@@ -152,17 +152,17 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
         print "Executing command: ", cmd
         os.system(cmd)
-        
+
         # -edit the setup.cfg file to choose the compiler
         #  and to prevent the library download
         cfg_file = os.path.join(temp_build_dir, 'setup.cfg')
-        
+
         cfg_lines = open(cfg_file).readlines()
-    
+
         # save a backup copy by moving the original
         # os.rename(cfg_file, cfg_file+'.orig')
-        
-        fd = open(cfg_file, 'wt')
+
+        fd = open(cfg_file, 'w')
         for l in cfg_lines:
             if 'preferred_fortran_compiler' in l:
                 fd.write('preferred_fortran_compiler='+fc+'\n')
@@ -177,12 +177,12 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         cmd = 'cd '+temp_build_dir+';'+\
               'hg commit -m "automatic commit by the build_test tool"'
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
-    
+
         # -build the software
         cmd = 'cd '+temp_build_dir+';'+\
               './setup.py build'
         os.system(cmd)
-        
+
         # -verify the presence of the generated ecmwfbufr.so file
         so_files = glob.glob(os.path.join(temp_build_dir,
                                       'build/lib*/pybufr_ecmwf/ecmwfbufr.so'))
@@ -193,12 +193,12 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')
-    
+
         # -run the unit tests
         cmd = 'cd '+temp_build_dir+';'+\
               './unittests.py'
         # os.system(cmd)
-        (lines_stdout, lines_stderr) = run_shell_command(cmd)    
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
         for l in lines_stdout:
             this_result.append('STDOUT: '+l.replace('\n', ''))
         for l in lines_stderr:
@@ -215,22 +215,22 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
             print 'dir: ', temp_build_dir, ' exists; removing it first'
             cmd = '\\rm -rf '+temp_build_dir
             os.system(cmd)
-    
+
         # -clone the repository
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
         print "Executing command: ", cmd
         os.system(cmd)
-        
+
         # -edit the setup.cfg file to choose the compiler
         #  and to prevent the library download
         cfg_file = os.path.join(temp_build_dir, 'setup.cfg')
-        
+
         cfg_lines = open(cfg_file).readlines()
-        
+
         # save a backup copy by moving the original
         # os.rename(cfg_file, cfg_file+'.orig')
-        
-        fd = open(cfg_file, 'wt')
+
+        fd = open(cfg_file, 'w')
         for l in cfg_lines:
             if 'preferred_fortran_compiler' in l:
                 fd.write('preferred_fortran_compiler='+fc+'\n')
@@ -245,7 +245,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         cmd = 'cd '+temp_build_dir+';'+\
               'hg commit -m "automatic commit by the build_test tool"'
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
-    
+
         # -build the software
         cmd = 'cd '+temp_build_dir+';'+\
               './setup.py sdist'
@@ -268,7 +268,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # split path and filename
         (tar_path, tar_file) = os.path.split(tar_files[0])
-        
+
         # unpack the created ter file
         cmd = 'cd '+test_dir+'; tar zxvf ../dist/'+tar_file
         os.system(cmd)
@@ -280,16 +280,16 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         # -edit the setup.cfg file to choose the compiler
         #  and to prevent the library download
         cfg_file = os.path.join(unpacked_sdist_path, 'setup.cfg')
-        
+
         cfg_lines = open(cfg_file).readlines()
-    
+
         # save a backup copy by moving the original
         #os.rename(cfg_file, cfg_file+'.orig')
 
         # this mod is not needed since the sdist takes the
         # modification made before running the setup sdist
         # command with it.
-        fd = open(cfg_file, 'wt')
+        fd = open(cfg_file, 'w')
         for l in cfg_lines:
             if 'preferred_fortran_compiler' in l:
                 fd.write('preferred_fortran_compiler='+fc+'\n')
@@ -303,7 +303,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         cmd = 'cd '+unpacked_sdist_path+';'+\
               './setup.py build'
         os.system(cmd)
-        
+
         # -verify the presence of the generated ecmwfbufr.so file
         so_files = glob.glob(os.path.join(unpacked_sdist_path,
                                       'build/lib*/pybufr_ecmwf/ecmwfbufr.so'))
@@ -313,12 +313,12 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')
-    
+
         # -run the unit tests
         cmd = 'cd '+unpacked_sdist_path+';'+\
               './unittests.py'
         # os.system(cmd)
-        (lines_stdout, lines_stderr) = run_shell_command(cmd)    
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
         for l in lines_stdout:
             this_result.append('STDOUT: '+l.replace('\n', ''))
         for l in lines_stderr:
@@ -340,16 +340,16 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         # not needed, the clone command creates the dir
         # print 'creating dir: ', temp_build_dir
         # os.mkdir(temp_build_dir)
-    
+
         # -clone the repository
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
         print "Executing command: ", cmd
         os.system(cmd)
-        
+
         # step into the test dir
         saved_cwd = os.getcwd()
         os.chdir(temp_build_dir)
-        
+
         print 'temp_build_dir = ', temp_build_dir
         print 'saved_cwd   = ', saved_cwd
         print 'os.getcwd() = ', os.getcwd()
@@ -365,7 +365,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         print 'temp_py3_build_dir = ', temp_py3_build_dir
         print 'os.getcwd() = ', os.getcwd()
-        
+
         # -build the software
         sys.path.append(os.getcwd())
         # print 'sys.path = ', sys.path
@@ -376,22 +376,22 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         #pylint: disable-msg=W0404
         from build_interface import InstallBUFRInterfaceECMWF
         #pylint: enable-msg=W0404
-        
+
         BI = InstallBUFRInterfaceECMWF(verbose = True,
                                        preferred_fortran_compiler = fc,
                                        download_library_sources=False)
-        
+
         # make sure we are in the right directory
         BUILD_DIR = 'pybufr_ecmwf'
         os.chdir(BUILD_DIR)
-        
+
         BI.build()
         del(BI)
 
         # the py3 test almost works now. It fails in the f2py stage
         # in the post-processing (stage 2) with this message:
         # (seems to me this is a bug in f2py)
-        
+
         # Post-processing (stage 2)...
         # Saving signatures to file "f2py_build/signatures.pyf"
         # Traceback (most recent call last):
@@ -438,35 +438,35 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         #        http://projects.scipy.org/numpy/ticket/1932
         # and here:
         #       https://github.com/numpy/numpy/issues/3192
-         
+
         sys.exit(1)
-        
+
         # restore the original directory
         os.chdir(saved_cwd)
-        
+
         # -verify the presence of the generated ecmwfbufr.so file
         so_files = glob.glob(os.path.join(temp_build_dir, BUILD_DIR,
                                           'ecmwfbufr.so'))
-        
+
         this_result = []
         this_result.append('test results for manual build for: '+fc)
         if len(so_files)>0:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')
-    
+
         # -run the unit tests
         cmd = 'cd '+temp_build_dir+';'+\
               './unittests.py'
         # os.system(cmd)
-        (lines_stdout, lines_stderr) = run_shell_command(cmd)    
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
         for l in lines_stdout:
             this_result.append('STDOUT: '+l.replace('\n', ''))
         for l in lines_stderr:
             this_result.append('STDERR: '+l.replace('\n', ''))
 
         TESTRESULTS.append(this_result)
-    
+
         #  #]
 
 print 50*'='

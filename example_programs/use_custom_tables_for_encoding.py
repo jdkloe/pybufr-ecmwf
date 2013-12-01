@@ -43,9 +43,9 @@ def encoding_example(output_bufr_file):
     convention of requiring capitals for constants in the global
     scope (since most of these variables are not constants at all))
     """
-    
+
     bufr = BUFRInterfaceECMWF(verbose=True)
-    
+
     # fill sections 0, 1, 2 and 3
     num_subsets = 4
     bufr.fill_sections_0123(bufr_code_centre =  98, # ECMWF
@@ -64,20 +64,20 @@ def encoding_example(output_bufr_file):
     # default tables if needed
     bufr.setup_tables(table_b_to_use='B_my_test_BUFR_table.txt',
                       table_d_to_use='D_my_test_BUFR_table.txt')
-    
+
     # define a descriptor list
     template = BufrTemplate(max_nr_descriptors=4)
-    
+
     template.add_descriptors(DD_B_048001,        # 0
                              DD_B_048002,        # 1
                              DD_D_348001)        # 2
-    
+
     bufr.register_and_expand_descriptors(template)
-    
+
     # retrieve the length of the expanded descriptor list
     exp_descr_list_length = bufr.ktdexl
     print "exp_descr_list_length = ", exp_descr_list_length
-    
+
     # fill the values array with some dummy varying data
     num_values = exp_descr_list_length*num_subsets
     values = np.zeros(num_values, dtype=np.float64) # this is the default
@@ -87,7 +87,7 @@ def encoding_example(output_bufr_file):
     # cause of the huge memory use of cvals in case num_values is large.
     num_cvalues = num_values
     cvals  = np.zeros((num_cvalues, 80), dtype=np.character)
-    
+
     for subset in range(num_subsets):
         # note that python starts counting with 0, unlike fortran,
         # so there is no need to take (subset-1)
@@ -104,7 +104,7 @@ def encoding_example(output_bufr_file):
 
     # do the encoding to binary format
     bufr.encode_data(values, cvals)
-    
+
     # get an instance of the RawBUFRFile class
     bf1 = RawBUFRFile()
     # open the file for writing

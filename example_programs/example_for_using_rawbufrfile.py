@@ -9,7 +9,7 @@ module may be used.
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 21-Jan-2010    
+# Written by: J. de Kloe, KNMI, Initial version 21-Jan-2010
 #
 # License: GPL v2.
 
@@ -29,12 +29,12 @@ def raw_file_reading_example(input_bufr_file):
 
     # get an instance of the RawBUFRFile class
     rbf = RawBUFRFile()
-    
+
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
     # an array of pointers to the start and end of each BUFR message
     rbf.open(input_bufr_file, 'rb')
-    
+
     # print the internal data of the class instance
     rbf.print_properties(prefix = "RawBUFRFile (opened for reading)")
 
@@ -68,7 +68,7 @@ def raw_file_reading_example(input_bufr_file):
 
     # close the file
     rbf.close()
-    
+
     # delete the class instance
     del(rbf)
     return (msg1, msg2, msg3)
@@ -78,13 +78,13 @@ def raw_file_writing_example(output_bufr_file, msg1, msg2):
     """
     example for writing a BUFR message
     """
-    
+
     # get an instance of the RawBUFRFile class
     bf1 = RawBUFRFile()
-    
+
     # open the test file for writing
     bf1.open(output_bufr_file, 'wb')
-    
+
     # write a few raw (encoded) BUFR messages
     bf1.write_raw_bufr_msg(msg1)
     if msg2 is not None:
@@ -92,10 +92,10 @@ def raw_file_writing_example(output_bufr_file, msg1, msg2):
 
     # print the internal data of the class instance
     bf1.print_properties(prefix = "RawBUFRFile (opened for writing)")
-    
+
     # close the file
     bf1.close()
-    
+
     # delete the class instance
     del(bf1)
     #  #]
@@ -104,20 +104,20 @@ def raw_file_appending_example(output_bufr_file, msg3):
     """
     example for appending a BUFR message
     """
-    
+
     # get an instance of the RawBUFRFile class
     bf2 = RawBUFRFile()
-    
+
     # open the test file for appending
     bf2.open(output_bufr_file, 'ab')
-    
+
     # write a third raw (encoded) BUFR messages
     if msg3 is not None:
         bf2.write_raw_bufr_msg(msg3)
-    
+
     # print the internal data of the class instance
     bf2.print_properties(prefix = "RawBUFRFile2 (opened for appending)")
-    
+
     # close the file
     bf2.close()
 

@@ -10,7 +10,7 @@ used for encoding a BUFR message.
 # For details on the revision history, refer to the log-notes in
 # the mercurial revisioning system hosted at google code.
 #
-# Written by: J. de Kloe, KNMI, Initial version 25-Feb-2010    
+# Written by: J. de Kloe, KNMI, Initial version 25-Feb-2010
 #
 # License: GPL v2.
 
@@ -37,28 +37,28 @@ DD_D_DATE_YYYYMMDD = 301011 # date
 # 004003 ! day
 
 # define descriptor 2
-DD_D_TIME_HHMM = 301012 # time 
+DD_D_TIME_HHMM = 301012 # time
 # this defines the sequence:
-# 004004 ! hour 
-# 004005 ! minute 
+# 004004 ! hour
+# 004005 ! minute
 
 # define descriptor 3
-DD_PRESSURE = int('007004', 10) # pressure [pa]  
+DD_PRESSURE = int('007004', 10) # pressure [pa]
 
 # WARNING: filling the descriptor variable with 007004 will fail
 # because python will interpret this as an octal value, and thus
 # automatically convert 007004 to the decimal value 3588
 
 # define descriptor 4
-DD_TEMPERATURE = int('012001', 10) # [dry-bulb] temperature [K]  
+DD_TEMPERATURE = int('012001', 10) # [dry-bulb] temperature [K]
 
 # define descriptor 5
 DD_LATITUDE_HIGH_ACCURACY = int('005001', 10)
-# latitude (high accuracy) [degree] 
+# latitude (high accuracy) [degree]
 
 # define descriptor 6
 DD_LONGITUDE_HIGH_ACCURACY = int('006001', 10)
-# longitude (high accuracy) [degree] 
+# longitude (high accuracy) [degree]
 
 #  #]
 
@@ -69,9 +69,9 @@ def encoding_example(output_bufr_file):
     convention of requiring capitals for constants in the global
     scope (since most of these variables are not constants at all))
     """
-    
+
     bufr = BUFRInterfaceECMWF(verbose=True)
-    
+
     # fill sections 0, 1, 2 and 3
     num_subsets = 4
     bufr.fill_sections_0123(bufr_code_centre =  98, # ECMWF
@@ -89,30 +89,30 @@ def encoding_example(output_bufr_file):
     # names expected by the ECMWF BUFR library and create symlinks to the
     # default tables if needed
     bufr.setup_tables()
-    
+
     # define a descriptor list
     template = BufrTemplate(max_nr_descriptors=20)
-    
+
     template.add_descriptors(DD_D_DATE_YYYYMMDD, # 0
                              DD_D_TIME_HHMM)     # 1
-    
+
     # delay replication for the next 2 descriptors
     # allow at most 2 delayed replications
     template.add_delayed_replic_descriptors(2,
                                             DD_PRESSURE,
                                             DD_TEMPERATURE)
-    
+
     # replicate the next 2 descriptors 3 times
     template.add_replicated_descriptors(3,
                                         DD_LATITUDE_HIGH_ACCURACY,
                                         DD_LONGITUDE_HIGH_ACCURACY)
 
     bufr.register_and_expand_descriptors(template)
-    
+
     # retrieve the length of the expanded descriptor list
     exp_descr_list_length = bufr.ktdexl
     print "exp_descr_list_length = ", exp_descr_list_length
-    
+
     # fill the values array with some dummy varying data
     num_values = exp_descr_list_length*num_subsets
     values = np.zeros(num_values, dtype=np.float64) # this is the default
@@ -122,12 +122,12 @@ def encoding_example(output_bufr_file):
     # cause of the huge memory use of cvals in case num_values is large.
     num_cvalues = num_values
     cvals  = np.zeros((num_cvalues, 80), dtype=np.character)
-    
+
     for subset in range(num_subsets):
         # note that python starts counting with 0, unlike fortran,
         # so there is no need to take (subset-1)
         i = subset*exp_descr_list_length
-        
+
         values[i]        = 1999 # year
         i = i+1
         values[i] =   12 # month
@@ -145,7 +145,7 @@ def encoding_example(output_bufr_file):
         for repl in range(2):
             i = i+1
             values[i] = 1013.e2 - 100.e2*subset+i+repl # pressure [pa]
-            i = i+1 
+            i = i+1
             values[i] = 273.15  -    10.*subset+i+repl # temperature [K]
         for repl in range(3):
             i = i+1
@@ -155,7 +155,7 @@ def encoding_example(output_bufr_file):
 
     # do the encoding to binary format
     bufr.encode_data(values, cvals)
-    
+
     # get an instance of the RawBUFRFile class
     bf1 = RawBUFRFile()
     # open the file for writing
