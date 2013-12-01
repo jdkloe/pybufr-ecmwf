@@ -127,7 +127,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -run the unit tests
         cmd = 'cd '+temp_build_dir+';'+\
-              './unittests.py'
+              'python ./unittests.py'
         # os.system(cmd)
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
         for l in lines_stdout:
@@ -196,7 +196,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -run the unit tests
         cmd = 'cd '+temp_build_dir+';'+\
-              './unittests.py'
+              'python ./unittests.py'
         # os.system(cmd)
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
         for l in lines_stdout:
@@ -316,7 +316,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -run the unit tests
         cmd = 'cd '+unpacked_sdist_path+';'+\
-              './unittests.py'
+              'python ./unittests.py'
         # os.system(cmd)
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
         for l in lines_stdout:
@@ -457,7 +457,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -run the unit tests
         cmd = 'cd '+temp_build_dir+';'+\
-              './unittests.py'
+              'python3 ./unittests.py'
         # os.system(cmd)
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
         for l in lines_stdout:

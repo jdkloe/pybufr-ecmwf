@@ -178,8 +178,11 @@ def call_cmd_and_verify_output(cmd):
     expected_stdout = basename_exp+".expected_stdout"
     expected_stderr = basename_exp+".expected_stderr"
 
+    tmp_cmd = 'python '+cmd
+    if python3:
+        tmp_cmd = 'python3 '+cmd
     # execute the test and catch all output
-    (lines_stdout, lines_stderr) = call_cmd(cmd)
+    (lines_stdout, lines_stderr) = call_cmd(tmp_cmd)
 
     # write the actual outputs to file
     file_descr = open(actual_stdout, 'w')
