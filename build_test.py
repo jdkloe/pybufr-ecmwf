@@ -180,7 +180,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -build the software
         cmd = 'cd '+temp_build_dir+';'+\
-              './setup.py build'
+              'python ./setup.py build'
         os.system(cmd)
 
         # -verify the presence of the generated ecmwfbufr.so file
@@ -248,7 +248,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -build the software
         cmd = 'cd '+temp_build_dir+';'+\
-              './setup.py sdist'
+              'python ./setup.py sdist'
         os.system(cmd)
 
         # -verify the presence of the generated tar file
@@ -301,7 +301,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -build the software
         cmd = 'cd '+unpacked_sdist_path+';'+\
-              './setup.py build'
+              'python ./setup.py build'
         os.system(cmd)
 
         # -verify the presence of the generated ecmwfbufr.so file

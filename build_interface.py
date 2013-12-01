@@ -791,7 +791,7 @@ class InstallBUFRInterfaceECMWF:
                  c_ld_library_path = None,
                  c_flags = None,
                  debug_f2py_c_api = False,
-                 download_library_sources = True):
+                 download_library_sources = False):
         #  #[
 
         # first remove any quotes that may be around the strings
