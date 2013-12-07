@@ -28,6 +28,7 @@ TESTDIR = '../pybufr_ecmwf_test_builds'
 DO_MANUAL_TESTS      = True
 DO_SETUP_BUILD_TESTS = True
 DO_SETUP_SDIST_TESTS = True
+DO_PIP_INSTALL_TESTS = True
 DO_MANUAL_PY3_TESTS  = False # True
 # DO_MANUAL_PY3_TESTS  = False # True # not yet implemented!
 
@@ -71,7 +72,7 @@ print 'available fortran compilers: ', \
 #  #]
 TESTRESULTS = []
 for fc in AVAILABLE_POSSIBLE_COMPILERS:
-    if (DO_MANUAL_TESTS):
+    if DO_MANUAL_TESTS:
         #  #[ build using the manual build script and check the result
         # -create a temporary working dir for the build
         build_dir_name = 'manual_build_'+fc
@@ -140,7 +141,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         TESTRESULTS.append(this_result)
 
         #  #]
-    if (DO_SETUP_BUILD_TESTS):
+    if DO_SETUP_BUILD_TESTS:
         #  #[ build using the setup tool and check the result
         # -create a temporary working dir for the build
         build_dir_name = 'build_'+fc
@@ -210,7 +211,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         TESTRESULTS.append(this_result)
     #  #]
-    if (DO_SETUP_SDIST_TESTS):
+    if DO_SETUP_SDIST_TESTS:
         #  #[ build a tarfile using setup sdist, unpack, build and check
         # -create a temporary working dir for the build
         build_dir_name = 'build_sdist_'+fc
@@ -330,7 +331,97 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         TESTRESULTS.append(this_result)
         #  #]
-    if (DO_MANUAL_PY3_TESTS):
+    if DO_PIP_INSTALL_TESTS:
+        #  #[ build a tarfile using setup sdist, unpack, build and check
+        # -create a temporary working dir for the build
+        build_dir_name = 'build_pip_'+fc
+        temp_build_dir = os.path.join(TESTDIR, build_dir_name)
+        if os.path.exists(temp_build_dir):
+            print 'dir: ', temp_build_dir, ' exists; removing it first'
+            cmd = '\\rm -rf '+temp_build_dir
+            os.system(cmd)
+
+        # -clone the repository
+        cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
+        print "Executing command: ", cmd
+        os.system(cmd)
+
+        # -edit the setup.cfg file to choose the compiler
+        #  and to prevent the library download
+        cfg_file = os.path.join(temp_build_dir, 'setup.cfg')
+
+        cfg_lines = open(cfg_file).readlines()
+
+        # save a backup copy by moving the original
+        # os.rename(cfg_file, cfg_file+'.orig')
+
+        fd = open(cfg_file, 'w')
+        for l in cfg_lines:
+            if 'preferred_fortran_compiler' in l:
+                fd.write('preferred_fortran_compiler='+fc+'\n')
+            elif 'download_library_sources' in l:
+                fd.write('download_library_sources = False\n')
+            else:
+                fd.write(l)
+        fd.close()
+
+        # commit the modified code, to track what happended incase
+        # I would pull from this modified repository by mistake.
+        cmd = 'cd '+temp_build_dir+';'+\
+              'hg commit -m "automatic commit by the build_test tool"'
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
+
+        # -build the software
+        cmd = 'cd '+temp_build_dir+';'+\
+              'python ./setup.py sdist'
+        os.system(cmd)
+
+        # -verify the presence of the generated tar file
+        pattern = os.path.join(temp_build_dir, 'dist/pybufr-ecmwf*gz')
+        tar_files = glob.glob(pattern)
+
+        this_result = []
+        this_result.append('test results for pip test for: '+fc)
+        if len(tar_files)>0:
+            this_result.append('tar file found: '+tar_files[0])
+        else:
+            this_result.append('ERROR: tar file NOT found!')
+
+        # create a test directory
+        test_dir = os.path.join(temp_build_dir, 'temp_test')
+        os.makedirs(test_dir)
+
+        # split path and filename
+        (tar_path, tar_file) = os.path.split(tar_files[0])
+
+        # setup a virtualenv and try to install the package in it
+        cmds = ['cd '+test_dir,
+                'virtualenv myenv --system-site-packages',
+                'source myenv/bin/activate',
+                'pip install pybufr-ecmwf --no-index '+\
+                '--find-links '+os.path.abspath(os.path.join(temp_build_dir,'dist')),
+                'python -c "import pybufr_ecmwf;print \'pybufr_ecmwf.__file__ = \', pybufr_ecmwf.__file__"',
+                'deactivate',
+                'rm -rf myenv/']
+
+        cmd = ';'.join(c for c in cmds)
+        print 'executing cmd: [{}]'.format(cmd)
+        (lines_stdout, lines_stderr) = run_shell_command(cmd)
+
+        # -verify the output
+        module_properly_loaded = False
+        for l in  lines_stdout:
+            if ( ('pybufr_ecmwf.__file__' in l) and
+                 ('__init__.py' in l)              ):
+                module_properly_loaded = True
+        if module_properly_loaded:
+            this_result.append('module_properly_loaded.')
+        else:
+            this_result.append('ERROR: something seems wrong: '+\
+                               'module not properlyloaded!')
+        TESTRESULTS.append(this_result)
+        #  #]        
+    if DO_MANUAL_PY3_TESTS:
         #  #[ convert to python3, and test the manual build
 
         # -create a temporary working dir for the build
