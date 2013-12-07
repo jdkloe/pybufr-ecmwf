@@ -33,7 +33,7 @@ DO_MANUAL_PY3_TESTS  = False # True
 
 #  #]
 #  #[ helper functions
-def run_shell_command(cmd_to_run, env={}):
+def run_shell_command(cmd_to_run, env=os.environ):
     #  #[
     """ a wrapper routine around subprocess.Popen intended
     to make it a bit easier to call this functionality.
@@ -60,7 +60,9 @@ POSSIBLE_FORTRAN_COMPILERS = ['g95', 'gfortran', 'ifort', 'pgf90', 'f90']
 AVAILABLE_POSSIBLE_COMPILERS = []
 for fc in POSSIBLE_FORTRAN_COMPILERS:
     cmd = 'which '+fc
+    # print 'running: ',cmd
     (lines_stdout, lines_stderr) = run_shell_command(cmd)
+    # print '(lines_stdout, lines_stderr) = ',(lines_stdout, lines_stderr)
     if len(lines_stderr)==0:
         AVAILABLE_POSSIBLE_COMPILERS.append(fc)
 

@@ -401,7 +401,8 @@ ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr',
                            ["pybufr_ecmwf/build_interface.py"])
 #ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr', [])
 
-ECMWF_BUFR_DATA = [(PACKAGE_NAME ,['pybufr_ecmwf/alt_bufr_tables/*.TXT',])]
+# make sure the alternative BUFR tables are included as well
+ECMWF_BUFR_DATA = {'pybufr_ecmwf' : ['alt_bufr_tables/*.TXT',]}
 
 setup(cmdclass = {'build'       : Build,
                   'build_ext'   : BuildExt,

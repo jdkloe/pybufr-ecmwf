@@ -1,3 +1,6 @@
+# this lists the files to be included in the sdist tgz fike
+# as created by: python setup.py sdist
+
 include *.txt
 include *.sh
 include pybufr_ecmwf/alt_bufr_tables/*.TXT
