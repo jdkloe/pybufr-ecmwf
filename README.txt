@@ -31,16 +31,17 @@ install numpy from source first, before you can use the python3 version
 of this pybufr_ecmwf module.
 
 WARNING2 for python3 users:
-the f2py tool that comes with numpy
-seems broken somehow, and crashes during the build process.
+the f2py tool that comes with numpy was broken, and crashed during 
+the build process.
 The problem has been reported to the numpy developers (see
-http://projects.scipy.org/numpy/ticket/1932), so for the moment
-I'll wait for a bugfix from the numpy team before continuing
-the python3 porting effort.
+http://projects.scipy.org/numpy/ticket/1932 and
+https://github.com/numpy/numpy/pull/3230), and the bug was fixed
+in may 2013. However, if your numpy version is older than that this 
+may still be a problem.
 
 For more information on this module please consult the wiki at:
 http://code.google.com/p/pybufr-ecmwf/
 
 If you have any questions feel free to contact me by email.
 
-Jos de Kloe, 06-Sep-2011.
+Jos de Kloe, 01-Dec-2013.

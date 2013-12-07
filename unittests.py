@@ -40,14 +40,31 @@ are planned as well.
 #
 #  #]
 #  #[ imported modules
-import os, sys    # operating system functions
+import os, sys, shutil    # operating system functions
 import unittest   # import the unittest functionality
 import subprocess # support running additional executables
+
 # from build_interface import InterfaceBuildError # currently not used
 from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
 
-(sys.path, MY_MODULE_PATH) = get_and_set_the_module_path(sys.path)
+dummy_sys_path = sys.path[:] # provide a copy
+(dummy_sys_path, MY_MODULE_PATH) = get_and_set_the_module_path(dummy_sys_path)
 # print '(sys.path, MY_MODULE_PATH) = ',(sys.path, MY_MODULE_PATH)
+
+# in case the build is done by setup.py, the created ecmwfbufr.so module will
+# be in a path like SWROOT/build/lib.linux-x86_64-2.7/pybufr_ecmwf/
+# To ensure the unittests find it, temporarily rename SWROOT/pybufr_ecmwf/
+# and create a symlink to SWROOT/build/lib.linux-x86_64-2.7/pybufr_ecmwf/
+pybufr_ecmwf_module_was_renamed = False
+if 'build/lib' in MY_MODULE_PATH:
+    print 'renaming pybufr_ecmwf to pybufr_ecmwf.renamed'
+    shutil.move('pybufr_ecmwf', 'pybufr_ecmwf.renamed')
+    print 'creating symlink pybufr_ecmwf'    
+    os.symlink(os.path.join(MY_MODULE_PATH, 'pybufr_ecmwf'), # source
+               'pybufr_ecmwf') # destination
+    pybufr_ecmwf_module_was_renamed = True
+else:
+    print 'MY_MODULE_PATH = ',MY_MODULE_PATH
 
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
@@ -941,9 +958,21 @@ os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
 
 # this just runs all tests
 print "Running unit tests:"
-unittest.main()
+unittest.main(exit=False)
+# unittest.main(verbosity=2)
 
+# Problem: unittest.main() seems to call sys.exit()
+# and does not return (even in case of no errors!)
+# The exit=False switch ensures the module rename gets restored again.
 
+# restore the original directory structure when all testing is done
+if pybufr_ecmwf_module_was_renamed:
+    # safety check
+    if os.path.islink('pybufr_ecmwf'):
+        print 'removing symlink pybufr_ecmwf'
+        os.remove('pybufr_ecmwf')
+        print 'renaming pybufr_ecmwf.renamed to pybufr_ecmwf'
+        shutil.move('pybufr_ecmwf.renamed', 'pybufr_ecmwf')
 
 # still todo:
 #

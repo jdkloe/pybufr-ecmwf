@@ -33,13 +33,13 @@ DO_MANUAL_PY3_TESTS  = False # True
 
 #  #]
 #  #[ helper functions
-def run_shell_command(cmd_to_run):
+def run_shell_command(cmd_to_run, env={}):
     #  #[
     """ a wrapper routine around subprocess.Popen intended
     to make it a bit easier to call this functionality.
     """
     #print "Executing command: ", cmd_to_run
-    subpr = subprocess.Popen(cmd_to_run, shell = True,
+    subpr = subprocess.Popen(cmd_to_run, shell = True, env=env,
                              stdout = subprocess.PIPE,
                              stderr = subprocess.PIPE)
     ls_stdout = subpr.stdout.readlines()
@@ -195,10 +195,12 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
             this_result.append('ERROR: so file NOT found!')
 
         # -run the unit tests
+        env = os.environ
+        env['PYTHONPATH'] = os.path.split(so_files[0])[0]
         cmd = 'cd '+temp_build_dir+';'+\
               'python ./unittests.py'
         # os.system(cmd)
-        (lines_stdout, lines_stderr) = run_shell_command(cmd)
+        (lines_stdout, lines_stderr) = run_shell_command(cmd,env=env)
         for l in lines_stdout:
             this_result.append('STDOUT: '+l.replace('\n', ''))
         for l in lines_stderr:

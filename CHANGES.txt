@@ -1,6 +1,32 @@
 Updated to build and use the new BUFRDC series of the ECMWF library
 including the latest version 000400.
 
+Release ...
+-fix pip install issue
+-fix a whole bunch of new pylint warnings
+ (since pylint now also complains about whitespace)
+
+Release 0.72 (14-May-2013):
+-add a safety check to bufr_to_ascii.py and add a little sorting script
+ named sort_bufr_msgs.py, to prevent trouble in case bufr_to_ascii.py is
+ used on a file that contains mixed BUFR messages using different templates
+
+Release 0.71 (14-May-2013):
+-fix a mistake in the manifest file
+
+Release 0.7 (..-May-2013):
+-fix a few python3 compatibility issues
+-fix issue 4 (warning on max bufr message size had wrong threshold)
+-add a simple example program to request a name for a descriptor number
+-make bufr table copying code more efficient
+
+Release 0.6 (...
+-move to ECMWF BUFR version bufrdc_000400
+-reorganise custom fortran code added to the ECMWF library 
+ to allow easier interfacing by this module
+-split test data from example_programs dir, and move to separate test dir
+-fix a number of python3 compatibility issues
+
 Release 0.5 (25-Sep-2012):
 
 Contains mainly small bug fixes and updates the build script to the 

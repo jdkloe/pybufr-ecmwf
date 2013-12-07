@@ -401,6 +401,8 @@ ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr',
                            ["pybufr_ecmwf/build_interface.py"])
 #ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr', [])
 
+ECMWF_BUFR_DATA = [(PACKAGE_NAME ,['pybufr_ecmwf/alt_bufr_tables/*.TXT',])]
+
 setup(cmdclass = {'build'       : Build,
                   'build_ext'   : BuildExt,
                   'install_lib' : CustomInstallLib},
@@ -416,6 +418,8 @@ setup(cmdclass = {'build'       : Build,
       platforms = ["POSIX"],
       license = "GPLv2",
       packages = ['pybufr_ecmwf'],
+      include_package_data=True,
+      package_data=ECMWF_BUFR_DATA,
       ext_modules = [ECMWF_BUFR_EXT],
       requires = ["numpy", "numpy.f2py", "subprocess"],
       provides = ["pybufr_ecmwf"]
