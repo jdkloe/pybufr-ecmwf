@@ -7,11 +7,10 @@ The API consists of several layers:
  oriented usage
 
 For examples on its usage you can take a look at the programs in the
-example_programs directory.
+example_programs directory in the source code.
 The run_example_program.sh shell script allows easy testing of all of
 these programs. 
-All needed test data files are provided in the example_programs/testdata
-directory.
+All needed test data files are provided in the test/testdata directory.
 
 examples for using the raw/bare API are:
 -example_for_using_ecmwfbufr_for_decoding.py
@@ -48,7 +47,11 @@ an example tool to demonstrate how to extract the data from a BUFR file
 and convert it to ASCII of CSV format.
 -bufr_to_ascii.py
 
+In case your BUFR files are mixed and have several message types in a
+single file, it is preferable to sort them first before converting
+them to ascii. To do this you can use the script:
+-sort_bufr_msgs.py
 
 If you have any questions or requests feel free to contact me by email.
 
-Jos de Kloe, 2011.
+Jos de Kloe, 8-Dec-2013.

@@ -1,8 +1,8 @@
 Updated to build and use the new BUFRDC series of the ECMWF library
 including the latest version 000400.
 
-Release ...
--fix pip install issue
+Release 0.73 (08-Dec-2013)
+-fix pip install issue and add pip install test to build_test.py 
 -fix a whole bunch of new pylint warnings
  (since pylint now also complains about whitespace)
 

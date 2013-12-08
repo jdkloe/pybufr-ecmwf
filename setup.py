@@ -114,6 +114,7 @@ class Build(_build):
 # and setup.cfg options to the build_ext stage
 class BuildExt(_build_ext):
     #  #[ custom build_ext
+
     """Specialized Python extension builder."""
     # implement whatever needs to be different...
     # see the original build_ext.py in:
@@ -225,6 +226,7 @@ class BuildExt(_build_ext):
         #  #]
     def build_extension(self, ext):
         #  #[ the actual build
+
         """ initiate building the extension module """
         # don't re-initialise these properties here !
         # at his point the setup machinery already has processed
@@ -335,7 +337,9 @@ class BuildExt(_build_ext):
         #print "self.extensions[0].name = ", self.extensions[0].name
         #print "dir(self.extensions[0]) = ", dir(self.extensions[0])
         #sys.exit(1)
+
         #  #]
+
     #  #]
 
 # modify the install_lib class to ensure the symlinks in the
@@ -408,7 +412,7 @@ setup(cmdclass = {'build'       : Build,
                   'build_ext'   : BuildExt,
                   'install_lib' : CustomInstallLib},
       name = PACKAGE_NAME,
-      version = '0.72',
+      version = '0.73',
       description = DESCR,
       long_description = LONG_DESCR,
       author = 'Jos de Kloe',

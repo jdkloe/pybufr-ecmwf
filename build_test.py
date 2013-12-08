@@ -34,13 +34,16 @@ DO_MANUAL_PY3_TESTS  = False # True
 
 #  #]
 #  #[ helper functions
-def run_shell_command(cmd_to_run, env=os.environ):
+def run_shell_command(cmd_to_run, sp_env=None):
     #  #[
     """ a wrapper routine around subprocess.Popen intended
     to make it a bit easier to call this functionality.
     """
     #print "Executing command: ", cmd_to_run
-    subpr = subprocess.Popen(cmd_to_run, shell = True, env=env,
+    this_env = sp_env
+    if sp_env is None:
+        this_env = os.environ
+    subpr = subprocess.Popen(cmd_to_run, shell = True, env=this_env,
                              stdout = subprocess.PIPE,
                              stderr = subprocess.PIPE)
     ls_stdout = subpr.stdout.readlines()
@@ -203,7 +206,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         cmd = 'cd '+temp_build_dir+';'+\
               'python ./unittests.py'
         # os.system(cmd)
-        (lines_stdout, lines_stderr) = run_shell_command(cmd,env=env)
+        (lines_stdout, lines_stderr) = run_shell_command(cmd, sp_env=env)
         for l in lines_stdout:
             this_result.append('STDOUT: '+l.replace('\n', ''))
         for l in lines_stderr:
