@@ -210,16 +210,20 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
             this_result.append('ERROR: so file NOT found!')
 
         # -run the unit tests
-        env = os.environ
-        env['PYTHONPATH'] = os.path.split(so_files[0])[0]
-        cmd = 'cd '+temp_build_dir+';'+\
-              'python ./unittests.py'
-        # os.system(cmd)
-        (lines_stdout, lines_stderr) = run_shell_command(cmd, sp_env=env)
-        for l in lines_stdout:
-            this_result.append('STDOUT: '+l.replace('\n', ''))
-        for l in lines_stderr:
-            this_result.append('STDERR: '+l.replace('\n', ''))
+        try:
+            env = os.environ
+            env['PYTHONPATH'] = os.path.split(so_files[0])[0]
+            
+            cmd = 'cd '+temp_build_dir+';'+\
+                  'python ./unittests.py'
+            # os.system(cmd)
+            (lines_stdout, lines_stderr) = run_shell_command(cmd, sp_env=env)
+            for l in lines_stdout:
+                this_result.append('STDOUT: '+l.replace('\n', ''))
+            for l in lines_stderr:
+                this_result.append('STDERR: '+l.replace('\n', ''))
+        except IndexError:
+            this_result.append('skipping unittests')
 
         TESTRESULTS.append(this_result)
     #  #]
