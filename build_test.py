@@ -114,7 +114,14 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         BUILD_DIR = 'pybufr_ecmwf'
         os.chdir(BUILD_DIR)
 
-        BI.build()
+        this_result = []
+        build_succesfull = True
+        try:
+            BI.build()
+        except:
+            this_result.append('manual build failed for compiler: '+fc)
+            build_succesfull = False
+
         del(BI)
 
         # restore the original directory
@@ -124,25 +131,27 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         so_files = glob.glob(os.path.join(temp_build_dir, BUILD_DIR,
                                           'ecmwfbufr.so'))
 
-        this_result = []
         this_result.append('test results for manual build for: '+fc)
         if len(so_files)>0:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')
 
-        # -run the unit tests
-        cmd = 'cd '+temp_build_dir+';'+\
-              'python ./unittests.py'
-        # os.system(cmd)
-        (lines_stdout, lines_stderr) = run_shell_command(cmd)
-        for l in lines_stdout:
-            this_result.append('STDOUT: '+l.replace('\n', ''))
-        for l in lines_stderr:
-            this_result.append('STDERR: '+l.replace('\n', ''))
+        if build_succesfull:
+            # -run the unit tests
+            cmd = 'cd '+temp_build_dir+';'+\
+                  'python ./unittests.py'
+            # os.system(cmd)
+            (lines_stdout, lines_stderr) = run_shell_command(cmd)
+            for l in lines_stdout:
+                this_result.append('STDOUT: '+l.replace('\n', ''))
+            for l in lines_stderr:
+                this_result.append('STDERR: '+l.replace('\n', ''))
 
-        TESTRESULTS.append(this_result)
-
+            TESTRESULTS.append(this_result)
+        else:
+            TESTRESULTS.append('unittests skipped')
+        
         #  #]
     if DO_SETUP_BUILD_TESTS:
         #  #[ build using the setup tool and check the result
