@@ -147,10 +147,10 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
                 this_result.append('STDOUT: '+l.replace('\n', ''))
             for l in lines_stderr:
                 this_result.append('STDERR: '+l.replace('\n', ''))
-
-            TESTRESULTS.append(this_result)
         else:
-            TESTRESULTS.append('unittests skipped')
+            this_result.append('unittests skipped')
+            
+        TESTRESULTS.append(this_result)
         
         #  #]
     if DO_SETUP_BUILD_TESTS:

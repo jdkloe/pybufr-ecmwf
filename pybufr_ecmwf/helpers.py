@@ -31,7 +31,7 @@ def get_and_set_the_module_path(syspath):
     else:
         errtxt = 'could not find ecmwfbufr*.so; '+\
                  'the interface seems not yet build!'
-        raise InterfaceBuildError(errtxt)
+        raise RuntimeError(errtxt)
 
     abs_module_path = os.path.abspath(module_path)
     # print 'appending path: ', abs_module_path

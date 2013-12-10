@@ -45,7 +45,6 @@ import os, sys, shutil    # operating system functions
 import unittest   # import the unittest functionality
 import subprocess # support running additional executables
 
-# from build_interface import InterfaceBuildError # currently not used
 from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
 
 DUMMY_SYS_PATH = sys.path[:] # provide a copy
