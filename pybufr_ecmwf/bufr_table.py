@@ -675,6 +675,7 @@ class BufrTable:
         #  #]
         #  #[ do the actual expansion
         expanded_descriptor_list = []
+        delayed_repl_present = False
         num_descr_to_skip = 0
         for (i, descr) in enumerate(normalised_descriptor_list):
 
@@ -694,13 +695,16 @@ class BufrTable:
                 if self.verbose:
                     print 'adding expanded version of: %6.6i' % \
                           descr.reference
-                tmp_list = self.expand_descriptor_list(\
-                                self.table_d[descr.reference].descriptor_list)
+                tmp_list, tmp_del_repl_present = \
+                          self.expand_descriptor_list(\
+                               self.table_d[descr.reference].descriptor_list)
+                if tmp_del_repl_present:
+                    delayed_repl_present = True
                 if tmp_list:
                     expanded_descriptor_list.extend(tmp_list)
                 else:
                     # this exception occurs in case of delayed replication
-                    return None
+                    return None, True
                 if self.verbose:
                     print 'done expanding: %6.6i' % \
                           descr.reference
@@ -722,6 +726,14 @@ class BufrTable:
                 replication_count = yyy
                 num_descr_to_skip = xx
 
+                # note that i points to the replication operator
+                descr_list_to_be_replicated = \
+                      normalised_descriptor_list[i+1:i+1+xx]
+                if self.verbose:
+                    print 'descr_list_to_be_replicated = ', \
+                          ';'.join(str(s.reference) for s
+                                   in descr_list_to_be_replicated)
+                
                 if yyy == 0:
                     # delayed replication is a problem since we don't
                     # know the actual replication count untill section 4
@@ -730,36 +742,34 @@ class BufrTable:
                     # run if only sections 0-3 are unpacked,
                     # so we have no choice but to leave the delayed
                     # replication unhandled here
-                    if self.verbose:
-                        print 'Sorry, expanding delayed replications is not'
-                        print 'possible based on a descriptor list alone.'
-                        print 'expand_descriptor_list failed ...'
-                    return None
-                    
+                    #if self.verbose:
+                    #    print 'Sorry, expanding delayed replications is not'
+                    #    print 'possible based on a descriptor list alone.'
+                    #    print 'expand_descriptor_list failed ...'
+                    #return None, True
+                    tmp_list, tmp_del_repl_present = \
+                       self.expand_descriptor_list(descr_list_to_be_replicated)
+                    expanded_descriptor_list.append(tmp_list)
+                    delayed_repl_present = True
 
-                # note that i points to the replication operator
-                descr_list_to_be_replicated = \
-                      normalised_descriptor_list[i+1:i+1+xx]
-                if self.verbose:
-                    print 'descr_list_to_be_replicated = ', \
-                          ';'.join(str(s.reference) for s
-                                   in descr_list_to_be_replicated)
-                # do the replication
-                for j in range(yyy):
-                    for repl_descr in descr_list_to_be_replicated:
-                        repl_descr_f_val = int(repl_descr.reference/100000.)
-                        if repl_descr_f_val == 3:
-                            if self.verbose:
-                                print ('%i: adding expanded version '+\
-                                      'of: %6.6i') % \
-                                      (j, repl_descr.reference)
-                            expanded_descriptor_list.extend(repl_descr.expand())
-                        else:
-                            if self.verbose:
-                                print '%i: adding copy of: %6.6i' % \
-                                      (j, repl_descr.reference)
-                            expanded_descriptor_list.\
-                                     append(repl_descr.reference)
+                else:
+                    # do the replication
+                    for j in range(yyy):
+                        for repl_descr in descr_list_to_be_replicated:
+                            repl_descr_f_val = int(repl_descr.reference/100000.)
+                            if repl_descr_f_val == 3:
+                                if self.verbose:
+                                    print ('%i: adding expanded version '+\
+                                           'of: %6.6i') % \
+                                           (j, repl_descr.reference)
+                                expanded_descriptor_list.\
+                                         extend(repl_descr.expand())
+                            else:
+                                if self.verbose:
+                                    print '%i: adding copy of: %6.6i' % \
+                                          (j, repl_descr.reference)
+                                expanded_descriptor_list.\
+                                         append(repl_descr.reference)
                 if self.verbose:
                     print 'done handling replication operator: %6.6i' % \
                           descr.reference
@@ -768,7 +778,7 @@ class BufrTable:
                     print 'adding: %6.6i' % descr.reference
                 expanded_descriptor_list.append(descr.reference)
         #  #]
-        return expanded_descriptor_list
+        return expanded_descriptor_list, delayed_repl_present
         #  #]    
     def set_bufr_tables_dir(self, tables_dir):
         #  #[

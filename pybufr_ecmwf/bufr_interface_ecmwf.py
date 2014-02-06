@@ -1336,9 +1336,15 @@ class BUFRInterfaceECMWF:
         bt.load(self.table_b_file_to_use)
         bt.load(self.table_d_file_to_use)
 
-        self.py_expanded_descr_list = \
-             bt.expand_descriptor_list(self.py_unexp_descr_list)
-        
+        exp_descr_list, delayed_repl_present = \
+                        bt.expand_descriptor_list(self.py_unexp_descr_list)
+
+        if delayed_repl_present:
+            self.py_expanded_descr_list = []
+        else:
+            self.py_expanded_descr_list = exp_descr_list
+
+            
         #for descr in 
         #    if descr[0]=='3':
         #        # print 'expanding: ',descr
@@ -1354,7 +1360,18 @@ class BUFRInterfaceECMWF:
         # print 'self.py_expanded_descr_list: ',self.py_expanded_descr_list
         # print 'with length: ',len(self.py_expanded_descr_list)
         #  #]
-    def fill_descriptor_list(self):
+    def derive_delayed_repl_factors(self):
+        #  #[
+        select = np.where(self.ktdexp != 0)
+        ktdexp = list(self.ktdexp[select])
+        ndr = ktdexp.count(BufrTemplate.Delayed_Descr_Repl_Factor)
+
+        select = np.where(self.ktdexp == BufrTemplate.Delayed_Descr_Repl_Factor)
+        delayed_repl_data = self.values[select]
+        # print 'delayed_repl_data = ', delayed_repl_data
+        return delayed_repl_data
+        #  #]
+    def fill_descriptor_list(self, nr_of_expanded_descriptors=None):
         #  #[ fills both the normal and expanded descriptor lists
         """
         fill the normal and expanded descriptor lists (defines the
@@ -1376,7 +1393,10 @@ class BUFRInterfaceECMWF:
         # or bufrex have been called previously on the same bufr message.....
 
         actual_nr_of_descriptors = len(self.py_unexp_descr_list)
-        actual_nr_of_expanded_descriptors = len(self.py_expanded_descr_list)
+        if nr_of_expanded_descriptors:
+            actual_nr_of_expanded_descriptors = nr_of_expanded_descriptors
+        else:
+            actual_nr_of_expanded_descriptors = len(self.py_expanded_descr_list)
 
         # arrays to hold the descriptors
         self.ktdlen = 0 # will hold nr of descriptors
@@ -1572,6 +1592,24 @@ class BUFRInterfaceECMWF:
         self.sections012_decoded = True
         self.sections0123_decoded = True
         #  #]
+    def fill_delayed_repl_data(self, del_repl_max_nr_of_repeats_list):
+        #  #[ define and fill the list of replication factors
+        self.kdata = np.zeros(self.nr_subsets*
+                              len(del_repl_max_nr_of_repeats_list),
+                              dtype=np.int)
+        #                      nr_of_delayed_repl_factors, dtype=np.int)
+        i = 0
+        for subset in range(self.nr_subsets):
+            # Warning: just set the whole array to the maximum you wish to have.
+            # Letting this number vary seems not to work with the current
+            # ECMWF library. It will allways just look at the first element
+            # in the kdata array. (or do I misunderstand the BUFR format here?)
+            for max_repeats in del_repl_max_nr_of_repeats_list:
+                self.kdata[i] = max_repeats
+                i += 1
+                
+        # print "delayed replication factors: ", self.kdata
+        #  #]
     def register_and_expand_descriptors(self, BT):
         #  #[ delayed replication works only for encoding
         """
@@ -1616,30 +1654,18 @@ class BUFRInterfaceECMWF:
             print "------------------------"
 
         # define and fill the list of replication factors
-        self.kdata = np.zeros(self.nr_subsets*
-                              BT.nr_of_delayed_repl_factors, dtype=np.int)
-        i = 0
-        for subset in range(self.nr_subsets):
-            # Warning: just set the whole array to the maximum you wish to have.
-            # Letting this number vary seems not to work with the current
-            # ECMWF library. It will allways just look at the first element
-            # in the kdata array. (or do I misunderstand the BUFR format here?)
-            for max_repeats in BT.del_repl_max_nr_of_repeats_list:
-                self.kdata[i] = max_repeats
-                i += 1
-                
-        print "delayed replication factors: ", self.kdata
-
+        self.fill_delayed_repl_data(BT.del_repl_max_nr_of_repeats_list)
+        
         self.store_fortran_stdout()
-        ecmwfbufr.buxdes(iprint,
-                         self.ksec1,
-                         self.ktdlst,
-                         self.kdata,
-                         self.ktdexl,
-                         self.ktdexp,
-                         self.cnames,
-                         self.cunits,
-                         kerr)
+        ecmwfbufr.buxdes(iprint,      # input
+                         self.ksec1,  # input
+                         self.ktdlst, # input
+                         self.kdata,  # input
+                         self.ktdexl, # output
+                         self.ktdexp, # output
+                         self.cnames, # output
+                         self.cunits, # output
+                         kerr)        # output
         lines = self.get_fortran_stdout()
         self.display_fortran_stdout(lines)
         if (kerr != 0):
@@ -1687,7 +1713,7 @@ class BUFRInterfaceECMWF:
         # allocate space for decoding
         # note: float64 is the default, but it doesn't hurt to make it explicit
         #self.values = np.zeros(      self.kvals, dtype = np.float64)
-        self.cvals  = np.zeros((self.kvals, 80), dtype = '|S1')
+        #self.cvals  = np.zeros((self.kvals, 80), dtype = '|S1')
 
         # define the output buffer
         num_bytes = 5000
