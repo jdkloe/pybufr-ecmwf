@@ -13,7 +13,6 @@ The current list is:  [ 48001  48002 348001]
 ------------------------
  printing BUFR template 
 ------------------------
-delayed replication factors:  []
 ktdlst =  [ 48001  48002 348001]
 ktdexp =  [48001 48002 48001 48002]
 exp_descr_list_length =  4

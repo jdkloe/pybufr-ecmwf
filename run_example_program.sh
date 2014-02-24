@@ -3,9 +3,24 @@
 PYTHONPATH='./':$PYTHONPATH
 export PYTHONPATH
 
+# safety check
+if test -e 'pybufr_ecmwf/ecmwfbufr.so'; then
+   echo 'found compiled interface module: pybufr_ecmwf/ecmwfbufr.so'
+else
+   echo 'could not find compiled interface module: pybufr_ecmwf/ecmwfbufr.so'
+   echo ''
+   echo 'This script only runs when the software is build with the'
+   echo 'manual build install method'.
+   echo 'Before using this test script you need to manually build this'
+   echo 'software first using this method:'
+   echo '    python ./build_interface.py'
+   echo ''
+   exit 1
+fi
+
 # some test input BUFR files
-TESTINPUTFILE='example_programs/testdata/Testfile.BUFR'
-CORRUPTEDTESTINPUTFILE='example_programs/testdata/Testfile3CorruptedMsgs.BUFR'
+TESTINPUTFILE='test/testdata/Testfile.BUFR'
+CORRUPTEDTESTINPUTFILE='test/testdata/Testfile3CorruptedMsgs.BUFR'
 
 # NOTE: this testfile: Testfile3CorruptedMsgs.BUFR holds 3 copies of 
 # Testfile.BUFR catted together, and was especially modified using hexedit 
@@ -18,9 +33,9 @@ CORRUPTEDTESTINPUTFILE='example_programs/testdata/Testfile3CorruptedMsgs.BUFR'
 # example_for_using_pb_routines.py has nothing to do with this file corruption
 
 # some output BUFR filenames
-TESTOUTPUTFILE1='example_programs/testdata/Testoutputfile1.BUFR'
-TESTOUTPUTFILE2='example_programs/testdata/Testoutputfile2.BUFR'
-TESTOUTPUTFILE3='example_programs/testdata/Testoutputfile3.BUFR'
+TESTOUTPUTFILE1='test/testdata/Testoutputfile1.BUFR'
+TESTOUTPUTFILE2='test/testdata/Testoutputfile2.BUFR'
+TESTOUTPUTFILE3='test/testdata/Testoutputfile3.BUFR'
 
 # some BUFR tables to be verified
 BTABLE='pybufr_ecmwf/ecmwf_bufrtables/B_default.TXT'
