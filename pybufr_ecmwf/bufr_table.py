@@ -380,21 +380,46 @@ class SpecialCommand(Descriptor): # F=1
     #  #]
 
 # is this identical to SpecialCommand ?x
+# see also the F=1 case in the expand method of CompositeDescriptor
 class Replicator(Descriptor):
     #  #[
     """
     a base class for replicators
     """
-    def __init__(self):
-        pass
+    def __init__(self,repeats,descriptor_list):
+        #  #[ init
+        self.repeats = repeats
+        self.descriptor_list = descriptor_list
+        #  #]
     def checkinit(self):
-        """
-        a function to be called when an instance is created for a
-        replication command that had been instantiated before.
-        """
+        # checkinit is probably not needed for this type
         pass
-    #  ==>replication-count
-    #  ==>list-of-descriptor-objects = []
+    def __str__(self):
+        #  #[
+        txt = "{} repeats of [{}]".format(self.repeats,
+                                          ";".join(str(d.reference) for d
+                                                   in self.descriptor_list))
+        return txt
+        #  #]
+    def __getattr__(self, attr):
+        #  #[ delegate to compose_reference
+        if attr=='reference':
+            return self.compose_reference()
+        else:
+            raise AttributeError
+        #  #]
+    def compose_reference(self):
+        #  #[ 
+        # f = type = 1 for replication
+        # xx = num. descr. to replicate
+        # yyy = repl. count
+        f = '1'
+        xx = '{:02}'.format(len(self.descriptor_list))
+        yyy = '{:03}'.format(self.repeats)
+        return f+xx+yyy
+        #return f+xx+yyy+';{}'.format(";".join(str(d.reference) for d
+        #                                      in self.descriptor_list))
+        #  #]
     #  #]
 
 class DelayedReplicator(Descriptor):
@@ -420,12 +445,24 @@ class CompositeDescriptor(Descriptor): #[table D entry]
     """
     a base class for composite descriptors (table D entries)
     """
-    def __init__(self, reference, descriptor_list, comment, parent):
+    def __init__(self, reference, descriptor_list, comment, bufr_table_set):
         #  #[
         self.reference = reference
-        self.descriptor_list = descriptor_list
+
+        self.descriptor_list = []
+        for d in descriptor_list:
+            if isinstance(d, DelayedReplicator):
+                raise NotImplementedError('adding a DelayedReplicator')
+            elif isinstance(d, Replicator):
+                self.descriptor_list.append(d)
+                self.descriptor_list.extend(d.descriptor_list)
+            else:
+                self.descriptor_list.append(d)
+            
         self.comment = comment
-        self.parent = parent
+        # set of BUFR tables to which this D descriptor belongs
+        # (essential information to enable unpacking this D descriptor!)
+        self.bufr_table_set = bufr_table_set
         #  #]
     def __str__(self):
         #  #[
@@ -441,7 +478,7 @@ class CompositeDescriptor(Descriptor): #[table D entry]
         """
         expanded_descriptor_list = []
         num_descr_to_skip = 0
-        if self.parent.verbose:
+        if self.bufr_table_set.verbose:
             print '==> expanding: %6.6i' % self.reference
         for (i, descr) in enumerate(self.descriptor_list):
 
@@ -451,26 +488,26 @@ class CompositeDescriptor(Descriptor): #[table D entry]
             # skipped when continuing the loop
             if num_descr_to_skip > 0:
                 num_descr_to_skip -= 1
-                if self.parent.verbose:
+                if self.bufr_table_set.verbose:
                     print 'skipping: %6.6i' % descr.reference
                 continue
             
             f_val = int(descr.reference/100000.)
             if f_val == 3:
                 # this is another table D entry, so expand recursively
-                if self.parent.verbose:
+                if self.bufr_table_set.verbose:
                     print 'adding expanded version of: %6.6i' % \
                           descr.reference
-                tmp_list = self.parent.table_d[descr.reference].expand()
+                tmp_list = self.bufr_table_set.table_d[descr.reference].expand()
                 expanded_descriptor_list.extend(tmp_list)
             elif f_val == 1:
                 # this is a replication operator
-                if self.parent.verbose:
+                if self.bufr_table_set.verbose:
                     print 'handling replication operator: %6.6i' % \
                           descr.reference
                 xx  = int((descr.reference-100000.)/1000)
                 yyy = (descr.reference-100000-1000*xx)
-                if self.parent.verbose:
+                if self.bufr_table_set.verbose:
                     print 'xx = ', xx, ' = num. descr. to replicate'
                     print 'yyy = ', yyy, ' = repl. count'
 
@@ -485,7 +522,7 @@ class CompositeDescriptor(Descriptor): #[table D entry]
 
                 # note that i points to the replication operator
                 descr_list_to_be_replicated = self.descriptor_list[i+1:i+1+xx]
-                if self.parent.verbose:
+                if self.bufr_table_set.verbose:
                     print 'descr_list_to_be_replicated = ', \
                           ';'.join(str(s.reference) for s
                                    in descr_list_to_be_replicated)
@@ -494,13 +531,13 @@ class CompositeDescriptor(Descriptor): #[table D entry]
                     for repl_descr in descr_list_to_be_replicated:
                         repl_descr_f_val = int(repl_descr.reference/100000.)
                         if repl_descr_f_val == 3:
-                            if self.parent.verbose:
+                            if self.bufr_table_set.verbose:
                                 print ('%i: adding expanded version '+\
                                        'of: %6.6i') % \
                                        (j, repl_descr.reference)
                             expanded_descriptor_list.extend(repl_descr.expand())
                         else:
-                            if self.parent.verbose:
+                            if self.bufr_table_set.verbose:
                                 print '%i: adding copy of: %6.6i' % \
                                       (j, repl_descr.reference)
                             expanded_descriptor_list.\
@@ -510,13 +547,13 @@ class CompositeDescriptor(Descriptor): #[table D entry]
                 # sys.exit(1)
                 
             else:
-                if self.parent.verbose:
+                if self.bufr_table_set.verbose:
                     print 'adding: %6.6i' % descr.reference
                 expanded_descriptor_list.append(descr.reference)
                 
         return expanded_descriptor_list
         #  #]    
-    def checkinit(self, reference, descriptor_list, comment, parent):
+    def checkinit(self, reference, descriptor_list, comment, bufr_table_set):
         #  #[
 
         """
@@ -531,7 +568,7 @@ class CompositeDescriptor(Descriptor): #[table D entry]
             assert(self.reference       == reference)
             assert(self.descriptor_list == descriptor_list)
             assert(self.comment         == comment)
-            assert(self.parent          == parent)
+            assert(self.bufr_table_set  == bufr_table_set)
         except:
             print 'assertion failed in CompositeDescriptor.checkinit'
             print 'in module pybufr_ecmwf.bufr_table'
@@ -543,8 +580,8 @@ class CompositeDescriptor(Descriptor): #[table D entry]
             print 'descriptor_list      = ', str(descriptor_list)
             print 'self.comment = ', str(self.comment)
             print 'comment      = ', str(comment)
-            print 'self.parent = ', str(self.parent)
-            print 'parent      = ', str(parent)
+            print 'self.bufr_table_set = ', str(self.bufr_table_set)
+            print 'bufr_table_set      = ', str(bufr_table_set)
             print
             print '==>A possibly cause for this problem could be that'
             print '==>you tried to load a BUFR D-table twice into the same'

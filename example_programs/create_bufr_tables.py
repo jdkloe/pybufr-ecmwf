@@ -60,9 +60,9 @@ def create_bufr_tables():
     reference       = '348001'
     descriptor_list = [descr_048001, descr_048002]
     comment         = 'a small test D entry' # not written to file
-    parent          = bt1
+    bufr_table_set  = bt1
     descr_348001 = CompositeDescriptor(reference, descriptor_list,
-                                       comment, parent)
+                                       comment, bufr_table_set)
 
     bt1.add_to_D_table(descr_348001)
 
@@ -77,7 +77,7 @@ def create_bufr_tables():
     print '='*50
 
     # define the table name without preceding 'B' or 'D' character
-    # (which will be added the the below write method)
+    # (which will be prepended by the below write method)
     table_name = '_my_test_BUFR_table.txt'
     bt1.write_tables(table_name)
     #  #]
