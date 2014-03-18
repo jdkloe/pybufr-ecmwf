@@ -11,7 +11,8 @@ Therefore you need to install a 3rd party numpy rpm/deb package or install
 numpy from source first, before you can use the python3 version of this
 pybufr_ecmwf module. JK, 22-Apr-2011.
 """
-
+from __future__ import (absolute_import, division,
+                        print_function) # , unicode_literals)
 import os, sys
 import subprocess  # support running additional executables
 
@@ -46,10 +47,10 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         env['PYTHONPATH'] = module_path
 
     if (verbose):
-        print "Executing command: ", cmd
+        print("Executing command: ", cmd)
 
     if (catch_output):
-        # print 'env[PYTHONPATH] = ',env['PYTHONPATH']
+        # print('env[PYTHONPATH] = ',env['PYTHONPATH'])
         subpr = subprocess.Popen(cmd,
                                  shell  = True,
                                  env    = env,
@@ -62,8 +63,8 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         lines_stdout = subpr.stdout.readlines()
         lines_stderr = subpr.stderr.readlines()
 
-        #print "lines_stdout: ", lines_stdout
-        #print "lines_stderr: ", lines_stderr
+        #print("lines_stdout: ", lines_stdout)
+        #print("lines_stderr: ", lines_stderr)
 
         return (lines_stdout, lines_stderr)
 
@@ -97,41 +98,41 @@ def port_2to3():
         (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
 
         if len(lines_stderr)>0:
-            print 'sorry, the '+tool_to_check+' tool seems not installed'
-            print 'num lines stderr/stdout = ', \
-                  len(lines_stderr), len(lines_stdout)
+            print('sorry, the '+tool_to_check+' tool seems not installed')
+            print('num lines stderr/stdout = ', \
+                  len(lines_stderr), len(lines_stdout))
             sys.exit(1)
         else:
-            print 'tool found: ', tool_to_check
+            print('tool found: ', tool_to_check)
 
     # create the testdir
     if os.path.exists(PY3_CONVERTED_PATH):
-        print 'ERROR: testdir: ', PY3_CONVERTED_PATH, ' already exists'
-        print 'please first run the clean.py tool before trying to run'
-        print 'this conversion script'
+        print('ERROR: testdir: ', PY3_CONVERTED_PATH, ' already exists')
+        print('please first run the clean.py tool before trying to run')
+        print('this conversion script')
         sys.exit(1)
     os.mkdir(PY3_CONVERTED_PATH)
 
     # clone the repository to the testdir
-    print 'cloning the repository'
+    print('cloning the repository')
     cmd = 'hg clone . '+PY3_CONVERTED_PATH
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
     if len(lines_stderr)>0:
-        print 'sorry, failed command: ', cmd
+        print('sorry, failed command: ', cmd)
         for line in lines_stderr:
-            print line,
+            print(line, end='')
         sys.exit(1)
 
     # do the actual conversion
-    print 'converting sources to python3'
+    print('converting sources to python3')
     cmd = '2to3 -w '+PY3_CONVERTED_PATH
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
     # this next check is not usefull, since the 2to3 tool issues
     # several messages to stderr even if all runs well
     # if len(lines_stderr)>0:
-    #    print 'sorry, failed command: ', cmd
+    #    print('sorry, failed command: ', cmd)
     #    for line in lines_stderr:
-    #        print line,
+    #        print(line, end='')
     #    sys.exit(1)
 
     # walk along all python files and fix the shebang/hashbang line
@@ -143,7 +144,7 @@ def port_2to3():
             ext = os.path.splitext(filename)[1]
             if ext == '.py':
                 path_and_file = os.path.join(dirpath, filename)
-                print 'fixing: ', path_and_file
+                print('fixing: ', path_and_file)
 
                 fdb = open(path_and_file) #, 'rt')
                 lines = fdb.readlines()
@@ -152,7 +153,7 @@ def port_2to3():
                 fda = open(path_and_file, 'w')
                 for line in lines:
                     if '#!' in line:
-                        print 'shebang line found: ', line.replace('\n','')
+                        print('shebang line found: ', line.replace('\n',''))
                         fda.write('#!/usr/bin/env python3\n')
                     else:
                         fda.write(line)
@@ -164,7 +165,7 @@ def port_2to3():
           'hg commit -m "automatic commit by the port_2to3.py tool"'
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
 
-    print 'conversion done'
+    print('conversion done')
     #  #]
 
 # run the conversion tool

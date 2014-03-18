@@ -40,6 +40,8 @@ are planned as well.
 #
 #  #]
 #  #[ imported modules
+from __future__ import (absolute_import, division,
+                        print_function) # , unicode_literals)
 
 import os, sys, shutil    # operating system functions
 import unittest   # import the unittest functionality
@@ -57,14 +59,14 @@ DUMMY_SYS_PATH = sys.path[:] # provide a copy
 # and create a symlink to SWROOT/build/lib.linux-x86_64-2.7/pybufr_ecmwf/
 PYBUFR_ECMWF_MODULE_WAS_RENAMED = False
 if 'build/lib' in MY_MODULE_PATH:
-    print 'renaming pybufr_ecmwf to pybufr_ecmwf.renamed'
+    print('renaming pybufr_ecmwf to pybufr_ecmwf.renamed')
     shutil.move('pybufr_ecmwf', 'pybufr_ecmwf.renamed')
-    print 'creating symlink pybufr_ecmwf'
+    print('creating symlink pybufr_ecmwf')
     os.symlink(os.path.join(MY_MODULE_PATH, 'pybufr_ecmwf'), # source
                'pybufr_ecmwf') # destination
     PYBUFR_ECMWF_MODULE_WAS_RENAMED = True
 #else:
-#    print 'MY_MODULE_PATH = ', MY_MODULE_PATH
+#    print('MY_MODULE_PATH = ', MY_MODULE_PATH)
 
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
@@ -101,9 +103,9 @@ def call_cmd(cmd):
     else:
         env['PYTHONPATH'] = MY_MODULE_PATH
 
-    # print 'TESTJOS: env[PYTHONPATH] = ',env['PYTHONPATH']
-    # print 'TESTJOS: env[BUFR_TABLES] = ',env.get('BUFR_TABLES','undefined')
-    # print 'TESTJOS: cmd = ',cmd
+    # print('TESTJOS: env[PYTHONPATH] = ',env['PYTHONPATH'])
+    # print('TESTJOS: env[BUFR_TABLES] = ',env.get('BUFR_TABLES','undefined'))
+    # print('TESTJOS: cmd = ',cmd)
 
     # remove the env setting to
     # /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES/
@@ -152,16 +154,16 @@ def call_cmd_and_verify_output(cmd):
     success = True
 
     #  #[ some old notes
-    #print "__name__ = ", __name__
-    #print "__file__ = ", __file__
-    #print "self.__class__.__name__ = ", self.__class__.__name__
-    #print "func_filename = ", sys._getframe().f_code.co_filename
-    #print "func_name = ", sys._getframe().f_code.co_name
-    #print "dir(frame) = ", dir(sys._getframe())
-    #print "dir(f_code) = ", dir(sys._getframe().f_code)
-    #print "0:callers name = ", sys._getframe(0).f_code.co_name
+    #print("__name__ = ", __name__)
+    #print("__file__ = ", __file__)
+    #print("self.__class__.__name__ = ", self.__class__.__name__)
+    #print("func_filename = ", sys._getframe().f_code.co_filename)
+    #print("func_name = ", sys._getframe().f_code.co_name)
+    #print("dir(frame) = ", dir(sys._getframe()))
+    #print("dir(f_code) = ", dir(sys._getframe().f_code))
+    #print("0:callers name = ", sys._getframe(0).f_code.co_name)
     #
-    #print "2:callers name = ", sys._getframe(2).f_code.co_name
+    #print("2:callers name = ", sys._getframe(2).f_code.co_name)
     #sys.exit(1)
     # see: http://code.activestate.com/recipes/66062/
     # for more examples on using sys._getframe()
@@ -229,28 +231,28 @@ def call_cmd_and_verify_output(cmd):
 
         # compare the actual and expected outputs
         if not (lines_stdout == expected_lines_stdout):
-            print "stdout differs from what was expected!!!"
-            print "to find out what happended execute this diff command:"
-            print "xdiff ", actual_stdout, ' ', expected_stdout
-            # for l in lines_stdout:          print 'output:      ['+l+']'
-            # for l in expected_lines_stdout: print 'exp. output: ['+l+']'
+            print("stdout differs from what was expected!!!")
+            print("to find out what happended execute this diff command:")
+            print("xdiff ", actual_stdout, ' ', expected_stdout)
+            # for l in lines_stdout:          print('output:      ['+l+']')
+            # for l in expected_lines_stdout: print('exp. output: ['+l+']')
             success = False
 
         if not (lines_stderr == expected_lines_stderr):
-            print "stderr differs from what was expected!!!"
-            print "to find out what happended execute this diff command:"
-            print "xdiff ", actual_stderr, ' ', expected_stderr
+            print("stderr differs from what was expected!!!")
+            print("to find out what happended execute this diff command:")
+            print("xdiff ", actual_stderr, ' ', expected_stderr)
             success = False
     except IOError:
-        print "ERROR: expected output not found; probably because"
-        print "you just defined a new unittest case."
-        print "Missing filenames:"
+        print("ERROR: expected output not found; probably because")
+        print("you just defined a new unittest case.")
+        print("Missing filenames:")
         if not os.path.exists(expected_stdout):
-            print "expected_stdout: ", expected_stdout
-            print "(actual output available in: ", actual_stdout, ")"
+            print("expected_stdout: ", expected_stdout)
+            print("(actual output available in: ", actual_stdout, ")")
         if not os.path.exists(expected_stderr):
-            print "expected_stderr: ", expected_stderr
-            print "(actual output available in: ", actual_stderr, ")"
+            print("expected_stderr: ", expected_stderr)
+            print("(actual output available in: ", actual_stderr, ")")
         success = False
 
     return success
@@ -259,7 +261,7 @@ def call_cmd_and_verify_output(cmd):
     # pylint: enable-msg=R0914
     #  #]
 
-print "Starting test program:"
+print("Starting test program:")
 
 class CheckRawECMWFBUFR(unittest.TestCase):
     #  #[ 3 tests
@@ -309,20 +311,20 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         #
         #    # compare the actual and expected outputs
         #    if not (lines_stdout == expected_lines_stdout):
-        #        print "stdout differs from what was expected!!!"
-        #        print "to find out what happended execute this diff command:"
+        #        print("stdout differs from what was expected!!!")
+        #        print("to find out what happended execute this diff command:")
         #        cmd = "xdiff "+actual_stdout+' '+expected_stdout
-        #        print cmd
+        #        print(cmd)
         #        # os.system(cmd)
         #        success = False
         #
         #except IOError:
-        #    print "ERROR: expected output not found; probably because"
-        #    print "you just defined a new unittest case."
-        #    print "Missing filename:"
+        #    print("ERROR: expected output not found; probably because")
+        #    print("you just defined a new unittest case.")
+        #    print("Missing filename:")
         #    if not os.path.exists(expected_stdout):
-        #        print "expected_stdout: ", expected_stdout
-        #        print "(actual output available in: ", actual_stdout, ")"
+        #        print("expected_stdout: ", expected_stdout)
+        #        print("(actual output available in: ", actual_stdout, ")")
         #    success = False
         #
         #self.assertEqual(success, True)
@@ -456,7 +458,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         elif os.path.exists(path2):
             ecmwf_bufr_tables_dir = path2
         else:
-            print "Error: could not find BUFR tables directory"
+            print("Error: could not find BUFR tables directory")
             raise IOError
 
         # make sure the path is absolute, otherwise the ECMWF library
@@ -472,8 +474,8 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
                              edition_number,
                              master_table_number)
 
-        # print "tabel name B: ", btable
-        # print "tabel name D: ", dtable
+        # print("tabel name B: ", btable)
+        # print("tabel name D: ", dtable)
         self.assertEqual(btable, 'B0000000000210000001.TXT')
         self.assertEqual(dtable, 'D0000000000210000001.TXT')
         #  #]
@@ -787,7 +789,7 @@ class CheckCustomTables(unittest.TestCase):
     #pylint: disable-msg=C0103
     def tearDown(self):
         # cleanup after running the tests from this class
-        # print 'tearDown running'
+        # print('tearDown running')
         os.system('\\rm -rf tmp_BUFR_TABLES')
         os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/'+\
                   'tmp_BUFR_TABLES')
@@ -957,7 +959,7 @@ os.system('\\rm -rf tmp_BUFR_TABLES')
 os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
 
 # this just runs all tests
-print "Running unit tests:"
+print("Running unit tests:")
 unittest.main(exit=False)
 # unittest.main(verbosity=2)
 
@@ -969,9 +971,9 @@ unittest.main(exit=False)
 if PYBUFR_ECMWF_MODULE_WAS_RENAMED:
     # safety check
     if os.path.islink('pybufr_ecmwf'):
-        print 'removing symlink pybufr_ecmwf'
+        print('removing symlink pybufr_ecmwf')
         os.remove('pybufr_ecmwf')
-        print 'renaming pybufr_ecmwf.renamed to pybufr_ecmwf'
+        print('renaming pybufr_ecmwf.renamed to pybufr_ecmwf')
         shutil.move('pybufr_ecmwf.renamed', 'pybufr_ecmwf')
 
 # still todo:
@@ -993,28 +995,28 @@ if PYBUFR_ECMWF_MODULE_WAS_RENAMED:
 #################################################
 #
 # bf = BUFRFile(filename,'r')
-# print bf.get_num_bufr_msgs()
+# print(bf.get_num_bufr_msgs())
 # ==> 3
-# print len(bf)
+# print(len(bf))
 # ==> 3
 #
 # for msg in bf:
-#    print msg
+#    print(msg)
 #    ==> BUFR msg holding 361 subsets of 44 descriptors
-#    print len(msg)
+#    print(len(msg))
 #    ==>361
 #    for subset in msg:
-#      print subset
+#      print(subset)
 #      ==>BUFR MSG SUBSET holding 44 descriptors
-#      print len(subset)
+#      print(len(subset))
 #      ==>44
 #      for item in subset:
 #         if item['name'] == 'LATITUDE (COARSE ACCURACY)':
-#            print item.value
+#            print(item.value)
 #            ==>-2.91
 #
 #    x = msg.get_values('LATITUDE (COARSE ACCURACY)')
-#    print x
+#    print(x)
 #    array([1.21,1.43,1.66,...])
 #
 #

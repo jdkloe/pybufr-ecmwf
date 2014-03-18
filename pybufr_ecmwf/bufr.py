@@ -26,6 +26,8 @@ by providing several helper classes.
 # License: GPL v2.
 #  #]
 #  #[ imported modules
+from __future__ import (absolute_import, division,
+                        print_function) #, unicode_literals)
 import sys # os
 import numpy   # array functionality
 from .raw_bufr_file import RawBUFRFile
@@ -141,8 +143,8 @@ class BUFRReader:
         """
         (raw_msg, section_sizes, section_start_locations) = \
                  self.rbf.get_next_raw_bufr_msg()
-        # print '(raw_msg, section_sizes, section_start_locations) = ',\
-        #       (raw_msg, section_sizes, section_start_locations)
+        # print('(raw_msg, section_sizes, section_start_locations) = ',\
+        #       (raw_msg, section_sizes, section_start_locations))
         self.bufr_obj = BUFRInterfaceECMWF(raw_msg,
                                            section_sizes,
                                            section_start_locations)
@@ -202,8 +204,8 @@ class BUFRReader:
         num_elements = self.bufr_obj.get_num_elements()
         result = numpy.zeros([num_subsets, num_elements], dtype=float)
 
-        # print 'DEBUG: num_subsets = ', num_subsets
-        # print 'DEBUG: num_elements = ', num_elements
+        # print('DEBUG: num_subsets = ', num_subsets)
+        # print('DEBUG: num_elements = ', num_elements)
 
         for descr_nr in range(num_elements):
             result[:, descr_nr] = self.bufr_obj.get_values(descr_nr)
@@ -255,7 +257,7 @@ class BUFRReader:
 
 if __name__ == "__main__":
     #  #[ test program
-    print "Starting test program:"
+    print("Starting test program:")
     
     # this is how I think the BUFR module interfacing should look like
     

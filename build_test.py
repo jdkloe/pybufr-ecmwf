@@ -19,6 +19,8 @@ fortran compilers.
 #
 #  #]
 #  #[ imported modules
+from __future__ import (absolute_import, division,
+                        print_function) # , unicode_literals)
 import os, sys, glob
 import subprocess  # support running additional executables
 #  #]
@@ -39,7 +41,7 @@ def run_shell_command(cmd_to_run, sp_env=None):
     """ a wrapper routine around subprocess.Popen intended
     to make it a bit easier to call this functionality.
     """
-    #print "Executing command: ", cmd_to_run
+    #print("Executing command: ", cmd_to_run)
     this_env = sp_env
     if sp_env is None:
         this_env = os.environ
@@ -53,7 +55,7 @@ def run_shell_command(cmd_to_run, sp_env=None):
 #  #]
 #  #[ init
 if not os.path.exists(REPODIR):
-    print 'ERROR: could not find REPODIR: '+REPODIR
+    print('ERROR: could not find REPODIR: '+REPODIR)
     sys.exit(1)
 
 if not os.path.exists(TESTDIR):
@@ -64,14 +66,14 @@ POSSIBLE_FORTRAN_COMPILERS = ['g95', 'gfortran', 'ifort', 'pgf90', 'f90']
 AVAILABLE_POSSIBLE_COMPILERS = []
 for fc in POSSIBLE_FORTRAN_COMPILERS:
     cmd = 'which '+fc
-    # print 'running: ',cmd
+    # print('running: ',cmd)
     (lines_stdout, lines_stderr) = run_shell_command(cmd)
-    # print '(lines_stdout, lines_stderr) = ',(lines_stdout, lines_stderr)
+    # print('(lines_stdout, lines_stderr) = ',(lines_stdout, lines_stderr))
     if len(lines_stderr)==0:
         AVAILABLE_POSSIBLE_COMPILERS.append(fc)
 
-print 'available fortran compilers: ', \
-      ', '.join(fc for fc in AVAILABLE_POSSIBLE_COMPILERS)
+print('available fortran compilers: ', 
+      ', '.join(fc for fc in AVAILABLE_POSSIBLE_COMPILERS))
 #  #]
 TESTRESULTS = []
 for fc in AVAILABLE_POSSIBLE_COMPILERS:
@@ -81,29 +83,29 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         build_dir_name = 'manual_build_'+fc
         temp_build_dir = os.path.join(TESTDIR, build_dir_name)
         if os.path.exists(temp_build_dir):
-            print 'dir: ', temp_build_dir, ' exists; removing it first'
+            print('dir: ', temp_build_dir, ' exists; removing it first')
             cmd = '\\rm -rf '+temp_build_dir
             os.system(cmd)
 
         # not needed, the clone command creates the dir
-        # print 'creating dir: ', temp_build_dir
+        # print('creating dir: ', temp_build_dir)
         # os.mkdir(temp_build_dir)
 
         # -clone the repository
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
-        print "Executing command: ", cmd
+        print("Executing command: ", cmd)
         os.system(cmd)
 
         # step into the test dir
         saved_cwd = os.getcwd()
         os.chdir(temp_build_dir)
 
-        print 'saved_cwd   = ', saved_cwd
-        print 'os.getcwd() = ', os.getcwd()
+        print('saved_cwd   = ', saved_cwd)
+        print('os.getcwd() = ', os.getcwd())
 
         # -build the software
         sys.path.append(os.getcwd())
-        # print 'sys.path = ', sys.path
+        # print('sys.path = ', sys.path)
 
         from build_interface import InstallBUFRInterfaceECMWF
         BI = InstallBUFRInterfaceECMWF(verbose = True,
@@ -159,13 +161,13 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         build_dir_name = 'build_'+fc
         temp_build_dir = os.path.join(TESTDIR, build_dir_name)
         if os.path.exists(temp_build_dir):
-            print 'dir: ', temp_build_dir, ' exists; removing it first'
+            print('dir: ', temp_build_dir, ' exists; removing it first')
             cmd = '\\rm -rf '+temp_build_dir
             os.system(cmd)
 
         # -clone the repository
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
-        print "Executing command: ", cmd
+        print("Executing command: ", cmd)
         os.system(cmd)
 
         # -edit the setup.cfg file to choose the compiler
@@ -233,13 +235,13 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         build_dir_name = 'build_sdist_'+fc
         temp_build_dir = os.path.join(TESTDIR, build_dir_name)
         if os.path.exists(temp_build_dir):
-            print 'dir: ', temp_build_dir, ' exists; removing it first'
+            print('dir: ', temp_build_dir, ' exists; removing it first')
             cmd = '\\rm -rf '+temp_build_dir
             os.system(cmd)
 
         # -clone the repository
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
-        print "Executing command: ", cmd
+        print("Executing command: ", cmd)
         os.system(cmd)
 
         # -edit the setup.cfg file to choose the compiler
@@ -296,7 +298,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         pattern = os.path.join(test_dir, 'pybufr-ecmwf-*')
         unpacked_sdist_path = glob.glob(pattern)[0]
-        # print 'TESTJOS: unpacked_sdist_path = ', unpacked_sdist_path
+        # print('TESTJOS: unpacked_sdist_path = ', unpacked_sdist_path)
 
         # -edit the setup.cfg file to choose the compiler
         #  and to prevent the library download
@@ -353,13 +355,13 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         build_dir_name = 'build_pip_'+fc
         temp_build_dir = os.path.join(TESTDIR, build_dir_name)
         if os.path.exists(temp_build_dir):
-            print 'dir: ', temp_build_dir, ' exists; removing it first'
+            print('dir: ', temp_build_dir, ' exists; removing it first')
             cmd = '\\rm -rf '+temp_build_dir
             os.system(cmd)
 
         # -clone the repository
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
-        print "Executing command: ", cmd
+        print("Executing command: ", cmd)
         os.system(cmd)
 
         # -edit the setup.cfg file to choose the compiler
@@ -421,7 +423,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
                 'rm -rf myenv/']
 
         cmd = ';'.join(c for c in cmds)
-        print 'executing cmd: [{}]'.format(cmd)
+        print('executing cmd: [{}]'.format(cmd))
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
 
         # -verify the output
@@ -444,42 +446,42 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         build_dir_name = 'py3_manual_build_'+fc
         temp_build_dir = os.path.join(TESTDIR, build_dir_name)
         if os.path.exists(temp_build_dir):
-            print 'dir: ', temp_build_dir, ' exists; removing it first'
+            print('dir: ', temp_build_dir, ' exists; removing it first')
             cmd = '\\rm -rf '+temp_build_dir
             os.system(cmd)
 
         # not needed, the clone command creates the dir
-        # print 'creating dir: ', temp_build_dir
+        # print('creating dir: ', temp_build_dir)
         # os.mkdir(temp_build_dir)
 
         # -clone the repository
         cmd = 'cd '+TESTDIR+'; hg clone '+REPODIR+' '+build_dir_name
-        print "Executing command: ", cmd
+        print("Executing command: ", cmd)
         os.system(cmd)
 
         # step into the test dir
         saved_cwd = os.getcwd()
         os.chdir(temp_build_dir)
 
-        print 'temp_build_dir = ', temp_build_dir
-        print 'saved_cwd   = ', saved_cwd
-        print 'os.getcwd() = ', os.getcwd()
+        print('temp_build_dir = ', temp_build_dir)
+        print('saved_cwd   = ', saved_cwd)
+        print('os.getcwd() = ', os.getcwd())
 
         # convert the source code to python3
         cmd = './port_2to3.py'
-        print "Executing command: ", cmd
+        print("Executing command: ", cmd)
         os.system(cmd)
 
         temp_py3_build_dir = 'tmp_2to3_converted_sources'
 
         os.chdir(temp_py3_build_dir)
 
-        print 'temp_py3_build_dir = ', temp_py3_build_dir
-        print 'os.getcwd() = ', os.getcwd()
+        print('temp_py3_build_dir = ', temp_py3_build_dir)
+        print('os.getcwd() = ', os.getcwd())
 
         # -build the software
         sys.path.append(os.getcwd())
-        # print 'sys.path = ', sys.path
+        # print('sys.path = ', sys.path)
 
         # note: this re-import is intentional, since this should be a
         # different copy, then the one used by DO_MANUAL_TESTS,
@@ -580,10 +582,10 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         #  #]
 
-print 50*'='
+print(50*'=')
 for result in TESTRESULTS:
     #  #[ display the results
     for l in result:
-        print l
-    print 50*'='
+        print(l)
+    print(50*'=')
     #  #]

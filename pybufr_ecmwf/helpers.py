@@ -4,6 +4,8 @@
 a module containing helpers to handle sys.path juggling
 and python3 string handling cases
 """
+from __future__ import (absolute_import, division,
+                        print_function) #, unicode_literals)
 
 import os, sys    # operating system functions
 import glob       # support wildcard expansion on filenames
@@ -20,8 +22,8 @@ def get_and_set_the_module_path(syspath):
     possible_so_files_2 = glob.glob(os.path.join('.', 'build', 'lib*',
                                                  'pybufr_ecmwf',
                                                  'ecmwfbufr*.so'))
-    # print 'possible_so_files_1 = ',possible_so_files_1
-    # print 'possible_so_files_2 = ',possible_so_files_2
+    # print('possible_so_files_1 = ',possible_so_files_1)
+    # print('possible_so_files_2 = ',possible_so_files_2)
     # sys.exit(1)
     
     if len(possible_so_files_1)>0:
@@ -34,7 +36,7 @@ def get_and_set_the_module_path(syspath):
         raise RuntimeError(errtxt)
 
     abs_module_path = os.path.abspath(module_path)
-    # print 'appending path: ', abs_module_path
+    # print('appending path: ', abs_module_path)
     #syspath.append(abs_module_path)
     syspath.insert(0,abs_module_path)
     syspath.insert(0,os.path.join(abs_module_path, 'pybufr_ecmwf'))
@@ -46,10 +48,10 @@ def get_and_set_the_module_path(syspath):
             abs_spth = os.path.abspath(spth)
             if abs_spth == os.path.abspath('./'):
                 if spth in syspath:
-                    # print 'removing path: ', spth
+                    # print('removing path: ', spth)
                     syspath.remove(spth)
                 if abs_spth in syspath:
-                    # print 'removing abs_path: ', abs_spth
+                    # print('removing abs_path: ', abs_spth)
                     syspath.remove(abs_spth)
 
     return (syspath, abs_module_path)

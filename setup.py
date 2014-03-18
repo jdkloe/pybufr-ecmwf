@@ -10,6 +10,9 @@ module on your system.
 """
 
 #  #[ imported modules
+from __future__ import (absolute_import, division,
+                        print_function) # , unicode_literals)
+
 import os
 import sys
 from distutils.core import setup, Extension
@@ -97,13 +100,13 @@ class Build(_build):
     def run(self):
         #  #[ modified run (for debugging only)
         # some test prints:
-        print "build: self.user_options = ", self.user_options
-        print "build: self.preferred_fortran_compiler = ", \
-              self.preferred_fortran_compiler
-        print "build: self.preferred_c_compiler = ", \
-              self.preferred_c_compiler
-        print 'build: self.download_library_sources = ', \
-              self.download_library_sources
+        print("build: self.user_options = ", self.user_options)
+        print("build: self.preferred_fortran_compiler = ",
+              self.preferred_fortran_compiler)
+        print("build: self.preferred_c_compiler = ",
+              self.preferred_c_compiler)
+        print('build: self.download_library_sources = ',
+              self.download_library_sources)
 
         # call the run command of the default build
         _build.run(self)
@@ -200,26 +203,26 @@ class BuildExt(_build_ext):
         #  _build_ext.run(self)  )
 
         # test prints
-        #print "python executable: ", sys.executable
-        #print "build_ext: self.user_options = ", self.user_options
-        #print "build_ext: self.preferred_fortran_compiler = ",\
-        #      self.preferred_fortran_compiler
-        #print "build_ext: self.preferred_c_compiler = ",\
-        #      self.preferred_c_compiler
-        #print "build_ext: self.fortran_compiler = ",\
-        #      self.fortran_compiler
-        #print "build_ext: self.fortran_ld_library_path = ",\
-        #      self.fortran_ld_library_path
-        #print "build_ext: self.fortran_flags = ",\
-        #      self.fortran_flags
-        #print "build_ext: self.c_compiler = ",\
-        #      self.c_compiler
-        #print "build_ext: self.c_ld_library_path = ",\
-        #      self.c_ld_library_path
-        #print "build_ext: self.c_flags = ",\
-        #      self.c_flags
-        #print "build_ext: self.download_library_sources = ",\
-        #      self.download_library_sources
+        #print("python executable: ", sys.executable)
+        #print("build_ext: self.user_options = ", self.user_options)
+        #print("build_ext: self.preferred_fortran_compiler = ",
+        #      self.preferred_fortran_compiler)
+        #print("build_ext: self.preferred_c_compiler = ",
+        #      self.preferred_c_compiler)
+        #print("build_ext: self.fortran_compiler = ",
+        #      self.fortran_compiler)
+        #print("build_ext: self.fortran_ld_library_path = ",
+        #      self.fortran_ld_library_path)
+        #print("build_ext: self.fortran_flags = ",
+        #      self.fortran_flags)
+        #print("build_ext: self.c_compiler = ",
+        #      self.c_compiler)
+        #print("build_ext: self.c_ld_library_path = ",
+        #      self.c_ld_library_path)
+        #print("build_ext: self.c_flags = ",
+        #      self.c_flags)
+        #print("build_ext: self.download_library_sources = ",
+        #      self.download_library_sources)
 
         # this run command in turn runs the build_extension method
         #_build_ext.run(self)
@@ -244,10 +247,10 @@ class BuildExt(_build_ext):
         #self.download_library_sources = None
 
         #fullname = self.get_ext_fullname(ext.name)
-        #print "trying to build extension: ", fullname
+        #print("trying to build extension: ", fullname)
         log.info("building '%s' extension", ext.name)
 
-        #print "ext.sources = ", ext.sources
+        #print("ext.sources = ", ext.sources)
 
         # this does not work properly yet for setup.py bdist
         # since in that case the pybufr_ecmwf/ecmwfbufr.so
@@ -256,8 +259,8 @@ class BuildExt(_build_ext):
 
         build_dir = os.path.join(self.build_lib, "pybufr_ecmwf")
         build_dir = os.path.abspath(build_dir)
-        #print "self.build_lib = ", self.build_lib
-        print "initiating build in dir: ", build_dir
+        #print("self.build_lib = ", self.build_lib)
+        print("initiating build in dir: ", build_dir)
 
         #if os.path.isdir(build_dir):
         #    sys.path.append(build_dir)
@@ -290,7 +293,7 @@ class BuildExt(_build_ext):
                     break
 
         if base_build_dir is not None:
-            print 'base_build_dir = ', base_build_dir
+            print('base_build_dir = ', base_build_dir)
             sys.path.insert(0, os.path.abspath(base_build_dir))
 
         from build_interface import InstallBUFRInterfaceECMWF
@@ -333,9 +336,9 @@ class BuildExt(_build_ext):
 
         os.chdir(cwd)
 
-        #print "self.distribution.dist_files = ", self.distribution.dist_files
-        #print "self.extensions[0].name = ", self.extensions[0].name
-        #print "dir(self.extensions[0]) = ", dir(self.extensions[0])
+        #print("self.distribution.dist_files = ", self.distribution.dist_files)
+        #print("self.extensions[0].name = ", self.extensions[0].name)
+        #print("dir(self.extensions[0]) = ", dir(self.extensions[0]))
         #sys.exit(1)
 
         #  #]

@@ -22,6 +22,9 @@ construction of BUFR templates
 #
 #  #]
 #  #[ imported modules
+from __future__ import (absolute_import, division,
+                        print_function) #, unicode_literals)
+
 #import os          # operating system functions
 #import sys         # system functions
 
@@ -59,7 +62,7 @@ class BufrTemplate:
         add a list of descriptors to the template
         """
         nr_of_descriptors = len(descriptors)
-        print 'adding ', nr_of_descriptors, ' descriptors'
+        print('adding ', nr_of_descriptors, ' descriptors')
         self.unexpanded_descriptor_list.extend(descriptors)
         #  #]
     def add_delayed_replic_descriptors(self, max_nr_of_repeats,
@@ -69,9 +72,9 @@ class BufrTemplate:
         use delayed replication to add a list of descriptors to the template
         """
         nr_of_descriptors = len(descriptors)
-        print 'adding delayed replication for ', nr_of_descriptors, \
-              ' descriptors'
-        print 'replicating them at most ', max_nr_of_repeats, ' times'
+        print('adding delayed replication for ', nr_of_descriptors,
+              ' descriptors')
+        print('replicating them at most ', max_nr_of_repeats, ' times')
         repl_code = self.get_replication_code(nr_of_descriptors, 0)
         self.unexpanded_descriptor_list.append(repl_code)
         self.unexpanded_descriptor_list.append(self.Delayed_Descr_Repl_Factor)
@@ -85,8 +88,8 @@ class BufrTemplate:
         use normal replication to add a list of descriptors to the template
         """
         nr_of_descriptors = len(descriptors)
-        print 'adding replication for ', nr_of_descriptors, ' descriptors'
-        print 'replicating them ', nr_of_repeats, ' times'
+        print('adding replication for ', nr_of_descriptors, ' descriptors')
+        print('replicating them ', nr_of_repeats, ' times')
         repl_code = self.get_replication_code(nr_of_descriptors,
                                               nr_of_repeats)
         self.unexpanded_descriptor_list.append(repl_code)
