@@ -1627,9 +1627,11 @@ class BUFRInterfaceECMWF:
         assert(isinstance(BT, BufrTemplate))
         
         # length of unexpanded descriptor list
-        self.ktdlen = len(BT.unexpanded_descriptor_list)
+        unexpanded_descriptor_list = BT.get_unexpanded_descriptor_list()
+        self.ktdlen = len(unexpanded_descriptor_list)
         # convert the unexpanded descriptor list to a numpy array
-        self.ktdlst = np.array(BT.unexpanded_descriptor_list, dtype=np.int)
+        print("DEBUG: ",[str(d) for d in unexpanded_descriptor_list])
+        self.ktdlst = np.array(unexpanded_descriptor_list, dtype=np.int)
         print("unexpanded nr of descriptors = ", self.ktdlen)
         print("The current list is: ", self.ktdlst)
 

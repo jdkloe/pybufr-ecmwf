@@ -151,8 +151,8 @@ def port_2to3():
                 fdb.close()
 
                 fda = open(path_and_file, 'w')
-                for line in lines:
-                    if '#!' in line:
+                for i, line in enumerate(lines):
+                    if ('#!' in line) and (i==0):
                         print('shebang line found: ', line.replace('\n',''))
                         fda.write('#!/usr/bin/env python3\n')
                     else:

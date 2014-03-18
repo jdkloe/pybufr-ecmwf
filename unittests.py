@@ -103,9 +103,9 @@ def call_cmd(cmd):
     else:
         env['PYTHONPATH'] = MY_MODULE_PATH
 
-    # print('TESTJOS: env[PYTHONPATH] = ',env['PYTHONPATH'])
-    # print('TESTJOS: env[BUFR_TABLES] = ',env.get('BUFR_TABLES','undefined'))
-    # print('TESTJOS: cmd = ',cmd)
+    # print('DEBUG: env[PYTHONPATH] = ',env['PYTHONPATH'])
+    # print('DEBUG: env[BUFR_TABLES] = ',env.get('BUFR_TABLES','undefined'))
+    # print('DEBUG: cmd = ',cmd)
 
     # remove the env setting to
     # /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES/

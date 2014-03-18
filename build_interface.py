@@ -1066,7 +1066,7 @@ class InstallBUFRInterfaceECMWF(object):
 
         # report the result
         if (self.verbose):
-            print("Most recent library version seems to be: ", 
+            print("Most recent library version seems to be: ",
                   most_recent_bufr_tarfile_name)
 
         return (most_recent_bufr_lib_url,
@@ -1193,7 +1193,7 @@ class InstallBUFRInterfaceECMWF(object):
                 (source_dir, tarfile_to_install) = self.get_source_dir()
             else:
                 # debug print
-                # print('(source_dir, tarfile_to_install) = ', 
+                # print('(source_dir, tarfile_to_install) = ',
                 #      (source_dir, tarfile_to_install))
                 pass
 
@@ -1270,7 +1270,7 @@ class InstallBUFRInterfaceECMWF(object):
         #if (self.verbose):
         print('selection fortran compiler')
         print('==>input: self.fortran_compiler = ', self.fortran_compiler)
-        print('==>input: self.preferred_fortran_compiler = ', 
+        print('==>input: self.preferred_fortran_compiler = ',
               self.preferred_fortran_compiler)
 
         # first check a possible custom executable, passed in
@@ -1292,9 +1292,9 @@ class InstallBUFRInterfaceECMWF(object):
                 if not (self.preferred_fortran_compiler in
                         POSSIBLE_F_COMPILERS):
                     print("ERROR: unknown preferred fortran compiler "+
-                          "specified:", 
+                          "specified:",
                           self.preferred_fortran_compiler)
-                    print("valid options are: ", 
+                    print("valid options are: ",
                           ", ".join(s for s in POSSIBLE_F_COMPILERS))
                     raise NotImplementedError
 
@@ -1321,7 +1321,7 @@ class InstallBUFRInterfaceECMWF(object):
 
         #if (self.verbose):
         print('selection fortran compiler')
-        print('==>result: self.fortran_compiler_to_use = ', 
+        print('==>result: self.fortran_compiler_to_use = ',
               self.fortran_compiler_to_use)
 
         #  #]
@@ -1352,9 +1352,9 @@ class InstallBUFRInterfaceECMWF(object):
             if (self.preferred_c_compiler is not None):
                 if not (self.preferred_c_compiler in POSSIBLE_C_COMPILERS):
                     print("ERROR: unknown preferred c compiler "+
-                          "specified:", 
+                          "specified:",
                           self.preferred_c_compiler)
-                    print("valid options are: ", 
+                    print("valid options are: ",
                           ", ".join(s for s in POSSIBLE_C_COMPILERS))
                     raise NotImplementedError
 

@@ -32,7 +32,7 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
     # get 2 instances of the RawBUFRFile class
     rbf_in  = RawBUFRFile()
     rbf_out = RawBUFRFile()
-    
+
     # open the file for reading, count nr of BUFR messages in it
     # and store its content in memory, together with
     # an array of pointers to the start and end of each BUFR message
@@ -40,7 +40,7 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
 
     # open the file for writing
     rbf_out.open(output_bufr_file, 'wb')
-    
+
     # extract the number of BUFR messages from the file
     num_msgs = rbf_in.get_num_bufr_msgs()
 
@@ -54,7 +54,7 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
         bufr_obj.decode_sections_012()
         bufr_obj.setup_tables()
         bufr_obj.decode_data()
-        
+
         nsub = bufr_obj.get_num_subsets()
         n = len(bufr_obj.values)/nsub
         bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=n)
@@ -64,7 +64,7 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
 
         # extract delayed replication factors
         delayed_repl_data = bufr_obj.derive_delayed_repl_factors()
-        
+
         # fill the list of replication factors
         bufr_obj.fill_delayed_repl_data(delayed_repl_data)
 
@@ -73,7 +73,7 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
         print 'Encode BUFR msg %i' % msg_nr
 
         rbf_out.write_raw_bufr_msg(bufr_obj.encoded_message)
-        
+
     # close the file
     rbf_in.close()
     rbf_out.close()

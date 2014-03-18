@@ -107,4 +107,15 @@ class BufrTemplate:
         # then add the Delayed_Descr_Repl_Factor after this code
         return repl_factor
         #  #]
+    def get_unexpanded_descriptor_list(self):
+        #  #[
+        ''' return a simple list (without nesting) if needed '''
+        unexpanded_descriptor_list = []
+        for descr in self.unexpanded_descriptor_list:
+            if type(descr) == list:
+                unexpanded_descriptor_list.extend(descr)
+            else:
+                unexpanded_descriptor_list.append(descr)
+        return unexpanded_descriptor_list
+        #  #]
     #  #]

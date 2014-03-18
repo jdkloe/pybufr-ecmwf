@@ -592,6 +592,8 @@ class CompositeDescriptor(Descriptor): #[table D entry]
             print('==>the previous copy?')
             sys.exit(1)
         #  #]
+    def __long__(self):
+        return long(self.reference)
     #  #]
 
 class BufrTable:

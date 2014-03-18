@@ -72,7 +72,7 @@ for fc in POSSIBLE_FORTRAN_COMPILERS:
     if len(lines_stderr)==0:
         AVAILABLE_POSSIBLE_COMPILERS.append(fc)
 
-print('available fortran compilers: ', 
+print('available fortran compilers: ',
       ', '.join(fc for fc in AVAILABLE_POSSIBLE_COMPILERS))
 #  #]
 TESTRESULTS = []
@@ -151,9 +151,9 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
                 this_result.append('STDERR: '+l.replace('\n', ''))
         else:
             this_result.append('unittests skipped')
-            
+
         TESTRESULTS.append(this_result)
-        
+
         #  #]
     if DO_SETUP_BUILD_TESTS:
         #  #[ build using the setup tool and check the result
@@ -215,7 +215,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         try:
             env = os.environ
             env['PYTHONPATH'] = os.path.split(so_files[0])[0]
-            
+
             cmd = 'cd '+temp_build_dir+';'+\
                   'python ./unittests.py'
             # os.system(cmd)
@@ -438,7 +438,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
             this_result.append('ERROR: something seems wrong: '+\
                                'module not properlyloaded!')
         TESTRESULTS.append(this_result)
-        #  #]        
+        #  #]
     if DO_MANUAL_PY3_TESTS:
         #  #[ convert to python3, and test the manual build
 
