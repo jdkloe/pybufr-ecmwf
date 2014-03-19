@@ -1624,7 +1624,7 @@ class BUFRInterfaceECMWF:
         # print("delayed replication factors: ", self.kdata)
         #  #]
     def register_and_expand_descriptors(self, BT):
-        #  #[ delayed replication works only for encoding
+        #  #[ estimate exp. descr. list size and needed bytes for encoding
         """
         expand the descriptor list, generating the expanded list
         from the raw list by calling buxdes, with some additional
@@ -1731,6 +1731,30 @@ class BUFRInterfaceECMWF:
         # To fix this the next line has been added:
         self.ktdexl = len(selection[0])
 
+        # estimate number of bits and bytes needed for the encoded message
+        num_bits = 0
+        norm_ktdexp = self.bt.normalise_descriptor_list(self.ktdexp[selection])
+        for d in norm_ktdexp:
+            num_bits += d.get_num_bits()
+        data_bytes = int(num_bits/8)+1
+        descriptor_bytes = self.ktdlen # just guessing here
+        # add sizes of header sections (in bytes)
+        size_sec0 = 8 # bufr editions 0 and 1 had 4 bytes here
+        size_sec1 = 17 # or ...
+        size_sec2 = 0 # optional section, not used by this python module
+        size_sec3 = 7+descriptor_bytes # template definition
+        size_sec4 = 4+data_bytes
+        size_sec5 = 4
+        num_bytes = size_sec0+size_sec1+size_sec2+size_sec3+size_sec4+size_sec5
+        # add extra bytes to compensate for extra header bytes
+        # and estimation errors in descriptor_bytes and data_bytes
+        num_bytes += 5000
+        
+        # print('num_bits = ',num_bits)
+        # print('num_bytes = ',num_bytes)
+
+        self.estimated_num_bytes_for_encoding = num_bytes
+
         # these are filled as well after the call to buxdes
         # print("cnames = ", self.cnames)
         # print("cunits = ", self.cunits)
@@ -1764,7 +1788,8 @@ class BUFRInterfaceECMWF:
         #self.cvals  = np.zeros((self.kvals, 80), dtype = '|S1')
 
         # define the output buffer
-        num_bytes = 5000
+        num_bytes = self.estimated_num_bytes_for_encoding
+        # num_bytes = 15000
         num_words = num_bytes/4
         words = np.zeros(num_words, dtype=np.int)
 

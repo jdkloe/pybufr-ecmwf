@@ -181,6 +181,8 @@ class Descriptor(Singleton): # [a simple table B entry]
         return long(self.reference)
     def get_count(self):
         return 1
+    def get_num_bits(self):
+        return self.data_width
     #  #]
 
 # todo: look-up the possibilities in the documentation
@@ -688,14 +690,13 @@ class BufrTable:
             if isinstance(tmp_descr, Descriptor):
                 descr = tmp_descr
             else:
-                if (type(tmp_descr) == str):
+                try:
                     int_descr = int(tmp_descr)
-                elif (type(tmp_descr) == int):
-                    int_descr = tmp_descr
-                else:
+                except:
                     print('ERROR: unknowm type: type(tmp_descr): ',
                           type(tmp_descr))
                     print('for tmp_descr = ', tmp_descr)
+                    sys.exit(1)
                 f_val = int(int_descr/100000.)
                 if f_val == 0:
                     # this one should already be in the table_b dictionary
@@ -895,6 +896,9 @@ class BufrTable:
         """
         load a BUFR B or D table from file
         """
+
+#        print("loading file: ", t_file)
+
 #        e = os.environ
 #        tables_dir = e["BUFR_TABLES"]
 #        if not os.path.exists(os.path.join(tables_dir,bfile)):
