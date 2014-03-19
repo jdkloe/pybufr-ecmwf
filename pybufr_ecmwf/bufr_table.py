@@ -118,7 +118,7 @@ class Singleton(object):
         #  #]
     #  #]
 
-class Descriptor(Singleton):
+class Descriptor(Singleton): # [a simple table B entry]
     #  #[
     """
     a base class for storing descriptor information
@@ -177,6 +177,10 @@ class Descriptor(Singleton):
                   "data_width          = ", data_width)
             raise aerr
         #  #]
+    def __long__(self):
+        return long(self.reference)
+    def get_count(self):
+        return 1
     #  #]
 
 # todo: look-up the possibilities in the documentation
@@ -419,7 +423,7 @@ class Replicator(Descriptor):
         f = '1'
         xx = '{:02}'.format(len(self.descriptor_list))
         yyy = '{:03}'.format(self.repeats)
-        return f+xx+yyy
+        return int(f+xx+yyy)
         #return f+xx+yyy+';{}'.format(";".join(str(d.reference) for d
         #                                      in self.descriptor_list))
         #  #]
@@ -443,7 +447,7 @@ class DelayedReplicator(Descriptor):
     #  ==>list-of-descriptor-objects = []
     #  #]
 
-class CompositeDescriptor(Descriptor): #[table D entry]
+class CompositeDescriptor(Descriptor): # [table D entry]
     #  #[
     """
     a base class for composite descriptors (table D entries)
@@ -592,8 +596,14 @@ class CompositeDescriptor(Descriptor): #[table D entry]
             print('==>the previous copy?')
             sys.exit(1)
         #  #]
-    def __long__(self):
-        return long(self.reference)
+    def get_count(self):
+        count = 0
+        for d in self.descriptor_list:
+            if isinstance(d, SpecialCommand):
+                print('Sorry, not yet implemented')
+                sys.exit(1)
+            count += d.get_count()
+        return count
     #  #]
 
 class BufrTable:
@@ -670,15 +680,7 @@ class BufrTable:
         self.num_d_blocks = 0
 
         #  #]
-    def expand_descriptor_list(self, descr_list):
-        #  #[
-        """ a function to expand a descriptor list, holding table D entries
-        and replicators etc. into a clean list of table B entries (with f=0)
-        and modification operators (with f=2).
-        Descr_list may be a list of descriptor instances, or a list of
-        integer reference numbers, or a list of strings that can be
-        converted to a list of reference numbers.
-        """
+    def normalise_descriptor_list(self, descr_list):
         #  #[ normalise the list to hold only Desciptor instances
         normalised_descriptor_list = []
         for tmp_descr in descr_list:
@@ -715,8 +717,19 @@ class BufrTable:
                     descr = self.table_d[int_descr]
 
             normalised_descriptor_list.append(descr)
+        return normalised_descriptor_list
         #  #]
-        #  #[ do the actual expansion
+    def expand_descriptor_list(self, descr_list):
+        #  #[
+        """ a function to expand a descriptor list, holding table D entries
+        and replicators etc. into a clean list of table B entries (with f=0)
+        and modification operators (with f=2).
+        Descr_list may be a list of descriptor instances, or a list of
+        integer reference numbers, a list of strings that can be
+        converted to a list of reference numbers, or even a combination of
+        these different types.
+        """
+        normalised_descriptor_list = self.normalise_descriptor_list(descr_list)
         expanded_descriptor_list = []
         delayed_repl_present = False
         num_descr_to_skip = 0
@@ -819,7 +832,7 @@ class BufrTable:
                 if self.verbose:
                     print('adding: %6.6i' % descr.reference)
                 expanded_descriptor_list.append(descr.reference)
-        #  #]
+
         return expanded_descriptor_list, delayed_repl_present
         #  #]    
     def set_bufr_tables_dir(self, tables_dir):
@@ -1579,7 +1592,31 @@ class BufrTable:
         self.write_D_table(fd)
         fd.close()
         #  #]
+    def is_defined(self, descr):
+        #  #[ check function
+        '''
+        check whether the given descriptor is available in the current
+        set of BUFR tables or not
+        '''
+        # print('checked: {}'.format(descr))
+        f_val = int(descr/100000.)
+        if f_val == 0:
+            # check table B
+            if descr in self.table_b:
+                return True
+        if f_val == 1:
+            # special class 1 descriptors are not defined in BUFR tables
+            return True
+        if f_val == 2:
+            # special class 2 descriptors are not defined in BUFR tables
+            return True
+        if f_val == 3:
+            # check table D
+            if descr in self.table_d:
+                return True
 
+        return False
+        #  #]
     #  #]
     
 if __name__ == "__main__":

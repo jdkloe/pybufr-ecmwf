@@ -27,7 +27,7 @@ from __future__ import (absolute_import, division,
 
 #import os          # operating system functions
 #import sys         # system functions
-
+from . import bufr_table
 #  #]
 
 class BufrTemplate:
@@ -38,13 +38,11 @@ class BufrTemplate:
     
     #  #[ class constants
     
-    # define the delayed replication code
     Delayed_Descr_Repl_Factor = int('031001', 10)
 
     #  #]
-    def __init__(self, max_nr_descriptors):
+    def __init__(self):
         #  #[
-        self.max_nr_descriptors = max_nr_descriptors
         self.unexpanded_descriptor_list = []
         self.nr_of_delayed_repl_factors = 0
         self.del_repl_max_nr_of_repeats_list = []
@@ -54,6 +52,7 @@ class BufrTemplate:
         """
         add a descriptor to the template
         """
+        print('adding descriptor: ',descriptor)
         self.unexpanded_descriptor_list.append(descriptor)
         #  #]
     def add_descriptors(self, *descriptors):
@@ -105,7 +104,7 @@ class BufrTemplate:
         # be encoded as: 102025
         # for delayed replication, set num_repeats to 0
         # then add the Delayed_Descr_Repl_Factor after this code
-        return repl_factor
+        return bufr_table.SpecialCommand(repl_factor)
         #  #]
     def get_unexpanded_descriptor_list(self):
         #  #[
@@ -118,4 +117,57 @@ class BufrTemplate:
                 unexpanded_descriptor_list.append(descr)
         return unexpanded_descriptor_list
         #  #]
+    def get_max_size(self, descriptor_list, bufrtables):
+        count = 0
+        # ensure all descriptors are instances of bufr_table.Descriptor
+        normalised_descriptor_list = \
+                   bufrtables.normalise_descriptor_list(descriptor_list)
+        
+        while normalised_descriptor_list:
+            descr = normalised_descriptor_list.pop(0)
+            # print('handling descr: ',descr)
+            if isinstance(descr, (bufr_table.SpecialCommand,
+                                  bufr_table.Replicator,
+                                  bufr_table.DelayedReplicator)):
+                descr_count = int((descr.reference-100000)/1000)
+                if int(descr.reference % 1000) == 0:
+                    # print('delayed replicator found !!')
+                    # pop the obligatory 31001 code as well
+                    normalised_descriptor_list.pop(0)
+                    # count the obligatory 31001 code as well
+                    count += 1
+                    repeat_count = self.del_repl_count_list.pop(0)
+                elif int(descr.reference/100000) == 1:
+                    # print('replicator found !!')
+                    repeat_count = int(descr.reference % 1000)
+                    
+                # print('repeat_count = ', repeat_count)
+
+                repl_descr_list = \
+                                normalised_descriptor_list[:descr_count]
+                normalised_descriptor_list = \
+                                normalised_descriptor_list[descr_count:]
+                # print('repl_descr_list = ',
+                #       ';'.join(str(d.reference) for d in repl_descr_list))
+                # print('it has a size of: ',self.get_max_size(repl_descr_list,
+                #                                              bufrtables))
+                count += repeat_count*self.get_max_size(repl_descr_list,
+                                                        bufrtables)
+            elif isinstance(descr, bufr_table.CompositeDescriptor):
+                # a composite D-table descriptor
+                # print('D: ',descr)
+                count += self.get_max_size(descr.descriptor_list,
+                                           bufrtables)
+            else:
+                # a normal B-table descriptor
+                count += descr.get_count()
+            
+        return count
+    def get_max_nr_expanded_descriptors(self, bufrtables):
+        # init list that is modified in the recursive get_max_size function
+        self.del_repl_count_list = self.del_repl_max_nr_of_repeats_list[:]
+        # get the max size
+        s = self.get_max_size(self.unexpanded_descriptor_list,bufrtables)
+        # print('s=',s)
+        return s
     #  #]

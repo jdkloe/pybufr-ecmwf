@@ -66,7 +66,7 @@ def encoding_example(output_bufr_file):
                       table_d_to_use='D_my_test_BUFR_table.txt')
 
     # define a descriptor list
-    template = BufrTemplate(max_nr_descriptors=4)
+    template = BufrTemplate()
 
     template.add_descriptors(DD_B_048001,        # 0
                              DD_B_048002,        # 1

@@ -236,6 +236,8 @@ class BUFRInterfaceECMWF:
         
         self.outp_file = None
 
+        # to store the loaded BUFR table information
+        self.bt = None
         #  #]        
     def get_expected_ecmwf_bufr_table_names(self,
                                             center, subcenter,
@@ -763,6 +765,19 @@ class BUFRInterfaceECMWF:
         self.tables_have_been_setup = True
         self.table_b_file_to_use = destination_b
         self.table_d_file_to_use = destination_d
+
+        # finally load the tables into memory
+        self.bt = BufrTable(tables_dir=self.private_bufr_tables_dir,
+                            verbose=False, report_warnings=False)
+        #                    verbose=True, report_warnings=False)
+        
+        # setup_tables already has created the symlinks to the BUFR tables
+        # so don't use this autolink feature for now
+        # bt = BufrTable(autolink_tablesdir=self.private_bufr_tables_dir,
+        #                verbose=False)
+        self.bt.load(self.table_b_file_to_use)
+        self.bt.load(self.table_d_file_to_use)
+
         #  #]
     def print_sections_012(self):
         #  #[ wrapper for buprs0, buprs1, buprs2
@@ -1328,18 +1343,14 @@ class BUFRInterfaceECMWF:
         #  #]
     def expand_raw_descriptor_list(self):
         #  #[
-        bt = BufrTable(tables_dir=self.private_bufr_tables_dir,
-                       verbose=False, report_warnings=False)
-        #               verbose=True, report_warnings=False)
-        # setup_tables already has created the symlinks to the BUFR tables
-        # so don't use this autolink feature for now
-        # bt = BufrTable(autolink_tablesdir=self.private_bufr_tables_dir,
-        #                verbose=False)
-        bt.load(self.table_b_file_to_use)
-        bt.load(self.table_d_file_to_use)
-
+        if self.bt is None:
+            errtxt = ("ERROR in expand_raw_descriptor_list: " + 
+                      "you need to setup BUFR tables before " +
+                      "expanding raw descriptor lists is possible.")
+            raise EcmwfBufrLibError(errtxt)
+            
         exp_descr_list, delayed_repl_present = \
-                        bt.expand_descriptor_list(self.py_unexp_descr_list)
+                        self.bt.expand_descriptor_list(self.py_unexp_descr_list)
 
         if delayed_repl_present:
             self.py_expanded_descr_list = []
@@ -1619,6 +1630,11 @@ class BUFRInterfaceECMWF:
         from the raw list by calling buxdes, with some additional
         logic to make it easier to use delayed replication in your
         templates.
+        WARNING: setting max_nr_expanded_descriptors to a too low value will
+        cause very ugly runtime memory corruption (malloc) errors!
+        Make sure you set this value to a large enough value for your template.
+        Unfortunately I have no idea yet how to catch this error.
+        If you have any idea please let me know ...
         """
         kerr   = 0
 
@@ -1630,10 +1646,26 @@ class BUFRInterfaceECMWF:
         unexpanded_descriptor_list = BT.get_unexpanded_descriptor_list()
         self.ktdlen = len(unexpanded_descriptor_list)
         # convert the unexpanded descriptor list to a numpy array
-        print("DEBUG: ",[str(d) for d in unexpanded_descriptor_list])
+        # print("DEBUG: ",[str(d) for d in unexpanded_descriptor_list])
+        
         self.ktdlst = np.array(unexpanded_descriptor_list, dtype=np.int)
         print("unexpanded nr of descriptors = ", self.ktdlen)
         print("The current list is: ", self.ktdlst)
+
+        # ensure all descriptors mentioned in the template exist in the
+        # choosen BUFR tables
+        for descr in self.ktdlst:
+            if not self.bt.is_defined(descr):
+                errtxt = ('you tried to use a descriptor in your template '+
+                          'that is not available in the current ' +
+                          'BUFR tables: {}'.format(descr)
+                          )
+                raise EcmwfBufrLibError(errtxt)
+        
+        self.max_nr_expanded_descriptors = \
+                BT.get_max_nr_expanded_descriptors(self.bt)
+
+        #sys.exit(1)
 
         # define a list to store the expanded descriptor list
         self.ktdexp = np.zeros(self.max_nr_expanded_descriptors, dtype = np.int)
@@ -1650,8 +1682,8 @@ class BUFRInterfaceECMWF:
         #          but I'll run ot anyway for now since this usually is
         #          a cheap operation, so a user should not be bothered by it]
         
-        # iprint = 0 # default is to be silent
-        iprint = 1
+        iprint = 0 # default is to be silent
+        # iprint = 1
         if (iprint == 1):
             print("------------------------")
             print(" printing BUFR template ")
@@ -1659,6 +1691,16 @@ class BUFRInterfaceECMWF:
 
         # define and fill the list of replication factors
         self.fill_delayed_repl_data(BT.del_repl_max_nr_of_repeats_list)
+
+        # print('DEBUG: self.ksec1 ',self.ksec1)
+        # print('DEBUG: self.ktdlst ',self.ktdlst)
+        # print('DEBUG: self.kdata = ',self.kdata)
+
+        # print('DEBUG: self.ktdexl = ',self.ktdexl)
+        # print('DEBUG: self.ktdexp = ',self.ktdexp)
+        # print('DEBUG: self.ktdexp.shape = ',self.ktdexp.shape)
+        # print('DEBUG: self.cnames = ',self.cnames.shape)
+        # print('DEBUG: self.cunits = ',self.cunits.shape)
         
         self.store_fortran_stdout()
         ecmwfbufr.buxdes(iprint,      # input
@@ -1676,16 +1718,18 @@ class BUFRInterfaceECMWF:
             raise EcmwfBufrLibError(self.explain_error(kerr, 'buxdes'))
 
         print("ktdlst = ", self.ktdlst)
-        selection = np.where(self.ktdexp>0)
+        selection = np.where(self.ktdexp > 0)
+
+        # note: this seems to be an empty list in case
+        #       delayed replication is used!
         print("ktdexp = ", self.ktdexp[selection])
-        # print("ktdexl = ", self.ktdexl # this one seems not to be filled ...?)
+        #print("ktdexl = ", self.ktdexl) # this one seems not to be filled ...?
 
         # It is not clear to me why buxdes seems to correctly produce
         # the expanded descriptor list, but yet it does
         # not seem to fill the ktdexl value.
-        # To fix this the next 2 lines have been added:
-        selection2 = np.where(self.ktdexp > 0)
-        self.ktdexl = len(selection2[0])
+        # To fix this the next line has been added:
+        self.ktdexl = len(selection[0])
 
         # these are filled as well after the call to buxdes
         # print("cnames = ", self.cnames)

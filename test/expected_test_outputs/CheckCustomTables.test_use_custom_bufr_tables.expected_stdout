@@ -10,9 +10,6 @@ D_my_test_BUFR_table.txt
 adding  3  descriptors
 unexpanded nr of descriptors =  3
 The current list is:  [ 48001  48002 348001]
-------------------------
- printing BUFR template 
-------------------------
 ktdlst =  [ 48001  48002 348001]
 ktdexp =  [48001 48002 48001 48002]
 exp_descr_list_length =  4
