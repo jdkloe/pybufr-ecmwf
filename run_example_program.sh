@@ -1,17 +1,40 @@
 #!/bin/sh
 
-PYTHONPATH='./':$PYTHONPATH
-export PYTHONPATH
+# perform some searches to ensure the PYTHONPATH points to a directory
+# that holds the compiled version of the pybufr-ecmwf module.
+
+MODULELOCATION1='./'
+if test -e build; then
+  MODULELOCATION2=`find build | grep ecmwfbufr.so | awk -F/ '{ print $1 "/" $2  "/"}'`
+fi
 
 # safety check
-if test -e 'pybufr_ecmwf/ecmwfbufr.so'; then
-   echo 'found compiled interface module: pybufr_ecmwf/ecmwfbufr.so'
-else
-   echo 'could not find compiled interface module: pybufr_ecmwf/ecmwfbufr.so'
+if test -e $MODULELOCATION1/'pybufr_ecmwf/ecmwfbufr.so'; then
+   echo found compiled interface module: $MODULELOCATION1/pybufr_ecmwf/ecmwfbufr.so
+   PYTHONPATH=$MODULELOCATION1:$PYTHONPATH
+   export PYTHONPATH
+fi
+
+if test -e build; then
+   if test -e $MODULELOCATION2/'pybufr_ecmwf/ecmwfbufr.so'; then
+      echo found compiled interface module: $MODULELOCATION2/pybufr_ecmwf/ecmwfbufr.so
+      PYTHONPATH=$MODULELOCATION2:$PYTHONPATH
+      export PYTHONPATH
+   fi
+fi
+
+python -c 'import sys;del sys.path[0];import pybufr_ecmwf.ecmwfbufr'
+if [ $? -ne 0 ]; then
+   echo 'could not find compiled interface module:'
+   echo '     pybufr_ecmwf/ecmwfbufr.so'
+   echo 'or'
+   echo '     build/lib*/pybufr_ecmwf/ecmwfbufr.so'
+   echo 'or'
+   echo '     a local or system wide installed copy'
    echo ''
-   echo 'This script only runs when the software is build with the'
-   echo 'manual build install method'.
-   echo 'Before using this test script you need to manually build this'
+   echo 'This script only runs when the software is build and/or installed.'
+   echo ''
+   echo 'Before using this test script you could try to manually build this'
    echo 'software first using this method:'
    echo '    python ./build_interface.py'
    echo ''
