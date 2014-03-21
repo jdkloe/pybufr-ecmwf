@@ -1545,8 +1545,8 @@ class BufrTable:
             # do anything it likes to do here ...
             
             b_descr = self.table_b[ref]
-            txt = ' %6s %-64s %-24s %3i %12i %3i\n' % \
-                  (b_descr.reference,
+            txt = ' %6.6d %-64s %-24s %3i %12i %3i\n' % \
+                  (int(b_descr.reference),
                    b_descr.name,
                    b_descr.unit,
                    b_descr.unit_scale,

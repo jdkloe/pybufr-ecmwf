@@ -14,13 +14,13 @@ Release 0.72 (14-May-2013):
 Release 0.71 (14-May-2013):
 -fix a mistake in the manifest file
 
-Release 0.7 (..-May-2013):
+Release 0.7 (May-2013):
 -fix a few python3 compatibility issues
 -fix issue 4 (warning on max bufr message size had wrong threshold)
 -add a simple example program to request a name for a descriptor number
 -make bufr table copying code more efficient
 
-Release 0.6 (...
+Release 0.6 (May-2013):
 -move to ECMWF BUFR version bufrdc_000400
 -reorganise custom fortran code added to the ECMWF library 
  to allow easier interfacing by this module
