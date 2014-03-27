@@ -912,6 +912,7 @@ class BUFRInterfaceECMWF:
                 nr_of_descriptors = (nr_of_descriptors *
                                      self.nr_of_descriptors_multiplyer)
                 if nr_of_descriptors>self.nr_of_descriptors_maxval:
+                    lines = self.get_fortran_stdout()
                     self.display_fortran_stdout(lines)
                     raise e
                 else:
@@ -1186,7 +1187,7 @@ class BUFRInterfaceECMWF:
 
         return self.ksup[4]
         #  #]
-    def get_value(self, i, j):
+    def get_value(self, i, j, get_cval=False):
         #  #[ get the i th value from subset j
         """
         a helper function to request the i th value from subset j
@@ -1216,9 +1217,22 @@ class BUFRInterfaceECMWF:
         
         selection = self.actual_kelem*j + i
         value = self.values[selection]
-        return value
+
+        if get_cval:
+            exp_descr_list_length = self.ktdexl
+            template_offset = selection % exp_descr_list_length
+            descr = self.ktdexp[template_offset]
+            unit = self.bt.table_b[descr].unit
+            if unit == 'CCITT IA5':
+                cvals_index = int(value/1000)-1
+                text = ''.join(c for c in self.cvals[cvals_index,:])
+                return text.strip()
+            else:
+                return ''
+        else:
+            return value
         #  #]
-    def get_values(self, i):
+    def get_values(self, i, get_cval=False):
         #  #[ get the i th value from each subset as an array
         """
         a helper function to request the i th value from each subset
@@ -1241,7 +1255,24 @@ class BUFRInterfaceECMWF:
 
         selection = self.actual_kelem*np.array(range(nsubsets))+i
         values = self.values[selection]
-        return values
+
+        if get_cval:
+            cvalues = []
+            exp_descr_list_length = self.ktdexl
+            template_offset = selection % exp_descr_list_length
+            descr = self.ktdexp[template_offset]
+            unit = self.bt.table_b[descr[0]].unit
+            if unit == 'CCITT IA5':
+                for subset in range(nsubsets):
+                    cvals_index = int(values[subset]/1000)-1
+                    text = ''.join(c for c in self.cvals[cvals_index,:])
+                    cvalues.append(text.strip())
+            else:
+                cvalues = ['',]*nsubsets
+            return cvalues
+        else:
+            # print('i, self.values[selection] = '+str(i)+' '+str(values))
+            return values
         #  #]
     def get_element_name_and_unit(self, i):
         #  #[
@@ -1421,7 +1452,7 @@ class BUFRInterfaceECMWF:
     
         kerr   = 0
     
-        print("calling: ecmwfbufr.busel():")
+        #print("calling: ecmwfbufr.busel():")
         self.store_fortran_stdout()
         ecmwfbufr.busel(self.ktdlen, # actual number of data descriptors
                         self.ktdlst, # list of data descriptors
@@ -1787,6 +1818,10 @@ class BUFRInterfaceECMWF:
         #self.values = np.zeros(      self.kvals, dtype = np.float64)
         #self.cvals  = np.zeros((self.kvals, 80), dtype = '|S1')
 
+        #cval_strings = np.zeros(self.kvals, dtype = '|S64')
+        #for i in range(self.kvals):
+        #    cval_strings[i] = ''.join(c for c in cvals[i,:])
+
         # define the output buffer
         num_bytes = self.estimated_num_bytes_for_encoding
         # num_bytes = 15000
@@ -1805,6 +1840,7 @@ class BUFRInterfaceECMWF:
                          self.ktdexl, # input: exp_descr_list_length,
                          values, # input: values to encode
                          cvals,  # input: strings to encode
+#                         cval_strings,  # input: strings to encode
                          words, # output: the encoded message
                          kerr)  # output: an error flag
         lines = self.get_fortran_stdout()
@@ -1812,6 +1848,10 @@ class BUFRInterfaceECMWF:
         print("bufren call finished")
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bufren'))
+
+        #for i in range(len(values)):
+        #    print('i,cvals[i] = {} "{}"'.\
+        #          format(i,(''.join(c for c in cvals[i,:])).strip()))
 
         print("words = ")
         print(words)
@@ -1825,5 +1865,23 @@ class BUFRInterfaceECMWF:
         
         self.data_encoded = True
         #  #]
-        
+    def verify_in_range(self, i, v):
+        #  #[ verify value to be packed
+        """
+        check whether the value to be packed into the BUFR message
+        fits in the range defined by the template, and give a proper
+        warning and exit if it does not.
+        """
+        exp_descr_list_length = self.ktdexl
+        template_offset = i % exp_descr_list_length
+        descr = self.ktdexp[template_offset]
+        minval, maxval, step = self.bt.table_b[descr].get_min_max_step()
+        name = self.bt.table_b[descr].name
+        if (v<minval) or (v>maxval):
+            txt = ('ERROR: value to be packed it out of range! '+
+                   'descriptor: {} (name: {}) min/max: {} {} value: {}'.
+                   format(descr, name, minval, maxval, v))
+            raise EcmwfBufrTableError(txt)
+
+        #  #]
 #  #]

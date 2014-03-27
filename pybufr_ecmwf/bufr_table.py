@@ -183,6 +183,20 @@ class Descriptor(Singleton): # [a simple table B entry]
         return 1
     def get_num_bits(self):
         return self.data_width
+    def get_min_max_step(self):
+        #  #[ return some descriptor properties
+        # encoded_val = value*10^scale-refvalue
+        # decoded_val = (encoded_val+refvalue)*10^(-scale)
+        # ==>range for encoded values for n bits: min_val = 0, max_val = 2^n-1
+        # ==>this gives for the range of decoded values:
+        #    min_val = (0+refvalue)*10^(-scale)
+        #    max_val = (2^n-1+refvalue)*10^(-scale)
+
+        step = 10.**(-1.*self.unit_scale)
+        min_allowed_value = self.unit_reference * step
+        max_allowed_value = ((2**self.data_width)-1+self.unit_reference)*step
+        return (min_allowed_value, max_allowed_value, step)
+        #  #]
     #  #]
 
 # todo: look-up the possibilities in the documentation
@@ -688,12 +702,16 @@ class BufrTable:
         for tmp_descr in descr_list:
 
             if isinstance(tmp_descr, Descriptor):
-                descr = tmp_descr
+                normalised_descriptor_list.append(tmp_descr)
+            elif isinstance(tmp_descr,list):
+                # we have got a list ...
+                norm_descr_list = self.normalise_descriptor_list(tmp_descr)
+                normalised_descriptor_list.extend(norm_descr_list)
             else:
                 try:
                     int_descr = int(tmp_descr)
                 except:
-                    print('ERROR: unknowm type: type(tmp_descr): ',
+                    print('ERROR: unknown type: type(tmp_descr): ',
                           type(tmp_descr))
                     print('for tmp_descr = ', tmp_descr)
                     sys.exit(1)
@@ -717,7 +735,8 @@ class BufrTable:
                     # otherwise the wrong table_d is loaded
                     descr = self.table_d[int_descr]
 
-            normalised_descriptor_list.append(descr)
+                normalised_descriptor_list.append(descr)
+                
         return normalised_descriptor_list
         #  #]
     def expand_descriptor_list(self, descr_list):

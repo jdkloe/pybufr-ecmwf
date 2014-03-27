@@ -135,6 +135,21 @@ class BUFRReader:
         # decoded from this file
         self.msg_loaded = -1
         self.bufr_obj = None
+
+        # allow manual choice of tables
+        self.table_b_to_use = None
+        self.table_d_to_use = None
+        self.tables_dir = None
+        #  #]
+    def setup_tables(self,table_b_to_use=None, table_d_to_use=None,
+                     tables_dir=None):
+        #  #[
+        """
+        allow manual choice of bufr tables
+        """
+        self.table_b_to_use = table_b_to_use
+        self.table_d_to_use = table_d_to_use
+        self.tables_dir = tables_dir
         #  #]
     def get_next_msg(self):
         #  #[
@@ -149,8 +164,13 @@ class BUFRReader:
                                            section_sizes,
                                            section_start_locations)
         self.bufr_obj.decode_sections_012()
-        self.bufr_obj.setup_tables()
+        self.bufr_obj.setup_tables(self.table_b_to_use,
+                                   self.table_d_to_use, self.tables_dir)
         self.bufr_obj.decode_data()
+
+        nsub = self.bufr_obj.get_num_subsets()
+        n = len(self.bufr_obj.values)/nsub
+        self.bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=n)
         
         self.msg_loaded = self.rbf.last_used_msg
         #  #]
@@ -172,16 +192,17 @@ class BUFRReader:
             raise NoMsgLoadedError
         return self.bufr_obj.get_num_elements()
         #  #]
-    def get_value(self, descr_nr, subset_nr):
+    def get_value(self, descr_nr, subset_nr, get_cval=False):
         #  #[
         """
         request a value for a given subset and descriptor number
         """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
-        return self.bufr_obj.get_value(descr_nr, subset_nr)
+        return self.bufr_obj.get_value(descr_nr, subset_nr, get_cval)
         #  #]
-    def get_values(self, descr_nr):
+    def get_values(self, descr_nr, get_cval=False):
+
         #  #[
         """
         request an array of values containing the values
@@ -189,7 +210,7 @@ class BUFRReader:
         """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
-        return self.bufr_obj.get_values(descr_nr)
+        return self.bufr_obj.get_values(descr_nr, get_cval)
         #  #]
     def get_values_as_2d_array(self):
         #  #[
@@ -204,10 +225,11 @@ class BUFRReader:
         num_elements = self.bufr_obj.get_num_elements()
         result = numpy.zeros([num_subsets, num_elements], dtype=float)
 
-        # print('DEBUG: num_subsets = ', num_subsets)
-        # print('DEBUG: num_elements = ', num_elements)
+        #print('DEBUG: num_subsets = ', num_subsets)
+        #print('DEBUG: num_elements = ', num_elements)
 
         for descr_nr in range(num_elements):
+            
             result[:, descr_nr] = self.bufr_obj.get_values(descr_nr)
 
         return result

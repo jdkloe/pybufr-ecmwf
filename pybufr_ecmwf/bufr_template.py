@@ -118,11 +118,13 @@ class BufrTemplate:
         return unexpanded_descriptor_list
         #  #]
     def get_max_size(self, descriptor_list, bufrtables):
+        #  #[
         count = 0
         # ensure all descriptors are instances of bufr_table.Descriptor
         normalised_descriptor_list = \
                    bufrtables.normalise_descriptor_list(descriptor_list)
-        
+        #print('debug: normalised_descriptor_list = ',
+        #      list(str(d) for d in normalised_descriptor_list))
         while normalised_descriptor_list:
             descr = normalised_descriptor_list.pop(0)
             # print('handling descr: ',descr)
@@ -163,11 +165,14 @@ class BufrTemplate:
                 count += descr.get_count()
             
         return count
+        #  #]
     def get_max_nr_expanded_descriptors(self, bufrtables):
+        #  #[
         # init list that is modified in the recursive get_max_size function
         self.del_repl_count_list = self.del_repl_max_nr_of_repeats_list[:]
         # get the max size
         s = self.get_max_size(self.unexpanded_descriptor_list,bufrtables)
         # print('s=',s)
         return s
+        #  #]
     #  #]
