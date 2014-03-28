@@ -233,11 +233,16 @@ class BUFRInterfaceECMWF:
         self.py_num_subsets = 0
         self.py_unexp_descr_list = None
         self.py_expanded_descr_list = None
+        self.delayed_repl_present = False
+        self.delayed_repl_problem_reported = False
         
         self.outp_file = None
 
         # to store the loaded BUFR table information
         self.bt = None
+
+        # to store the loaded BUFR template information
+        self.BufrTemplate = None
         #  #]        
     def get_expected_ecmwf_bufr_table_names(self,
                                             center, subcenter,
@@ -937,6 +942,7 @@ class BUFRInterfaceECMWF:
         #       self.actual_nr_of_expanded_descriptors)
         # print('self.ksup[4] = ', self.ksup[4] # real num of exp. elements)
         # print('self.ksup[6] = ', self.ksup[6] # real num of elements in cvals)
+
         #  #]
     def try_decode_data(self, nr_of_descriptors, nr_of_subsets):
         #  #[ try decoding for a given array length
@@ -1017,7 +1023,7 @@ class BUFRInterfaceECMWF:
             raise EcmwfBufrLibError(errtxt)
         
         self.data_decoded = True
-
+        # self.BufrTemplate = ...
         #  #]
     def print_sections_012_metadata(self):
         #  #[
@@ -1253,10 +1259,81 @@ class BUFRInterfaceECMWF:
                       "counted starting with 0)")
             raise EcmwfBufrLibError(errtxt)
 
+        if self.delayed_repl_present and not self.delayed_repl_problem_reported:
+            print('WARNING: the current template uses delayed replication! ')
+            print('Therefore the actual expanded descriptor list may be')
+            print('different for each subset within this BUFR message!')
+            print('and retrieving an array of data values spanning multiple')
+            print('subsets may yield unintended results !')
+            exp_descr_list, delayed_repl_present = \
+                   self.bt.expand_descriptor_list(self.py_unexp_descr_list)
+            print('exp_descr_list = ',exp_descr_list)
+            self.delayed_repl_problem_reported = True
+            
         selection = self.actual_kelem*np.array(range(nsubsets))+i
         values = self.values[selection]
 
         if get_cval:
+            cvalues = []
+            exp_descr_list_length = self.ktdexl
+            template_offset = selection % exp_descr_list_length
+            descr = self.ktdexp[template_offset]
+            unit = self.bt.table_b[descr[0]].unit
+            if unit == 'CCITT IA5':
+                for subset in range(nsubsets):
+                    cvals_index = int(values[subset]/1000)-1
+                    text = ''.join(c for c in self.cvals[cvals_index,:])
+                    cvalues.append(text.strip())
+            else:
+                cvalues = ['',]*nsubsets
+            return cvalues
+        else:
+            # print('i, self.values[selection] = '+str(i)+' '+str(values))
+            return values
+        #  #]
+    def get_subset_values(self, subset_nr, get_cval=False):
+        #  #[ get the values for a given subset as an array
+        """
+        a helper function to request the values of the i th subset
+        for the current BUFR message as an array
+        """
+        if (not self.data_decoded):
+            errtxt = ("Sorry, retrieving values is only possible after "+
+                      "a BUFR message has been decoded with a call to "+
+                      "decode_data")
+            raise EcmwfBufrLibError(errtxt)
+
+        nsubsets  = self.get_num_subsets()
+        #nelements = self.get_num_elements()
+        if subset_nr > nsubsets-1:
+            errtxt = ("Sorry, this BUFR message has only "+str(nsubsets)+
+                      " subsets, so requesting subset "+
+                      str(subset_nr)+" is not possible "+
+                      "(remember the arrays are "+
+                      "counted starting with 0)")
+            raise EcmwfBufrLibError(errtxt)
+
+        if self.delayed_repl_present:
+            print('WARNING: the current template uses delayed replication! ')
+            print('Therefore the actual expanded descriptor list may be')
+            print('different for each subset within this BUFR message!')
+            print('and retrieving an array of data values spanning multiple')
+            print('subsets may yield unintended results !')
+            exp_descr_list, delayed_repl_present = \
+                   self.bt.expand_descriptor_list(self.py_unexp_descr_list)
+            print('exp_descr_list = ',exp_descr_list)
+            
+        selection = (self.actual_kelem*subset_nr +
+                     np.array(range(self.actual_kelem)))
+        values = self.values[selection]
+
+        # todo:
+        # loop over values and exp_descr_list and manually
+        # do the delayed replication to get the proper descriptor list
+        # for the current subset
+
+        if get_cval:
+            # this code is not yet tested, not sure if this still works
             cvalues = []
             exp_descr_list_length = self.ktdexl
             template_offset = selection % exp_descr_list_length
@@ -1385,9 +1462,10 @@ class BUFRInterfaceECMWF:
 
         if delayed_repl_present:
             self.py_expanded_descr_list = []
+            self.delayed_repl_present = True
         else:
             self.py_expanded_descr_list = exp_descr_list
-
+            self.delayed_repl_present = False
             
         #for descr in 
         #    if descr[0]=='3':
@@ -1451,8 +1529,9 @@ class BUFRInterfaceECMWF:
                                dtype = np.int)
     
         kerr   = 0
-    
-        #print("calling: ecmwfbufr.busel():")
+
+        if self.verbose:
+            print("calling: ecmwfbufr.busel():")
         self.store_fortran_stdout()
         ecmwfbufr.busel(self.ktdlen, # actual number of data descriptors
                         self.ktdlst, # list of data descriptors
@@ -1652,7 +1731,7 @@ class BUFRInterfaceECMWF:
                 self.kdata[i] = max_repeats
                 i += 1
                 
-        # print("delayed replication factors: ", self.kdata)
+        # print("DEBUG: delayed replication factors: ", self.kdata)
         #  #]
     def register_and_expand_descriptors(self, BT):
         #  #[ estimate exp. descr. list size and needed bytes for encoding
@@ -1791,7 +1870,7 @@ class BUFRInterfaceECMWF:
         # print("cunits = ", self.cunits)
 
         self.bufr_template_registered = True
-
+        self.BufrTemplate = BT
         #  #]        
     def encode_data(self, values, cvals):
         #  #[ call bufren to encode a bufr message
@@ -1813,10 +1892,9 @@ class BUFRInterfaceECMWF:
         actual_nr_of_subsets = self.get_num_subsets()
         self.kvals = self.max_nr_expanded_descriptors*actual_nr_of_subsets
 
-        # allocate space for decoding
-        # note: float64 is the default, but it doesn't hurt to make it explicit
-        #self.values = np.zeros(      self.kvals, dtype = np.float64)
-        #self.cvals  = np.zeros((self.kvals, 80), dtype = '|S1')
+        # copy incoming data into instance namespace
+        self.values = values
+        self.cvals  = cvals
 
         #cval_strings = np.zeros(self.kvals, dtype = '|S64')
         #for i in range(self.kvals):

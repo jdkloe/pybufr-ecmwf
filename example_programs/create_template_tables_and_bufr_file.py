@@ -87,11 +87,17 @@ bufr_table_set.write_tables(table_name)
 # now use these definitions to create a BUFR template
 from pybufr_ecmwf.bufr_template import BufrTemplate
 
+# include delayed replication in the test or not?
+#use_delayed_replication = False
+use_delayed_replication = True
+
 template = BufrTemplate()
 template.add_descriptor(D_301192) # 4 items
 template.add_descriptor(D_301193) # 6 items
-max_nr = 5
-template.add_delayed_replic_descriptors(max_nr,[variable3,]) # max. 5*1 items
+if use_delayed_replication:
+    max_nr = 5 # max. 5*1 items
+    template.add_delayed_replic_descriptors(max_nr,[variable3,])
+
 
 # and use this BUFR template to create a test BUFR message
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
@@ -132,10 +138,13 @@ num_cvalues = num_values
 cvals  = numpy.zeros((num_cvalues, 80), dtype=numpy.character)
 cvals_index = 0
 
+repl_counts = []
+
 for subset in range(num_subsets):
     # note that python starts counting with 0, unlike fortran,
     # so there is no need to take (subset-1)
 
+    print 'subset,exp_descr_list_length = ',subset,exp_descr_list_length
     i = subset*exp_descr_list_length
     
     # fill the message with some dummy data
@@ -161,22 +170,27 @@ for subset in range(num_subsets):
         values[i] = v
         i += 1
 
-    # set actual delayed replication repeats                                                                                                          
-    num_repl = 3+2*subset
-    print 'num_repl = ',num_repl
-    values[i] = num_repl
-    i += 1
-
-    # fill the replicated variable
-    for ii in range(num_repl):
-        v = 12.+subset*0.1 + ii*0.01
-        bufr.verify_in_range(i,v)
-        values[i] = v
+    if use_delayed_replication:
+        # set actual delayed replication repeats
+        num_repl = 3 + 2*subset
+        print 'num_repl = ',num_repl
+        values[i] = num_repl
         i += 1
+        repl_counts.append(num_repl)
+        
+        # fill the replicated variable
+        for ii in range(num_repl):
+            v = 12.+subset*0.1 + ii*0.01
+            bufr.verify_in_range(i,v)
+            values[i] = v
+            i += 1
 
 # do the encoding to binary format
+bufr.kdata = numpy.array(repl_counts)
 print 'bufr.kdata = ',bufr.kdata
 bufr.encode_data(values, cvals)
+
+print 'DEBUG: values = ', values
 
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 # get an instance of the RawBUFRFile class
@@ -204,17 +218,28 @@ bob.setup_tables(table_b_to_use='B'+table_name,
 
 bob.get_next_msg()
 print 'num_subsets:  ', bob.get_num_subsets()
-print 'num_elements: ', bob.get_num_elements()
-print bob.get_names()
-print bob.get_units()
-data = bob.get_values_as_2d_array()
-print data.shape
-print data
+
+if use_delayed_replication:
+    data1 = bob.get_subset_values(0)
+    print 'data1 = ',data1
+    data2 = bob.get_subset_values(1)
+    print 'data2 = ',data2
+else:
+    print 'num_elements: ', bob.get_num_elements()
+    print bob.get_names()
+    print bob.get_units()
+    data = bob.get_values_as_2d_array()
+    print data.shape
+    print data
+    print 'bob.bufr_obj.values = '
+    print bob.bufr_obj.values
+
 textdata = bob.get_value(3,0)
 print 'textdata(3,0)', textdata
 textdata = bob.get_value(3,0,get_cval=True)
 print 'textdata(3,0)', textdata
 textdata = bob.get_values(3,get_cval=True)
 print 'textdata(3,:)', textdata
+
 
 bob.close()

@@ -822,11 +822,15 @@ class BufrTable:
                     #    print('possible based on a descriptor list alone.')
                     #    print('expand_descriptor_list failed ...')
                     #return None, True
+                    delayed_repl_operator = normalised_descriptor_list[i+1]
+                    descr_list_to_be_replicated = \
+                                normalised_descriptor_list[i+2:i+2+xx]
                     tmp_list, tmp_del_repl_present = \
                        self.expand_descriptor_list(descr_list_to_be_replicated)
+                    expanded_descriptor_list.append(delayed_repl_operator.reference)
                     expanded_descriptor_list.append(tmp_list)
                     delayed_repl_present = True
-
+                    num_descr_to_skip += 1
                 else:
                     # do the replication
                     for j in range(yyy):

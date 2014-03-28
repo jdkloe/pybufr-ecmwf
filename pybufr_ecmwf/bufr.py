@@ -212,6 +212,16 @@ class BUFRReader:
             raise NoMsgLoadedError
         return self.bufr_obj.get_values(descr_nr, get_cval)
         #  #]
+    def get_subset_values(self, subset_nr , get_cval=False):
+         #  #[
+        """
+        request an array of values containing the values
+        for a given subset for this bufr message
+        """
+        if (self.msg_loaded == -1):
+            raise NoMsgLoadedError
+        return self.bufr_obj.get_subset_values(subset_nr, get_cval)
+        #  #]
     def get_values_as_2d_array(self):
         #  #[
         """
