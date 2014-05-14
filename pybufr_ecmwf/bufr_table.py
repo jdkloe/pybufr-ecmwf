@@ -41,6 +41,7 @@ from __future__ import (absolute_import, division,
 import os, stat
 import sys
 import glob
+import csv
 #  #]
 
 class ProgrammingError(Exception):
@@ -1414,6 +1415,157 @@ class BufrTable:
             raise ProgrammingError
 
         #  #]
+    def read_WMO_csv_table_b(self, b_filename):
+        #  #[ load table B from WMO csv file
+        table_b   = {} # dict of desciptor-objects (f=0)
+        with open(b_filename) as csvfile:
+            csvreader = csv.DictReader(csvfile, delimiter=',', quotechar='"')
+            nr_of_ignored_probl_entries = 0
+            for row in csvreader:
+                success = True
+                FXY            = row['FXY']
+                ElementName_en = row['ElementName_en']
+                Note_en        = row['Note_en']
+                ElementName_en = ElementName_en + Note_en
+                BUFR_Unit      = row['BUFR_Unit']
+                BUFR_Scale     = row['BUFR_Scale']
+                BUFR_ReferenceValue  = row['BUFR_ReferenceValue']
+                BUFR_DataWidth_Bits  = row['BUFR_DataWidth_Bits']
+                
+                # manual fix a long unit
+                if BUFR_Unit=="Code table defined by originating/generating centre":
+                    BUFR_Unit = "Code table"
+                # manually truncate name field
+                if len(ElementName_en) > 64:
+                    ElementName_en = ElementName_en[:64]
+                    
+                # check field widths
+                if len(FXY) > 8:
+                    print("ERROR: string too long for field: FXY", FXY)
+                if len(ElementName_en) > 64:
+                    print("ERROR: string too long for field: ElementName_en",\
+                          len(ElementName_en), ElementName_en)
+                if len(BUFR_Unit) > 24:
+                    print("ERROR: string too long for field: BUFR_Unit",\
+                          len(BUFR_Unit), BUFR_Unit)
+                if len(BUFR_Scale) > 4:
+                    print("ERROR: string too long for field: BUFR_Scale",\
+                          len(BUFR_Scale), BUFR_Scale)
+                if len(BUFR_ReferenceValue) > 14:
+                    print("ERROR: string too long for field: BUFR_ReferenceValue",\
+                          len(BUFR_ReferenceValue), BUFR_ReferenceValue)
+                if len(BUFR_DataWidth_Bits) > 4:
+                    print("ERROR: string too long for field: BUFR_DataWidth_Bits",\
+                          len(BUFR_DataWidth_Bits), BUFR_DataWidth_Bits)
+        
+                #print a''.join('[{}]'.format(s) for s in
+                #              [FXY,ElementName_en,BUFR_Unit,BUFR_Scale,
+                #               BUFR_ReferenceValue,BUFR_DataWidth_Bits])
+                
+                try:
+                    reference = int(FXY, 10)
+                    unit_scale = int(BUFR_Scale)
+                    unit_reference = int(BUFR_ReferenceValue)
+                    data_width = int(BUFR_DataWidth_Bits)
+                    txt_additional_info = ''
+                    
+                    # remove excess spaces from the string before storing
+                    name = ElementName_en.strip()
+                    unit = BUFR_Unit.strip()
+                except ValueError:
+                    success = False
+                    nr_of_ignored_probl_entries += 1
+                    print("ERROR: unexpected format in WMO table B file...")
+                    print("Could not convert one of the numeric "+
+                          "fields to integer.")
+                    print("txt_reference       = ["+FXY+"]")
+                    print("txt_unit_scale      = ["+BUFR_Scale+"]")
+                    print("txt_unit_reference  = ["+BUFR_ReferenceValue+"]")
+                    print("txt_data_width      = ["+BUFR_DataWidth_Bits+"]")
+                    print("txt_additional_info = ["+txt_additional_info+"]")
+                    print("Ignoring this entry .....")
+                
+                if (success):
+                    # add descriptor object to the list
+                    try:
+                        b_descr = Descriptor(reference, name, unit, unit_scale,
+                                             unit_reference, data_width)
+                    except AssertionError:
+                        print("ERROR: multiple table B descriptors with "+
+                              "identical reference")
+                        print("number found. This should never happen !!!")
+                        print("problematic descriptor is: ", b_descr)
+                        print("Ignoring this entry .....")
+                        nr_of_ignored_probl_entries += 1
+                        
+                    if not table_b.has_key(reference):
+                        #print("adding descr. key ", reference)
+                        table_b[reference] = b_descr
+                    
+        print("-------------")
+        if (nr_of_ignored_probl_entries>0):
+            print("nr_of_ignored_probl_entries = ",
+                  nr_of_ignored_probl_entries)
+        print("Loaded: ", len(table_b), " table B entries")
+        print("-------------")
+        self.table_b = table_b
+        #  #]
+    def read_WMO_csv_table_d(self, d_filename):
+        #  #[ load table D from WMO csv file
+        table_d   = {} # dict of desciptor-objects (f=0)
+        with open(d_filename) as csvfile:
+            csvreader = csv.DictReader(csvfile, delimiter=',', quotechar='"')
+            nr_of_ignored_probl_entries = 0
+            for row in csvreader:
+                FXY1 = row['FXY1']
+                FXY2 = row['FXY2']
+                # comment = row['ElementName_en'] + \
+                #          row['ElementDescription_en'] + \
+                #          row['Note_en']
+                int_FXY1 = int(FXY1, 10)
+                int_FXY2 = int(FXY2, 10)
+                if int_FXY1 not in table_d:
+                    table_d[int_FXY1] = []
+                # table_d[int_FXY1].append((int_FXY2, comment))
+                table_d[int_FXY1].append(int_FXY2)
+
+        # now convert the imported lists into proper CompositeDescriptor instances
+        while table_d:
+            keys = table_d.keys()
+            for reference in keys:
+                descriptor_list = []
+                
+                postpone = False
+                for d in table_d[reference]:
+                    descr = self.get_descr_object(d)
+                    if (descr == None):
+                        postpone = True
+                        break
+                    descriptor_list.append(descr)
+                    
+                if postpone:
+                    # print 'postponing'
+                    continue
+            
+                comment = ''
+                d_descr = CompositeDescriptor(reference, descriptor_list,
+                                              comment, self)
+                if not self.table_d.has_key(reference):
+                    # print("adding descr. key ", reference)
+                    self.table_d[reference] = d_descr
+                else:
+                    print("WARNING: multiple table D descriptors "+
+                          "with identical reference")
+                    print("number found. This should never happen !!!")
+                    print("problematic descriptor is: ", d_descr)
+                    print("Please report this problem, together with")
+                    print("a copy of the bufr table you tried to read.")
+                    print("This is a formatting problem in the BUFR")
+                    print("Table but will not affect decoding.")
+                    print("Ignoring this entry for now.....")
+                
+                del(table_d[reference])
+        #  #]
     def apply_special_commands(self):
         #  #[
         """
@@ -1597,11 +1749,11 @@ class BufrTable:
             n = len(d_descr.descriptor_list)
             for (i, ref_descr) in enumerate(d_descr.descriptor_list):
                 if (i == 0):
-                    txt = ' %6s %2i %6s\n' % \
-                          (d_descr.reference, n, ref_descr.reference)
+                    txt = ' %6i %2i %6.6i\n' % \
+                          (int(d_descr.reference), n, int(ref_descr.reference))
                 else:
-                    txt = ' %6s %2s %6s\n' % \
-                          ('', '', ref_descr.reference)
+                    txt = ' %6s %2s %6.6i\n' % \
+                          ('', '', int(ref_descr.reference))
                     
                 # txt = str(self.table_d[ref])+'\n'
                 fd.write(txt)
