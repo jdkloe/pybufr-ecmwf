@@ -39,7 +39,8 @@ class BufrTemplate:
     #  #[ class constants
     
     Delayed_Descr_Repl_Factor = int('031001', 10)
-
+    Extended_Delayed_Descr_Repl_Factor = int('031002', 10)
+    
     #  #]
     def __init__(self):
         #  #[
@@ -65,18 +66,24 @@ class BufrTemplate:
         self.unexpanded_descriptor_list.extend(descriptors)
         #  #]
     def add_delayed_replic_descriptors(self, max_nr_of_repeats,
-                                       *descriptors):
+                                       *descriptors, **kwargs):
         #  #[
         """
         use delayed replication to add a list of descriptors to the template
         """
         nr_of_descriptors = len(descriptors)
-        print('adding delayed replication for ', nr_of_descriptors,
-              ' descriptors')
+        if 'extended' in kwargs:
+            repl_factor = self.Extended_Delayed_Descr_Repl_Factor
+            print('adding extended delayed replication for ', nr_of_descriptors,
+                  ' descriptors')
+        else:
+            repl_factor = self.Delayed_Descr_Repl_Factor
+            print('adding delayed replication for ', nr_of_descriptors,
+                  ' descriptors')
         print('replicating them at most ', max_nr_of_repeats, ' times')
         repl_code = self.get_replication_code(nr_of_descriptors, 0)
         self.unexpanded_descriptor_list.append(repl_code)
-        self.unexpanded_descriptor_list.append(self.Delayed_Descr_Repl_Factor)
+        self.unexpanded_descriptor_list.append(repl_factor)
         self.unexpanded_descriptor_list.extend(descriptors)
         self.nr_of_delayed_repl_factors = self.nr_of_delayed_repl_factors + 1
         self.del_repl_max_nr_of_repeats_list.append(max_nr_of_repeats)
