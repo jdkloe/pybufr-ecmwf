@@ -57,7 +57,7 @@ class ProgrammingError(Exception):
 
 #  #]
 #  #[ constants
-URL_ECMWF_WEBSITE = "http://www.ecmwf.int/"
+URL_ECMWF_WEBSITE = "http://old.ecmwf.int/"
 URL_BUFR_PAGE     = URL_ECMWF_WEBSITE+"products/data/"+\
                     "software/download/bufr.html"
 
