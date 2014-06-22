@@ -2,6 +2,10 @@ this tar file bufr_000*.tar.gz was downloaded from:
 
 http://www.ecmwf.int/products/data/software/download/bufr.html
 
+tar file versions 000401 and later where downloaded from:
+
+http://old.ecmwf.int/products/data/software/download/bufr.html
+
 This software is copyright ECMWF and is LGPL licensed.
 Redistribution is permitted only according to the terms specified
 in this license.

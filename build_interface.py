@@ -1221,7 +1221,13 @@ class InstallBUFRInterfaceECMWF(object):
             # this should be something like: bufrdc_000389
             try:
                 bufr_dir = os.path.split(source_dir)[1]
-                bufrdir_version = int(bufr_dir.split('_')[1])
+                parts = bufr_dir.split('_')
+                if len(parts)>1:
+                    bufrdir_version = int(parts[1])
+                else:
+                    # exception seems needed for version 000401
+                    # which unpacks as 000401 without bufrdc_ prepended
+                    bufrdir_version = int(parts[0])
                 # print('bufr_dir = ',bufr_dir)
                 # print('bufrdir_version = ',bufrdir_version)
             except:
@@ -1607,15 +1613,16 @@ class InstallBUFRInterfaceECMWF(object):
             for makefile_dir in makefile_dirs:
                 makefile = os.path.join(source_dir, makefile_dir, 'Makefile')
                 makefile_template = makefile+'.in'
-                print('creating: ', makefile)
-                fd_makefile = open(makefile, 'w')
-                for line in open(makefile_template).readlines():
-                    line_new = line
-                    # print('adapting line: ',line)
-                    for (old, new) in replacements:
-                        line_new = line_new.replace(old, new)
-                    fd_makefile.write(line_new)
-                fd_makefile.close()
+                if os.path.exists(makefile_template):
+                    print('creating: ', makefile)
+                    fd_makefile = open(makefile, 'w')
+                    for line in open(makefile_template).readlines():
+                        line_new = line
+                        # print('adapting line: ',line)
+                        for (old, new) in replacements:
+                            line_new = line_new.replace(old, new)
+                        fd_makefile.write(line_new)
+                    fd_makefile.close()
             #  #]
 
         #  #[ compile little pieces of Fortran and c to test the compilers
