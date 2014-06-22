@@ -9,7 +9,7 @@ B0000000000098015001.TXT
 D0000000000098015001.TXT
 WARNING: unexpected format in table D file...
 problematic descriptor is:  340010
-linecount:  5217
+linecount:  5186
 line: [           010102]
 This D-table entry defines more descriptors than
 specified in the start line.
