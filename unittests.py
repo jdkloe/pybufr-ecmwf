@@ -88,7 +88,7 @@ if not os.path.exists(ACT_OUTP_DIR):
     os.mkdir(ACT_OUTP_DIR)
 #  #]
 
-def call_cmd(cmd):
+def call_cmd(cmd, rundir=''):
     #  #[
     """ a wrapper around run_shell_command for easier testing.
     It sets the environment setting PYTHONPATH to allow the
@@ -113,6 +113,11 @@ def call_cmd(cmd):
     if (env.has_key('BUFR_TABLES')):
         del(env['BUFR_TABLES'])
 
+    # change dir if needed
+    if rundir:
+        cwd = os.getcwd()
+        os.chdir(rundir)
+
     # execute the test and catch all output
     subpr = subprocess.Popen(cmd,
                              shell  = True,
@@ -124,6 +129,9 @@ def call_cmd(cmd):
     subpr.stdout.close()
     subpr.stderr.close()
 
+    if rundir:
+        os.chdir(cwd)
+
     if python3:
         text_lines_stdout = [l.decode() for l in lines_stdout]
         text_lines_stderr = [l.decode() for l in lines_stderr]
@@ -132,7 +140,7 @@ def call_cmd(cmd):
         return (lines_stdout, lines_stderr)
     #  #]
 
-def call_cmd_and_verify_output(cmd):
+def call_cmd_and_verify_output(cmd, rundir=''):
     #  #[
     """ a wrapper around run_shell_command for easier testing.
     It automatically constructs a name for the test output based
@@ -201,7 +209,7 @@ def call_cmd_and_verify_output(cmd):
     if python3:
         tmp_cmd = 'python3 '+cmd
     # execute the test and catch all output
-    (lines_stdout, lines_stderr) = call_cmd(tmp_cmd)
+    (lines_stdout, lines_stderr) = call_cmd(tmp_cmd, rundir)
 
     # write the actual outputs to file
     file_descr = open(actual_stdout, 'w')
@@ -708,6 +716,16 @@ class CheckBufrTable(unittest.TestCase):
         testprog = 'find_descriptor_code.py'
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+    def test_single_table(self):
+         #  #[
+        """
+        test consistency of one set of bufr table files
+        """
+        # run the provided example code and verify the output
+        cmd = "bufr_table.py simpletest"
+        success = call_cmd_and_verify_output(cmd, rundir='pybufr_ecmwf')
         self.assertEqual(success, True)
         #  #]
     #  #]

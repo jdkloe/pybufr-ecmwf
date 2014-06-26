@@ -623,10 +623,20 @@ class CompositeDescriptor(Descriptor): # [table D entry]
         return count
     #  #]
 
+class FlagDefinition:
+    def __init__(self):
+        self.reference = None
+        self.flag_dict = {}
+    def __str__(self):
+        text = []
+        for k in sorted(self.flag_dict):
+            text.append('flag: {} value: {}'.format(k, self.flag_dict[k]))
+        return '\n'.join('==> '+l for l in text)
+    
 class BufrTable:
     #  #[
     """
-    a base class for BUFR B and D tables    
+    a base class for BUFR B, C and D tables    
     """
     # Some variables to remember if we already loaded a BUFR table or not.
     # Note that these have to be stored as class variables.
@@ -634,14 +644,16 @@ class BufrTable:
     # the information could not be shared between 2 different
     # instances of this class (even though the actual descriptor instances
     # are shared thanks to the singleton trick used in this module).
-    # This is important to speed upn performance in case multiple
+    # This is important to speed up performance in case multiple
     # BUFR messages need to be decoded sequentially that use the
     # same set of BUFR tables (which will ususally be the case, although
     # this is not a requirement as far as I know; even 2 BUFR messages
     # from the same BUFR file could in theory use different tables ...).
     currently_loaded_B_table = None
+    currently_loaded_C_table = None
     currently_loaded_D_table = None
     saved_B_table = None
+    saved_C_table = None
     saved_D_table = None
     
     def __init__(self,
@@ -654,6 +666,8 @@ class BufrTable:
         self.specials  = {} # dict of specials  (f=1)
         self.modifiers = {} # dict of modifiers (f=2)
         self.table_d   = {} # dict of composite-descriptor-objects (f=3)
+
+        self.table_c   = {} # dict of flag definitions
 
         self.verbose = verbose
         self.report_warnings = report_warnings
@@ -918,7 +932,7 @@ class BufrTable:
     def load(self, t_file):
         #  #[
         """
-        load a BUFR B or D table from file
+        load a BUFR B, C or D table from file
         """
 
 #        print("loading file: ", t_file)
@@ -964,6 +978,15 @@ class BufrTable:
                 if self.verbose:
                     print('B-table already loaded: ', tablefile)
                 self.table_b = self.__class__.saved_B_table
+        elif base[0].upper() == 'C':
+            if (self.__class__.currently_loaded_C_table != tablefile):
+                self.load_c_table(tablefile)
+                self.__class__.currently_loaded_C_table = tablefile
+                self.__class__.saved_C_table = self.table_c
+            else:
+                if self.verbose:
+                    print('C-table already loaded: ', tablefile)
+                self.table_c = self.__class__.saved_C_table
         elif base[0].upper() == 'D':
             if (self.__class__.currently_loaded_D_table != tablefile):
                 self.load_d_table(tablefile)
@@ -1028,7 +1051,7 @@ class BufrTable:
 
         #  #]
     def load_b_table(self, bfile):
-        #  #[
+        #  #[ load the B table from file
         """
         load BUFR table B from file
         """
@@ -1164,7 +1187,16 @@ class BufrTable:
 
         return postpone
         #  #]
-    def custom_split(self, line):
+    def custom_c_split(self, line):
+        #  #[ split a flag table line in parts
+        part0 = line[:6]
+        part1 = line[7:11]
+        part2 = line[12:20]
+        part3 = line[21:23]
+        part4 = line[24:]
+        return (part0, part1, part2, part3, part4)
+        #  #]
+    def custom_d_split(self, line):
         #  #[ replacement for split()
         # needed because sometimes D-descriptors do not have
         # spaces in between the items on the start line
@@ -1203,7 +1235,7 @@ class BufrTable:
                 #print(j, "considering line ["+line+"]")
                 # this fails if more than 100 elements in one D-entry
                 # parts = line[:18].split()
-                parts = self.custom_split(line)
+                parts = self.custom_d_split(line)
                 if j == 0: # startline
                     #print("is a start line")
                     reference     = int(parts[0], 10)
@@ -1300,20 +1332,120 @@ class BufrTable:
                 
         return (handled_blocks, remaining_blocks)
         #  #]
+    def add_c_table_entry(self,lineblock):
+        #  #[ parse lines defining a C table entry
+
+        #if self.verbose:
+        #    print(60*'=')
+        #    for l in lineblock:
+        #        print('line: ['+l+']')
+
+        fldef = FlagDefinition()
+
+        startline = lineblock[0]
+        parts = self.custom_c_split(startline)
+        reference = int(parts[0])
+        num_flags = int(parts[1])
+
+        copied_lineblock = lineblock[:]
+        flag_value = None
+        # repeat as long as we have lines
+        while copied_lineblock:
+            current_line = copied_lineblock.pop(0)
+            #if self.verbose:
+            #    print('parsing: ', current_line)
+            parts = self.custom_c_split(current_line)
+            if parts[2].strip() == '':
+                # this is a continuation line
+                text += current_line[22:]
+                num_text_lines_added += 1
+            else:
+                # this is a main flag definition line
+                # store previous flag
+                if flag_value is not None:
+                    # print('storing prev. flag')
+                    fldef.flag_dict[flag_value] = text
+                    # verify consistency of C table definition
+                    if num_text_lines_added != num_text_lines:
+                        print('ERROR: C-table seems wrong!')
+                        print('expected num_text_lines = ', num_text_lines)
+                        print('found    num_text_lines = ',
+                              num_text_lines_added)
+                        print('parts: ',parts)
+                        sys.exit(1)
+                        
+                # parse new flag
+                flag_value = int(parts[2])
+                num_text_lines = int(parts[3])
+                text = parts[4]
+                num_text_lines_added = 1
+
+        # print('Handling final flag def')
+        
+        # handle last flag def
+        if flag_value is not None:
+            fldef.flag_dict[flag_value] = text
+            # verify consistency of C table definition
+            if num_text_lines_added != num_text_lines:
+                print('ERROR: C-table seems wrong!')
+                print('expected num_text_lines = ', num_text_lines)
+                print('found    num_text_lines = ', num_text_lines_added)
+                sys.exit(1)
+            
+        # verify consistency of C table definition
+        if num_flags != len(fldef.flag_dict.keys()):
+            print('ERROR: C-table seems wrong for reference {}!'.
+                  format(reference))
+            print('expected number of flag values = ', num_flags)
+            print('found number of unique flag values = ',
+                  len(fldef.flag_dict.keys()))
+            #if num_flags==0:
+            print('==>ignoring this problem for now\n')
+        else:
+            #print('fldef {} \n{}'.format(reference,str(fldef)))
+            # store the result
+            self.table_c[reference] = fldef
+        #  #]
+    def load_c_table(self, cfile):
+        #  #[ load the C table from file
+        """
+        load BUFR table C from file
+        """
+        if self.verbose:
+            print("loading C table from file: ", cfile)
+
+        # load blocks of lines that define each flag
+        this_lineblock = []
+        for (i, line) in enumerate(open(cfile, 'rt')):
+            line_copy = line.replace('\r', '').replace('\n', '')
+            # skip empty lines
+            if line_copy == '': continue
+
+            if line_copy[:6].strip() != '':
+                # found a new flag definition
+
+                # in case this is not the first block
+                if this_lineblock:
+                    # handle the previous one
+                    self.add_c_table_entry(this_lineblock)
+                    # and start all over again
+                    this_lineblock = []
+
+            # add the line to the block
+            this_lineblock.append(line_copy)
+
+        # handle final definition in the file
+        self.add_c_table_entry(this_lineblock)
+        
+        #  #]
     def load_d_table(self, dfile):
-        #  #[
+        #  #[ load the D table from file
         """
         load BUFR table D from file
         """
         if self.verbose:
             print("loading D table from file: ", dfile)
             
-        # known problem:
-        # the code stops with an error if a D-table entry is used before
-        # it is defined, even if it is defined lateron in the same D-table
-        # in the current example file, this happens for entry 301028
-        # which is used on line 67, but only defined on line 69
-
         if self.verbose:
             print("********************")
             print("**** first pass ****")
@@ -1328,7 +1460,7 @@ class BufrTable:
 
             # this fails if more than 100 elements in one D-entry
             # parts = line_copy[:18].split()
-            parts = self.custom_split(line_copy)
+            parts = self.custom_d_split(line_copy)
             # print('parts: ',parts)
             
             start_line = False
@@ -1633,13 +1765,13 @@ class BufrTable:
     def unload_tables(self):
         #  #[
         """
-        unload the descriptors for the current BUFR table to
-        allow loading a new table
+        unload the descriptors for the current BUFR table by removing them
+        from the class namespace to allow loading a new table
         """
         # ok, this works but is not very pretty,
         # todo: see if this can be added as a function to the Singleton
         # or Descriptor class
-
+        
         # dicts
         for b_reference in self.table_b.keys():
             del(self.table_b[b_reference].__class__.\
@@ -1660,14 +1792,22 @@ class BufrTable:
         del(self.list_of_d_entry_lineblocks)
         self.list_of_d_entry_lineblocks = []
 
-        # print('self.table_b = ', self.table_b)
-        # print('self.table_d = ', self.table_d)
-        # print('self.specials = ', self.specials)
-        # print('self.modifiers = ', self.modifiers)
-        # print('self.list_of_d_entry_lineblocks = ',
-        #       self.list_of_d_entry_lineblocks)
+        # reset instance  attributes
+        self.table_b   = {}
+        self.specials  = {}
+        self.modifiers = {}
+        self.table_c   = {} # 
+        self.table_d   = {}
+        self.list_of_d_entry_lineblocks = []
+        self.num_d_blocks = 0
 
-        #sys.exit(1)
+        # reset class attributes
+        self.__class__.currently_loaded_B_table = None
+        self.__class__.currently_loaded_C_table = None
+        self.__class__.currently_loaded_D_table = None
+        self.__class__.saved_B_table = None
+        self.__class__.saved_C_table = None
+        self.__class__.saved_D_table = None
         #  #]
     def add_to_B_table(self, descriptor):
         #  #[
@@ -1797,14 +1937,33 @@ class BufrTable:
         return False
         #  #]
     #  #]
-    
+
 if __name__ == "__main__":
     #  #[ test program
     print("Starting test program:")
+
     BT = BufrTable(autolink_tablesdir = "tmp_BUFR_TABLES",
                    verbose=False)
     # load BUFR tables using the automatically linked
     # tables defined on the lines above
+
+    par = ''
+    if len(sys.argv)>1:
+        par = sys.argv[1]
+    if par == 'simpletest':
+        # simple test on one file only
+        bufr_b_table = 'ecmwf_bufrtables/B0000000000099017001.TXT'
+        bufr_c_table = 'ecmwf_bufrtables/C0000000000099017001.TXT'
+        bufr_d_table = 'ecmwf_bufrtables/D0000000000099017001.TXT'
+
+        BT.load(bufr_b_table)
+        print('loaded bufr B table: {}'.format(bufr_b_table))
+        BT.load(bufr_c_table)
+        print('loaded bufr C table: {}'.format(bufr_c_table))
+        BT.load(bufr_d_table)
+        print('loaded bufr D table: {}'.format(bufr_d_table))
+    
+        sys.exit()
     
     # test the available bufr tables
     #TABLE_CODES = ["0000000000098000000",
@@ -1816,6 +1975,47 @@ if __name__ == "__main__":
     # this last one seems only to have a B table but no D table!!!!
     
     handled_orig_names = []
+
+    def check_tablefile(bufr_table):
+        #  #[ check consistency of a BUFR table file
+        bufr_name = os.path.split(bufr_table)[1]
+        table_type = bufr_name[0]
+        code = bufr_name[1:]
+        
+        if not os.path.exists(bufr_table):
+            print('ERROR: {} table missing for code: {}'.
+                  format(table_type,code))
+            return
+
+        realname_bufr_table = os.path.split(os.path.realpath(bufr_table))[1]
+
+        # prevent double checking
+        if realname_bufr_table in handled_orig_names: return
+
+        print('appending: ',realname_bufr_table)
+        handled_orig_names.append(realname_bufr_table)
+
+        print('='*50)
+        print('loading: '+bufr_table)
+        print('='*50)
+        comments_file = 'comments_during_load_of_'+realname_bufr_table
+        saved_sys_stdout = sys.stdout
+        try:
+            sys.stdout = open(comments_file,'wt')
+            BT.load(bufr_table)
+            sys.stdout.close()
+            sys.stdout = saved_sys_stdout
+        except:
+            sys.stdout = saved_sys_stdout
+            print('ERROR: load failed !!!')
+        if os.path.exists(comments_file):
+            # get the filesize and remove empty files
+            statresult = os.stat(comments_file)
+            filesize = statresult[stat.ST_SIZE]
+            if filesize == 0:
+                os.remove(comments_file)
+        #  #]
+            
 
     PATH = "ecmwf_bufrtables"
     bufr_b_tables = glob.glob(os.path.join(PATH, "B*.TXT"))
@@ -1830,89 +2030,10 @@ if __name__ == "__main__":
         bufr_c_table = os.path.join(PATH, bufr_c_name)
         bufr_d_table = os.path.join(PATH, bufr_d_name)
 
-        check_b_table = False
-        check_c_table = False
-        check_d_table = False
-
-        if os.path.exists(bufr_b_table):
-            realname_bufr_b_table = \
-                     os.path.split(os.path.realpath(bufr_b_table))[1]
-            if realname_bufr_b_table not in handled_orig_names:
-                print('appending: ',realname_bufr_b_table)
-                handled_orig_names.append(realname_bufr_b_table)
-                check_b_table = True
-        else:
-            print('ERROR: B table missing for code: ',code)
-
-        if os.path.exists(bufr_c_table):
-            realname_bufr_c_table = \
-                     os.path.split(os.path.realpath(bufr_c_table))[1]
-            if realname_bufr_c_table not in handled_orig_names:
-                print('appending: ',realname_bufr_c_table)
-                handled_orig_names.append(realname_bufr_c_table)
-                check_c_table = True
-        else:
-            print('ERROR: C table missing for code: ',code)
-
-        if os.path.exists(bufr_d_table):
-            realname_bufr_d_table = \
-                     os.path.split(os.path.realpath(bufr_d_table))[1]
-            if realname_bufr_d_table not in handled_orig_names:
-                print('appending: ',realname_bufr_d_table)
-                handled_orig_names.append(realname_bufr_d_table)
-                check_d_table = True
-        else:
-            print('ERROR: D table missing for code: ',code)
-
-
-        if check_b_table:
-            print('='*50)
-            print('loading: '+bufr_b_table)
-            print('='*50)
-            comments_file_b = 'comments_during_load_of_'+bufr_b_name
-            saved_sys_stdout = sys.stdout
-            try:
-                sys.stdout = open(comments_file_b,'wt')
-                BT.load(bufr_b_table)
-                sys.stdout.close()
-                sys.stdout = saved_sys_stdout
-            except:
-                sys.stdout = saved_sys_stdout
-                print('ERROR: load failed !!!')
-            if os.path.exists(comments_file_b):
-                # get the filesize
-                statresult = os.stat(comments_file_b)
-                filesize = statresult[stat.ST_SIZE]
-                if filesize == 0:
-                    os.remove(comments_file_b)
-
-
-        if check_c_table:
-            print('='*50)
-            print('C-table checking not yet implemented')
-            print('='*50)
-
-        if check_d_table:
-            print('='*50)
-            print('loading: '+bufr_d_table)
-            print('='*50)
-            comments_file_d = 'comments_during_load_of_'+bufr_d_name
-            saved_sys_stdout = sys.stdout
-            try:
-                sys.stdout = open(comments_file_d,'wt')
-                BT.load(bufr_d_table)
-                sys.stdout.close()
-                sys.stdout = saved_sys_stdout
-            except:
-                sys.stdout = saved_sys_stdout
-                print('ERROR: load failed !!!')
-            if os.path.exists(comments_file_d):
-                # get the filesize
-                statresult = os.stat(comments_file_d)
-                filesize = statresult[stat.ST_SIZE]
-                if filesize == 0:
-                    os.remove(comments_file_d)
-
+        check_tablefile(bufr_b_table)
+        check_tablefile(bufr_c_table)
+        check_tablefile(bufr_d_table)
+        
         BT.unload_tables()
     
     # test application of modification commands:
