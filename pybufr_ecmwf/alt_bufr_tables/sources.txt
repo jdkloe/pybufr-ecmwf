@@ -1,0 +1,21 @@
+These BUFR table files have been copied from:
+
+B0000000000098015001.TXT
+C0000000000098015001.TXT
+D0000000000098015001.TXT
+
+the above 3 are from ECMWF BUFR library version 000401, 
+
+
+GENERIC_SCAT_BUFR_TABLE_B.TXT
+GENERIC_SCAT_BUFR_TABLE_D.TXT
+
+the above 2 are from the KNMI genscat software, version of 27-Oct-2009
+which was build from ECMWF global table v13, and added to it
+it includes the new SWS generic scatterometry format
+
+GENERIC_SCAT_BUFR_TABLE_C.TXT
+
+the above file was copied from ECMWF BUFR library version 000401,
+and was originally called: C0000000000098013001.TXT
+[I just hope it is compatible enough with the 2 other GENERIC tables]

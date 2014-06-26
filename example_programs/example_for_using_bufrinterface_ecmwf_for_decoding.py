@@ -119,7 +119,8 @@ def decoding_example(input_bufr_file, custom_bufr_tables=None):
     print "calling: setup_tables()"
     if custom_bufr_tables:
         bufr.setup_tables(table_b_to_use=custom_bufr_tables[0],
-                          table_d_to_use=custom_bufr_tables[1])
+                          table_c_to_use=custom_bufr_tables[1],
+                          table_d_to_use=custom_bufr_tables[2])
     else:
         bufr.setup_tables()
 
@@ -153,6 +154,7 @@ ALT_BUFR_TABLES_DIR = os.path.join(os.path.split(EXAMPLES_DIR)[0],
                                    'pybufr_ecmwf','alt_bufr_tables')
 CUSTOM_BUFR_TABLES = \
       (os.path.join(ALT_BUFR_TABLES_DIR,'GENERIC_SCAT_BUFR_TABLE_B.TXT'),
+       os.path.join(ALT_BUFR_TABLES_DIR,'GENERIC_SCAT_BUFR_TABLE_C.TXT'),
        os.path.join(ALT_BUFR_TABLES_DIR,'GENERIC_SCAT_BUFR_TABLE_D.TXT') )
 
 if 'noaa_mos' in INP_BUFR_FILE:

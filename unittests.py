@@ -771,6 +771,9 @@ class CheckCustomTables(unittest.TestCase):
         fdb.close()
         fdd.close()
 
+        # allows larger chuncks during comparisons by assertEqual
+        self.maxDiff = None
+        
         self.assertEqual(b_table_txt, expected_b_table_txt)
         self.assertEqual(d_table_txt, expected_d_table_txt)
 
@@ -784,6 +787,7 @@ class CheckCustomTables(unittest.TestCase):
         """
         test_bufr_file = 'TESTCUSTOM.BUFR'
         b_table_file = 'B_my_test_BUFR_table.txt'
+        c_table_file = 'C_my_test_BUFR_table.txt'
         d_table_file = 'D_my_test_BUFR_table.txt'
 
         # create the custom BUFR tables
@@ -801,6 +805,7 @@ class CheckCustomTables(unittest.TestCase):
 
         # clean up
         os.remove(b_table_file)
+        os.remove(c_table_file)
         os.remove(d_table_file)
         os.remove(test_bufr_file)
         #  #]
