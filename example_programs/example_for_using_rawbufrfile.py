@@ -36,7 +36,7 @@ def raw_file_reading_example(input_bufr_file):
     rbf.open(input_bufr_file, 'rb')
 
     # print the internal data of the class instance
-    rbf.print_properties(prefix = "RawBUFRFile (opened for reading)")
+    rbf.print_properties(prefix="RawBUFRFile (opened for reading)")
 
     # print the number of BUFR messages in the file
     num_msgs = rbf.get_num_bufr_msgs()
@@ -70,7 +70,7 @@ def raw_file_reading_example(input_bufr_file):
     rbf.close()
 
     # delete the class instance
-    del(rbf)
+    del rbf
     return (msg1, msg2, msg3)
     #  #]
 def raw_file_writing_example(output_bufr_file, msg1, msg2):
@@ -91,13 +91,13 @@ def raw_file_writing_example(output_bufr_file, msg1, msg2):
         bf1.write_raw_bufr_msg(msg2)
 
     # print the internal data of the class instance
-    bf1.print_properties(prefix = "RawBUFRFile (opened for writing)")
+    bf1.print_properties(prefix="RawBUFRFile (opened for writing)")
 
     # close the file
     bf1.close()
 
     # delete the class instance
-    del(bf1)
+    del bf1
     #  #]
 def raw_file_appending_example(output_bufr_file, msg3):
     #  #[
@@ -116,24 +116,24 @@ def raw_file_appending_example(output_bufr_file, msg3):
         bf2.write_raw_bufr_msg(msg3)
 
     # print the internal data of the class instance
-    bf2.print_properties(prefix = "RawBUFRFile2 (opened for appending)")
+    bf2.print_properties(prefix="RawBUFRFile2 (opened for appending)")
 
     # close the file
     bf2.close()
 
     # delete the class instance
-    del(bf2)
+    del bf2
     #  #]
 
 #  #[ run the example
-if len(sys.argv)<3:
+if len(sys.argv) < 3:
     print 'please give 2 BUFR files as argument'
     sys.exit(1)
 
 INP_BUFR_FILE = sys.argv[1]
 OUTP_BUFR_FILE = sys.argv[2]
 # make sure the outputfile does not yet exist
-if (os.path.exists(OUTP_BUFR_FILE)):
+if os.path.exists(OUTP_BUFR_FILE):
     os.remove(OUTP_BUFR_FILE)
 
 print "-"*50

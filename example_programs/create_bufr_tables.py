@@ -25,19 +25,19 @@ def create_bufr_tables():
     # YYY should be in the range 000 to 255, but if a standard WMO class
     # is used it should be between 192 and 255 for local use.
 
-    #                 FXXYYY
-    reference      = '048001'
-    name           = 'my test variable A' # max. 64 characters
-    unit           = 'm/s' # SI units are recommended here. max.
-    unit_scale     = 3 # the power of 10 by which the element has to be
-    #                  # multiplied prior to encoding, or divided after
-    #                  # decoding.
+    #            FXXYYY
+    reference = '048001'
+    name = 'my test variable A' # max. 64 characters
+    unit = 'm/s' # SI units are recommended here. max.
+    unit_scale = 3 # the power of 10 by which the element has to be
+    #              # multiplied prior to encoding, or divided after
+    #              # decoding.
     unit_reference = 1250 # the number to be subtracted from the element, after
     #                       scaling (if any) and prior to encoding (or added
     #                       after decoding)
-    data_width     = 4 # the number of bits used to store the data, which will
-    #                    always be converted to an integer (using the above
-    #                    scaling and reference subtraction)
+    data_width = 4 # the number of bits used to store the data, which will
+    #                always be converted to an integer (using the above
+    #                scaling and reference subtraction)
 
     # NOTE: on linux the ECMWF BUFR library is always compiled using 32-bits
     # integers, so the max. data_width is 32 and the maximum unit_reference
@@ -48,29 +48,29 @@ def create_bufr_tables():
     bt1.add_to_B_table(descr_048001)
 
     #                 FXXYYY
-    reference      = '048002'
-    name           = 'my test variable B' # max. 64 characters
-    unit           = 'kg/m' # SI units are recommended here. max.
-    unit_scale     = 12
+    reference = '048002'
+    name = 'my test variable B' # max. 64 characters
+    unit = 'kg/m' # SI units are recommended here. max.
+    unit_scale = 12
     unit_reference = 3456
-    data_width     = 5
+    data_width = 5
     descr_048002 = Descriptor(reference, name, unit, unit_scale,
                               unit_reference, data_width)
     bt1.add_to_B_table(descr_048002)
 
-    #                 FXXYYY
-    reference      = '048003'
-    name           = 'a dummy counter' # max. 64 characters
-    unit           = 'FLAG TABLE 048003'
-    unit_scale     = 0
+    #            FXXYYY
+    reference = '048003'
+    name = 'a dummy counter' # max. 64 characters
+    unit = 'FLAG TABLE 048003'
+    unit_scale = 0
     unit_reference = 0
-    data_width     = 10
+    data_width = 10
     descr_048003 = Descriptor(reference, name, unit, unit_scale,
                               unit_reference, data_width)
     bt1.add_to_B_table(descr_048003)
 
-    #                 FXXYYY
-    reference      = '048003'
+    #            FXXYYY
+    reference = '048003'
     fldef = FlagDefinition(reference)
     fldef.flag_dict[0] = 'zero'
     fldef.flag_dict[1] = 'one'
@@ -79,11 +79,11 @@ def create_bufr_tables():
     fldef.flag_dict[4] = 'four'
     fldef.flag_dict[999] = 'missing'
     bt1.table_c[int(reference)] = fldef
-    
-    reference       = '348001'
+
+    reference = '348001'
     descriptor_list = [descr_048001, descr_048002]
-    comment         = 'a small test D entry' # not written to file
-    bufr_table_set  = bt1
+    comment = 'a small test D entry' # not written to file
+    bufr_table_set = bt1
     descr_348001 = CompositeDescriptor(reference, descriptor_list,
                                        comment, bufr_table_set)
 

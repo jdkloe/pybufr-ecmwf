@@ -51,7 +51,7 @@ def sort_msgs(input_bufr_file):
             fdescr = files_dict[output_filename][0]
             files_dict[output_filename][1] += 1 # increment count
         else:
-            fdescr = open(output_filename,'wb')
+            fdescr = open(output_filename, 'wb')
             count = 1
             files_dict[output_filename] = [fdescr, count]
         fdescr.write(bob.bufr_obj.encoded_message)
@@ -66,11 +66,11 @@ def sort_msgs(input_bufr_file):
     #  #]
 
 #  #[ run the tool
-if len(sys.argv)<2:
+if len(sys.argv) < 2:
     print 'please give a BUFR file as argument'
     sys.exit(1)
 
-INPUT_BUFR_FILE  = sys.argv[1]
+INPUT_BUFR_FILE = sys.argv[1]
 GEN_FILES = sort_msgs(INPUT_BUFR_FILE)
 # print 'generated_files = ', GEN_FILES
 #  #]

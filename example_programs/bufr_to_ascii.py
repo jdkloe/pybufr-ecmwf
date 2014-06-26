@@ -60,7 +60,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
 
         data = bob.get_values_as_2d_array()
 
-        if (list_of_unexp_descr != list_of_unexp_descr_first_msg):
+        if list_of_unexp_descr != list_of_unexp_descr_first_msg:
             print '\n\n'
             print 'WARNING: it seems different types of BUFR messages'
             print 'are mixed in this BUFR file, meaning that the list of'
@@ -89,7 +89,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
                             separator.join(str(val) for val in data[subs, :])+
                             "\n")
         print 'converted BUFR msg nr. ', msg_nr
-        if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
+        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
             print 'skipping remainder of this BUFR file'
             break
 
@@ -138,7 +138,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
                             "\n")
 
         print 'converted BUFR msg nr. ', msg_nr
-        if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
+        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
             print 'skipping remainder of this BUFR file'
             break
 
@@ -219,7 +219,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
                             separator.join(str(val) for val in data_list)+
                             "\n")
         print 'converted BUFR msg nr. ', msg_nr
-        if ( (max_msg_nr>0) and (msg_nr >= max_msg_nr) ):
+        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
             print 'skipping remainder of this BUFR file'
             break
 
@@ -259,8 +259,8 @@ def main():
         # command line handling; the ':' and '=' note that the
         # options must have a value following it
         short_options = 'aci:o:m:h123'
-        long_options  = ['ascii', 'csv', 'infile=', 'outfile=',
-                         'maxmsgnr=', 'help']
+        long_options = ['ascii', 'csv', 'infile=', 'outfile=',
+                        'maxmsgnr=', 'help']
         (options, other_args) = getopt.getopt(sys.argv[1:],
                                               short_options, long_options)
     except getopt.GetoptError, err:
@@ -274,31 +274,31 @@ def main():
     #print 'other_args = ', other_args
 
     # defaults
-    output_to_ascii   = True
-    input_bufr_file   = None
-    output_file       = None
+    output_to_ascii = True
+    input_bufr_file = None
+    output_file = None
     implementation_nr = 1
-    max_msg_nr        = -1
+    max_msg_nr = -1
 
     for (opt, value) in options:
-        if   ( (opt == '-h') or (opt == '--help') ):
+        if   (opt == '-h') or (opt == '--help'):
             usage()
-        elif ( (opt == '-a') or (opt == '--ascii') ):
+        elif (opt == '-a') or (opt == '--ascii'):
             output_to_ascii = True
-        elif ( (opt == '-c') or (opt == '--csv') ):
+        elif (opt == '-c') or (opt == '--csv'):
             output_to_ascii = False # implies csv
-        elif ( (opt == '-i') or (opt == '--infile') ):
+        elif (opt == '-i') or (opt == '--infile'):
             input_bufr_file = value
-        elif ( (opt == '-o') or (opt == '--outfile') ):
+        elif (opt == '-o') or (opt == '--outfile'):
             output_file = value
-        elif (opt == '-1'):
+        elif opt == '-1':
             implementation_nr = 1
-        elif (opt == '-2'):
+        elif opt == '-2':
             implementation_nr = 2
-        elif (opt == '-3'):
+        elif opt == '-3':
             implementation_nr = 3
-        elif ( (opt == '-m') or (opt == '--maxmsgnr') ):
-            max_msg_nr        = int(value)
+        elif (opt == '-m') or (opt == '--maxmsgnr'):
+            max_msg_nr = int(value)
         else:
             print "Unhandled option: "+opt
             usage()
@@ -326,13 +326,13 @@ def main():
     else:
         separator = ',' # csv case
 
-    if   (implementation_nr == 1):
+    if implementation_nr == 1:
         print_bufr_content1(input_bufr_file, output_fd,
                             separator, max_msg_nr)
-    elif (implementation_nr == 2):
+    elif implementation_nr == 2:
         print_bufr_content2(input_bufr_file, output_fd,
                             separator, max_msg_nr)
-    elif (implementation_nr == 3):
+    elif implementation_nr == 3:
         print_bufr_content3(input_bufr_file, output_fd,
                             separator, max_msg_nr)
 
@@ -341,9 +341,9 @@ def main():
         output_fd.close()
 
         if output_to_ascii:
-            print("ascii output written to file " + output_file)
+            print "ascii output written to file " + output_file
         else:
-            print("csv output written to file " + output_file)
+            print "csv output written to file " + output_file
 
 #  #]
 

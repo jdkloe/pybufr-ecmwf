@@ -30,7 +30,7 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
     upgrade it's edition number, and write it to an output BUFR file
     """
     # get 2 instances of the RawBUFRFile class
-    rbf_in  = RawBUFRFile()
+    rbf_in = RawBUFRFile()
     rbf_out = RawBUFRFile()
 
     # open the file for reading, count nr of BUFR messages in it
@@ -56,8 +56,8 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
         bufr_obj.decode_data()
 
         nsub = bufr_obj.get_num_subsets()
-        n = len(bufr_obj.values)/nsub
-        bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=n)
+        n_exp_descr = len(bufr_obj.values)/nsub
+        bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=n_exp_descr)
 
         bufr_obj.ksec0[3-1] = 4 # set bufr edition to 4
         bufr_obj.ktdlst = bufr_obj.get_descriptor_list()
@@ -80,11 +80,11 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
     #  #]
 
 #  #[ run the tool
-if len(sys.argv)<3:
+if len(sys.argv) < 3:
     print 'please specify the input and output BUFR file names as argument'
     sys.exit(1)
 
-INPUT_BUFR_FILE  = sys.argv[1]
+INPUT_BUFR_FILE = sys.argv[1]
 OUTPUT_BUFR_FILE = sys.argv[2]
 
 upgrade_bufr_file(INPUT_BUFR_FILE, OUTPUT_BUFR_FILE)

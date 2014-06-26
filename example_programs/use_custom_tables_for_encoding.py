@@ -48,15 +48,15 @@ def encoding_example(output_bufr_file):
 
     # fill sections 0, 1, 2 and 3
     num_subsets = 4
-    bufr.fill_sections_0123(bufr_code_centre =  98, # ECMWF
-                            bufr_obstype     =   3, # sounding
-                            bufr_subtype     = 251, # L1B
-                            bufr_table_local_version  =  1,
-                            bufr_table_master         =  0,
-                            bufr_table_master_version = 15,
-                            bufr_code_subcentre = 0, # L2B processing facility
-                            num_subsets = num_subsets,
-                            bufr_compression_flag = 0)
+    bufr.fill_sections_0123(bufr_code_centre=98, # ECMWF
+                            bufr_obstype=3, # sounding
+                            bufr_subtype=251, # L1B
+                            bufr_table_local_version=1,
+                            bufr_table_master=0,
+                            bufr_table_master_version=15,
+                            bufr_code_subcentre=0, # L2B processing facility
+                            num_subsets=num_subsets,
+                            bufr_compression_flag=0)
     # 64=compression/0=no compression
 
     # determine information from sections 0123 to construct the BUFR table
@@ -89,7 +89,7 @@ def encoding_example(output_bufr_file):
     # python to fortran interface breaks down. This also ofcourse is the
     # cause of the huge memory use of cvals in case num_values is large.
     num_cvalues = num_values
-    cvals  = np.zeros((num_cvalues, 80), dtype=np.character)
+    cvals = np.zeros((num_cvalues, 80), dtype=np.character)
 
     for subset in range(num_subsets):
         # note that python starts counting with 0, unlike fortran,
@@ -119,14 +119,14 @@ def encoding_example(output_bufr_file):
     #  #]
 
 #  #[ run the example
-if len(sys.argv)<2:
+if len(sys.argv) < 2:
     print 'please give a BUFR file as first argument'
     sys.exit(1)
 
 OUTP_BUFR_FILE = sys.argv[1]
 
 # make sure the outputfile does not yet exist
-if (os.path.exists(OUTP_BUFR_FILE)):
+if os.path.exists(OUTP_BUFR_FILE):
     os.remove(OUTP_BUFR_FILE)
 
 print "-"*50

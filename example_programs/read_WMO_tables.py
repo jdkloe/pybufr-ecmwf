@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
-import os, csv
+'''
+a simple example script that shows how to load WMO csv formatted
+BUFR tables, and write them to the ECMWF specific format.
+'''
+
+import os # , csv
 from pybufr_ecmwf.bufr_table import BufrTable
 
 # testwed with files from the BUFRCREX_21_0_0.zip package
@@ -11,8 +16,8 @@ from pybufr_ecmwf.bufr_table import BufrTable
 # http://www.wmo.int/pages/prog/www/WMOCodes/WMO306_vI2/PrevVERSIONS/PreviousVERSIONS.html
 
 wmo_tabledir = 'BUFRCREX_21_0_0'
-wmo_b_file   = 'BUFRCREX_21_0_0_TableB_en.txt'
-wmo_d_file   = 'BUFR_21_0_0_TableD_en.txt'
+wmo_b_file = 'BUFRCREX_21_0_0_TableB_en.txt'
+wmo_d_file = 'BUFR_21_0_0_TableD_en.txt'
 
 set_of_bufr_tables = BufrTable()
 

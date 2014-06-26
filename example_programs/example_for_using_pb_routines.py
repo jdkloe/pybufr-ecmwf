@@ -41,7 +41,7 @@ def pb_example(input_bufr_file):
     """
 
     # pbopen test
-    c_file_unit     = 0
+    c_file_unit = 0
     bufr_error_flag = 0
     print "input_bufr_file = ["+input_bufr_file+"]"
     print "calling: ecmwfbufr.pbopen()"
@@ -147,7 +147,7 @@ print "-"*50
 print "pb usage example"
 print "-"*50
 
-if len(sys.argv)<2:
+if len(sys.argv) < 2:
     print 'please give a BUFR file as first argument'
     sys.exit(1)
 
