@@ -817,9 +817,9 @@ class CheckCustomTables(unittest.TestCase):
         self.assertEqual(success, True)
 
         # clean up
-        #os.remove(b_table_file)
-        #os.remove(c_table_file)
-        #os.remove(d_table_file)
+        os.remove(b_table_file)
+        os.remove(c_table_file)
+        os.remove(d_table_file)
         os.remove(test_bufr_file)
         #  #]
     #pylint: disable-msg=C0103
