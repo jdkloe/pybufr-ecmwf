@@ -39,6 +39,10 @@ class NoMsgLoadedError(Exception):
     """ an exception to indicate that no message has yet been
     loaded from the currently open BUFR file. """
     pass
+class CannotExpandFlagsError(Exception):
+    """ an exception to indicate that the user tried to expand
+    flags,  but used this in a wrong way. """
+    pass
 #  #]
 
 class DataValue:
@@ -118,7 +122,8 @@ class BUFRReader:
     a class that combines reading and decoding of a BUFR file
     to allow easier reading and usage of BUFR files
     """
-    def __init__(self, input_bufr_file, warn_about_bufr_size=True):
+    def __init__(self, input_bufr_file, warn_about_bufr_size=True,
+                 expand_flags=False):
         #  #[
         # get an instance of the RawBUFRFile class
         self.rbf = RawBUFRFile(warn_about_bufr_size=warn_about_bufr_size)
@@ -138,16 +143,22 @@ class BUFRReader:
 
         # allow manual choice of tables
         self.table_b_to_use = None
+        self.table_c_to_use = None
         self.table_d_to_use = None
         self.tables_dir = None
+
+        # expand flags to text
+        self.expand_flags = expand_flags
+        
         #  #]
-    def setup_tables(self,table_b_to_use=None, table_d_to_use=None,
-                     tables_dir=None):
+    def setup_tables(self,table_b_to_use=None, table_c_to_use=None,
+                     table_d_to_use=None, tables_dir=None):
         #  #[
         """
         allow manual choice of bufr tables
         """
         self.table_b_to_use = table_b_to_use
+        self.table_c_to_use = table_c_to_use
         self.table_d_to_use = table_d_to_use
         self.tables_dir = tables_dir
         #  #]
@@ -162,9 +173,10 @@ class BUFRReader:
         #       (raw_msg, section_sizes, section_start_locations))
         self.bufr_obj = BUFRInterfaceECMWF(raw_msg,
                                            section_sizes,
-                                           section_start_locations)
+                                           section_start_locations,
+                                           expand_flags=self.expand_flags)
         self.bufr_obj.decode_sections_012()
-        self.bufr_obj.setup_tables(self.table_b_to_use,
+        self.bufr_obj.setup_tables(self.table_b_to_use, self.table_c_to_use,
                                    self.table_d_to_use, self.tables_dir)
         self.bufr_obj.decode_data()
 
@@ -199,7 +211,9 @@ class BUFRReader:
         """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
-        return self.bufr_obj.get_value(descr_nr, subset_nr, get_cval)
+
+        val = self.bufr_obj.get_value(descr_nr, subset_nr, get_cval)
+        return val
         #  #]
     def get_values(self, descr_nr, get_cval=False):
 
@@ -210,7 +224,8 @@ class BUFRReader:
         """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
-        return self.bufr_obj.get_values(descr_nr, get_cval)
+        vals = self.bufr_obj.get_values(descr_nr, get_cval)
+        return vals
         #  #]
     def get_subset_values(self, subset_nr , get_cval=False):
          #  #[
@@ -220,7 +235,8 @@ class BUFRReader:
         """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
-        return self.bufr_obj.get_subset_values(subset_nr, get_cval)
+        vals = self.bufr_obj.get_subset_values(subset_nr, get_cval)
+        return vals
         #  #]
     def get_values_as_2d_array(self):
         #  #[
@@ -230,7 +246,17 @@ class BUFRReader:
         runs over the subsets, the second over the descriptors.
         """
         if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
+            txt = 'Sorry, no BUFR messages available'
+            raise NoMsgLoadedError(txt)
+
+        if self.expand_flags:
+            txt = ('ERROR: get_values_as_2d_array only returns numeric '+
+                   'results and cannot be used together with the '+
+                   'expand_flags option.'+
+                   'You will need to extract one element of one row of '+
+                   'elements at a time in this case.')
+            raise CannotExpandFlagsError(txt)
+            
         num_subsets  = self.bufr_obj.get_num_subsets()
         num_elements = self.bufr_obj.get_num_elements()
         result = numpy.zeros([num_subsets, num_elements], dtype=float)

@@ -62,7 +62,10 @@ def encoding_example(output_bufr_file):
     # determine information from sections 0123 to construct the BUFR table
     # names expected by the ECMWF BUFR library and create symlinks to the
     # default tables if needed
+    # NOTE: these custom BUFR tables have been created by the
+    #       create_bufr_tables.py example script
     bufr.setup_tables(table_b_to_use='B_my_test_BUFR_table.txt',
+                      table_c_to_use='C_my_test_BUFR_table.txt',
                       table_d_to_use='D_my_test_BUFR_table.txt')
 
     # define a descriptor list

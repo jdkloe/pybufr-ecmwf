@@ -108,8 +108,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
 
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = BUFRReader(input_bufr_file)
-
+    bob = BUFRReader(input_bufr_file, expand_flags=True)
     msg_nr = 0
     while True:
         try:

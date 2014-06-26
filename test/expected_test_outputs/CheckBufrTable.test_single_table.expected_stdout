@@ -1,71 +1,71 @@
 Starting test program:
 loaded bufr B table: ecmwf_bufrtables/B0000000000099017001.TXT
-ERROR: C-table seems wrong for reference 1031!
+WARNING: C-table seems wrong for reference 1031!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 1034!
+WARNING: C-table seems wrong for reference 1034!
 expected number of flag values =  132
 found number of unique flag values =  79
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 2011!
+WARNING: C-table seems wrong for reference 2011!
 expected number of flag values =  124
 found number of unique flag values =  100
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 2012!
+WARNING: C-table seems wrong for reference 2012!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 20105!
+WARNING: C-table seems wrong for reference 20105!
 expected number of flag values =  23
 found number of unique flag values =  12
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 21069!
+WARNING: C-table seems wrong for reference 21069!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 25045!
+WARNING: C-table seems wrong for reference 25045!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 25046!
+WARNING: C-table seems wrong for reference 25046!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 25047!
+WARNING: C-table seems wrong for reference 25047!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 25048!
+WARNING: C-table seems wrong for reference 25048!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 25049!
+WARNING: C-table seems wrong for reference 25049!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 25051!
+WARNING: C-table seems wrong for reference 25051!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 33052!
+WARNING: C-table seems wrong for reference 33052!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
-ERROR: C-table seems wrong for reference 33053!
+WARNING: C-table seems wrong for reference 33053!
 expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now

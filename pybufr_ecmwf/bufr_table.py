@@ -624,8 +624,8 @@ class CompositeDescriptor(Descriptor): # [table D entry]
     #  #]
 
 class FlagDefinition:
-    def __init__(self):
-        self.reference = None
+    def __init__(self, reference):
+        self.reference = reference
         self.flag_dict = {}
     def __str__(self):
         text = []
@@ -1340,12 +1340,12 @@ class BufrTable:
         #    for l in lineblock:
         #        print('line: ['+l+']')
 
-        fldef = FlagDefinition()
-
         startline = lineblock[0]
         parts = self.custom_c_split(startline)
         reference = int(parts[0])
         num_flags = int(parts[1])
+
+        fldef = FlagDefinition(reference)
 
         copied_lineblock = lineblock[:]
         flag_value = None
@@ -1367,7 +1367,7 @@ class BufrTable:
                     fldef.flag_dict[flag_value] = text
                     # verify consistency of C table definition
                     if num_text_lines_added != num_text_lines:
-                        print('ERROR: C-table seems wrong!')
+                        print('WARNING: C-table seems wrong!')
                         print('expected num_text_lines = ', num_text_lines)
                         print('found    num_text_lines = ',
                               num_text_lines_added)
@@ -1387,14 +1387,14 @@ class BufrTable:
             fldef.flag_dict[flag_value] = text
             # verify consistency of C table definition
             if num_text_lines_added != num_text_lines:
-                print('ERROR: C-table seems wrong!')
+                print('WARNING: C-table seems wrong!')
                 print('expected num_text_lines = ', num_text_lines)
                 print('found    num_text_lines = ', num_text_lines_added)
                 sys.exit(1)
             
         # verify consistency of C table definition
         if num_flags != len(fldef.flag_dict.keys()):
-            print('ERROR: C-table seems wrong for reference {}!'.
+            print('WARNING: C-table seems wrong for reference {}!'.
                   format(reference))
             print('expected number of flag values = ', num_flags)
             print('found number of unique flag values = ',
@@ -1814,6 +1814,9 @@ class BufrTable:
         assert(isinstance(descriptor, Descriptor) == True)
         self.table_b[descriptor.reference] = descriptor
         #  #]
+    def add_to_C_table(self, flag_def):
+        ref = flag_def.reference
+        self.table_c.flag_dict[ref] = flag_def
     def add_to_D_table(self, descriptor):
         #  #[
         assert(isinstance(descriptor, CompositeDescriptor) == True)
@@ -1826,11 +1829,17 @@ class BufrTable:
         for ref in ref_list:
             print(str(self.table_b[ref]))
         #  #]
+    def print_C_table(self):
+        #  #[
+        ref_list = self.table_c.keys()
+        for ref in sorted(ref_list):
+            print('flag table for reference: {}\n{}'.
+                  format(ref, str(self.table_c[ref])))
+        #  #]
     def print_D_table(self):
         #  #[
         ref_list = self.table_d.keys()
-        ref_list.sort()
-        for ref in ref_list:
+        for ref in sorted(ref_list):
             print(str(self.table_d[ref]))
         #  #]
     def write_B_table(self, fd):
@@ -1869,6 +1878,40 @@ class BufrTable:
                    b_descr.data_width)
             fd.write(txt)
         #  #]
+    def write_C_table(self, fd):
+        #  #[
+        max_text_length = 64
+        fd.write('\n') # t.b.d.
+        ref_list = self.table_c.keys()
+        for ref in sorted(ref_list):
+            flag_values = self.table_c[ref].flag_dict.keys()
+            num_keys = len(flag_values)
+            for i, flag_value in enumerate(sorted(flag_values)):
+                text = self.table_c[ref].flag_dict[flag_value]
+                this_line = text[:] # take a copy
+                text_lines = []
+                while this_line:
+                    front     = this_line[:max_text_length]
+                    remainder = this_line[max_text_length:]
+                    text_lines.append(front)
+                    this_line = remainder
+                    
+                num_text_lines = len(text_lines)
+
+                # write first line of text
+                if i==0:
+                    fd.write('{:06d} {:04d} {:08d} {:02d} {}\n'.
+                             format(ref, num_keys, flag_value,
+                                    num_text_lines, text_lines[0]))
+                else:
+                    fd.write('{} {:08d} {:02d} {}\n'.
+                             format(' '*11, flag_value,
+                                    num_text_lines, text_lines[0]))
+                    
+                for l in text_lines[1:]:
+                    # write remaining lines of text
+                    fd.write('{} {}\n'.format(' '*22, l))
+        #  #]
     def write_D_table(self, fd):
         #  #[
         ref_list = self.table_d.keys()
@@ -1901,10 +1944,15 @@ class BufrTable:
     def write_tables(self, table_name):
         #  #[
         b_table_name = 'B'+table_name
+        c_table_name = 'C'+table_name
         d_table_name = 'D'+table_name
 
         fd = open(b_table_name,'w')
         self.write_B_table(fd)
+        fd.close()
+
+        fd = open(c_table_name,'w')
+        self.write_C_table(fd)
         fd.close()
 
         fd = open(d_table_name,'w')

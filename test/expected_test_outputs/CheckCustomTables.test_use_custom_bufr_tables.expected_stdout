@@ -3,9 +3,11 @@ BUFR encoding example
 --------------------------------------------------
 Table names expected by the library:
 B0000000000098015001.TXT
+C0000000000098015001.TXT
 D0000000000098015001.TXT
 Tables to be used:
 B_my_test_BUFR_table.txt
+C_my_test_BUFR_table.txt
 D_my_test_BUFR_table.txt
 adding  3  descriptors
 unexpanded nr of descriptors =  3

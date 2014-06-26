@@ -4,7 +4,8 @@ a small example program to demonstrate how a new set of BUFR tables
 can be created from scratch, using the BufrTable class.
 """
 
-from pybufr_ecmwf.bufr_table import BufrTable, Descriptor, CompositeDescriptor
+from pybufr_ecmwf.bufr_table \
+     import BufrTable, Descriptor, CompositeDescriptor, FlagDefinition
 
 def create_bufr_tables():
     #  #[
@@ -57,6 +58,28 @@ def create_bufr_tables():
                               unit_reference, data_width)
     bt1.add_to_B_table(descr_048002)
 
+    #                 FXXYYY
+    reference      = '048003'
+    name           = 'a dummy counter' # max. 64 characters
+    unit           = 'FLAG TABLE 048003'
+    unit_scale     = 0
+    unit_reference = 0
+    data_width     = 10
+    descr_048003 = Descriptor(reference, name, unit, unit_scale,
+                              unit_reference, data_width)
+    bt1.add_to_B_table(descr_048003)
+
+    #                 FXXYYY
+    reference      = '048003'
+    fldef = FlagDefinition(reference)
+    fldef.flag_dict[0] = 'zero'
+    fldef.flag_dict[1] = 'one'
+    fldef.flag_dict[2] = 'two'
+    fldef.flag_dict[3] = 'a very long line to describe the number 3; '*10
+    fldef.flag_dict[4] = 'four'
+    fldef.flag_dict[999] = 'missing'
+    bt1.table_c[int(reference)] = fldef
+    
     reference       = '348001'
     descriptor_list = [descr_048001, descr_048002]
     comment         = 'a small test D entry' # not written to file
@@ -70,6 +93,10 @@ def create_bufr_tables():
     print "B-table:"
     print '='*50
     bt1.print_B_table()
+    print '='*50
+    print "C-table:"
+    print '='*50
+    bt1.print_C_table()
     print '='*50
     print "D-table:"
     print '='*50

@@ -1696,22 +1696,23 @@ class InstallBUFRInterfaceECMWF(object):
             #            ensure_permissions(fullname, 'r')
 
             # select the newest set of tables and symlink them
-            # to a default name
-            pattern = os.path.join(table_dir,'B0*098*.TXT')
-            b_tables = glob.glob(pattern)
+            # to a default name (making sure a matching C table
+            # is provided as well)
+            pattern = os.path.join(table_dir,'C0*098*.TXT')
+            c_tables = glob.glob(pattern)
             # print('pattern = ',pattern)
-            # print('b_tables = ',b_tables)
+            # print('c_tables = ',c_tables)
 
-            if len(b_tables)>0:
-                b_tables.sort()
+            if len(c_tables)>0:
+                c_tables.sort()
                 # assume the highest numbered table is the most recent one
-                newest_b_table = b_tables[-1]
-                bt_file = os.path.split(newest_b_table)[1]
-                bt_base, bt_ext = os.path.splitext(bt_file)
-                newest_table_code = bt_base[1:]
-                ct_file = 'C'+newest_table_code+bt_ext
-                dt_file = 'D'+newest_table_code+bt_ext
-                newest_c_table = os.path.join(table_dir, ct_file)
+                newest_c_table = c_tables[-1]
+                ct_file = os.path.split(newest_c_table)[1]
+                ct_base, ct_ext = os.path.splitext(ct_file)
+                newest_table_code = ct_base[1:]
+                bt_file = 'B'+newest_table_code+ct_ext
+                dt_file = 'D'+newest_table_code+ct_ext
+                newest_b_table = os.path.join(table_dir, bt_file)
                 newest_d_table = os.path.join(table_dir, dt_file)
 
                 default_b_table = os.path.join(table_dir, 'B_default.TXT')
@@ -1724,19 +1725,12 @@ class InstallBUFRInterfaceECMWF(object):
 
                 os.symlink(os.path.abspath(newest_b_table),
                            os.path.abspath(default_b_table))
-                # workaround, needed because in bufrdc 000400 the C table
-                # with the newest version number seems missing ...
-                # (C0000019000098013001.TXT)
-                # this doesn't hurt, since it is not used by the software
-                # anyway (at least not with the routines that have
-                # interfaces to python)
-                if os.path.exists(os.path.abspath(newest_c_table)):
-                    os.symlink(os.path.abspath(newest_c_table),
-                               os.path.abspath(default_c_table))
+                os.symlink(os.path.abspath(newest_c_table),
+                           os.path.abspath(default_c_table))
                 os.symlink(os.path.abspath(newest_d_table),
                            os.path.abspath(default_d_table))
             else:
-                print('WARNING: no default table B and D found')
+                print('WARNING: no default table B, C and D found')
             #  #]
 
         #  #[ some old notes

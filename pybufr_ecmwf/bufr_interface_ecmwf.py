@@ -89,7 +89,8 @@ class BUFRInterfaceECMWF:
 
     #  #]
     def __init__(self, encoded_message=None, section_sizes=None,
-                 section_start_locations=None, verbose=False):
+                 section_start_locations=None, verbose=False,
+                 expand_flags=False):
         #  #[
         """
         initialise all module parameters needed for encoding and decoding
@@ -106,6 +107,12 @@ class BUFRInterfaceECMWF:
         self.section_start_locations = section_start_locations
 
         self.verbose = verbose
+
+        # NOTE: the ECMWF BUFR library provides the functions
+        # bufrdc/getflag.F and bufrdc/getcode.F for flag handling
+        # but I find it easier to handle them entirely inside python
+        # so I added custom code for this,
+        self.expand_flags = expand_flags
 
         # switches
         self.sections012_decoded      = False
@@ -344,6 +351,7 @@ class BUFRInterfaceECMWF:
                                            copy_localversion)
 
         name_table_b = 'B'+numeric_part+'.TXT'
+        name_table_c = 'C'+numeric_part+'.TXT' # beware, may be missing!
         name_table_d = 'D'+numeric_part+'.TXT'
 
         # Note that this naming scheme is specific for the ECMWF library
@@ -416,7 +424,7 @@ class BUFRInterfaceECMWF:
         #                      TABLE USED( CURRENTLY 12 )
         #             ZZZ    - VERSION NUMBER OF LOCAL TABLE USED
         
-        return (name_table_b, name_table_d)
+        return (name_table_b, name_table_c, name_table_d)
         #  #]
     def store_fortran_stdout(self):
         #  #[
@@ -541,8 +549,8 @@ class BUFRInterfaceECMWF:
         self.sections012_decoded  = True
         self.sections0123_decoded = True
         #  #]
-    def setup_tables(self, table_b_to_use=None, table_d_to_use=None,
-                     tables_dir=None):
+    def setup_tables(self, table_b_to_use=None, table_c_to_use=None,
+                     table_d_to_use=None, tables_dir=None):
         #  #[ routine for easier handling of tables
         """
         helper routine, to enable automatic or manual setting of table names,
@@ -634,7 +642,9 @@ class BUFRInterfaceECMWF:
             print("is not yet implemented.")
             sys.exit(1)
 
-        (expected_name_table_b, expected_name_table_d) = \
+        ( expected_name_table_b,
+          expected_name_table_c,
+          expected_name_table_d ) = \
               self.get_expected_ecmwf_bufr_table_names(
                        center, subcenter,
                        LocalVersion, MasterTableVersion,
@@ -644,28 +654,38 @@ class BUFRInterfaceECMWF:
         #       (expected_name_table_b, expected_name_table_d))
 
         userpath_table_b = None
+        userpath_table_c = None
         userpath_table_d = None
         if self.user_tables_dir:
             userpath_table_b = os.path.join(self.user_tables_dir,
                                             expected_name_table_b)
+            userpath_table_c = os.path.join(self.user_tables_dir,
+                                            expected_name_table_c)
             userpath_table_d = os.path.join(self.user_tables_dir,
                                             expected_name_table_d)
             
         fullpath_table_b = os.path.join(self.ecmwf_bufr_tables_dir,
                                         expected_name_table_b)
+        fullpath_table_c = os.path.join(self.ecmwf_bufr_tables_dir,
+                                        expected_name_table_c)
         fullpath_table_d = os.path.join(self.ecmwf_bufr_tables_dir,
                                         expected_name_table_d)
         fullpath_default_table_b = os.path.join(self.ecmwf_bufr_tables_dir,
                                                 'B_default.TXT')
+        fullpath_default_table_c = os.path.join(self.ecmwf_bufr_tables_dir,
+                                                'C_default.TXT')
         fullpath_default_table_d = os.path.join(self.ecmwf_bufr_tables_dir,
                                                 'D_default.TXT')
-        # print('Test:')
-        # print('userpath_table_b:',userpath_table_b)
-        # print('userpath_table_d:',userpath_table_d)
-        # print('fullpath_table_b:',fullpath_table_b)
-        # print('fullpath_table_d:',fullpath_table_d)
-        # print('fullpath_default_table_b:',fullpath_default_table_b)
-        # print('fullpath_default_table_d:',fullpath_default_table_d)
+        #print('Test:')
+        #print('userpath_table_b:',userpath_table_b)
+        #print('userpath_table_c:',userpath_table_c)
+        #print('userpath_table_d:',userpath_table_d)
+        #print('fullpath_table_b:',fullpath_table_b)
+        #print('fullpath_table_c:',fullpath_table_c)
+        #print('fullpath_table_d:',fullpath_table_d)
+        #print('fullpath_default_table_b:',fullpath_default_table_b)
+        #print('fullpath_default_table_c:',fullpath_default_table_c)
+        #print('fullpath_default_table_d:',fullpath_default_table_d)
 
         # OK, the trick now is to create a symbolic link in a tmp_BUFR_TABLES
         # directory from the name expected by the ecmwf bufr library to:
@@ -683,10 +703,13 @@ class BUFRInterfaceECMWF:
         
         destination_b = os.path.join(self.private_bufr_tables_dir,
                                      expected_name_table_b)
+        destination_c = os.path.join(self.private_bufr_tables_dir,
+                                     expected_name_table_c)
         destination_d = os.path.join(self.private_bufr_tables_dir,
                                      expected_name_table_d)
 
         source_b = None
+        source_c = None
         source_d = None
         
         if (table_b_to_use and table_d_to_use):
@@ -700,6 +723,11 @@ class BUFRInterfaceECMWF:
                 # print('table_d_to_use = ',table_d_to_use)
                 source_b = table_b_to_use
                 source_d = table_d_to_use
+
+        # may be absent for now, so handle this one separately
+        if table_c_to_use:
+            if os.path.exists(table_c_to_use):
+                source_c = table_c_to_use
                 
         if ( (not source_b) and (not source_d) ):
             if (userpath_table_b and userpath_table_d):
@@ -711,6 +739,9 @@ class BUFRInterfaceECMWF:
                     # print('userpath_table_d = ',userpath_table_d)
                     source_b = userpath_table_b
                     source_d = userpath_table_d
+                    # may be absent for now, so put an extra test on it
+                    if os.path.exists(userpath_table_c):
+                        source_c = userpath_table_c
                 
         if ( (not source_b) and (not source_d) ):
             if (os.path.exists(fullpath_table_b) and
@@ -721,6 +752,9 @@ class BUFRInterfaceECMWF:
                 # print('fullpath_table_d = ',fullpath_table_d)
                 source_b = fullpath_table_b
                 source_d = fullpath_table_d
+                # may be absent for now, so put an extra test on it
+                if os.path.exists(fullpath_table_c):
+                    source_c = fullpath_table_c
                 
         if ( (not source_b) and (not source_d) ):
             if (os.path.exists(fullpath_default_table_b) and
@@ -731,12 +765,19 @@ class BUFRInterfaceECMWF:
                 # print('fullpath_default_table_d = ',fullpath_default_table_d)
                 source_b = fullpath_default_table_b
                 source_d = fullpath_default_table_d
+                if os.path.exists(fullpath_default_table_c):
+                    source_c = fullpath_default_table_c
 
         if ( (not source_b) and (not source_d) ):
             errtxt = ('ERROR: no BUFR tables seem available.' +
                       'please point explicitely to the tables ' +
                       'you wish to use')
             raise EcmwfBufrTableError(errtxt)
+
+        if not source_c:
+            print('Warning: no matching C table available for B,D tables')
+            print('==>', os.path.split(source_b)[1])
+            print('==>', os.path.split(source_d)[1])
             
         # full names, containing full path, are not nice to print
         # in the unit tests since they will differ on different
@@ -744,9 +785,14 @@ class BUFRInterfaceECMWF:
         if self.verbose:
             print('Table names expected by the library:')
             print(os.path.split(destination_b)[1])
+            print(os.path.split(destination_c)[1])
             print(os.path.split(destination_d)[1])
             print('Tables to be used:')
             print(os.path.split(source_b)[1])
+            if source_c:
+                print(os.path.split(source_c)[1])
+            else:
+                print('[C table is missing]')
             print(os.path.split(source_d)[1])
         
         # make sure any old symbolic link is removed
@@ -754,10 +800,16 @@ class BUFRInterfaceECMWF:
         if ( os.path.islink(destination_b) or
              os.path.exists(destination_b)   ):
             os.remove(destination_b)
+        if ( os.path.islink(destination_c) or
+             os.path.exists(destination_c)   ):
+            os.remove(destination_c)
         if ( os.path.islink(destination_d) or
              os.path.exists(destination_d)   ):
             os.remove(destination_d)
+
         os.symlink(os.path.abspath(source_b), destination_b)
+        if source_c:
+            os.symlink(os.path.abspath(source_c), destination_c)
         os.symlink(os.path.abspath(source_d), destination_d)
             
         # make sure the BUFR tables can be found
@@ -769,6 +821,9 @@ class BUFRInterfaceECMWF:
 
         self.tables_have_been_setup = True
         self.table_b_file_to_use = destination_b
+        self.table_c_file_to_use = None
+        if source_c:
+            self.table_c_file_to_use = destination_c
         self.table_d_file_to_use = destination_d
 
         # finally load the tables into memory
@@ -781,6 +836,8 @@ class BUFRInterfaceECMWF:
         # bt = BufrTable(autolink_tablesdir=self.private_bufr_tables_dir,
         #                verbose=False)
         self.bt.load(self.table_b_file_to_use)
+        if source_c:
+            self.bt.load(self.table_c_file_to_use)
         self.bt.load(self.table_d_file_to_use)
 
         #  #]
@@ -1193,6 +1250,26 @@ class BUFRInterfaceECMWF:
 
         return self.ksup[4]
         #  #]
+    def convert_flag_values_to_text(self, values, i):
+        #  #[ convert flags to text if needed
+        flag_text_values = []
+        ref = int(self.ktdexp[i])
+        unit = ''.join(c.decode() for c in self.cunits[i])
+        if 'TABLE' in unit:
+            if ref in self.bt.table_c:
+                for v in values:
+                    try:
+                        flag_text = self.bt.table_c[ref].flag_dict[int(v)]
+                    except:
+                        flag_text = '<UNDEFINED VALUE>'
+                    flag_text_values.append(flag_text)
+
+                return flag_text_values
+
+        # default fallback in case flag seems not defined
+        # or C-table is missing or descriptor is numeric after all
+        return values
+        #  #]
     def get_value(self, i, j, get_cval=False):
         #  #[ get the i th value from subset j
         """
@@ -1236,6 +1313,9 @@ class BUFRInterfaceECMWF:
             else:
                 return ''
         else:
+            if self.expand_flags:
+                values = self.convert_flag_values_to_text([value,], i)
+                value = values[0]
             return value
         #  #]
     def get_values(self, i, get_cval=False):
@@ -1288,6 +1368,9 @@ class BUFRInterfaceECMWF:
                 cvalues = ['',]*nsubsets
             return cvalues
         else:
+            if self.expand_flags:
+                values = self.convert_flag_values_to_text(values, i)
+
             # print('i, self.values[selection] = '+str(i)+' '+str(values))
             return values
         #  #]
@@ -1348,6 +1431,9 @@ class BUFRInterfaceECMWF:
                 cvalues = ['',]*nsubsets
             return cvalues
         else:
+            if self.expand_flags:
+                values = self.convert_flag_values_to_text(values, i)
+
             # print('i, self.values[selection] = '+str(i)+' '+str(values))
             return values
         #  #]

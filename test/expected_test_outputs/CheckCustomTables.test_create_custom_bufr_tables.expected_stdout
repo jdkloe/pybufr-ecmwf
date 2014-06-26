@@ -3,6 +3,17 @@ B-table:
 ==================================================
 reference: [048001] name: [my test variable A] unit: [m/s] unit_scale: [3] unit_reference: [1250] data_width: [4] 
 reference: [048002] name: [my test variable B] unit: [kg/m] unit_scale: [12] unit_reference: [3456] data_width: [5] 
+reference: [048003] name: [a dummy counter] unit: [FLAG TABLE 048003] unit_scale: [0] unit_reference: [0] data_width: [10] 
+==================================================
+C-table:
+==================================================
+flag table for reference: 48003
+==> flag: 0 value: zero
+==> flag: 1 value: one
+==> flag: 2 value: two
+==> flag: 3 value: a very long line to describe the number 3; a very long line to describe the number 3; a very long line to describe the number 3; a very long line to describe the number 3; a very long line to describe the number 3; a very long line to describe the number 3; a very long line to describe the number 3; a very long line to describe the number 3; a very long line to describe the number 3; a very long line to describe the number 3; 
+==> flag: 4 value: four
+==> flag: 999 value: missing
 ==================================================
 D-table:
 ==================================================
