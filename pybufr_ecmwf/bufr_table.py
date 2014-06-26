@@ -1881,7 +1881,6 @@ class BufrTable:
     def write_C_table(self, fd):
         #  #[
         max_text_length = 64
-        fd.write('\n') # t.b.d.
         ref_list = self.table_c.keys()
         for ref in sorted(ref_list):
             flag_values = self.table_c[ref].flag_dict.keys()

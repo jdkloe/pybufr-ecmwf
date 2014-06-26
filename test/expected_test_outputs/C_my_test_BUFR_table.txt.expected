@@ -1,0 +1,12 @@
+048003 0006 00000000 01 zero
+            00000001 01 one
+            00000002 01 two
+            00000003 07 a very long line to describe the number 3; a very long line to d
+                       escribe the number 3; a very long line to describe the number 3;
+                        a very long line to describe the number 3; a very long line to 
+                       describe the number 3; a very long line to describe the number 3
+                       ; a very long line to describe the number 3; a very long line to
+                        describe the number 3; a very long line to describe the number 
+                       3; a very long line to describe the number 3; 
+            00000004 01 four
+            00000999 01 missing

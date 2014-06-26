@@ -1,2 +1,3 @@
  048001 my test variable A                                               m/s                        3         1250   4
  048002 my test variable B                                               kg/m                      12         3456   5
+ 048003 a dummy counter                                                  FLAG TABLE 048003          0            0  10

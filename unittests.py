@@ -473,7 +473,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         # might fail when it attempts to use it ...
         bufrobj.ecmwf_bufr_tables_dir = os.path.abspath(ecmwf_bufr_tables_dir)
 
-        (btable, dtable) = \
+        (btable, ctable, dtable) = \
                  bufrobj.get_expected_ecmwf_bufr_table_names(\
                              center,
                              subcenter,
@@ -485,6 +485,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         # print("tabel name B: ", btable)
         # print("tabel name D: ", dtable)
         self.assertEqual(btable, 'B0000000000210000001.TXT')
+        self.assertEqual(ctable, 'C0000000000210000001.TXT')
         self.assertEqual(dtable, 'D0000000000210000001.TXT')
         #  #]
     def test_run_decoding_example(self):
@@ -741,6 +742,7 @@ class CheckCustomTables(unittest.TestCase):
         test the creation of custom BUFR table files
         """
         b_table_file = 'B_my_test_BUFR_table.txt'
+        c_table_file = 'C_my_test_BUFR_table.txt'
         d_table_file = 'D_my_test_BUFR_table.txt'
 
         # run the provided example code and verify the output
@@ -753,31 +755,42 @@ class CheckCustomTables(unittest.TestCase):
         expected_b_table_file = os.path.join('test',
                                              'expected_test_outputs',
                                              b_table_file+'.expected')
+        expected_c_table_file = os.path.join('test',
+                                             'expected_test_outputs',
+                                             c_table_file+'.expected')
         expected_d_table_file = os.path.join('test',
                                              'expected_test_outputs',
                                              d_table_file+'.expected')
 
         fdb = open(b_table_file)
+        fdc = open(c_table_file)
         fdd = open(d_table_file)
         b_table_txt = fdb.readlines()
+        c_table_txt = fdc.readlines()
         d_table_txt = fdd.readlines()
         fdb.close()
+        fdc.close()
         fdd.close()
 
         fdb = open(expected_b_table_file)
+        fdc = open(expected_c_table_file)
         fdd = open(expected_d_table_file)
         expected_b_table_txt = fdb.readlines()
+        expected_c_table_txt = fdc.readlines()
         expected_d_table_txt = fdd.readlines()
         fdb.close()
+        fdc.close()
         fdd.close()
 
         # allows larger chuncks during comparisons by assertEqual
         self.maxDiff = None
         
         self.assertEqual(b_table_txt, expected_b_table_txt)
+        self.assertEqual(c_table_txt, expected_c_table_txt)
         self.assertEqual(d_table_txt, expected_d_table_txt)
 
 #        os.remove(b_table_file)
+#        os.remove(c_table_file)
 #        os.remove(d_table_file)
         #  #]
     def test_use_custom_bufr_tables(self):
@@ -804,9 +817,9 @@ class CheckCustomTables(unittest.TestCase):
         self.assertEqual(success, True)
 
         # clean up
-        os.remove(b_table_file)
-        os.remove(c_table_file)
-        os.remove(d_table_file)
+        #os.remove(b_table_file)
+        #os.remove(c_table_file)
+        #os.remove(d_table_file)
         os.remove(test_bufr_file)
         #  #]
     #pylint: disable-msg=C0103
