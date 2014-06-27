@@ -27,12 +27,12 @@ import subprocess  # support running additional executables
 #  #[ settings
 REPODIR = '../pybufr-ecmwf'
 TESTDIR = '../pybufr_ecmwf_test_builds'
-DO_MANUAL_TESTS      = True
+DO_MANUAL_TESTS = True
 DO_SETUP_BUILD_TESTS = True
 DO_SETUP_SDIST_TESTS = True
 DO_PIP_INSTALL_TESTS = True
-DO_MANUAL_PY3_TESTS  = False # True
-# DO_MANUAL_PY3_TESTS  = False # True # not yet implemented!
+DO_MANUAL_PY3_TESTS = False # True
+# DO_MANUAL_PY3_TESTS = False # True # not yet implemented!
 
 #  #]
 #  #[ helper functions
@@ -45,9 +45,9 @@ def run_shell_command(cmd_to_run, sp_env=None):
     this_env = sp_env
     if sp_env is None:
         this_env = os.environ
-    subpr = subprocess.Popen(cmd_to_run, shell = True, env=this_env,
-                             stdout = subprocess.PIPE,
-                             stderr = subprocess.PIPE)
+    subpr = subprocess.Popen(cmd_to_run, shell=True, env=this_env,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
     ls_stdout = subpr.stdout.readlines()
     ls_stderr = subpr.stderr.readlines()
     return (ls_stdout, ls_stderr)
@@ -69,7 +69,7 @@ for fc in POSSIBLE_FORTRAN_COMPILERS:
     # print('running: ',cmd)
     (lines_stdout, lines_stderr) = run_shell_command(cmd)
     # print('(lines_stdout, lines_stderr) = ',(lines_stdout, lines_stderr))
-    if len(lines_stderr)==0:
+    if len(lines_stderr) == 0:
         AVAILABLE_POSSIBLE_COMPILERS.append(fc)
 
 print('available fortran compilers: ',
@@ -108,8 +108,8 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         # print('sys.path = ', sys.path)
 
         from build_interface import InstallBUFRInterfaceECMWF
-        BI = InstallBUFRInterfaceECMWF(verbose = True,
-                                       preferred_fortran_compiler = fc,
+        BI = InstallBUFRInterfaceECMWF(verbose=True,
+                                       preferred_fortran_compiler=fc,
                                        download_library_sources=False)
 
         # make sure we are in the right directory
@@ -124,7 +124,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
             this_result.append('manual build failed for compiler: '+fc)
             build_succesfull = False
 
-        del(BI)
+        del BI
 
         # restore the original directory
         os.chdir(saved_cwd)
@@ -134,7 +134,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
                                           'ecmwfbufr.so'))
 
         this_result.append('test results for manual build for: '+fc)
-        if len(so_files)>0:
+        if len(so_files) > 0:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')
@@ -206,7 +206,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         this_result = []
         this_result.append('test results for build for: '+fc)
-        if len(so_files)>0:
+        if len(so_files) > 0:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')
@@ -280,7 +280,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         this_result = []
         this_result.append('test results for setup sdist test for: '+fc)
-        if len(tar_files)>0:
+        if len(tar_files) > 0:
             this_result.append('tar file found: '+tar_files[0])
         else:
             this_result.append('ERROR: tar file NOT found!')
@@ -332,7 +332,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
                                       'build/lib*/pybufr_ecmwf/ecmwfbufr.so'))
 
         this_result.append('test results for sdist build for: '+fc)
-        if len(so_files)>0:
+        if len(so_files) > 0:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')
@@ -400,7 +400,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         this_result = []
         this_result.append('test results for pip test for: '+fc)
-        if len(tar_files)>0:
+        if len(tar_files) > 0:
             this_result.append('tar file found: '+tar_files[0])
         else:
             this_result.append('ERROR: tar file NOT found!')
@@ -417,8 +417,10 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
                 'virtualenv myenv --system-site-packages',
                 'source myenv/bin/activate',
                 'pip install pybufr-ecmwf --no-index '+\
-                '--find-links '+os.path.abspath(os.path.join(temp_build_dir,'dist')),
-                'python -c "import pybufr_ecmwf;print \'pybufr_ecmwf.__file__ = \', pybufr_ecmwf.__file__"',
+                '--find-links '+\
+                os.path.abspath(os.path.join(temp_build_dir, 'dist')),
+                'python -c "import pybufr_ecmwf;'+\
+                'print \'pybufr_ecmwf.__file__ = \', pybufr_ecmwf.__file__"',
                 'deactivate',
                 'rm -rf myenv/']
 
@@ -429,8 +431,8 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         # -verify the output
         module_properly_loaded = False
         for l in  lines_stdout:
-            if ( ('pybufr_ecmwf.__file__' in l) and
-                 ('__init__.py' in l)              ):
+            if (('pybufr_ecmwf.__file__' in l) and
+                ('__init__.py' in l)):
                 module_properly_loaded = True
         if module_properly_loaded:
             this_result.append('module_properly_loaded.')
@@ -490,8 +492,8 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         from build_interface import InstallBUFRInterfaceECMWF
         #pylint: enable-msg=W0404
 
-        BI = InstallBUFRInterfaceECMWF(verbose = True,
-                                       preferred_fortran_compiler = fc,
+        BI = InstallBUFRInterfaceECMWF(verbose=True,
+                                       preferred_fortran_compiler=fc,
                                        download_library_sources=False)
 
         # make sure we are in the right directory
@@ -499,7 +501,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         os.chdir(BUILD_DIR)
 
         BI.build()
-        del(BI)
+        del BI
 
         # the py3 test almost works now. It fails in the f2py stage
         # in the post-processing (stage 2) with this message:
@@ -563,7 +565,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         this_result = []
         this_result.append('test results for manual build for: '+fc)
-        if len(so_files)>0:
+        if len(so_files) > 0:
             this_result.append('so file found: '+so_files[0])
         else:
             this_result.append('ERROR: so file NOT found!')

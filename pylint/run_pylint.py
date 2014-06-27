@@ -29,7 +29,7 @@ except ImportError:
 # /usr/lib/python2.6/site-packages/pylint/lint.py
 # for examples on how to run the checkers manually
 
-if len(sys.argv)>1:
+if len(sys.argv) > 1:
     SCRIPTS_TO_CHECK = []
     for filetocheck in sys.argv[1:]:
         if os.path.exists(filetocheck):
@@ -37,7 +37,7 @@ if len(sys.argv)>1:
     MODULES_TO_CHECK = []
 else:
     EX_PROGR_PATH = 'example_programs'
-    EX_FILES = glob.glob(os.path.join(EX_PROGR_PATH,'*.py'))
+    EX_FILES = glob.glob(os.path.join(EX_PROGR_PATH, '*.py'))
     SCRIPTS_TO_CHECK = glob.glob('*.py')
     SCRIPTS_TO_CHECK.append('pylint/run_pylint.py')
     # note: pylint/pylint_numpy_test.py is omitted here on purpose.
@@ -72,7 +72,7 @@ def check(msg, pycode, additional_args):
         print 'this point should not be used'
         return (-1, pycode)
     except SystemExit as sysexit:
-        if (sysexit.args[0] == 0):
+        if sysexit.args[0] == 0:
             print 'all seems fine'
             return (0, pycode)
         else:
@@ -94,15 +94,15 @@ def check_pylint_numpy_handling():
 
     (success, pycode) = check('checking script: ',
                               'pylint/pylint_numpy_test.py',
-                              additional_args = [])
-    if (success == 0):
+                              additional_args=[])
+    if success == 0:
         use_numpy_checks = True
         return use_numpy_checks
 
     (success, pycode) = check('checking script: ',
                               'pylint/pylint_numpy_test.py',
                               additional_args=['--ignored-classes=numpy'])
-    if (success == 0):
+    if success == 0:
         use_numpy_checks = False
         return use_numpy_checks
 
@@ -134,7 +134,7 @@ def check_all_py_files():
     # check for presence of compiled ecmwfbufr.so shared object file
     # which is only present after manually building the software
     # and disable the import during the pylint checking if it is missing
-    if not os.path.exists(os.path.join('pybufr_ecmwf','ecmwfbufr.so')):
+    if not os.path.exists(os.path.join('pybufr_ecmwf', 'ecmwfbufr.so')):
         #additional_args.append('--ignored-classes=ecmwfbufr')
         # note: this seems not to help at the moment ...
         # workaround: do the manual build first before running pylint
@@ -154,7 +154,7 @@ def check_all_py_files():
                             script, additional_args))
 
     num_not_ok = sum([r[0] for r in result])
-    num_ok     = len(result) - num_not_ok
+    num_ok = len(result) - num_not_ok
 
     print "done; nr of modules/scripts checked: ", len(result)
     print "number of well validated modules/scripts: ", num_ok

@@ -55,18 +55,18 @@ for pattern in FILE_GLOB_PATTERNS:
     files_to_delete.extend(glob.glob(pattern))
 
 for d in dirs_to_delete:
-    if (os.path.exists(d)):
-        if (os.path.isdir(d)):
+    if os.path.exists(d):
+        if os.path.isdir(d):
             print('deleting dir: ', d)
             os.system(r'\rm -rf '+d)
     # this only works if the dirs are empty!
     #os.removedirs(d)
 
 for f in files_to_delete:
-    if (os.path.exists(f)):
+    if os.path.exists(f):
         print('deleting file: ', f)
         os.remove(f)
-    if (os.path.islink(f)):
+    if os.path.islink(f):
         print('deleting symlink: ', f)
         os.remove(f)
 

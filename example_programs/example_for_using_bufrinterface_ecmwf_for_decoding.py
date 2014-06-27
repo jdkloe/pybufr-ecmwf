@@ -42,7 +42,7 @@ def display_results(bufr):
     print "Decoded BUFR message:"
 
     print "values array: ", bufr.values
-    txt = ''.join(str(v)+';' for v in bufr.values[:20] if v>0.)
+    txt = ''.join(str(v)+';' for v in bufr.values[:20] if v > 0.)
     print "values[:20] : ", txt
 
     nsubsets = bufr.get_num_subsets()
@@ -55,7 +55,7 @@ def display_results(bufr):
     lon_array = bufr.get_values(25)
 
     for subs in range(nsubsets):
-        if (30*(subs//30) == subs):
+        if 30*(subs//30) == subs:
             print " lat_array["+str(subs)+"] = "+str(lat_array[subs])+\
                   " lon_array["+str(subs)+"] = "+str(lon_array[subs])
 
@@ -73,7 +73,7 @@ def display_results(bufr):
     print "ktdlen = ", bufr.ktdlen
     print "ktdexl = ", bufr.ktdexl
 
-    descriptor_list          = bufr.get_descriptor_list()
+    descriptor_list = bufr.get_descriptor_list()
     expanded_discriptor_list = bufr.get_expanded_descriptor_list()
     print "descriptor list: ", descriptor_list
     print "descriptor list length: ", len(descriptor_list)
@@ -139,7 +139,7 @@ def decoding_example(input_bufr_file, custom_bufr_tables=None):
     #  #]
 
 #  #[ run the example
-if len(sys.argv)<2:
+if len(sys.argv) < 2:
     print 'please give a BUFR file as first argument'
     sys.exit(1)
 
@@ -151,11 +151,11 @@ print "-"*50
 
 EXAMPLES_DIR = os.path.dirname(os.path.abspath(__file__))
 ALT_BUFR_TABLES_DIR = os.path.join(os.path.split(EXAMPLES_DIR)[0],
-                                   'pybufr_ecmwf','alt_bufr_tables')
+                                   'pybufr_ecmwf', 'alt_bufr_tables')
 CUSTOM_BUFR_TABLES = \
-      (os.path.join(ALT_BUFR_TABLES_DIR,'GENERIC_SCAT_BUFR_TABLE_B.TXT'),
-       os.path.join(ALT_BUFR_TABLES_DIR,'GENERIC_SCAT_BUFR_TABLE_C.TXT'),
-       os.path.join(ALT_BUFR_TABLES_DIR,'GENERIC_SCAT_BUFR_TABLE_D.TXT') )
+      (os.path.join(ALT_BUFR_TABLES_DIR, 'GENERIC_SCAT_BUFR_TABLE_B.TXT'),
+       os.path.join(ALT_BUFR_TABLES_DIR, 'GENERIC_SCAT_BUFR_TABLE_C.TXT'),
+       os.path.join(ALT_BUFR_TABLES_DIR, 'GENERIC_SCAT_BUFR_TABLE_D.TXT'))
 
 if 'noaa_mos' in INP_BUFR_FILE:
     BUFRMSG = decoding_example(INP_BUFR_FILE)

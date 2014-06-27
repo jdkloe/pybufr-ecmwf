@@ -18,8 +18,8 @@ import subprocess  # support running additional executables
 
 PY3_CONVERTED_PATH = 'tmp_2to3_converted_sources'
 
-def run_shell_command(cmd, libpath = None, catch_output = True,
-                      module_path = './', verbose = True):
+def run_shell_command(cmd, libpath=None, catch_output=True,
+                      module_path='./', verbose=True):
     #  #[
     """ a wrapper routine around subprocess.Popen intended
     to make it a bit easier to call this functionality.
@@ -33,29 +33,29 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
 
     # get the list of already defined env settings
     env = os.environ
-    if (libpath):
+    if libpath:
         # add the additional env setting
         envname = "LD_LIBRARY_PATH"
-        if (env.has_key(envname)):
+        if env.has_key(envname):
             env[envname] = env[envname] + ":" + libpath
         else:
             env[envname] = libpath
 
-    if (env.has_key('PYTHONPATH')):
+    if env.has_key('PYTHONPATH'):
         env['PYTHONPATH'] = env['PYTHONPATH']+':'+module_path
     else:
         env['PYTHONPATH'] = module_path
 
-    if (verbose):
+    if verbose:
         print("Executing command: ", cmd)
 
-    if (catch_output):
+    if catch_output:
         # print('env[PYTHONPATH] = ',env['PYTHONPATH'])
         subpr = subprocess.Popen(cmd,
-                                 shell  = True,
-                                 env    = env,
-                                 stdout = subprocess.PIPE,
-                                 stderr = subprocess.PIPE)
+                                 shell=True,
+                                 env=env,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
 
         # wait until the child process is done
         # subpr.wait() # seems not necessary when catching stdout and stderr
@@ -69,7 +69,7 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         return (lines_stdout, lines_stderr)
 
     else:
-        subpr = subprocess.Popen(cmd, shell = True, env = env)
+        subpr = subprocess.Popen(cmd, shell=True, env=env)
 
         # wait until the child process is done
         subpr.wait()
@@ -97,7 +97,7 @@ def port_2to3():
         cmd = 'which '+tool_to_check
         (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
 
-        if len(lines_stderr)>0:
+        if len(lines_stderr) > 0:
             print('sorry, the '+tool_to_check+' tool seems not installed')
             print('num lines stderr/stdout = ', \
                   len(lines_stderr), len(lines_stdout))
@@ -117,7 +117,7 @@ def port_2to3():
     print('cloning the repository')
     cmd = 'hg clone . '+PY3_CONVERTED_PATH
     (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
-    if len(lines_stderr)>0:
+    if len(lines_stderr) > 0:
         print('sorry, failed command: ', cmd)
         for line in lines_stderr:
             print(line, end='')
@@ -138,7 +138,7 @@ def port_2to3():
     # walk along all python files and fix the shebang/hashbang line
     # since the 2to3 tool seems to not fix this one.
     for walk_result in os.walk(PY3_CONVERTED_PATH):
-        dirpath   = walk_result[0]
+        dirpath = walk_result[0]
         filenames = walk_result[2]
         for filename in filenames:
             ext = os.path.splitext(filename)[1]
@@ -152,8 +152,8 @@ def port_2to3():
 
                 fda = open(path_and_file, 'w')
                 for i, line in enumerate(lines):
-                    if ('#!' in line) and (i==0):
-                        print('shebang line found: ', line.replace('\n',''))
+                    if ('#!' in line) and (i == 0):
+                        print('shebang line found: ', line.replace('\n', ''))
                         fda.write('#!/usr/bin/env python3\n')
                     else:
                         fda.write(line)

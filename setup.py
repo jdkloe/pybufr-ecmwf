@@ -167,7 +167,7 @@ class BuildExt(_build_ext):
 
         _build_ext.initialize_options(self)
         #  #]
-    def finalize_options (self):
+    def finalize_options(self):
         #  #[ make settings available
         """ copy user defined options from the build to the
         build_ext class instance """
@@ -309,23 +309,18 @@ class BuildExt(_build_ext):
 
         # run the build method from the InstallBUFRInterfaceECMWF class
         # defined in the custom build script, to build the extension module
-        ibi = InstallBUFRInterfaceECMWF(verbose = True,
-                                        preferred_fortran_compiler = \
-                                        self.preferred_fortran_compiler,
-                                        preferred_c_compiler = \
-                                        self.preferred_c_compiler,
-                                        fortran_compiler = \
-                                        self.fortran_compiler,
-                                        fortran_ld_library_path = \
-                                        self.fortran_ld_library_path,
-                                        fortran_flags = self.fortran_flags,
-                                        c_compiler = self.c_compiler,
-                                        c_ld_library_path = \
-                                        self.c_ld_library_path,
-                                        c_flags = self.c_flags,
-                                        debug_f2py_c_api = False,
-                                        download_library_sources = \
-                                        do_download_library_sources )
+        ibi = InstallBUFRInterfaceECMWF(
+                  verbose=True,
+                  preferred_fortran_compiler=self.preferred_fortran_compiler,
+                  preferred_c_compiler=self.preferred_c_compiler,
+                  fortran_compiler=self.fortran_compiler,
+                  fortran_ld_library_path=self.fortran_ld_library_path,
+                  fortran_flags=self.fortran_flags,
+                  c_compiler=self.c_compiler,
+                  c_ld_library_path=self.c_ld_library_path,
+                  c_flags=self.c_flags,
+                  debug_f2py_c_api=False,
+                  download_library_sources=do_download_library_sources)
 
         # Build ecmwfbufr.so interface
         ibi.build()
@@ -394,9 +389,9 @@ CL = ["Development Status :: 3 - Alpha",
       "Topic :: Software Development :: Libraries"
       ]
 
-if (sys.version_info[0]==2):
+if sys.version_info[0] == 2:
     PACKAGE_NAME = 'pybufr-ecmwf'
-elif (sys.version_info[0]==3):
+elif sys.version_info[0] == 3:
     PACKAGE_NAME = 'pybufr-ecmwf3'
 else:
     ERRTXT = 'This python version is not supported: '+sys.version
@@ -411,26 +406,26 @@ ECMWF_BUFR_EXT = Extension('pybufr_ecmwf.ecmwfbufr',
 # make sure the alternative BUFR tables are included as well
 ECMWF_BUFR_DATA = {'pybufr_ecmwf' : ['alt_bufr_tables/*.TXT',]}
 
-setup(cmdclass = {'build'       : Build,
-                  'build_ext'   : BuildExt,
-                  'install_lib' : CustomInstallLib},
-      name = PACKAGE_NAME,
-      version = '0.74dev',
-      description = DESCR,
-      long_description = LONG_DESCR,
-      author = 'Jos de Kloe',
-      author_email = 'josdekloe@gmail.com',
-      url = 'http://code.google.com/p/pybufr-ecmwf/',
-      download_url = "http://code.google.com/p/pybufr-ecmwf/source/checkout",
-      classifiers = CL,
-      platforms = ["POSIX"],
-      license = "GPLv2",
-      packages = ['pybufr_ecmwf'],
+setup(cmdclass={'build'       : Build,
+                'build_ext'   : BuildExt,
+                'install_lib' : CustomInstallLib},
+      name=PACKAGE_NAME,
+      version='0.74dev',
+      description=DESCR,
+      long_description=LONG_DESCR,
+      author='Jos de Kloe',
+      author_email='josdekloe@gmail.com',
+      url='http://code.google.com/p/pybufr-ecmwf/',
+      download_url="http://code.google.com/p/pybufr-ecmwf/source/checkout",
+      classifiers=CL,
+      platforms=["POSIX"],
+      license="GPLv2",
+      packages=['pybufr_ecmwf'],
       include_package_data=True,
       package_data=ECMWF_BUFR_DATA,
-      ext_modules = [ECMWF_BUFR_EXT],
-      requires = ["numpy", "numpy.f2py", "subprocess"],
-      provides = ["pybufr_ecmwf"]
+      ext_modules=[ECMWF_BUFR_EXT],
+      requires=["numpy", "numpy.f2py", "subprocess"],
+      provides=["pybufr_ecmwf"]
       # this requires use of the setup tools which needs to be installed
       # first (i.e. it makes the setup a little bit less portable)
       # see: http://peak.telecommunity.com/DevCenter/setuptools#test

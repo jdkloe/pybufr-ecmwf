@@ -51,7 +51,7 @@ def print_bufr_data_category(input_bufr_file):
     #  #]
 
 #  #[ run the tool
-if len(sys.argv)<2:
+if len(sys.argv) < 2:
     print 'please give a BUFR file as argument'
     sys.exit(1)
 

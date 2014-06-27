@@ -47,16 +47,16 @@ def count_msgs(input_bufr_file):
     # delete the class instance
     # (just as test, not really needed here since this scope is about
     #  to be deleted anyway)
-    del(rbf)
+    del rbf
 
     return num_msgs
     #  #]
 
 #  #[ run the tool
-if len(sys.argv)<2:
+if len(sys.argv) < 2:
     print 'please give a BUFR file as argument'
     sys.exit(1)
 
-INPUT_BUFR_FILE  = sys.argv[1]
+INPUT_BUFR_FILE = sys.argv[1]
 print count_msgs(INPUT_BUFR_FILE)
 #  #]
