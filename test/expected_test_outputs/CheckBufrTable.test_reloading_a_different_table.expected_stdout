@@ -1,0 +1,43 @@
+input_bufr_files =  ['test/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr', 'test/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr', 'test/testdata/Testfile.BUFR', 'test/testdata/Testfile.BUFR']
+WARNING: C-table seems wrong for reference 21070!
+expected number of flag values =  24
+found number of unique flag values =  23
+==>ignoring this problem for now
+
+WARNING: unexpected format in table D file...
+problematic descriptor is:  340008
+linecount:  4754
+line: [           040022]
+This D-table entry defines more descriptors than
+specified in the start line.
+Please report this problem, together with
+a copy of the bufr table you tried to read.
+len(descriptor_list) =  61
+count =  60
+This is a formatting problem in the BUFR
+Table but will not affect decoding.
+ignoring excess descriptors for now...
+WARNING: the current template uses delayed replication! 
+Therefore the actual expanded descriptor list may be
+different for each subset within this BUFR message!
+and retrieving an array of data values spanning multiple
+subsets may yield unintended results !
+exp_descr_list =  [1007, 2019, 1033, 2172, 4001, 4002, 4003, 4004, 4005, 4006, 5001, 6001, 27001, 28001, 27001, 28001, 27001, 28001, 27001, 28001, 7022, 5043, 20010, 20016, 33003, 10040, 31001, [201131, 202129, 7004, 7004, 202000, 201000, 201131, 202000, 15020, 202000, 201000, 10002], 224000, 236000, 31001, [31031], 1031, 1032, 8023, 31001, [224255]]
+loaded BUFR msg nr.  1 shape =  (29, 394)
+data[:2,:2] =  [[   4.  220.]
+ [   4.  220.]]
+WARNING: the current template uses delayed replication! 
+Therefore the actual expanded descriptor list may be
+different for each subset within this BUFR message!
+and retrieving an array of data values spanning multiple
+subsets may yield unintended results !
+exp_descr_list =  [1007, 2019, 1033, 2172, 4001, 4002, 4003, 4004, 4005, 4006, 5001, 6001, 27001, 28001, 27001, 28001, 27001, 28001, 27001, 28001, 7022, 5043, 20010, 20016, 33003, 10040, 31001, [201131, 202129, 7004, 7004, 202000, 201000, 201131, 202000, 15020, 202000, 201000, 10002], 224000, 236000, 31001, [31031], 1031, 1032, 8023, 31001, [224255]]
+loaded BUFR msg nr.  1 shape =  (29, 394)
+data[:2,:2] =  [[   4.  220.]
+ [   4.  220.]]
+loaded BUFR msg nr.  1 shape =  (361, 44)
+data[:2,:2] =  [[   2.  803.]
+ [   2.  803.]]
+loaded BUFR msg nr.  1 shape =  (361, 44)
+data[:2,:2] =  [[   2.  803.]
+ [   2.  803.]]

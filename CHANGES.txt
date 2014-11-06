@@ -1,5 +1,8 @@
-Updated to build and use the new BUFRDC series of the ECMWF library
-including the latest version 000400.
+Release [next]
+-updated to build and use the new BUFRDC series of the ECMWF library
+ including the latest versions 000400 and  000401.
+-add reading, writing and using the C-BUFR tables which allows expanding
+ numerical flag values to the corresponding text values.
 
 Release 0.73 (08-Dec-2013)
 -fix pip install issue and add pip install test to build_test.py 

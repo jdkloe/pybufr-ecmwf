@@ -683,22 +683,6 @@ class CheckBufrTable(unittest.TestCase):
     """
     a class to check the bufr_table.py file
     """
-    def test_singleton(self):
-        #  #[ test the bufr_table.Singleton class
-        """
-        check the implementation of the singletom class in bufr.py
-        """
-        aaa = bufr_table.Singleton(1)
-        bbb = bufr_table.Singleton(1)
-        self.assertEqual(aaa is bbb, True)
-
-        repr_aaa = repr(aaa)
-        del(aaa)
-        ccc = bufr_table.Singleton(1)
-        repr_ccc = repr(ccc)
-        self.assertEqual(repr_aaa, repr_ccc)
-
-        #  #]
     def test_get_name(self):
         #  #[ test convert_code_to_descriptor_name.py
         '''
@@ -727,6 +711,27 @@ class CheckBufrTable(unittest.TestCase):
         # run the provided example code and verify the output
         cmd = "bufr_table.py simpletest"
         success = call_cmd_and_verify_output(cmd, rundir='pybufr_ecmwf')
+        self.assertEqual(success, True)
+        #  #]
+    def test_reloading_a_different_table(self):
+         #  #[
+        """
+        test ability to load several different sets of tables
+        from a single script, by decoding several bufr files that
+        require different templates and different tables.
+        """
+        # run the provided example code and verify the output
+        testfile1 = 'test/testdata/S-O3M_GOME_NOP_02_M02_20120911'+\
+                    '034158Z_20120911034458Z_N_O_20120911043724Z.bufr'
+        testfile2 = 'test/testdata/Testfile.BUFR'
+
+        # example_programs/
+        testprog = "test_read_multiple_bufr_files.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd += " {} {} {} {}".format(testfile1, testfile1,
+                                     testfile2, testfile2)
+               
+        success = call_cmd_and_verify_output(cmd)#, rundir='pybufr_ecmwf')
         self.assertEqual(success, True)
         #  #]
     #  #]

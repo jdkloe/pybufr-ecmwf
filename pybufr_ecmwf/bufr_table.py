@@ -49,77 +49,7 @@ class ProgrammingError(Exception):
     present in the code (this should be reported to the author) """
     pass
 
-class Singleton(object):
-    #  #[ explanation
-    """
-    this Singleton class is a modified version of the one
-    used by Guido van Rossum in his examples in his paper
-    "Unifying types and classes in Python 2.2", see:
-    http://www.python.org/download/releases/2.2.3/descrintro/
-    Its purpose is to have only one instance for each different
-    Descriptor reference number. If another instance is created with
-    the same reference number, this will actually just be a pointer
-    to the already existing instance, and not a totally new instance.
-    This way a huge amount of memory can be saved for large
-    BUFR templates/messages.
-    """
-    #  #]
-    #  #[
-    def __new__(cls, *args, **kwds):
-        #  #[
-        #print("class Singleton: calling __new__")
-        if len(args)>0:
-            # use the first arg, in case of Descriptors this is the
-            # reference number, as key in the instance dict
-            val = args[0]
-        else:
-            # note: since this __new__ is called with the same arguments
-            # as the cls.__init__ method, use the name init in this message
-            # to make more clear to the user where the problem is.
-            errtxt = "ERROR: at least one arg expected in init function !"
-            raise AttributeError(errtxt)
-        
-        # the next line returns None if __instance_dict__ does not yet exist
-        idct = cls.__dict__.get("__instance_dict__")
-        if idct is None:
-            # create a new dict to hold the instances of this class
-            # to allow only one instance for each int val used in init.
-            # NOTE THAT THIS WILL BE A CLASS VARIABLE
-            # NOT AN INSTANCE VARIABLE
-            # so all instances of this class will use the same dict
-            cls.__instance_dict__ = idct = {}
-
-        if idct.has_key(val):
-            # ok, we already had an instance for this value, so return
-            # a pointer to it, but first check if the init parameters
-            # are identical
-            instance = idct[val]
-            instance.checkinit(*args, **kwds)
-            return instance
-
-        # no instance yet exists for this value, so create a new one
-        cls.__instance_dict__[val] = instance = object.__new__(cls)
-        #instance.init(*args, **kwds)
-        return instance
-    #  #]
-    #def init(self, *args, **kwds):
-        #  #[
-        #print("class Singleton: calling init")
-        #pass
-        #  #]
-    def checkinit(self, *args, **kwargs):
-        #  #[
-        """
-        classes that inherit from this Singleton class should
-        implement this function to verify that the additional
-        args and kwargs are identical to the one used for an already
-        existing instance of the class.
-        """
-        pass
-        #  #]
-    #  #]
-
-class Descriptor(Singleton): # [a simple table B entry]
+class Descriptor: # [a simple table B entry]
     #  #[
     """
     a base class for storing descriptor information
@@ -144,8 +74,7 @@ class Descriptor(Singleton): # [a simple table B entry]
               "data_width: ["+str(self.data_width)+"] "
         return txt
         #  #]
-    def checkinit(self, reference, name, unit, unit_scale,
-                  unit_reference, data_width):
+    def checkinit(self, other):
         #  #[
         """
         a function to be called when an instance is created for a
@@ -155,27 +84,34 @@ class Descriptor(Singleton): # [a simple table B entry]
         in the BUFR files and/or template)
         """
         try:
-            assert(self.reference      == reference)
-            assert(self.name           == name)
-            assert(self.unit           == unit)
-            assert(self.unit_scale     == unit_scale)
-            assert(self.unit_reference == unit_reference)
-            assert(self.data_width     == data_width)
+            assert(self.reference      == other.reference)
+            assert(self.name           == other.name)
+            assert(self.unit           == other.unit)
+            assert(self.unit_scale     == other.unit_scale)
+            assert(self.unit_reference == other.unit_reference)
+            assert(self.data_width     == other.data_width)
         except AssertionError as aerr:
             print('checkinit check failed !!!')
             print()
-            print("self.reference      = ", self.reference,
-                  "reference           = ", reference)
-            print("self.name           = ", self.name,
-                  "name                = ", name)
-            print("self.unit           = ", self.unit,
-                  "unit                = ", unit)
-            print("self.unit_scale     = ", self.unit_scale,
-                  "unit_scale          = ", unit_scale)
-            print("self.unit_reference = ", self.unit_reference,
-                  "unit_reference      = ", unit_reference)
-            print("self.data_width     = ", self.data_width,
-                  "data_width          = ", data_width)
+            print(("self.reference       = [{:12s}]"
+                   "other.reference      = [{:12s}]").
+                  format(str(self.reference), str(other.reference)))
+            print(("self.name            = [{:12s}]"
+                   "other.name           = [{:12s}]").
+                  format(str(self.name), str(other.name)))
+            print(("self.unit            = [{:12s}]"
+                   "other.unit           = [{:12s}]").
+                  format(str(self.unit), str(other.unit)))
+            print(("self.unit_scale      = [{:12s}]"
+                   "other.unit_scale     = [{:12s}]").
+                  format(str(self.unit_scale), str(other.unit_scale)))
+            print(("self.unit_reference  = [{:12s}]"
+                   "other.unit_reference = [{:12s}]").
+                  format(str(self.unit_reference), str(other.unit_reference)))
+            print(("self.data_width     = [{:12s}]"
+                   "other.data_width    = [{:12s}]").
+                  format(str(self.data_width), str(other.data_width)))
+            #print('cls.__instance_dict__ = ', self.__class__.__instance_dict__)
             raise aerr
         #  #]
     def __long__(self):
@@ -968,38 +904,58 @@ class BufrTable:
         #print("longest line is: ", maxlen)
 
         (path, base) = os.path.split(tablefile)
+        B_tablefile = os.path.join(path, 'B'+base[1:])
+        C_tablefile = os.path.join(path, 'C'+base[1:])
+        D_tablefile = os.path.join(path, 'D'+base[1:])
+        
+        reload_tables = False
         if base[0].upper() == 'B':
             #
-            if (self.__class__.currently_loaded_B_table != tablefile):
-                self.load_b_table(tablefile)
-                self.__class__.currently_loaded_B_table = tablefile
-                self.__class__.saved_B_table = self.table_b
-            else:
-                if self.verbose:
-                    print('B-table already loaded: ', tablefile)
-                self.table_b = self.__class__.saved_B_table
+            if (self.__class__.currently_loaded_B_table !=  B_tablefile):
+                reload_tables = True
         elif base[0].upper() == 'C':
-            if (self.__class__.currently_loaded_C_table != tablefile):
-                self.load_c_table(tablefile)
-                self.__class__.currently_loaded_C_table = tablefile
-                self.__class__.saved_C_table = self.table_c
-            else:
-                if self.verbose:
-                    print('C-table already loaded: ', tablefile)
-                self.table_c = self.__class__.saved_C_table
+            if (self.__class__.currently_loaded_C_table != C_tablefile):
+                reload_tables = True
         elif base[0].upper() == 'D':
-            if (self.__class__.currently_loaded_D_table != tablefile):
-                self.load_d_table(tablefile)
-                self.__class__.currently_loaded_D_table = tablefile
-                self.__class__.saved_D_table = self.table_d
-            else:
-                if self.verbose:
-                    print('D-table already loaded: ', tablefile)
-                self.table_d = self.__class__.saved_D_table
+            if (self.__class__.currently_loaded_D_table != D_tablefile):
+                reload_tables = True
         else:
             print("ERROR: don't know what table this is")
             print("(path, base) = ", (path, base))
             raise IOError
+        
+        if reload_tables:
+            # first unload the previous file
+            # note that unload removes all 3 files (B,C,D)
+            # see just reload all 3 as well
+            # next calls to this load method will detect this,
+            # set reload_tables to False and use the stored version
+
+            #print('******* DEBUG: unloading tables')
+            self.unload_tables()
+
+            # then load the new files
+            #print('******* DEBUG: reloading table B: ',  B_tablefile)
+            self.load_b_table(B_tablefile)
+            self.__class__.saved_B_table = self.table_b
+
+            #print('******* DEBUG: reloading table C: ', C_tablefile)
+            self.load_c_table(C_tablefile)
+            self.__class__.saved_C_table = self.table_c
+
+            #print('******* DEBUG: reloading table D: ', D_tablefile)
+            self.load_d_table(D_tablefile)
+            self.__class__.saved_D_table = self.table_d
+
+        else: # reuse the already loaded tables
+            #print('******* DEBUG: Reusing stored tables')
+            self.table_b = self.__class__.saved_B_table
+            self.table_c = self.__class__.saved_C_table
+            self.table_d = self.__class__.saved_D_table
+
+        self.__class__.currently_loaded_B_table = B_tablefile
+        self.__class__.currently_loaded_C_table = C_tablefile
+        self.__class__.currently_loaded_D_table = D_tablefile
         #  #]
     def autolinkbufrtablefile(self, t_file):
         #  #[
@@ -1146,6 +1102,7 @@ class BufrTable:
                           "identical reference")
                     print("number found. This should never happen !!!")
                     print("problematic descriptor is: ", b_descr)
+                    self.table_b[reference].checkinit(b_descr)
                     print("Ignoring this entry .....")
                     nr_of_ignored_probl_entries += 1
 
@@ -1317,6 +1274,7 @@ class BufrTable:
                     print("a copy of the bufr table you tried to read.")
                     print("This is a formatting problem in the BUFR")
                     print("Table but will not affect decoding.")
+                    self.table_d[reference].checkinit(d_descr)
                     print("Ignoring this entry for now.....")
                     
                 # mark this block as done
@@ -1619,20 +1577,20 @@ class BufrTable:
                 
                 if (success):
                     # add descriptor object to the list
-                    try:
-                        b_descr = Descriptor(reference, name, unit, unit_scale,
-                                             unit_reference, data_width)
-                    except AssertionError:
+                    b_descr = Descriptor(reference, name, unit, unit_scale,
+                                         unit_reference, data_width)
+                    if not table_b.has_key(reference):
+                        #print("adding descr. key ", reference)
+                        table_b[reference] = b_descr
+                    else:
                         print("ERROR: multiple table B descriptors with "+
                               "identical reference")
                         print("number found. This should never happen !!!")
                         print("problematic descriptor is: ", b_descr)
+                        self.table_b[reference].checkinit(b_descr)
                         print("Ignoring this entry .....")
                         nr_of_ignored_probl_entries += 1
                         
-                    if not table_b.has_key(reference):
-                        #print("adding descr. key ", reference)
-                        table_b[reference] = b_descr
                     
         print("-------------")
         if (nr_of_ignored_probl_entries>0):
@@ -1661,7 +1619,8 @@ class BufrTable:
                 # table_d[int_FXY1].append((int_FXY2, comment))
                 table_d[int_FXY1].append(int_FXY2)
 
-        # now convert the imported lists into proper CompositeDescriptor instances
+        # now convert the imported lists into proper
+        # CompositeDescriptor instances
         while table_d:
             keys = table_d.keys()
             for reference in keys:
@@ -1694,6 +1653,7 @@ class BufrTable:
                     print("a copy of the bufr table you tried to read.")
                     print("This is a formatting problem in the BUFR")
                     print("Table but will not affect decoding.")
+                    self.table_d[reference].checkinit(d_descr)
                     print("Ignoring this entry for now.....")
                 
                 del(table_d[reference])
@@ -1768,27 +1728,6 @@ class BufrTable:
         unload the descriptors for the current BUFR table by removing them
         from the class namespace to allow loading a new table
         """
-        # ok, this works but is not very pretty,
-        # todo: see if this can be added as a function to the Singleton
-        # or Descriptor class
-        
-        # dicts
-        for b_reference in self.table_b.keys():
-            del(self.table_b[b_reference].__class__.\
-                __dict__.get("__instance_dict__")[b_reference])
-            del(self.table_b[b_reference])
-        for d_reference in self.table_d.keys():
-            del(self.table_d[d_reference].__class__.\
-                __dict__.get("__instance_dict__")[d_reference])
-            del(self.table_d[d_reference])
-        for s_reference in self.specials.keys():
-            del(self.specials[s_reference].__class__.\
-                __dict__.get("__instance_dict__")[s_reference])
-            del(self.specials[s_reference])
-        for m_reference in self.modifiers.keys():
-            del(self.modifiers[m_reference].__class__.\
-                __dict__.get("__instance_dict__")[m_reference])
-            del(self.modifiers[m_reference])
         del(self.list_of_d_entry_lineblocks)
         self.list_of_d_entry_lineblocks = []
 
@@ -1796,7 +1735,7 @@ class BufrTable:
         self.table_b   = {}
         self.specials  = {}
         self.modifiers = {}
-        self.table_c   = {} # 
+        self.table_c   = {}
         self.table_d   = {}
         self.list_of_d_entry_lineblocks = []
         self.num_d_blocks = 0

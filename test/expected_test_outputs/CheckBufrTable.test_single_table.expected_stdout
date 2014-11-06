@@ -1,5 +1,4 @@
 Starting test program:
-loaded bufr B table: ecmwf_bufrtables/B0000000000099017001.TXT
 WARNING: C-table seems wrong for reference 1031!
 expected number of flag values =  0
 found number of unique flag values =  1
@@ -70,5 +69,6 @@ expected number of flag values =  0
 found number of unique flag values =  1
 ==>ignoring this problem for now
 
+loaded bufr B table: ecmwf_bufrtables/B0000000000099017001.TXT
 loaded bufr C table: ecmwf_bufrtables/C0000000000099017001.TXT
 loaded bufr D table: ecmwf_bufrtables/D0000000000099017001.TXT

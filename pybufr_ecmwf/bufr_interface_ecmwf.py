@@ -86,7 +86,8 @@ class BUFRInterfaceECMWF:
 
     # filename to use to redirect the fortran stdout stream
     fortran_stdout_tmp_file = 'tmp_fortran_stdout.txt'
-
+    bufr_tables_env_setting_set_by_script = False
+    
     #  #]
     def __init__(self, encoded_message=None, section_sizes=None,
                  section_start_locations=None, verbose=False,
@@ -219,8 +220,9 @@ class BUFRInterfaceECMWF:
         # store the user supplied environment setting for BUFR_TABLES
         # to allow later use by the setup_tables method
         self.bufr_tables_env_setting = None
-        if os.environ.has_key('BUFR_TABLES'):
-            self.bufr_tables_env_setting = os.environ['BUFR_TABLES']
+        if not self.__class__.bufr_tables_env_setting_set_by_script:
+            if os.environ.has_key('BUFR_TABLES'):
+                self.bufr_tables_env_setting = os.environ['BUFR_TABLES']
 
         # make sure the BUFR tables can be found
         # also, force a slash at the end, otherwise the library fails
@@ -557,6 +559,10 @@ class BUFRInterfaceECMWF:
         which in turn are transferred to the ECMWF library using an
         appropriate environment setting
         """
+        debug=False
+        if debug:
+            self.verbose = True
+            
         if (not self.sections012_decoded):
             errtxt = ("Sorry, setting up BUFR tables is only possible after "+
                       "sections 0,1,2 of a BUFR message have been decoded "+
@@ -580,10 +586,11 @@ class BUFRInterfaceECMWF:
         # environment variable
         self.user_tables_dir = None
         if self.bufr_tables_env_setting:
-            # print('setup_tables: the user provided a directory to look for')
-            # print('BUFR tables: ')
-            # print("==> os.environ['BUFR_TABLES'] = ",
-            #       self.bufr_tables_env_setting)
+            if debug:
+                print('setup_tables: the user provided a directory to look for')
+                print('BUFR tables: ')
+                print("==> os.environ['BUFR_TABLES'] = ",
+                      self.bufr_tables_env_setting)
             self.user_tables_dir = os.path.abspath(self.bufr_tables_env_setting)
 
         # allow the user to excplicitely set the tables_dir as an argument
@@ -591,9 +598,10 @@ class BUFRInterfaceECMWF:
         if tables_dir is not None:
             # the user provided a dir to look in for BUFR tables so store it
             # if present, this one overrides the environment setting
-            # print('setup_tables: the user provided a directory to look for')
-            # print('BUFR tables: ')
-            # print('==> tables_dir = ',tables_dir)
+            if debug:
+                print('setup_tables: the user provided a directory to look for')
+                print('BUFR tables: ')
+                print('==> tables_dir = ',tables_dir)
             self.user_tables_dir = os.path.abspath(tables_dir)
 
         # The tables_dir_has_been_defined setting should be preserved
@@ -650,8 +658,9 @@ class BUFRInterfaceECMWF:
                        LocalVersion, MasterTableVersion,
                        EditionNumber, MasterTableNumber)
         
-        # print('DEBUG: (expected_name_table_b, expected_name_table_d) = ',
-        #       (expected_name_table_b, expected_name_table_d))
+        if debug:
+            print('DEBUG: (expected_name_table_b, expected_name_table_d) = ',
+                  (expected_name_table_b, expected_name_table_d))
 
         userpath_table_b = None
         userpath_table_c = None
@@ -676,16 +685,17 @@ class BUFRInterfaceECMWF:
                                                 'C_default.TXT')
         fullpath_default_table_d = os.path.join(self.ecmwf_bufr_tables_dir,
                                                 'D_default.TXT')
-        #print('Test:')
-        #print('userpath_table_b:',userpath_table_b)
-        #print('userpath_table_c:',userpath_table_c)
-        #print('userpath_table_d:',userpath_table_d)
-        #print('fullpath_table_b:',fullpath_table_b)
-        #print('fullpath_table_c:',fullpath_table_c)
-        #print('fullpath_table_d:',fullpath_table_d)
-        #print('fullpath_default_table_b:',fullpath_default_table_b)
-        #print('fullpath_default_table_c:',fullpath_default_table_c)
-        #print('fullpath_default_table_d:',fullpath_default_table_d)
+        if debug:
+            print('Debug:')
+            print('userpath_table_b:',userpath_table_b)
+            print('userpath_table_c:',userpath_table_c)
+            print('userpath_table_d:',userpath_table_d)
+            print('fullpath_table_b:',fullpath_table_b)
+            print('fullpath_table_c:',fullpath_table_c)
+            print('fullpath_table_d:',fullpath_table_d)
+            print('fullpath_default_table_b:',fullpath_default_table_b)
+            print('fullpath_default_table_c:',fullpath_default_table_c)
+            print('fullpath_default_table_d:',fullpath_default_table_d)
 
         # OK, the trick now is to create a symbolic link in a tmp_BUFR_TABLES
         # directory from the name expected by the ecmwf bufr library to:
@@ -718,9 +728,10 @@ class BUFRInterfaceECMWF:
                 # case 1)
                 # create symbolic links from the provided tables to the
                 # expected names in the private_bufr_tables_dir
-                # print('using user specified tables:')
-                # print('table_b_to_use = ',table_b_to_use)
-                # print('table_d_to_use = ',table_d_to_use)
+                if debug:
+                    print('using user specified tables:')
+                    print('table_b_to_use = ',table_b_to_use)
+                    print('table_d_to_use = ',table_d_to_use)
                 source_b = table_b_to_use
                 source_d = table_d_to_use
 
@@ -734,9 +745,10 @@ class BUFRInterfaceECMWF:
                 if (os.path.exists(userpath_table_b) and
                     os.path.exists(userpath_table_d)   ):
                     # case 2)
-                    # print('table b and d found in user specified location:')
-                    # print('userpath_table_b = ',userpath_table_b)
-                    # print('userpath_table_d = ',userpath_table_d)
+                    if debug:
+                        print('table b and d found in user specified location:')
+                        print('userpath_table_b = ',userpath_table_b)
+                        print('userpath_table_d = ',userpath_table_d)
                     source_b = userpath_table_b
                     source_d = userpath_table_d
                     # may be absent for now, so put an extra test on it
@@ -747,9 +759,10 @@ class BUFRInterfaceECMWF:
             if (os.path.exists(fullpath_table_b) and
                 os.path.exists(fullpath_table_d)    ):
                 # case 3)
-                # print('table b and d found in ecmwf tables collection:')
-                # print('fullpath_table_b = ',fullpath_table_b)
-                # print('fullpath_table_d = ',fullpath_table_d)
+                if debug:
+                    print('table b and d found in ecmwf tables collection:')
+                    print('fullpath_table_b = ',fullpath_table_b)
+                    print('fullpath_table_d = ',fullpath_table_d)
                 source_b = fullpath_table_b
                 source_d = fullpath_table_d
                 # may be absent for now, so put an extra test on it
@@ -760,9 +773,12 @@ class BUFRInterfaceECMWF:
             if (os.path.exists(fullpath_default_table_b) and
                 os.path.exists(fullpath_default_table_d)    ):
                 # case 4)
-                # print('using default tables:')
-                # print('fullpath_default_table_b = ',fullpath_default_table_b)
-                # print('fullpath_default_table_d = ',fullpath_default_table_d)
+                if debug:
+                    print('using default tables:')
+                    print('fullpath_default_table_b = ',
+                          fullpath_default_table_b)
+                    print('fullpath_default_table_d = ',
+                          fullpath_default_table_d)
                 source_b = fullpath_default_table_b
                 source_d = fullpath_default_table_d
                 if os.path.exists(fullpath_default_table_c):
@@ -807,9 +823,15 @@ class BUFRInterfaceECMWF:
              os.path.exists(destination_d)   ):
             os.remove(destination_d)
 
+        #print("TEST: making symlink from ", source_b,
+        #      " to ", destination_b)
         os.symlink(os.path.abspath(source_b), destination_b)
         if source_c:
+            #print("TEST: making symlink from ", source_c,
+            #      " to ", destination_c)
             os.symlink(os.path.abspath(source_c), destination_c)
+        #print("TEST: making symlink from ", source_d,
+        #      " to ", destination_d)
         os.symlink(os.path.abspath(source_d), destination_d)
             
         # make sure the BUFR tables can be found
@@ -818,7 +840,8 @@ class BUFRInterfaceECMWF:
         # library versions I worked with)
         os.environ["BUFR_TABLES"] = (self.private_bufr_tables_dir +
                                      os.path.sep)
-
+        self.__class__.bufr_tables_env_setting_set_by_script = True
+        
         self.tables_have_been_setup = True
         self.table_b_file_to_use = destination_b
         self.table_c_file_to_use = None

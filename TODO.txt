@@ -3,6 +3,9 @@ note: these test files are not redistributed with this library
 so a todo for myself is to create a script outside this python
 module to automatically test on all these files 
 ---------------------------
+Todo: see if it is usefull to add a requirements.txt  file.
+See: https://caremad.io/blog/setup-vs-requirement/ for details.
+---------------------------
 # tested ./bufr_count_msgs.py on these bufr files:
 # ascat/* [works fine]
 # qscat/* [works fine]
