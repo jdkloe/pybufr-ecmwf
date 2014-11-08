@@ -11,7 +11,7 @@ This D-table entry defines more descriptors than
 specified in the start line.
 Please report this problem, together with
 a copy of the bufr table you tried to read.
-len(descriptor_list) =  61
+len(descriptor_list) = 61
 count =  60
 This is a formatting problem in the BUFR
 Table but will not affect decoding.
