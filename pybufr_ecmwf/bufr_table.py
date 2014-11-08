@@ -42,6 +42,8 @@ import os, stat
 import sys
 import glob
 import csv
+
+from pybufr_ecmwf.helpers import python3
 #  #]
 
 class ProgrammingError(Exception):
@@ -949,6 +951,9 @@ class BufrTable:
                 self.__class__.saved_C_table = self.table_c
             except IOError:
                 pass
+            except UnicodeDecodeError:
+                print('Text encding problem detected in file: ', C_tablefile)
+                raise
 
             #print('******* DEBUG: reloading table D: ', D_tablefile)
             self.load_d_table(D_tablefile)
@@ -1381,7 +1386,16 @@ class BufrTable:
 
         # load blocks of lines that define each flag
         this_lineblock = []
-        for (i, line) in enumerate(open(cfile, 'rt')):
+        if python3:
+            # note: bufr uses CCITT-5 encoding (also known as us-ascii)
+            # for all text fields. However there is no such 
+            # definition for the descriptions in the c-table file.
+            # From experience with the ECMWF files it seems they
+            # use the latin-1 alphabet in stead.
+            cfd = open(cfile, 'rt', encoding='latin_1')
+        else:
+            cfd = open(cfile, 'rt')
+        for (i, line) in enumerate(cfd):
             line_copy = line.replace('\r', '').replace('\n', '')
             # skip empty lines
             if line_copy == '': continue

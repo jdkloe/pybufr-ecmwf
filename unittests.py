@@ -239,7 +239,7 @@ def call_cmd_and_verify_output(cmd, rundir=''):
         if not (lines_stdout == expected_lines_stdout):
             print("stdout differs from what was expected!!!")
             print("to find out what happended execute this diff command:")
-            print("xdiff ", actual_stdout, ' ', expected_stdout)
+            print("xdiff "+actual_stdout+' '+expected_stdout)
             # for l in lines_stdout:          print('output:      ['+l+']')
             # for l in expected_lines_stdout: print('exp. output: ['+l+']')
             success = False
@@ -247,7 +247,7 @@ def call_cmd_and_verify_output(cmd, rundir=''):
         if not (lines_stderr == expected_lines_stderr):
             print("stderr differs from what was expected!!!")
             print("to find out what happended execute this diff command:")
-            print("xdiff ", actual_stderr, ' ', expected_stderr)
+            print("xdiff "+actual_stderr+' '+expected_stderr)
             success = False
     except IOError:
         print("ERROR: expected output not found; probably because")

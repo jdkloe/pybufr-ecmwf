@@ -1705,29 +1705,23 @@ class InstallBUFRInterfaceECMWF(object):
             if len(c_tables) > 0:
                 c_tables.sort()
                 # assume the highest numbered table is the most recent one
-                newest_c_table = c_tables[-1]
-                ct_file = os.path.split(newest_c_table)[1]
+                ct_path, ct_file = os.path.split(c_tables[-1])
                 ct_base, ct_ext = os.path.splitext(ct_file)
                 newest_table_code = ct_base[1:]
-                bt_file = 'B'+newest_table_code+ct_ext
-                dt_file = 'D'+newest_table_code+ct_ext
-                newest_b_table = os.path.join(table_dir, bt_file)
-                newest_d_table = os.path.join(table_dir, dt_file)
+                newest_c_table = ct_file
+                newest_b_table = 'B'+newest_table_code+ct_ext
+                newest_d_table = 'D'+newest_table_code+ct_ext
 
-                default_b_table = os.path.join(table_dir, 'B_default.TXT')
-                default_c_table = os.path.join(table_dir, 'C_default.TXT')
-                default_d_table = os.path.join(table_dir, 'D_default.TXT')
+                default_b_table = 'B_default.TXT'
+                default_c_table = 'C_default.TXT'
+                default_d_table = 'D_default.TXT'
 
-                # print('B: newest ',newest_b_table,' default ',default_b_table)
-                # print('C: newest ',newest_c_table,' default ',default_c_table)
-                # print('D: newest ',newest_d_table,' default ',default_d_table)
-
-                os.symlink(os.path.abspath(newest_b_table),
-                           os.path.abspath(default_b_table))
-                os.symlink(os.path.abspath(newest_c_table),
-                           os.path.abspath(default_c_table))
-                os.symlink(os.path.abspath(newest_d_table),
-                           os.path.abspath(default_d_table))
+                current_path = os.getcwd()
+                os.chdir(table_dir)
+                os.symlink(newest_b_table, default_b_table)
+                os.symlink(newest_c_table, default_c_table)
+                os.symlink(newest_d_table, default_d_table)
+                os.chdir(current_path)
             else:
                 print('WARNING: no default table B, C and D found')
             #  #]
