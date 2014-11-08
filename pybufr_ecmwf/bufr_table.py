@@ -1251,7 +1251,8 @@ class BufrTable:
                     print("This error is unrecoverable.")
                     print("Please report this problem, together with")
                     print("a copy of the bufr table you tried to read.")
-                    print("len(descriptor_list) = ", len(descriptor_list))
+                    print("len(descriptor_list) = {}".
+                          format(len(descriptor_list)))
                     print("count = ", count)
                     raise IOError
                 
@@ -1264,7 +1265,8 @@ class BufrTable:
                     print("specified in the start line.")
                     print("Please report this problem, together with")
                     print("a copy of the bufr table you tried to read.")
-                    print("len(descriptor_list) = ", len(descriptor_list))
+                    print("len(descriptor_list) = {}".
+                          format(len(descriptor_list)))
                     print("count = ", count)
                     print("This is a formatting problem in the BUFR")
                     print("Table but will not affect decoding.")
