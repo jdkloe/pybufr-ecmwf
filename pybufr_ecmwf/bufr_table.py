@@ -1366,9 +1366,9 @@ class BufrTable:
         if num_flags != len(fldef.flag_dict.keys()):
             print('WARNING: C-table seems wrong for reference {}!'.
                   format(reference))
-            print('expected number of flag values = ', num_flags)
-            print('found number of unique flag values = ',
-                  len(fldef.flag_dict.keys()))
+            print('expected number of flag values = {}'.format(num_flags))
+            print('found number of unique flag values = {}'.
+                  format(len(fldef.flag_dict.keys())))
             #if num_flags==0:
             print('==>ignoring this problem for now\n')
         else:

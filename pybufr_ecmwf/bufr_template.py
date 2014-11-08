@@ -122,7 +122,17 @@ class BufrTemplate:
                 unexpanded_descriptor_list.extend(descr)
             else:
                 unexpanded_descriptor_list.append(descr)
-        return unexpanded_descriptor_list
+
+        # ensure the references are returned, not the instances
+        ref_list = []
+        for descr in unexpanded_descriptor_list:
+            try:
+                ref = descr.reference
+            except AttributeError:
+                ref = descr
+            ref_list.append(ref)
+
+        return ref_list
         #  #]
     def get_max_size(self, descriptor_list, bufrtables):
         #  #[

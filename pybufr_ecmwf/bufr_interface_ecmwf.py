@@ -1866,7 +1866,7 @@ class BUFRInterfaceECMWF:
         self.ktdlen = len(unexpanded_descriptor_list)
         # convert the unexpanded descriptor list to a numpy array
         # print("DEBUG: ",[str(d) for d in unexpanded_descriptor_list])
-        
+
         self.ktdlst = np.array(unexpanded_descriptor_list, dtype=np.int)
         print("unexpanded nr of descriptors = ", self.ktdlen)
         print("The current list is: ", self.ktdlst)
