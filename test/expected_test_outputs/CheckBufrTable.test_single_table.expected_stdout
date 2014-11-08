@@ -1,72 +1,72 @@
 Starting test program:
 WARNING: C-table seems wrong for reference 1031!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 1034!
-expected number of flag values =  132
-found number of unique flag values =  79
+expected number of flag values = 132
+found number of unique flag values = 79
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 2011!
-expected number of flag values =  124
-found number of unique flag values =  100
+expected number of flag values = 124
+found number of unique flag values = 100
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 2012!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 20105!
-expected number of flag values =  23
-found number of unique flag values =  12
+expected number of flag values = 23
+found number of unique flag values = 12
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 21069!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 25045!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 25046!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 25047!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 25048!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 25049!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 25051!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 33052!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: C-table seems wrong for reference 33053!
-expected number of flag values =  0
-found number of unique flag values =  1
+expected number of flag values = 0
+found number of unique flag values = 1
 ==>ignoring this problem for now
 
 loaded bufr B table: ecmwf_bufrtables/B0000000000099017001.TXT

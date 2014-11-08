@@ -1,6 +1,6 @@
 WARNING: C-table seems wrong for reference 21070!
-expected number of flag values =  24
-found number of unique flag values =  23
+expected number of flag values = 24
+found number of unique flag values = 23
 ==>ignoring this problem for now
 
 WARNING: unexpected format in table D file...
