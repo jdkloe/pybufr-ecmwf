@@ -17,14 +17,14 @@ See: https://caremad.io/blog/setup-vs-requirement/ for details.
 
 see my private ./BUFR_test_all_files.py script.
 
-results for files in pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_000400/data:
+results for files in pybufr_ecmwf/ecmwf_bufr_lib/000401/data:
 Totals:
 count_passed =  140
 count_failed =  0
 
 results for files in BUFR_test_files:
 Totals:
-count_passed =  65
+count_passed =  78
 count_failed =  19
 
 problematic files are the sn.00*.bin files from noaa (15 files)

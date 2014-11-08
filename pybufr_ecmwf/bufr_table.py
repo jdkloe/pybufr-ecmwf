@@ -939,9 +939,16 @@ class BufrTable:
             self.load_b_table(B_tablefile)
             self.__class__.saved_B_table = self.table_b
 
+            # allow this load to fail for now, since some BUFR tables
+            # versions provided by ECMWF consist of a B and D table only...
+            # (and the C table is not needed for basic encoding/decoding
+            #  anyway, only for interpretation of flag tables)
             #print('******* DEBUG: reloading table C: ', C_tablefile)
-            self.load_c_table(C_tablefile)
-            self.__class__.saved_C_table = self.table_c
+            try:
+                self.load_c_table(C_tablefile)
+                self.__class__.saved_C_table = self.table_c
+            except IOError:
+                pass
 
             #print('******* DEBUG: reloading table D: ', D_tablefile)
             self.load_d_table(D_tablefile)

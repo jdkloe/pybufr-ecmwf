@@ -39,9 +39,14 @@ https://github.com/numpy/numpy/pull/3230), and the bug was fixed
 in may 2013. However, if your numpy version is older than that this 
 may still be a problem.
 
+WARNING3 for python3 users:
+currently there seems to be some unicodeDecodeError in the unittest results
+so the module is probably not usable in python3 at the moment.
+As soon as time permits I'll try to fix this.
+
 For more information on this module please consult the wiki at:
 http://code.google.com/p/pybufr-ecmwf/
 
 If you have any questions feel free to contact me by email.
 
-Jos de Kloe, 01-Dec-2013.
+Jos de Kloe, 08-Nov-2014.

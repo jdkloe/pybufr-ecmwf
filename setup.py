@@ -303,9 +303,9 @@ class BuildExt(_build_ext):
         # created by the ibi.build() call below.
         #from pybufr_ecmwf.build_interface import InstallBUFRInterfaceECMWF
 
-        do_download_library_sources = True
-        if str(self.download_library_sources).lower() == 'false':
-            do_download_library_sources = False
+        do_download_library_sources = False
+        if str(self.download_library_sources).lower() == 'true':
+            do_download_library_sources = True
 
         # run the build method from the InstallBUFRInterfaceECMWF class
         # defined in the custom build script, to build the extension module
