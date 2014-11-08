@@ -22,10 +22,10 @@ used for decoding a BUFR message.
 # too many lines or variables here, so disable these warnings:
 #
 # disable warning: "Too many local variables"
-# pylint: disable-msg=R0914
+# pylint: disable=R0914
 #
 # disable warning: "Too many statements"
-# pylint: disable-msg=R0915
+# pylint: disable=R0915
 #
 #  #]
 #  #[ imported modules

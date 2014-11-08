@@ -221,7 +221,7 @@ class BUFRInterfaceECMWF:
         # to allow later use by the setup_tables method
         self.bufr_tables_env_setting = None
         if not self.__class__.bufr_tables_env_setting_set_by_script:
-            if os.environ.has_key('BUFR_TABLES'):
+            if 'BUFR_TABLES' in os.environ:
                 self.bufr_tables_env_setting = os.environ['BUFR_TABLES']
 
         # make sure the BUFR tables can be found
@@ -439,7 +439,7 @@ class BUFRInterfaceECMWF:
         be mixed in inpredictable ways (which makes it impossible
         to define unit test cases ...)
         """
-        if os.environ.has_key('STD_OUT'):
+        if 'STD_OUT' in os.environ:
             outp_fileunit = os.environ['STD_OUT']
         else:
             outp_fileunit = '12'

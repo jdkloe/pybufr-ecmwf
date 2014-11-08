@@ -36,7 +36,7 @@ are planned as well.
 # nothing I can do to change this.
 #
 # disable warning: Too many public methods (../20)
-# pylint: disable-msg=R0904
+# pylint: disable=R0904
 #
 #  #]
 #  #[ imported modules
@@ -71,7 +71,7 @@ if 'build/lib' in MY_MODULE_PATH:
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 # from pybufr_ecmwf import bufr
-from pybufr_ecmwf import bufr_table
+# from pybufr_ecmwf import bufr_table
 from pybufr_ecmwf import ecmwfbufr
 
 #import ecmwfbufr # import the wrapper module
@@ -80,7 +80,7 @@ from pybufr_ecmwf import ecmwfbufr
 #  #[ some constants
 EXAMPLE_PROGRAMS_DIR = 'example_programs'
 TEST_DIR = 'test'
-TESTDATADIR  = os.path.join(TEST_DIR, 'testdata')
+TESTDATADIR = os.path.join(TEST_DIR, 'testdata')
 EXP_OUTP_DIR = os.path.join(TEST_DIR, 'expected_test_outputs')
 ACT_OUTP_DIR = os.path.join(TEST_DIR, 'actual_test_outputs')
 
@@ -96,7 +96,7 @@ def call_cmd(cmd, rundir=''):
 
     # get the list of already defined env settings
     env = os.environ
-    if (env.has_key('PYTHONPATH')):
+    if 'PYTHONPATH' in env:
         settings = env['PYTHONPATH'].split(':')
         if not MY_MODULE_PATH in settings:
             env['PYTHONPATH'] = MY_MODULE_PATH+':'+env['PYTHONPATH']
@@ -110,8 +110,8 @@ def call_cmd(cmd, rundir=''):
     # remove the env setting to
     # /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES/
     # that may have been left by a previous test
-    if (env.has_key('BUFR_TABLES')):
-        del(env['BUFR_TABLES'])
+    if 'BUFR_TABLES' in env:
+        del env['BUFR_TABLES']
 
     # change dir if needed
     if rundir:
@@ -119,11 +119,9 @@ def call_cmd(cmd, rundir=''):
         os.chdir(rundir)
 
     # execute the test and catch all output
-    subpr = subprocess.Popen(cmd,
-                             shell  = True,
-                             env    = env,
-                             stdout = subprocess.PIPE,
-                             stderr = subprocess.PIPE)
+    subpr = subprocess.Popen(cmd, shell=True, env=env,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
     lines_stdout = subpr.stdout.readlines()
     lines_stderr = subpr.stderr.readlines()
     subpr.stdout.close()
@@ -156,7 +154,7 @@ def call_cmd_and_verify_output(cmd, rundir=''):
     # since I feel this helper routine really could not be
     # rewritten using less local variables
     #
-    # pylint: disable-msg=R0914
+    # pylint: disable=R0914
 
     # assume at first that all will work as planned
     success = True
@@ -182,7 +180,7 @@ def call_cmd_and_verify_output(cmd, rundir=''):
 
     # disable the pylint warning:
     # "Access to a protected member _getframe of a client class"
-    # pylint: disable-msg=W0212
+    # pylint: disable=W0212
 
     # determine the name of the calling function
     name_of_calling_function = sys._getframe(1).f_code.co_name
@@ -191,7 +189,7 @@ def call_cmd_and_verify_output(cmd, rundir=''):
     classname_of_calling_function = \
                  sys._getframe(1).f_locals['self'].__class__.__name__
 
-    # pylint: enable-msg=W0212
+    # pylint: enable=W0212
 
     # construct filenames for the actual and expected outputs
     basename_exp = os.path.join(EXP_OUTP_DIR,
@@ -200,8 +198,8 @@ def call_cmd_and_verify_output(cmd, rundir=''):
     basename_act = os.path.join(ACT_OUTP_DIR,
                                 classname_of_calling_function+"."+\
                                 name_of_calling_function)
-    actual_stdout   = basename_act+".actual_stdout"
-    actual_stderr   = basename_act+".actual_stderr"
+    actual_stdout = basename_act+".actual_stdout"
+    actual_stderr = basename_act+".actual_stderr"
     expected_stdout = basename_exp+".expected_stdout"
     expected_stderr = basename_exp+".expected_stderr"
 
@@ -266,7 +264,7 @@ def call_cmd_and_verify_output(cmd, rundir=''):
     return success
 
     # enable the "Too many local variables" warning again
-    # pylint: enable-msg=R0914
+    # pylint: enable=R0914
     #  #]
 
 print("Starting test program:")
@@ -277,12 +275,10 @@ class CheckRawECMWFBUFR(unittest.TestCase):
     a class to check the ecmwf_bufr_lib interface
     """
     # common settings for the following tests
-    testinputfile          = os.path.join(TESTDATADIR,
-                                          'Testfile.BUFR')
+    testinputfile = os.path.join(TESTDATADIR, 'Testfile.BUFR')
     corruptedtestinputfile = os.path.join(TESTDATADIR,
                                           'Testfile3CorruptedMsgs.BUFR')
-    testoutputfile2u       = os.path.join(TESTDATADIR,
-                                          'Testoutputfile2u.BUFR')
+    testoutputfile2u = os.path.join(TESTDATADIR, 'Testoutputfile2u.BUFR')
 
     def test_run_decoding_example(self):
         #  #[
@@ -407,10 +403,9 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
     a class to check the bufr_interface_ecmwf class
     """
     # common settings for the following tests
-    testinputfile          = os.path.join(TESTDATADIR,
-                                          'Testfile.BUFR')
-    testoutputfile1u       = os.path.join(TESTDATADIR,
-                                          'Testoutputfile1u.BUFR')
+    testinputfile = os.path.join(TESTDATADIR, 'Testfile.BUFR')
+    testoutputfile1u = os.path.join(TESTDATADIR, 'Testoutputfile1u.BUFR')
+
     def test_init(self):
         #  #[
         """
@@ -431,13 +426,13 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
 
         # check that a call with a non-defined keyword fails
         self.assertRaises(TypeError,
-                          BUFRInterfaceECMWF, dummy = 42)
+                          BUFRInterfaceECMWF, dummy=42)
 
         # todo: implement this (if this turns out to be important)
         # the module does no typechecking (yet) on its
         # inputs, so this one is not yet functional
         # self.assertRaises(TypeError,
-        #                  BUFRInterfaceECMWF, verbose = 42)
+        #                  BUFRInterfaceECMWF, verbose=42)
 
         #  #]
     def test_get_exp_bufr_table_names(self):
@@ -446,12 +441,12 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
         test the get_expected_ecmwf_bufr_table_names method
         """
 
-        center               = 210 # = ksec1( 3)
-        subcenter            =   0 # = ksec1(16)
-        local_version        =   1 # = ksec1( 8)
-        master_table_version =   0 # = ksec1(15)
-        edition_number       =   3 # =  ksec0( 3)
-        master_table_number  =   0 # = ksec1(14)
+        center = 210 # = ksec1( 3)
+        subcenter = 0 # = ksec1(16)
+        local_version = 1 # = ksec1( 8)
+        master_table_version = 0 # = ksec1(15)
+        edition_number = 3 # =  ksec0( 3)
+        master_table_number = 0 # = ksec1(14)
         bufrobj = BUFRInterfaceECMWF()
 
         # inspect the location of the ecmwfbufr*.so file, and derive
@@ -539,19 +534,17 @@ class CheckRawBUFRFile(unittest.TestCase):
     a class to check the raw_bufr_file class
     """
     # common settings for the following tests
-    testinputfile          = os.path.join(TESTDATADIR,
-                                          'Testfile.BUFR')
+    testinputfile = os.path.join(TESTDATADIR, 'Testfile.BUFR')
     corruptedtestinputfile = os.path.join(TESTDATADIR,
                                           'Testfile3CorruptedMsgs.BUFR')
-    testoutputfile3u       = os.path.join(TESTDATADIR,
-                                          'Testoutputfile3u.BUFR')
+    testoutputfile3u = os.path.join(TESTDATADIR, 'Testoutputfile3u.BUFR')
 
     def test_init(self):
         #  #[
         """
         test instantiating the class
         """
-        bufrfile1 = RawBUFRFile(verbose = True)
+        bufrfile1 = RawBUFRFile(verbose=True)
         self.assertEqual(bufrfile1.bufr_fd, None)
         self.assertEqual(bufrfile1.filename, None)
         self.assertEqual(bufrfile1.filemode, None)
@@ -561,7 +554,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         self.assertEqual(bufrfile1.nr_of_bufr_messages, 0)
         self.assertEqual(bufrfile1.last_used_msg, 0)
         self.assertEqual(bufrfile1.verbose, True)
-        bufrfile2 = RawBUFRFile(verbose = False)
+        bufrfile2 = RawBUFRFile(verbose=False)
         self.assertEqual(bufrfile2.verbose, False)
         #  #]
     def test_open(self):
@@ -569,7 +562,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         """
         test opening a BUFR file
         """
-        bufrfile = RawBUFRFile(verbose = False)
+        bufrfile = RawBUFRFile(verbose=False)
 
         # check behaviour when mode is missing
         self.assertRaises(TypeError,
@@ -595,11 +588,11 @@ class CheckRawBUFRFile(unittest.TestCase):
 
         # check behaviour when file does not exist
         self.assertRaises(IOError, bufrfile.open, 'dummy', 'rb',
-                          silent = True)
+                          silent=True)
 
         # check behaviour when reading a file without proper permission
         testfile = "tmp_testfile.read.BUFR"
-        if (os.path.exists(testfile)):
+        if os.path.exists(testfile):
             # force the file to be readwrite
             os.chmod(testfile, 0666)
             os.remove(testfile)
@@ -612,16 +605,16 @@ class CheckRawBUFRFile(unittest.TestCase):
         os.chmod(testfile, 0000)
         # do the test
         self.assertRaises(IOError, bufrfile.open, testfile, 'rb',
-                          silent = True)
+                          silent=True)
         # cleanup
-        if (os.path.exists(testfile)):
+        if os.path.exists(testfile):
             # force the file to be readwrite
             os.chmod(testfile, 0666)
             os.remove(testfile)
 
         # check behaviour when writing to file without proper permission
         testfile = "tmp_testfile.write.BUFR"
-        if (os.path.exists(testfile)):
+        if os.path.exists(testfile):
             # force the file to be readwrite
             os.chmod(testfile, 0666)
             os.remove(testfile)
@@ -634,9 +627,9 @@ class CheckRawBUFRFile(unittest.TestCase):
         os.chmod(testfile, 0444)
         # do the test
         self.assertRaises(IOError, bufrfile.open, testfile, 'wb',
-                          silent = True)
+                          silent=True)
         # cleanup
-        if (os.path.exists(testfile)):
+        if os.path.exists(testfile):
             # force the file to be readwrite
             os.chmod(testfile, 0666)
             os.remove(testfile)
@@ -646,7 +639,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         """
         test opening and closing a BUFR file
         """
-        bufrfile = RawBUFRFile(verbose = False)
+        bufrfile = RawBUFRFile(verbose=False)
         bufrfile.open(self.corruptedtestinputfile, 'rb')
         bufrfile.close()
 
@@ -730,7 +723,7 @@ class CheckBufrTable(unittest.TestCase):
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd += " {} {} {} {}".format(testfile1, testfile1,
                                      testfile2, testfile2)
-               
+
         success = call_cmd_and_verify_output(cmd)#, rundir='pybufr_ecmwf')
         self.assertEqual(success, True)
         #  #]
@@ -789,7 +782,7 @@ class CheckCustomTables(unittest.TestCase):
 
         # allows larger chuncks during comparisons by assertEqual
         self.maxDiff = None
-        
+
         self.assertEqual(b_table_txt, expected_b_table_txt)
         self.assertEqual(c_table_txt, expected_c_table_txt)
         self.assertEqual(d_table_txt, expected_d_table_txt)
@@ -827,14 +820,14 @@ class CheckCustomTables(unittest.TestCase):
         os.remove(d_table_file)
         os.remove(test_bufr_file)
         #  #]
-    #pylint: disable-msg=C0103
+    #pylint: disable=C0103
     def tearDown(self):
         # cleanup after running the tests from this class
         # print('tearDown running')
         os.system('\\rm -rf tmp_BUFR_TABLES')
         os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/'+\
                   'tmp_BUFR_TABLES')
-    #pylint: enable-msg=C0103
+    #pylint: enable=C0103
     #  #]
 
 class CheckBufr(unittest.TestCase):
@@ -843,13 +836,12 @@ class CheckBufr(unittest.TestCase):
     a class to check the bufr.py file
     """
     # common settings for the following tests
-    testinputfile        = os.path.join(TESTDATADIR,
-                                        'Testfile.BUFR')
+    testinputfile = os.path.join(TESTDATADIR, 'Testfile.BUFR')
     testinputfile_unpadded = os.path.join(TESTDATADIR,
                                           'ISXH58EUSR199812162225')
-    testinputfile_gras   = os.path.join(TESTDATADIR,
+    testinputfile_gras = os.path.join(TESTDATADIR,
         'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR')
-    testinputfile_o3m    = os.path.join(TESTDATADIR,
+    testinputfile_o3m = os.path.join(TESTDATADIR,
         'S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr')
 
     def test_run_decode_example1_ascii(self):

@@ -44,9 +44,9 @@ def read_bufr_file(input_bufr_file):
         if data.shape[0]*data.shape[1] == 0:
             print 'NO DATA FOUND! this seems an empty BUFR message !'
             continue
-        
+
         print 'loaded BUFR msg nr. ', msg_nr, 'shape = ', data.shape
-        print 'data[:2,:2] = ', data[:2,:2]
+        print 'data[:2,:2] = ', data[:2, :2]
 
     # close the file
     bob.close()

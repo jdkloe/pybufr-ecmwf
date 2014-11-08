@@ -107,7 +107,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         sys.path.append(os.getcwd())
         # print('sys.path = ', sys.path)
 
-        from build_interface import InstallBUFRInterfaceECMWF
+        from build_interface import InstallBUFRInterfaceECMWF, BuildException
         BI = InstallBUFRInterfaceECMWF(verbose=True,
                                        preferred_fortran_compiler=fc,
                                        download_library_sources=False)
@@ -120,7 +120,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         build_succesfull = True
         try:
             BI.build()
-        except:
+        except BuildException:
             this_result.append('manual build failed for compiler: '+fc)
             build_succesfull = False
 
@@ -488,9 +488,9 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         # note: this re-import is intentional, since this should be a
         # different copy, then the one used by DO_MANUAL_TESTS,
         # so temporarily disable the re-import pylint warning
-        #pylint: disable-msg=W0404
+        #pylint: disable=W0404
         from build_interface import InstallBUFRInterfaceECMWF
-        #pylint: enable-msg=W0404
+        #pylint: enable=W0404
 
         BI = InstallBUFRInterfaceECMWF(verbose=True,
                                        preferred_fortran_compiler=fc,

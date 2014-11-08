@@ -18,7 +18,7 @@ import subprocess  # support running additional executables
 
 PY3_CONVERTED_PATH = 'tmp_2to3_converted_sources'
 
-def run_shell_command(cmd, libpath=None, catch_output=True,
+def run_shell_command(cmd, libpath=None,
                       module_path='./', verbose=True):
     #  #[
     """ a wrapper routine around subprocess.Popen intended
@@ -36,12 +36,12 @@ def run_shell_command(cmd, libpath=None, catch_output=True,
     if libpath:
         # add the additional env setting
         envname = "LD_LIBRARY_PATH"
-        if env.has_key(envname):
+        if envname in env:
             env[envname] = env[envname] + ":" + libpath
         else:
             env[envname] = libpath
 
-    if env.has_key('PYTHONPATH'):
+    if 'PYTHONPATH' in env:
         env['PYTHONPATH'] = env['PYTHONPATH']+':'+module_path
     else:
         env['PYTHONPATH'] = module_path
@@ -49,31 +49,23 @@ def run_shell_command(cmd, libpath=None, catch_output=True,
     if verbose:
         print("Executing command: ", cmd)
 
-    if catch_output:
-        # print('env[PYTHONPATH] = ',env['PYTHONPATH'])
-        subpr = subprocess.Popen(cmd,
-                                 shell=True,
-                                 env=env,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+    # print('env[PYTHONPATH] = ',env['PYTHONPATH'])
+    subpr = subprocess.Popen(cmd,
+                             shell=True,
+                             env=env,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
 
-        # wait until the child process is done
-        # subpr.wait() # seems not necessary when catching stdout and stderr
+    # wait until the child process is done
+    # subpr.wait() # seems not necessary when catching stdout and stderr
 
-        lines_stdout = subpr.stdout.readlines()
-        lines_stderr = subpr.stderr.readlines()
+    lines_stdout = subpr.stdout.readlines()
+    lines_stderr = subpr.stderr.readlines()
 
-        #print("lines_stdout: ", lines_stdout)
-        #print("lines_stderr: ", lines_stderr)
+    #print("lines_stdout: ", lines_stdout)
+    #print("lines_stderr: ", lines_stderr)
 
-        return (lines_stdout, lines_stderr)
-
-    else:
-        subpr = subprocess.Popen(cmd, shell=True, env=env)
-
-        # wait until the child process is done
-        subpr.wait()
-        return
+    return (lines_stdout, lines_stderr)
     #  #]
 
 def port_2to3():

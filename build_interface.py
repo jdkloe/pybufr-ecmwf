@@ -39,18 +39,21 @@ from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
 
 #  #]
 #  #[ exception definitions
-class NetworkError(Exception):
+class BuildException(Exception):
+    """ a generic base exception for this build script """
+    pass
+class NetworkError(BuildException):
     """ an exception to indicate that a network problem occurred """
     pass
-class LibraryBuildError(Exception):
+class LibraryBuildError(BuildException):
     """ an exception to indicate that building the ECMWF BUFR
     library has failed """
     pass
-class InterfaceBuildError(Exception):
+class InterfaceBuildError(BuildException):
     """ an exception to indicate that building the fortran-to-python
     interface has failed """
     pass
-class ProgrammingError(Exception):
+class ProgrammingError(BuildException):
     """ an exception to indicate that a progromming error seems
     present in the code (this should be reported to the author) """
     pass
@@ -58,8 +61,8 @@ class ProgrammingError(Exception):
 #  #]
 #  #[ constants
 URL_ECMWF_WEBSITE = "http://old.ecmwf.int/"
-URL_BUFR_PAGE     = URL_ECMWF_WEBSITE+"products/data/"+\
-                    "software/download/bufr.html"
+URL_BUFR_PAGE = URL_ECMWF_WEBSITE+"products/data/"+\
+                "software/download/bufr.html"
 
 # the first one found will be used, unless a preferred one is specified.
 POSSIBLE_F_COMPILERS = ['gfortran', 'g95', 'g77',
@@ -132,8 +135,8 @@ def ensure_permissions(filename, mode):
         print('ERROR in ensure_permissions: unknown mode string: ', mode)
         raise ProgrammingError
     #  #]
-def run_shell_command(cmd, libpath = None, catch_output = True,
-                      module_path = './', verbose = True):
+def run_shell_command(cmd, libpath=None, catch_output=True,
+                      module_path='./', verbose=True):
     #  #[
     """ a wrapper routine around subprocess.Popen intended
     to make it a bit easier to call this functionality.
@@ -147,37 +150,35 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
 
     # get the list of already defined env settings
     env = os.environ
-    if (libpath):
+    if libpath:
         # add the additional env setting
         envname = "LD_LIBRARY_PATH"
-        if (env.has_key(envname)):
+        if envname in env:
             env[envname] = env[envname] + ":" + libpath
         else:
             env[envname] = libpath
 
-    if (env.has_key('PYTHONPATH')):
+    if 'PYTHONPATH' in env:
         env['PYTHONPATH'] = env['PYTHONPATH']+':'+module_path
     else:
         env['PYTHONPATH'] = module_path
 
-    if (verbose):
+    if verbose:
         print("Executing command: ", cmd)
 
-    if (catch_output):
-        # print('env[PYTHONPATH] = ',env['PYTHONPATH'])
-        subpr = subprocess.Popen(cmd,
-                                 shell  = True,
-                                 env    = env,
-                                 stdout = subprocess.PIPE,
-                                 stderr = subprocess.PIPE)
+    if catch_output:
+        # print('env[PYTHONPATH] = ', env['PYTHONPATH'])
+        subpr = subprocess.Popen(cmd, shell=True, env=env,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
 
         # wait until the child process is done
         # subpr.wait() # seems not necessary when catching stdout and stderr
 
-        if (sys.version_info[0]==2):
+        if sys.version_info[0] == 2:
             lines_stdout = subpr.stdout.readlines()
             lines_stderr = subpr.stderr.readlines()
-        elif (sys.version_info[0]==3):
+        elif sys.version_info[0] == 3:
             # in python 3 the readlines() method returns bytes,
             # so convert them to a unicode string for convenience
             tmp_lines_stdout = subpr.stdout.readlines()
@@ -198,7 +199,7 @@ def run_shell_command(cmd, libpath = None, catch_output = True,
         return (lines_stdout, lines_stderr)
 
     else:
-        subpr = subprocess.Popen(cmd, shell = True, env = env)
+        subpr = subprocess.Popen(cmd, shell=True, env=env)
 
         # wait until the child process is done
         subpr.wait()
@@ -218,21 +219,21 @@ def fortran_compile_and_execute(fcmp, fflags, f_code, f_executable, f_libpath):
     cmd = fcmp+' '+fflags+' -o '+f_executable+' '+f_file
 
     # now issue the compile command
-    if (f_libpath == ""):
+    if f_libpath == "":
         print("Executing command: ", cmd)
         os.system(cmd)
     else:
-        run_shell_command(cmd, libpath = f_libpath, catch_output = False)
+        run_shell_command(cmd, libpath=f_libpath, catch_output=False)
 
     # now execute the just generated test program to verify if we succeeded
     # add a './' to ensure the executable is also found for users that
     # do not have '.' in their default search path
     cmd = os.path.join('.', f_executable)
-    if (f_libpath == ""):
+    if f_libpath == "":
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
     else:
         (lines_stdout, lines_stderr) = \
-                       run_shell_command(cmd, libpath = f_libpath)
+                       run_shell_command(cmd, libpath=f_libpath)
 
     # clean up
     os.remove(f_file)
@@ -268,8 +269,8 @@ end program pybufr_test_program
 
     expected_output = [' Hello pybufr module:\n',
                        ' Fortran compilation seems to work fine ...\n']
-    if ( (expected_output[0] not in lines_stdout) or
-         (expected_output[1] not in lines_stdout)   ):
+    if ((expected_output[0] not in lines_stdout) or
+        (expected_output[1] not in lines_stdout)):
         print("ERROR: Fortran compilation test failed; "+
               "something seems very wrong")
         print("Expected output: ", expected_output)
@@ -301,21 +302,20 @@ def c_compile_and_execute(ccmp, cflags, c_code, c_executable, c_libpath):
     cmd = ccmp+' '+cflags+' -o '+c_executable+' '+c_file
 
     # now issue the compile command
-    if (c_libpath == ""):
+    if c_libpath == "":
         print("Executing command: ", cmd)
         os.system(cmd)
     else:
-        run_shell_command(cmd, libpath = c_libpath, catch_output = False)
+        run_shell_command(cmd, libpath=c_libpath, catch_output=False)
 
     # now execute the just generated program
     # add a './' to ensure the executable is also found for users that
     # do not have '.' in their default search path
     cmd = os.path.join('.', c_executable)
-    if (c_libpath == ""):
+    if c_libpath == "":
         (lines_stdout, lines_stderr) = run_shell_command(cmd)
     else:
-        (lines_stdout, lines_stderr) = \
-                       run_shell_command(cmd, libpath = c_libpath)
+        (lines_stdout, lines_stderr) = run_shell_command(cmd, libpath=c_libpath)
 
     # clean up
     os.remove(c_file)
@@ -347,8 +347,8 @@ int main()
 
     expected_output = ['Hello pybufr module:\n',
                        'c compilation seems to work fine ...\n']
-    if ( (expected_output[0] not in lines_stdout) or
-         (expected_output[1] not in lines_stdout)   ):
+    if ((expected_output[0] not in lines_stdout) or
+        (expected_output[1] not in lines_stdout)):
         print("ERROR: c compilation test failed; something seems very wrong")
         print("Expected output: ", expected_output)
         print('actual output stdout = ', lines_stdout)
@@ -561,7 +561,7 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
     # fortran is not yet available, so for now use this
     # quick and dirty workaround...
     edits = {}
-    edits['JSUP']  = 9
+    edits['JSUP'] = 9
     edits['JSEC0'] = 3
     edits['JSEC1'] = 40
     edits['JSEC2'] = 4096
@@ -587,7 +587,7 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
     lines = open(signature_file).readlines()
 
     # create a backup copy, to allow manual inspection
-    source      = signature_file
+    source = signature_file
     destination = signature_file+".bak"
     shutil.copyfile(source, destination)
 
@@ -600,23 +600,23 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
 
         mod_line = line
 
-        if ('end subroutine' in mod_line):
+        if 'end subroutine' in mod_line:
             inside_subroutine = False
-        elif ('subroutine' in mod_line):
+        elif 'subroutine' in mod_line:
             inside_subroutine = True
 
-        if ('end subroutine retrieve_settings' in mod_line):
+        if 'end subroutine retrieve_settings' in mod_line:
             inside_retrieve_settings = False
-        elif ('subroutine retrieve_settings' in mod_line):
+        elif 'subroutine retrieve_settings' in mod_line:
             inside_retrieve_settings = True
 
-        if ('end subroutine pbbufr' in mod_line):
+        if 'end subroutine pbbufr' in mod_line:
             inside_pbbufr_sign = False
-        elif ('subroutine pbbufr' in mod_line):
+        elif 'subroutine pbbufr' in mod_line:
             inside_pbbufr_sign = True
 
-        if (inside_subroutine):
-            if (' ::' in mod_line):
+        if inside_subroutine:
+            if ' ::' in mod_line:
                 # Add the intent(inplace) switch to all subroutine
                 # parameters.
                 # This might not be very pretty, but otherwise all
@@ -655,7 +655,7 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
 
             #print("to           : ", mod_line)
 
-        if (mod_line.strip() == "end interface"):
+        if mod_line.strip() == "end interface":
             # NOTE: the pb interface routines are written in c, so f2py
             # will not automatically generate their signature. This next
             # subroutine call explicitely adds these signatures.
@@ -712,8 +712,8 @@ def extract_version():
 
     for line in open(os.path.join(setuppath, setupfiles[0])).readlines():
         if 'version =' in line:
-            quoted_version = line.split('=')[1].replace(',','')
-            software_version = quoted_version.replace("'",'').strip()
+            quoted_version = line.split('=')[1].replace(',', '')
+            software_version = quoted_version.replace("'", '').strip()
 
     # retrieve the mercurial revision
     cmd = 'hg log -l 1'
@@ -729,14 +729,14 @@ def extract_version():
 
     # store the result
     version_file = 'version.py'
-    fds = open(version_file,'w')
+    fds = open(version_file, 'w')
     fds.write("software_version = '"+software_version+"'\n")
     fds.write("hg_version = '"+hg_version+"'\n")
     fds.write("install_date = '"+install_date+"'\n")
     fds.write("version = '"+software_version+'; '+\
              hg_version+'; '+install_date+"'\n")
     fds.close()
-    ensure_permissions(version_file,'rx')
+    ensure_permissions(version_file, 'rx')
     #  #]
 def symlink_to_all_files(source_dir, dest_dir):
     #  #[ create symlinks in dest_dir for all links in source_dir
@@ -783,43 +783,43 @@ class InstallBUFRInterfaceECMWF(object):
     a class that downloads and builds the interface between the ECMWF
     BUFR library and python
     """
-    def __init__(self, verbose = False,
-                 preferred_fortran_compiler = None,
-                 preferred_c_compiler = None,
-                 fortran_compiler = None,
-                 fortran_ld_library_path = None,
-                 fortran_flags = None,
-                 c_compiler = None,
-                 c_ld_library_path = None,
-                 c_flags = None,
-                 debug_f2py_c_api = False,
-                 download_library_sources = False):
+    def __init__(self, verbose=False,
+                 preferred_fortran_compiler=None,
+                 preferred_c_compiler=None,
+                 fortran_compiler=None,
+                 fortran_ld_library_path=None,
+                 fortran_flags=None,
+                 c_compiler=None,
+                 c_ld_library_path=None,
+                 c_flags=None,
+                 debug_f2py_c_api=False,
+                 download_library_sources=False):
         #  #[
 
         # first remove any quotes that may be around the strings
         # (this may happen if the user uses quotes in the setup.cfg file)
         self.preferred_fortran_compiler = rem_quotes(preferred_fortran_compiler)
-        self.preferred_c_compiler       = rem_quotes(preferred_c_compiler)
-        self.fortran_compiler           = rem_quotes(fortran_compiler)
-        self.fortran_ld_library_path    = rem_quotes(fortran_ld_library_path)
-        self.c_compiler                 = rem_quotes(c_compiler)
-        self.c_ld_library_path          = rem_quotes(c_ld_library_path)
-        self.fortran_flags              = rem_quotes(fortran_flags)
-        self.c_flags                    = rem_quotes(c_flags)
-        self.debug_f2py_c_api           = debug_f2py_c_api
-        self.download_library_sources   = download_library_sources
+        self.preferred_c_compiler = rem_quotes(preferred_c_compiler)
+        self.fortran_compiler = rem_quotes(fortran_compiler)
+        self.fortran_ld_library_path = rem_quotes(fortran_ld_library_path)
+        self.c_compiler = rem_quotes(c_compiler)
+        self.c_ld_library_path = rem_quotes(c_ld_library_path)
+        self.fortran_flags = rem_quotes(fortran_flags)
+        self.c_flags = rem_quotes(c_flags)
+        self.debug_f2py_c_api = debug_f2py_c_api
+        self.download_library_sources = download_library_sources
 
         # save the verbose setting
         self.verbose = verbose
 
         # save the location to be used for installing the ECMWF BUFR library
-        self.ecmwf_bufr_lib_dir  = "./ecmwf_bufr_lib"
+        self.ecmwf_bufr_lib_dir = "./ecmwf_bufr_lib"
 
         # define the names of the library and shared object files
         # that will be created by this class
         self.bufr_lib_file = "libbufr.a"
 
-        self.wrapper_build_dir   = "f2py_build"
+        self.wrapper_build_dir = "f2py_build"
         self.wrapper_module_name = "ecmwfbufr"
 
         # init other module attributes to None
@@ -837,7 +837,7 @@ class InstallBUFRInterfaceECMWF(object):
         wrapper_was_build = False
 
         # check for the presence of the library
-        if (os.path.exists(self.bufr_lib_file)):
+        if os.path.exists(self.bufr_lib_file):
             print("BUFR library seems present")
         else:
             print("Entering installation sequence:")
@@ -850,7 +850,7 @@ class InstallBUFRInterfaceECMWF(object):
         except IndexError:
             wrapper_name = 'undefined'
 
-        if (os.path.exists(wrapper_name)):
+        if os.path.exists(wrapper_name):
             print("python wrapper seems present")
         else:
             print("Entering wrapper generation sequence:")
@@ -859,7 +859,7 @@ class InstallBUFRInterfaceECMWF(object):
             print("compilation of library wrapper finished")
             wrapper_was_build = True
 
-        if ((not bufr_was_build) and (not wrapper_was_build)):
+        if (not bufr_was_build) and (not wrapper_was_build):
             print("\nNothing to do\n"+
                   "Execute the clean.py tool if you wish to start again "+
                   "from scratch.")
@@ -932,7 +932,7 @@ class InstallBUFRInterfaceECMWF(object):
                 list_of_bufr_tarfiles = glob.glob(os.path.join(\
                                           local_ecmwf_bufr_lib_dir, "*.tar.gz"))
 
-                if len(list_of_bufr_tarfiles)>0:
+                if len(list_of_bufr_tarfiles) > 0:
                     # make sure the destination dir exists and step to it
                     if not os.path.exists(self.ecmwf_bufr_lib_dir):
                         os.makedirs(self.ecmwf_bufr_lib_dir)
@@ -993,7 +993,7 @@ class InstallBUFRInterfaceECMWF(object):
         if not os.path.exists(self.ecmwf_bufr_lib_dir):
             os.makedirs(self.ecmwf_bufr_lib_dir)
 
-        if (self.verbose):
+        if self.verbose:
             print("setting up connection to ECMWF website")
         try:
             # Get a file-like object for this website
@@ -1006,7 +1006,7 @@ class InstallBUFRInterfaceECMWF(object):
         # Read from the object, storing the page's contents in a list of lines
         lines = urlf.readlines()
         urlf.close()
-        if (self.verbose):
+        if self.verbose:
             print("ECMWF download page retrieved successfully")
 
         # a test print of the html of this webpage
@@ -1035,19 +1035,19 @@ class InstallBUFRInterfaceECMWF(object):
                 line = tmp_line.decode()
             else:
                 line = tmp_line
-            if (".tar.gz" in line):
+            if ".tar.gz" in line:
                 #print(line)
                 match_object = re.match(line_pattern, line)
-                if (match_object):
+                if match_object:
                     data = match_object.groups()
                     #print(data)
                     bufr_lib_versions.append(data)
 
         # find most recent library version, for now just sort on name
         # that should do the trick
-        most_recent_bufr_lib_url       = ""
-        most_recent_bufr_tarfile_name  = ""
-        #most_recent_bufr_lib_date      = ""
+        most_recent_bufr_lib_url = ""
+        most_recent_bufr_tarfile_name = ""
+        #most_recent_bufr_lib_date = ""
 
         # example values for data:
         # data[0] = '/products/data/software/download/software_files/'+\
@@ -1055,17 +1055,17 @@ class InstallBUFRInterfaceECMWF(object):
         # data[1] = 'bufr_000380.tar.gz'
         # data[2] = ' 28.07.2009'
         for data in bufr_lib_versions:
-            bufr_lib_url      = data[0]
+            bufr_lib_url = data[0]
             bufr_tarfile_name = data[1]
-            #bufr_lib_date     = data[2]
-            if (bufr_tarfile_name > most_recent_bufr_tarfile_name):
+            #bufr_lib_date = data[2]
+            if bufr_tarfile_name > most_recent_bufr_tarfile_name:
                 # store
-                most_recent_bufr_lib_url      = bufr_lib_url
+                most_recent_bufr_lib_url = bufr_lib_url
                 most_recent_bufr_tarfile_name = bufr_tarfile_name
-                #most_recent_bufr_lib_date     = bufr_lib_date
+                #most_recent_bufr_lib_date = bufr_lib_date
 
         # report the result
-        if (self.verbose):
+        if self.verbose:
             print("Most recent library version seems to be: ",
                   most_recent_bufr_tarfile_name)
 
@@ -1085,7 +1085,7 @@ class InstallBUFRInterfaceECMWF(object):
         #print('recent changes in the ECMWF BUFR library source code.')
         #return False
 
-        if (self.verbose):
+        if self.verbose:
             print("trying to download: ", most_recent_bufr_tarfile_name)
 
         download_url = URL_ECMWF_WEBSITE+most_recent_bufr_lib_url
@@ -1099,7 +1099,7 @@ class InstallBUFRInterfaceECMWF(object):
 
         tarfiledata = urlf.read()
         urlf.close()
-        if (self.verbose):
+        if self.verbose:
             print("ECMWF download page retrieved successfully")
 
         local_fullname = os.path.join(self.ecmwf_bufr_lib_dir,
@@ -1108,7 +1108,7 @@ class InstallBUFRInterfaceECMWF(object):
         tfd.write(tarfiledata)
         tfd.close()
 
-        if (self.verbose):
+        if self.verbose:
             print("created local copy of: ", most_recent_bufr_tarfile_name)
 
         return True
@@ -1120,17 +1120,17 @@ class InstallBUFRInterfaceECMWF(object):
         of the current tarball."""
 
         # save the location to be used for installing the ECMWF BUFR library
-        ecmwf_bufr_lib_dir  = "./ecmwf_bufr_lib"
+        ecmwf_bufr_lib_dir = "./ecmwf_bufr_lib"
         list_of_bufr_tarfiles = glob.glob(os.path.join(ecmwf_bufr_lib_dir,
                                                        "*.tar.gz"))
 
         # safety catch
-        if (len(list_of_bufr_tarfiles) == 0):
+        if len(list_of_bufr_tarfiles) == 0:
             return (None, None)
 
         # sort in reverse alphabetical order to get the newest one on top
-        list_of_bufr_tarfiles.sort(reverse = True)
-        if (self.verbose):
+        list_of_bufr_tarfiles.sort(reverse=True)
+        if self.verbose:
             print("available library tarfiles: ", list_of_bufr_tarfiles)
             print("most recent library tarfile: ", list_of_bufr_tarfiles[0])
 
@@ -1163,14 +1163,14 @@ class InstallBUFRInterfaceECMWF(object):
             (source_dir, tarfile_to_install) = self.get_source_dir()
 
             # if not available, search some possible alternative locations
-            if (source_dir is None):
+            if source_dir is None:
                 self.find_copy_of_library()
                 # retry (maybe we already had downloaded a copy in a different
                 # location, in which case downloading in not needed)
                 (source_dir, tarfile_to_install) = self.get_source_dir()
 
             # if still not found download, or use spare copy
-            if (source_dir is None):
+            if source_dir is None:
                 success = False
                 if self.download_library_sources:
                     # try to download the source code for the
@@ -1202,10 +1202,9 @@ class InstallBUFRInterfaceECMWF(object):
                 print("ERROR: extracting source_dir failed")
                 raise NetworkError
 
-            if (not os.path.exists(source_dir)):
-
+            if not os.path.exists(source_dir):
                 # safety catch
-                if (tarfile_to_install == None):
+                if tarfile_to_install == None:
                     print("ERROR: no tarfile available for BUFR library.")
                     raise NetworkError
 
@@ -1222,7 +1221,7 @@ class InstallBUFRInterfaceECMWF(object):
             try:
                 bufr_dir = os.path.split(source_dir)[1]
                 parts = bufr_dir.split('_')
-                if len(parts)>1:
+                if len(parts) > 1:
                     bufrdir_version = int(parts[1])
                 else:
                     # exception seems needed for version 000401
@@ -1287,14 +1286,14 @@ class InstallBUFRInterfaceECMWF(object):
 
         # the first one found will be used, unless a preferred one is specified.
         for f_compiler in POSSIBLE_F_COMPILERS:
-            if (self.preferred_fortran_compiler == f_compiler):
+            if self.preferred_fortran_compiler == f_compiler:
                 if self.check_presence(f_compiler):
                     self.fortran_compiler_to_use = f_compiler
                     break # stop the for loop
 
-        if (self.fortran_compiler_to_use is None):
+        if self.fortran_compiler_to_use is None:
             # a sanity check
-            if (self.preferred_fortran_compiler is not None):
+            if self.preferred_fortran_compiler is not None:
                 if not (self.preferred_fortran_compiler in
                         POSSIBLE_F_COMPILERS):
                     print("ERROR: unknown preferred fortran compiler "+
@@ -1315,7 +1314,7 @@ class InstallBUFRInterfaceECMWF(object):
                     self.fortran_compiler_to_use = f_compiler
                     break # stop the for loop
 
-        if (self.fortran_compiler_to_use is None):
+        if self.fortran_compiler_to_use is None:
             print("ERROR: no valid fortran compiler found,")
             print("installation is not possible")
             print("Please install a fortran compiler first.")
@@ -1348,14 +1347,14 @@ class InstallBUFRInterfaceECMWF(object):
 
         # the first one found will be used, unless a preferred one is specified.
         for c_compiler in POSSIBLE_C_COMPILERS:
-            if (self.preferred_c_compiler == c_compiler):
+            if self.preferred_c_compiler == c_compiler:
                 if self.check_presence(c_compiler):
                     self.c_compiler_to_use = c_compiler
                     break # stop the for loop
 
-        if (self.c_compiler_to_use is None):
+        if self.c_compiler_to_use is None:
             # a sanity check
-            if (self.preferred_c_compiler is not None):
+            if self.preferred_c_compiler is not None:
                 if not (self.preferred_c_compiler in POSSIBLE_C_COMPILERS):
                     print("ERROR: unknown preferred c compiler "+
                           "specified:",
@@ -1364,7 +1363,7 @@ class InstallBUFRInterfaceECMWF(object):
                           ", ".join(s for s in POSSIBLE_C_COMPILERS))
                     raise NotImplementedError
 
-            if (self.preferred_c_compiler is None):
+            if self.preferred_c_compiler is None:
                 print("no preferred c compiler given")
             else:
                 print("preferred c compiler ["+
@@ -1378,7 +1377,7 @@ class InstallBUFRInterfaceECMWF(object):
                     self.c_compiler_to_use = c_compiler
                     break # stop the for loop
 
-        if (self.c_compiler_to_use is None):
+        if self.c_compiler_to_use is None:
             print("ERROR: no valid c compiler found,")
             print("installation is not possible")
             print("Please install a c compiler first.")
@@ -1395,16 +1394,16 @@ class InstallBUFRInterfaceECMWF(object):
 
         #  #[ add the custom LD_LIBRARY_PATH settings
         libpath = ""
-        if (self.fortran_ld_library_path != None):
+        if self.fortran_ld_library_path != None:
             libpath = ";".join(s for s in
                                [libpath, self.fortran_ld_library_path]
-                               if (s != ""))
-        if (self.c_ld_library_path != None):
+                               if s != "")
+        if self.c_ld_library_path != None:
             libpath = ";".join(s for s in
                                [libpath, self.c_ld_library_path]
-                               if (s != ""))
+                               if s != "")
 
-        if (libpath != ""):
+        if libpath != "":
             print("Using LD_LIBRARY_PATH setting: ", libpath)
         #  #]
 
@@ -1466,26 +1465,26 @@ class InstallBUFRInterfaceECMWF(object):
             fcmp = ''
             fflags = ''
 
-            if (self.fortran_compiler_to_use == 'custom'):
+            if self.fortran_compiler_to_use == 'custom':
                 fcmp = self.fortran_compiler
-                fflags = ' '.join(flags for flags in FFLAGS_COMMON )
+                fflags = ' '.join(flags for flags in FFLAGS_COMMON)
             else:
                 fcmp = self.fortran_compiler_to_use
-                fflags = ' '.join(flags for flags in FFLAGS_NEEDED[fcmp] )
+                fflags = ' '.join(flags for flags in FFLAGS_NEEDED[fcmp])
 
             # add any custom flags given by the user
-            if (self.fortran_flags != None):
+            if self.fortran_flags != None:
                 fflags = fflags + ' ' + self.fortran_flags
 
-            if (self.c_compiler_to_use == 'custom'):
+            if self.c_compiler_to_use == 'custom':
                 ccmp = self.c_compiler
-                cflags = ' '.join(flags for flags in CFLAGS_COMMON )
+                cflags = ' '.join(flags for flags in CFLAGS_COMMON)
             else:
                 ccmp = self.c_compiler_to_use
-                cflags = ' '.join(flags for flags in CFLAGS_NEEDED[ccmp] )
+                cflags = ' '.join(flags for flags in CFLAGS_NEEDED[ccmp])
 
             # add any custom flags given by the user
-            if (self.c_flags != None):
+            if self.c_flags != None:
                 cflags = cflags+' '+self.c_flags
 
             # no check implemented on the "ar" and "ranlib" commands yet
@@ -1506,10 +1505,10 @@ class InstallBUFRInterfaceECMWF(object):
             # We just call it: config.linux_compiler
             # which seems safe for now, since ECMWF doesn't use that name.
 
-            arch  = "linux"
+            arch = "linux"
             cname = "_compiler"
-            r64   = ""
-            a64   = ""
+            r64 = ""
+            a64 = ""
 
             # construct the name of the config file to be used
             config_file = "config."+arch+cname+r64+a64
@@ -1547,12 +1546,12 @@ class InstallBUFRInterfaceECMWF(object):
             cfd.close()
 
             # create a backup copy in the ecmwf_bufr_lib_dir
-            source      = fullname_config_file
+            source = fullname_config_file
             destination = os.path.join(self.ecmwf_bufr_lib_dir, "config_file")
             shutil.copyfile(source, destination)
             #  #]
 
-        if (not remake) and (bufrdir_version>387):
+        if (not remake) and (bufrdir_version > 387):
             #  #[ generate fortran2c config file for newer bufr versions
             # fortran2c_compiler contains the extra libraries needed
             # to link the objects created with the current fortran
@@ -1573,7 +1572,7 @@ class InstallBUFRInterfaceECMWF(object):
                 # just copying the provided file fails for me
                 # (gfortran 4.7.x also needs -lm during the link stage)
                 #shutil.copyfile(fortran2c_source, fortran2c_target)
-                fd_f2c = open(fortran2c_target,'w')
+                fd_f2c = open(fortran2c_target, 'w')
                 fd_f2c.write('FORTRAN2C = -lgfortran -lm')
                 fd_f2c.close()
 
@@ -1604,12 +1603,12 @@ class InstallBUFRInterfaceECMWF(object):
                              'examples', 'synop2bufr',
                              'synop2bufr/station_list']
             install_dir = 'dummy' # seems never used in the makefiles
-            replacements = [('%reals%',      r64),
-                            ('%install_dir%',install_dir),
-                            ('%arch%',       arch),
-                            ('%comp%',       cname),
-                            ('%plat%',       a64),
-                            ('%depl%',       'bufr')]
+            replacements = [('%reals%', r64),
+                            ('%install_dir%', install_dir),
+                            ('%arch%', arch),
+                            ('%comp%', cname),
+                            ('%plat%', a64),
+                            ('%depl%', 'bufr')]
             for makefile_dir in makefile_dirs:
                 makefile = os.path.join(source_dir, makefile_dir, 'Makefile')
                 makefile_template = makefile+'.in'
@@ -1642,21 +1641,21 @@ class InstallBUFRInterfaceECMWF(object):
               cname+" R64="+r64+" A64="+a64
 
         # now issue the Make command
-        if (libpath == ""):
+        if libpath == "":
             print("Executing command: ", cmd)
             os.system(cmd)
         else:
             #(lines_stdout, lines_stderr) = \
             #      run_shell_command(cmd, libpath = libpath)
-            run_shell_command(cmd, libpath = libpath, catch_output = False)
+            run_shell_command(cmd, libpath=libpath, catch_output=False)
         #  #]
 
         #  #[ check the result and move the library file
         fullname_bufr_lib_file = os.path.join(source_dir, self.bufr_lib_file)
-        if (os.path.exists(fullname_bufr_lib_file)):
+        if os.path.exists(fullname_bufr_lib_file):
             print("Build seems successfull")
             # remove any old library file that might be present
-            if (os.path.exists(self.bufr_lib_file)):
+            if os.path.exists(self.bufr_lib_file):
                 os.remove(self.bufr_lib_file)
 
             # move to a more convenient location
@@ -1698,12 +1697,12 @@ class InstallBUFRInterfaceECMWF(object):
             # select the newest set of tables and symlink them
             # to a default name (making sure a matching C table
             # is provided as well)
-            pattern = os.path.join(table_dir,'C0*098*.TXT')
+            pattern = os.path.join(table_dir, 'C0*098*.TXT')
             c_tables = glob.glob(pattern)
             # print('pattern = ',pattern)
             # print('c_tables = ',c_tables)
 
-            if len(c_tables)>0:
+            if len(c_tables) > 0:
                 c_tables.sort()
                 # assume the highest numbered table is the most recent one
                 newest_c_table = c_tables[-1]
@@ -1759,17 +1758,17 @@ class InstallBUFRInterfaceECMWF(object):
         """ a method to check for the presence of executable commands
         from a user shell (using the which command) """
 
-        if (self.verbose):
+        if self.verbose:
             print("checking for presence of command: "+str(command))
 
-        if (command == None):
+        if command == None:
             return False
 
         # get the real command, in case it was an alias
         cmd = "which "+command
-        lines_stdout = run_shell_command(cmd, catch_output = True)[0]
+        lines_stdout = run_shell_command(cmd, catch_output=True)[0]
 
-        if (len(lines_stdout) == 0):
+        if len(lines_stdout) == 0:
             # command is not present in default path
             return False
         else:
@@ -1792,25 +1791,25 @@ class InstallBUFRInterfaceECMWF(object):
         lines = open(config_file).readlines()
 
         # extract which fortran compiler is used
-        fortran_compiler       = 'undefined'
+        fortran_compiler = 'undefined'
         fortran_compiler_flags = 'undefined'
         for line in lines:
             parts = line.split('=')
-            if (parts[0].strip() == "FC"):
+            if parts[0].strip() == "FC":
                 fortran_compiler = parts[1].strip()
-            if (parts[0].strip() == "FFLAGS"):
+            if parts[0].strip() == "FFLAGS":
                 fortran_compiler_flags = parts[1].strip()
 
         # apply ld_library path settings
         libpath = ""
-        if (self.fortran_ld_library_path != None):
+        if self.fortran_ld_library_path != None:
             libpath = ";".join(s for s in
                                [libpath, self.fortran_ld_library_path]
-                               if (s != ""))
-        if (self.c_ld_library_path != None):
+                               if s != "")
+        if self.c_ld_library_path != None:
             libpath = ";".join(s for s in
                                [libpath, self.c_ld_library_path]
-                               if (s != ""))
+                               if s != "")
         #  #]
 
         if not remake:
@@ -1827,7 +1826,7 @@ class InstallBUFRInterfaceECMWF(object):
                       " -h "+signatures_filename+\
                       " "+source_file_list
 
-            if (libpath == ""):
+            if libpath == "":
                 print("Executing command: ", cmd)
                 os.system(cmd)
                 # (lines_stdout, lines_stderr) = \
@@ -1837,12 +1836,12 @@ class InstallBUFRInterfaceECMWF(object):
                 # (lines_stdout, lines_stderr) = \
                 #       run_shell_command(cmd, libpath = libpath,
                 #                              catch_output = True)
-                run_shell_command(cmd, libpath = libpath, catch_output = False)
+                run_shell_command(cmd, libpath=libpath, catch_output=False)
 
             # safety check: see if the signatures.pyf file really is created
             signatures_fullfilename = os.path.join(self.wrapper_build_dir,
                                                    signatures_filename)
-            if (not os.path.exists(signatures_fullfilename)):
+            if not os.path.exists(signatures_fullfilename):
                 print("ERROR: build of python wrapper failed")
                 print("the signatures file could not be found")
                 raise InterfaceBuildError
@@ -1861,10 +1860,10 @@ class InstallBUFRInterfaceECMWF(object):
         #  #[ create the wrapper interface
         # it might be usefull for debugging to include this option: --debug-capi
         debug_f2py_c_api_option = ""
-        if (self.debug_f2py_c_api):
+        if self.debug_f2py_c_api:
             debug_f2py_c_api_option = " --debug-capi "
 
-        if (self.fortran_compiler != None):
+        if self.fortran_compiler != None:
             cmd = f2py_tool_name+\
                   " --build-dir "+self.wrapper_build_dir+\
                   debug_f2py_c_api_option+\
@@ -1888,7 +1887,7 @@ class InstallBUFRInterfaceECMWF(object):
                   " --fcompiler="+fortran_compiler+\
                   " ./f2py_build/signatures.pyf -L./ -lbufr -c"
 
-        if (libpath == ""):
+        if libpath == "":
             print("Executing command: ", cmd)
             os.system(cmd)
             #(lines_stdout, lines_stderr) = \
@@ -1897,7 +1896,7 @@ class InstallBUFRInterfaceECMWF(object):
             #(lines_stdout, lines_stderr) = \
             #       run_shell_command(cmd, libpath = libpath,
             #                              catch_output = True)
-            run_shell_command(cmd, libpath = libpath, catch_output = False)
+            run_shell_command(cmd, libpath=libpath, catch_output=False)
 
         #  #]
 
@@ -1908,7 +1907,7 @@ class InstallBUFRInterfaceECMWF(object):
         except IndexError:
             wrapper_name = 'undefined'
 
-        if (os.path.exists(wrapper_name)):
+        if os.path.exists(wrapper_name):
             print("a python wrapper to the ECMWF BUFR library "+
                   "has been generated")
             return
@@ -1948,7 +1947,7 @@ class InstallBUFRInterfaceECMWF(object):
 
         python_parameter_file = 'ecmwfbufr_parameters.py'
         print('creating parameter python file: ', python_parameter_file)
-        pfd = open(python_parameter_file,'w')
+        pfd = open(python_parameter_file, 'w')
 
         # write a simple doc string
         pfd.write('"""')
@@ -2022,19 +2021,19 @@ if __name__ == "__main__":
     #TESTCASE = 4 # test custom g95-32 bit
     #TESTCASE = 5 # test custom g95-64 bit
 
-    if (TESTCASE == 1):
+    if TESTCASE == 1:
         # tested at my laptop at home with a systemwide
         # gfortran v4.7.0 installed
         # successfully tested 29-Aug-2012
-        BI = InstallBUFRInterfaceECMWF(verbose = True)
-        #BI = InstallBUFRInterfaceECMWF(verbose = True, debug_f2py_c_api = True)
-    elif (TESTCASE == 2):
+        BI = InstallBUFRInterfaceECMWF(verbose=True)
+        #BI = InstallBUFRInterfaceECMWF(verbose=True, debug_f2py_c_api=True)
+    elif TESTCASE == 2:
         # tested at my laptop at home with a systemwide
         # gfortran v4.7.0 installed
         # successfully tested 29-Aug-2012
-        BI = InstallBUFRInterfaceECMWF(verbose = True,
-                                       preferred_fortran_compiler = 'gfortran')
-    elif (TESTCASE == 3):
+        BI = InstallBUFRInterfaceECMWF(verbose=True,
+                                       preferred_fortran_compiler='gfortran')
+    elif TESTCASE == 3:
         # note that the "-O" flag is allways set for each fortran compiler
         # so no need to specify it to the fortran_flags parameter.
 
@@ -2042,24 +2041,24 @@ if __name__ == "__main__":
         # in a user account
         # successfully tested 19-Mar-2010
         # NOTE: this gfortran is no longer installed, so no new testresults
-        BI = InstallBUFRInterfaceECMWF(verbose = True,
-                    fortran_compiler = "/home/jos/bin/gfortran_personal",
-                    fortran_ld_library_path = "/home/jos/bin/gcc-trunk/lib64",
-                    fortran_flags = "-fno-second-underscore -fPIC")
-    elif (TESTCASE == 4):
+        BI = InstallBUFRInterfaceECMWF(verbose=True,
+                    fortran_compiler="/home/jos/bin/gfortran_personal",
+                    fortran_ld_library_path="/home/jos/bin/gcc-trunk/lib64",
+                    fortran_flags="-fno-second-underscore -fPIC")
+    elif TESTCASE == 4:
         # tested at my laptop at home with a g95 v0.92 (32-bit) installed
         # in a user account
         # successfully tested 29-Aug-2012
-        BI = InstallBUFRInterfaceECMWF(verbose = True,
-                    fortran_compiler = "/home/jos/bin/g95_32",
-                    fortran_flags = "-fno-second-underscore -fPIC -i4 -r8")
-    elif (TESTCASE == 5):
+        BI = InstallBUFRInterfaceECMWF(verbose=True,
+                    fortran_compiler="/home/jos/bin/g95_32",
+                    fortran_flags="-fno-second-underscore -fPIC -i4 -r8")
+    elif TESTCASE == 5:
         # tested at my laptop at home with a g95 v0.92 (64-bit)
         # installed in a user account
         # successfully tested 29-Aug-2012
-        BI = InstallBUFRInterfaceECMWF(verbose = True,
-                    fortran_compiler = "/home/jos/bin/g95_64",
-                    fortran_flags = "-fno-second-underscore -fPIC -i4 -r8")
+        BI = InstallBUFRInterfaceECMWF(verbose=True,
+                    fortran_compiler="/home/jos/bin/g95_64",
+                    fortran_flags="-fno-second-underscore -fPIC -i4 -r8")
     #  #]
 
     # Build ecmwfbufr interface

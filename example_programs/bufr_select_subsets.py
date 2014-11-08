@@ -38,10 +38,10 @@ def select_subsets(input_bufr_file, output_bufr_file):
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
 
-    # open the file for writing                                                 
+    # open the file for writing
     rbf_out = RawBUFRFile()
     rbf_out.open(output_bufr_file, 'wb')
-    
+
     msg_nr = 0
     while True:
         try:
@@ -58,14 +58,15 @@ def select_subsets(input_bufr_file, output_bufr_file):
             continue
 
         # select every other subset
-        new_data = data[::2,:]
+        new_data = data[::2, :]
 
         print 'new_data.shape = ', new_data.shape
         #bob.bufr_obj
 
         nsub = bob.bufr_obj.get_num_subsets()
         n_exp_descr = len(bob.bufr_obj.values)/nsub
-        bob.bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=n_exp_descr)
+        bob.bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=
+                                          n_exp_descr)
         bob.bufr_obj.ktdlst = bob.bufr_obj.get_descriptor_list()
 
         delayed_repl_data = bob.bufr_obj.derive_delayed_repl_factors()
@@ -82,10 +83,9 @@ def select_subsets(input_bufr_file, output_bufr_file):
         bob.bufr_obj.kdate = new_nsub*list(delayed_repl_data)
 
         print 'bob.bufr_obj.cvals.shape = ', bob.bufr_obj.cvals.shape
-        bob.bufr_obj.encode_data(new_data, bob.bufr_obj.cvals[:32,:])
+        bob.bufr_obj.encode_data(new_data, bob.bufr_obj.cvals[:32, :])
         rbf_out.write_raw_bufr_msg(bob.bufr_obj.encoded_message)
 
-        
         #for subs in range(len(data[:, 0])):
         #    output_fd.write(str(subs)+separator+
         #                    separator.join(str(val) for val in data[subs, :])+
@@ -102,6 +102,6 @@ def select_subsets(input_bufr_file, output_bufr_file):
     #  #]
 
 # run the tool
-input_bufr_file  = 'test/testdata/Testoutputfile1.BUFR'
-output_bufr_file = 'test/testdata/Testoutputfile1.BUFR.selected_subsets_only'
-select_subsets(input_bufr_file, output_bufr_file)
+bufr_file_in = 'test/testdata/Testoutputfile1.BUFR'
+bufr_file_out = 'test/testdata/Testoutputfile1.BUFR.selected_subsets_only'
+select_subsets(bufr_file_in, bufr_file_out)

@@ -3,6 +3,10 @@ Release [next]
  including the latest versions 000400 and  000401.
 -add reading, writing and using the C-BUFR tables which allows expanding
  numerical flag values to the corresponding text values.
+-fix a bug that happens if multiple bufr files using different templates
+ from different bufr table files are used in the same script.
+-fase out the singletom trick since it made things too complicated
+ (and was only experimnental anyway)
 
 Release 0.73 (08-Dec-2013)
 -fix pip install issue and add pip install test to build_test.py 
