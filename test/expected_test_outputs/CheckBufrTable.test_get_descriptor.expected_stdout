@@ -106,7 +106,7 @@ descriptor 301072 is never defined but is used by
 D-table entry 310024 (line 1233)
 ---------------------------------------------------
 -------------
-Loaded:  308  table D entries
+Loaded: 308 table D entries
 -------------
 remaining_blocks = 7
 seaching for descriptors that contain substring:  WMO

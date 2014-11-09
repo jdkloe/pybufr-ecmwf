@@ -1513,7 +1513,7 @@ class BufrTable:
                 
         if self.verbose:
             print('-------------')
-            print('Loaded: ', self.num_d_blocks,' table D entries')
+            print('Loaded: {} table D entries'.format(self.num_d_blocks))
             print('-------------')
             
         if self.verbose:

@@ -64,16 +64,17 @@ class RawBUFRFile:
         # different addresses each time, and is not so very interesting
         # to print, so leave it out for now
         #print(prefix+": bufr_fd  = ", self.bufr_fd)
-        print(prefix+": filename = ", self.filename)
-        print(prefix+": filemode = ", self.filemode)
-        print(prefix+": filesize = ", self.filesize)
+        print(prefix+": filename = {}".format(self.filename))
+        print(prefix+": filemode = {}".format(self.filemode))
+        print(prefix+": filesize = {}".format(self.filesize))
         if (self.data != None):
-            print(prefix+": len(data) = ", len(self.data))
+            print(prefix+": len(data) = {}".format(len(self.data)))
         else:
-            print(prefix+": data = ", self.data)
-        print(prefix+": list_of_bufr_pointers = ",
-              self.list_of_bufr_pointers)
-        print(prefix+": nr_of_bufr_messages = ", self.nr_of_bufr_messages)
+            print(prefix+": data = {}".format(self.data))
+        print(prefix+": list_of_bufr_pointers = {}".
+              format(self.list_of_bufr_pointers))
+        print(prefix+": nr_of_bufr_messages = {}".
+              format(self.nr_of_bufr_messages))
         #  #]
     def open(self, filename, mode, silent = False):
         #  #[
