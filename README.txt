@@ -23,14 +23,6 @@ and execute the run_example_program.sh script and/or the unittests.py script.
 To execute the pylint testing run the pylint/run_pylint.py script.
 
 WARNING for python3 users:
-numpy for python3 is still very new, so may not be available
-as default package from your favourite linux distribution
-(however note that Fedora 15 does include it now).
-Therefore you may need to install a 3rd party numpy rpm/deb package or
-install numpy from source first, before you can use the python3 version
-of this pybufr_ecmwf module.
-
-WARNING2 for python3 users:
 the f2py tool that comes with numpy was broken, and crashed during 
 the build process.
 The problem has been reported to the numpy developers (see
@@ -38,11 +30,6 @@ http://projects.scipy.org/numpy/ticket/1932 and
 https://github.com/numpy/numpy/pull/3230), and the bug was fixed
 in may 2013. However, if your numpy version is older than that this 
 may still be a problem.
-
-WARNING3 for python3 users:
-currently there seems to be some unicodeDecodeError in the unittest results
-so the module is probably not usable in python3 at the moment.
-As soon as time permits I'll try to fix this.
 
 For more information on this module please consult the wiki at:
 http://code.google.com/p/pybufr-ecmwf/

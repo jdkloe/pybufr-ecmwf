@@ -80,23 +80,23 @@ found number of unique flag values = 1
 ==>ignoring this problem for now
 
 WARNING: unexpected format in table D file...
-problematic descriptor is:  340010
-linecount:  5186
+problematic descriptor is: 340010
+linecount: 5186
 line: [           010102]
 This D-table entry defines more descriptors than
 specified in the start line.
 Please report this problem, together with
 a copy of the bufr table you tried to read.
 len(descriptor_list) = 97
-count =  96
+count = 96
 This is a formatting problem in the BUFR
 Table but will not affect decoding.
 ignoring excess descriptors for now...
-adding  2  descriptors
-adding delayed replication for  2  descriptors
-replicating them at most  2  times
-adding replication for  2  descriptors
-replicating them  3  times
+adding 2 descriptors
+adding delayed replication for 2 descriptors
+replicating them at most 2 times
+adding replication for 2 descriptors
+replicating them 3 times
 unexpanded nr of descriptors =  9
 The current list is:  [301011 301012 102000  31001   7004  12001 102003   5001   6001]
 ktdlst =  [301011 301012 102000  31001   7004  12001 102003   5001   6001]
