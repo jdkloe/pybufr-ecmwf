@@ -410,7 +410,7 @@ setup(cmdclass={'build'       : Build,
                 'build_ext'   : BuildExt,
                 'install_lib' : CustomInstallLib},
       name=PACKAGE_NAME,
-      version='0.80',
+      version='0.81dev',
       description=DESCR,
       long_description=LONG_DESCR,
       author='Jos de Kloe',
@@ -424,7 +424,7 @@ setup(cmdclass={'build'       : Build,
       include_package_data=True,
       package_data=ECMWF_BUFR_DATA,
       ext_modules=[ECMWF_BUFR_EXT],
-      requires=["numpy", "numpy.f2py", "subprocess"],
+      requires=["numpy", "numpy.f2py"],
       provides=["pybufr_ecmwf"]
       # this requires use of the setup tools which needs to be installed
       # first (i.e. it makes the setup a little bit less portable)
