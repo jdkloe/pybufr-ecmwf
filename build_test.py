@@ -32,7 +32,6 @@ DO_SETUP_BUILD_TESTS = True
 DO_SETUP_SDIST_TESTS = True
 DO_PIP_INSTALL_TESTS = True
 DO_MANUAL_PY3_TESTS = False # True
-# DO_MANUAL_PY3_TESTS = False # True # not yet implemented!
 
 #  #]
 #  #[ helper functions
@@ -554,14 +553,14 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         # and here:
         #       https://github.com/numpy/numpy/issues/3192
 
-        sys.exit(1)
+        #sys.exit(1)
 
         # restore the original directory
         os.chdir(saved_cwd)
 
         # -verify the presence of the generated ecmwfbufr.so file
         so_files = glob.glob(os.path.join(temp_build_dir, BUILD_DIR,
-                                          'ecmwfbufr.so'))
+                                          'ecmwfbufr.*.so'))
 
         this_result = []
         this_result.append('test results for manual build for: '+fc)

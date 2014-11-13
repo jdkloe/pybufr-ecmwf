@@ -1,6 +1,6 @@
-Release [next]
+Release 0.80 (13-Nov-2014)
 -do no longer download the latest library version from ECMWF, to prevent
- breakage in case the redesign their website or software package,
+ breakage in case they redesign their website or software package,
  just use the packed tar file (the option to download can still be used though)
 -updated to build and use the new BUFRDC series of the ECMWF library
  including the latest versions 000400 and  000401.

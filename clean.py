@@ -20,6 +20,7 @@ DIRS_TO_DELETE = ['pybufr_ecmwf/example_programs/tmp_BUFR_TABLES',
                   'pybufr_ecmwf/tmp_BUFR_TABLES', 'tmp_BUFR_TABLES',
                   'ecmwf_bufrtables', 'pybufr_ecmwf/ecmwf_bufrtables',
                   'pybufr_ecmwf/f2py_build', 'build', 'dist',
+                  'pybufr_ecmwf/__pycache__', '__pycache__',
                   'tmp_2to3_converted_sources',
                   'example_programs/tmp_BUFR_TABLES',
                   'test/actual_test_outputs']
