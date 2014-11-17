@@ -711,7 +711,7 @@ def extract_version():
         raise ProgrammingError
 
     for line in open(os.path.join(setuppath, setupfiles[0])).readlines():
-        if 'version =' in line:
+        if 'version=' in line:
             quoted_version = line.split('=')[1].replace(',', '')
             software_version = quoted_version.replace("'", '').strip()
 

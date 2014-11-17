@@ -987,6 +987,18 @@ class CheckAddedFortranCode(unittest.TestCase):
         self.assertEqual(success, True)
     #  #]
 
+class CheckVersionInfo(unittest.TestCase):
+    #  #[
+    '''
+    a class to test the retrieval of version info works correct
+    '''
+    def test_version_info(self):
+        testprog = "print_version_info.py"
+        cmd = os.path.join(TEST_DIR, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+    #  #]
+
 # cleanup old tmp_BUFR_TABLES dir that may have been created by a previous run
 os.system('\\rm -rf tmp_BUFR_TABLES')
 os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')

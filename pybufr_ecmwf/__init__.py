@@ -6,6 +6,23 @@ Author:  J. de Kloe, KNMI
 Created: 04-Feb-2010
 """
 
+# I can't get this to work properly, so skip this for now.
+# if anyone knows how to do this, please drop me a note.
+
+## ensure version details are easy to find
+## but allow these imports to fail as well, since the version.py file
+## is a generated file, and noy yet available when the build_interface.py
+## script is launched (which also needs to import some items from the
+## pybufr_ecmwf module dir, especially the helpers.py file)
+#
+#try:
+#    from .version import version as __version__
+#    from .version import hg_version, install_date, software_version
+#except:
+#    # print 'not imported version info'
+#    pass
+
+
 #__all__ = ['bufr_template',
 #           'raw_bufr_file',
 #           'bufr_interface_ecmwf',
