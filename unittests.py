@@ -951,7 +951,7 @@ class CheckBufr(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
-        cmd = cmd + ' -1 -c -i ' + self.testinputfile_gras
+        cmd = cmd + ' -4 -c -i ' + self.testinputfile_gras
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
@@ -965,7 +965,7 @@ class CheckBufr(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
-        cmd = cmd + ' -1 -c -i ' + self.testinputfile_o3m
+        cmd = cmd + ' -4 -c -i ' + self.testinputfile_o3m
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)

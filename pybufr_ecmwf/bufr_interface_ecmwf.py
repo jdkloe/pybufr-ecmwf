@@ -50,21 +50,8 @@ from . import ecmwfbufr_parameters
 from .bufr_template import BufrTemplate
 from .bufr_table import BufrTable
 from .helpers import python3
-
-#  #]
-#  #[ exception definitions
-# see: http://docs.python.org/library/exceptions.html
-# for a list of already available exceptions.
-# are:     IOError, EOFError
-
-class EcmwfBufrLibError(Exception):
-    """ an exception to indicate that one of the subroutines or functions
-    in the ECMWF bufr library returned with an error """
-    pass
-class EcmwfBufrTableError(Exception):
-    """ an exception to indicate that no set of suitable BUFR tables
-    needed for bufr decoding/encoding can be found """
-    pass
+from .custom_exceptions import (EcmwfBufrLibError, EcmwfBufrTableError,
+                                IncorrectUsageError)
 #  #]
 
 class BUFRInterfaceECMWF:
@@ -938,8 +925,14 @@ class BUFRInterfaceECMWF:
         # cvals and values arrays (and especially the cvals array can become
         # rather huge ...)
 
+        # these 2 next methods are python implementations. This is needed
+        # because at this point the message is not yet (partially) decoded
+        # and no information of the template size is available yet.
+        # Howver, this is required to allocated the needed arrays to interface
+        # with the ecmwf library, so there is no easy workaround here.
         self.extract_raw_descriptor_list()
         self.expand_raw_descriptor_list()
+        # this last method also sets: self.delayed_repl_present
 
         # after these 2 method calls, these arrays and variables are filled:
         # len(self.py_expanded_descr_list)
@@ -1159,7 +1152,7 @@ class BUFRInterfaceECMWF:
         print("sec3 : ", self.ksec3)
         print("sec4 : ", self.ksec4)
         #  #]
-    def print_names_and_units(self):
+    def print_names_and_units(self, subset=1):
         #  #[
         """
         print names and units for the current expanded descriptor list
@@ -1171,21 +1164,50 @@ class BUFRInterfaceECMWF:
                       "decode_data")
             raise EcmwfBufrLibError(errtxt)
 
+        (list_of_names, list_of_units) = self.get_names_and_units(subset)
+
         print("[index] cname [cunit] : ")
 
-        for i in range(self.actual_kelem):
-            cnm = self.cnames[i,:]
-        # for (i, cnm) in enumerate(self.cnames):
-            cun = self.cunits[i,:]
-            if python3:
-                txtn = ''.join(c.decode() for c in cnm)
-                txtu = ''.join(c.decode() for c in cun)
-            else:
-                txtn = ''.join(c for c in cnm)
-                txtu = ''.join(c for c in cun)
-            if (txtn.strip() != ''):
-                print('[%3.3i]:%s [%s]' % (i, txtn, txtu))
+        for i, (txtn, txtu) in enumerate(zip(list_of_names, list_of_units)):
+            print('[%3.3i]:%-64s [%-24s]' % (i, txtn, txtu))
 
+        #  #]
+    def get_names_and_units(self, subset=1):
+        #  #[ request name and unit of each descriptor for the given subset
+
+        if (not self.data_decoded):
+            errtxt = ("Sorry, names are only available after "+
+                      "a BUFR message has been decoded with a call to "+
+                      "decode_data")
+            raise EcmwfBufrLibError(errtxt)
+
+        if self.delayed_repl_present:
+            # each subset may have a different list of descriptors
+            # after expansion, so reload the list of names for this subset
+            self.expand_descriptors_for_decoding(subset)
+
+        list_of_names = []
+        list_of_units = []
+        for i in range(self.ktdexl):
+            # get the names/units as numpy arrays of characters
+            cname = self.cnames[i,:]
+            cunit = self.cunits[i,:]
+            # glue the ndarray of characters together to form strings
+            cname_str = b''.join(cname).strip()
+            cunit_str = b''.join(cunit).strip()
+            # append the string to the list and quote them
+            if python3:
+                txtn = cname_str.decode()
+                txtu = cunit_str.decode()
+            else:
+                txtn = cname_str
+                txtu = cunit_str
+
+            #if (txtn.strip() != ''):
+            list_of_names.append(txtn)
+            list_of_units.append(txtu)
+
+        return (list_of_names, list_of_units)
         #  #]
     def explain_error(self, kerr, subroutine_name):
         #  #[ explain error codes returned by the bufrlib routines
@@ -1259,6 +1281,10 @@ class BUFRInterfaceECMWF:
         for the current BUFR message
         """
 
+        # note: "the current subset is not well defined here"
+        # so prevent using this one in case of delayed replication
+        self.delayed_repl_check_for_incorrect_use()
+
         if (not self.data_decoded):
             errtxt = ("Sorry, the number of elements is only available after "+
                       "a BUFR message has been decoded with a call to "+
@@ -1298,6 +1324,7 @@ class BUFRInterfaceECMWF:
         """
         a helper function to request the i th value from subset j
         for the current BUFR message
+        Note that subsets start counting at 1!
         """
         if (not self.data_decoded):
             errtxt = ("Sorry, retrieving values is only possible after "+
@@ -1314,14 +1341,14 @@ class BUFRInterfaceECMWF:
                       "counted starting with 0)")
             raise EcmwfBufrLibError(errtxt)
 
-        if j > nsubsets-1:
+        if j > nsubsets:
             errtxt = ("Sorry, this BUFR message has only "+str(nsubsets)+
                       " subsets, so requesting subset "+
                       str(j)+" is not possible (remember the arrays are "+
                       "counted starting with 0)")
             raise EcmwfBufrLibError(errtxt)
         
-        selection = self.actual_kelem*j + i
+        selection = self.actual_kelem*(j-1) + i
         value = self.values[selection]
 
         if get_cval:
@@ -1345,7 +1372,7 @@ class BUFRInterfaceECMWF:
         #  #[ get the i th value from each subset as an array
         """
         a helper function to request the i th value from each subset
-        for the current BUFR message as an array
+        for the current BUFR message as an array.
         """
         if (not self.data_decoded):
             errtxt = ("Sorry, retrieving values is only possible after "+
@@ -1367,7 +1394,7 @@ class BUFRInterfaceECMWF:
             print('Therefore the actual expanded descriptor list may be')
             print('different for each subset within this BUFR message!')
             print('and retrieving an array of data values spanning multiple')
-            print('subsets may yield unintended results !')
+            print('subsets will not be possible.')
             exp_descr_list, delayed_repl_present = \
                    self.bt.expand_descriptor_list(self.py_unexp_descr_list)
             print('exp_descr_list = ',exp_descr_list)
@@ -1402,6 +1429,7 @@ class BUFRInterfaceECMWF:
         """
         a helper function to request the values of the i th subset
         for the current BUFR message as an array
+        Note that subsets start counting at 1!
         """
         if (not self.data_decoded):
             errtxt = ("Sorry, retrieving values is only possible after "+
@@ -1411,26 +1439,16 @@ class BUFRInterfaceECMWF:
 
         nsubsets  = self.get_num_subsets()
         #nelements = self.get_num_elements()
-        if subset_nr > nsubsets-1:
+        if subset_nr > nsubsets:
             errtxt = ("Sorry, this BUFR message has only "+str(nsubsets)+
                       " subsets, so requesting subset "+
                       str(subset_nr)+" is not possible "+
-                      "(remember the arrays are "+
-                      "counted starting with 0)")
+                      "(remember the subsets are "+
+                      "counted starting with 1)")
             raise EcmwfBufrLibError(errtxt)
 
-        if self.delayed_repl_present:
-            print('WARNING: the current template uses delayed replication! ')
-            print('Therefore the actual expanded descriptor list may be')
-            print('different for each subset within this BUFR message!')
-            print('and retrieving an array of data values spanning multiple')
-            print('subsets may yield unintended results !')
-            exp_descr_list, delayed_repl_present = \
-                   self.bt.expand_descriptor_list(self.py_unexp_descr_list)
-            print('exp_descr_list = ',exp_descr_list)
-            
-        selection = (self.actual_kelem*subset_nr +
-                     np.array(range(self.actual_kelem)))
+        selection = (self.actual_kelem*(subset_nr-1) +
+                     np.array(range(self.ktdexl)))
         values = self.values[selection]
 
         # todo:
@@ -1461,7 +1479,7 @@ class BUFRInterfaceECMWF:
             return values
         #  #]
     def get_element_name_and_unit(self, i):
-        #  #[
+        #  #[ routine to get name and unit of a given element
         """
         a helper routine to request the element name and unit
         for the given index in the expanded descriptor list of the
@@ -1489,6 +1507,26 @@ class BUFRInterfaceECMWF:
             txtu = ''.join(c for c in self.cunits[i])
             
         return (txtn.strip(), txtu.strip())
+        #  #]
+    def delayed_repl_check_for_incorrect_use(self):
+        #  #[ check routine for delayed replication usage
+        '''
+        a method to be used by methods  that assume no delayed replication
+        is present (typically methods that return 1D/2D arrays of data)
+        '''
+        if self.delayed_repl_present:
+            errtxt =  ('ERROR: the current template uses delayed replication! '
+                       'Therefore the actual expanded descriptor list may be '
+                       'different for each subset within this BUFR message! '
+                       'and retrieving an array of data values spanning '
+                       'multiple subsets may yield unintended results ! '
+                       'Please loop over the subsets in your own script using '
+                       'the get_subset_values or get_value methods of the '
+                       'pybufr_ecmwf.bufr.BUFRReader or '
+                       'pybufr_ecmwf.bufr_interface_ecmwf.BUFRInterfaceECMWF '
+                       'classes to retrieve the data for this type of '
+                       'messages.')
+            raise IncorrectUsageError(errtxt)
         #  #]
     def extract_raw_descriptor_list(self):
         #  #[ extract the raw descriptor list from the binary bufr msg
@@ -1559,7 +1597,12 @@ class BUFRInterfaceECMWF:
         # print('with length = ',len(self.py_unexp_descr_list))
         #  #]
     def expand_raw_descriptor_list(self):
-        #  #[
+        #  #[ python implementation of the expansion
+        '''
+        a method to recursively replace D table entries with corresponding
+        lists of B table entries. It does not take subsets into account
+        and may not work correct in case delayed replication is present.
+        '''
         if self.bt is None:
             errtxt = ("ERROR in expand_raw_descriptor_list: " + 
                       "you need to setup BUFR tables before " +
@@ -1592,7 +1635,7 @@ class BUFRInterfaceECMWF:
         # print('with length: ',len(self.py_expanded_descr_list))
         #  #]
     def derive_delayed_repl_factors(self):
-        #  #[
+        #  #[ extract these factors from the self.ktdexp array
         select = np.where(self.ktdexp != 0)
         ktdexp = list(self.ktdexp[select])
         ndr = ktdexp.count(BufrTemplate.Delayed_Descr_Repl_Factor)
@@ -1607,7 +1650,9 @@ class BUFRInterfaceECMWF:
         """
         fill the normal and expanded descriptor lists (defines the
         names and units, which is needed only in case you wish to request
-        and or print these)
+        and or print these).
+        This one seems not to take subset into account and may not
+        give correct output for delayed replication templates.
         """
         if ( (not self.data_decoded) and
              (not self.sections012_decoded)):
@@ -1662,6 +1707,91 @@ class BUFRInterfaceECMWF:
         selection2 = np.where(self.ktdexp > 0)
         self.ktdexl = len(selection2[0])
 
+        self.descriptors_list_filled = True
+        #  #]
+    def fill_descriptor_list_subset(self, subset):
+        #  #[ fills both the normal and expanded descriptor lists
+        """
+        fill the normal and expanded descriptor lists (defines the
+        names and units, which is needed only in case you wish to request
+        and or print these) for a given subset.
+        """
+
+        if ( (not self.data_decoded) and
+             (not self.sections012_decoded)):
+            errtxt = ("Sorry, filling descriptor lists of a BUFR message "+
+                      "is only possible after a BUFR message has been decoded "+
+                      "with a call to decode_data or decode_sections_012")
+            raise EcmwfBufrLibError(errtxt)
+
+        # busels: fill the descriptor list arrays (only needed for printing)   
+    
+        # warning: this routine has no inputs, and acts on data stored
+        #          during previous library calls
+        # Therefore it only produces correct results when either bus012
+        # or bufrex have been called previously on the same bufr message.....
+
+        # kelem  = 500 #self.max_nr_expanded_descriptors
+        kerr   = 0
+
+        actual_nr_of_descriptors = len(self.py_unexp_descr_list)
+
+        # define space for decoding text strings
+        kelem  = self.actual_kelem
+        self.cnames = np.zeros((kelem, 64), dtype = '|S1')
+        self.cunits = np.zeros((kelem, 24), dtype = '|S1')
+
+        # arrays to hold the descriptors
+        self.ktdlen = 0 # will hold nr of descriptors
+        self.ktdlst = np.zeros(actual_nr_of_descriptors,
+                               dtype = np.int)
+        self.ktdexl = 0 # will hold nr of expanded descriptors
+        self.ktdexp = np.zeros(kelem,
+                               dtype = np.int)
+    
+        if self.verbose:
+            print("calling: ecmwfbufr.busel2():")
+            # print("SUBSETNR = ",subset)
+            # print('kelem = ', kelem)
+            # print('self.ktdlen = ', self.ktdlen)
+            # print('self.ktdlst = ', self.ktdlst)
+            # print('self.ktdexl = ', self.ktdexl)
+            # print('self.ktdexp.shape = ', self.ktdexp.shape)
+            # print('self.cnames.shape = ', self.cnames.shape)
+            # print('self.cunits.shape = ', self.cunits.shape)
+            # print('kerr = ', kerr)
+            # print('self.actual_kelem = ', self.actual_kelem)
+            
+        self.store_fortran_stdout()
+        ecmwfbufr.busel2(subset,      # subset to be inspected
+                         kelem,       # Max number of expected elements
+                         # outputs:
+                         self.ktdlen, # actual number of data descriptors
+                         self.ktdlst, # list of data descriptors
+                         self.ktdexl, # actual nr of expanded data descriptors
+                         self.ktdexp, # list of expanded data descriptors
+                         self.cnames, # descriptor names
+                         self.cunits, # descriptor units
+                         kerr)        # error code
+        lines = self.get_fortran_stdout()
+        self.display_fortran_stdout(lines)
+        if (kerr != 0):
+            raise EcmwfBufrLibError(self.explain_error(kerr, 'busel2'))
+
+        # It is not clear to me why busel seems to correctly produce
+        # the descriptor lists (both bare and expanded), but yet it does
+        # not seem to fill the ktdlen and ktdexl values.
+        # To fix this the next 4 lines have been added:
+        
+        selection1 = np.where(self.ktdlst > 0)
+        self.ktdlst = self.ktdlst[selection1]
+        self.ktdlen = len(self.ktdlst)
+        
+        selection2 = np.where(self.ktdexp > 0)
+        self.ktdexp = self.ktdexp[selection2]
+        self.ktdexl = len(self.ktdexp)
+        self.ksup[4] = self.ktdexl
+        
         self.descriptors_list_filled = True
         #  #]
     def get_descriptor_list(self):
@@ -1980,6 +2110,110 @@ class BUFRInterfaceECMWF:
 
         self.bufr_template_registered = True
         self.BufrTemplate = BT
+        #  #]        
+    def expand_descriptors_for_decoding(self, subset):
+        #  #[ expand descriptor list for a given subset
+        """
+        expand the descriptor list, generating the expanded list
+        from the raw list by calling buxdes. The output may differ
+        for each subset in case the bufr message uses delayed replication.
+        
+        WARNING: setting max_nr_expanded_descriptors to a too low value will
+        cause very ugly runtime memory corruption (malloc) errors!
+        Make sure you set this value to a large enough value for your template.
+        Unfortunately I have no idea yet how to catch this error.
+        If you have any idea please let me know ...
+        """
+
+        if (not self.sections0123_decoded):
+            # note: for delayed replication we even need to do the decoding
+            # first, otherwise the kdata array is not available
+            errtxt = ("Sorry, to expand the descriptor list sections 0,1,2,3 "
+                      "of a BUFR message must be available." +
+                      "This is only the case after a BUFR message has been " +
+                      "partially decoded with a call to decode_sections_0123")
+            raise EcmwfBufrLibError(errtxt)
+        
+        kerr   = 0
+
+        # define and fill the list of replication factors (kdata)
+        # assume this one is already filled by the decode_data method
+        # self.fill_delayed_repl_data(BT.del_repl_max_nr_of_repeats_list)
+        if self.delayed_repl_present:
+            self.fill_descriptor_list_subset(subset)
+        else:
+            # arrays to hold the descriptors
+            actual_nr_of_descriptors = len(self.py_unexp_descr_list)
+            
+            # self.ktdlen = 0 # will hold nr of descriptors
+            # self.ktdlst = np.zeros(actual_nr_of_descriptors,
+            #                        dtype = np.int)
+            # self.ktdexl = 0 # will hold nr of expanded descriptors
+            # self.ktdexp = np.zeros(actual_nr_of_expanded_descriptors,
+            #                        dtype = np.int)
+            
+            self.ktdexp = np.zeros(self.max_nr_expanded_descriptors,
+                                   dtype = np.int)
+            
+            # define space for decoding text strings
+            kelem  = self.max_nr_expanded_descriptors
+            self.cnames = np.zeros((kelem, 64), dtype = '|S1')
+            self.cunits = np.zeros((kelem, 24), dtype = '|S1')
+
+            # call BUXDES
+            # buxdes: expand the descriptor list
+            #         and fill the array ktdexp and the variable ktdexl
+            
+            iprint = 0 # default is to be silent
+            # iprint = 1
+            if (iprint == 1):
+                print("------------------------")
+                print(" printing BUFR template ")
+                print("------------------------")
+
+            # print('DEBUG: self.ksec1 ',self.ksec1)
+            # print('DEBUG: self.kdata = ',self.kdata)
+            
+            # print('DEBUG: self.ktdexl = ',self.ktdexl)
+            # print('DEBUG: self.ktdexp = ',self.ktdexp)
+            # print('DEBUG: self.ktdexp.shape = ',self.ktdexp.shape)
+            # print('DEBUG: self.cnames = ',self.cnames.shape)
+            # print('DEBUG: self.cunits = ',self.cunits.shape)
+            
+            self.store_fortran_stdout()
+            ecmwfbufr.buxdes(iprint,      # input
+                             self.ksec1,  # input
+                             self.ktdlst, # input
+                             self.kdata,  # input
+                             self.ktdexl, # output
+                             self.ktdexp, # output
+                             self.cnames, # output
+                             self.cunits, # output
+                             kerr)        # output
+            lines = self.get_fortran_stdout()
+            self.display_fortran_stdout(lines)
+            if (kerr != 0):
+                raise EcmwfBufrLibError(self.explain_error(kerr, 'buxdes'))
+
+            #print("DEBUG expand_descriptors_for_decoding: ",
+            #      "ktdlst = ", self.ktdlst)
+            
+            selection = np.where(self.ktdexp > 0)
+            
+            # note: this seems to be an empty list in case
+            #       delayed replication is used!
+            #print("DEBUG expand_descriptors_for_decoding: ",
+            #      "ktdexp = ", self.ktdexp[selection])
+            # this one seems not to be filled ...?
+            # print("ktdexl = ", self.ktdexl)
+        
+            # It is not clear to me why buxdes seems to correctly produce
+            # the expanded descriptor list, but yet it does
+            # not seem to fill the ktdexl value.
+            # To fix this the next line has been added:
+            self.ktdexl = len(selection[0])
+
+
         #  #]        
     def encode_data(self, values, cvals):
         #  #[ call bufren to encode a bufr message

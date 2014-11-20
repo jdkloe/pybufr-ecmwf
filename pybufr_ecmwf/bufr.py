@@ -33,16 +33,7 @@ import numpy   # array functionality
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF
 from .helpers import python3
-#  #]
-#  #[ exception definitions
-class NoMsgLoadedError(Exception):
-    """ an exception to indicate that no message has yet been
-    loaded from the currently open BUFR file. """
-    pass
-class CannotExpandFlagsError(Exception):
-    """ an exception to indicate that the user tried to expand
-    flags,  but used this in a wrong way. """
-    pass
+from .custom_exceptions import NoMsgLoadedError, CannotExpandFlagsError
 #  #]
 
 class DataValue:
@@ -123,11 +114,13 @@ class BUFRReader:
     to allow easier reading and usage of BUFR files
     """
     def __init__(self, input_bufr_file, warn_about_bufr_size=True,
-                 expand_flags=False):
+                 expand_flags=False, verbose=False):
         #  #[
         # get an instance of the RawBUFRFile class
         self.rbf = RawBUFRFile(warn_about_bufr_size=warn_about_bufr_size)
-    
+
+        self.verbose = verbose
+        
         # open the file for reading, count nr of BUFR messages in it
         # and store its content in memory, together with
         # an array of pointers to the start and end of each BUFR message
@@ -174,15 +167,20 @@ class BUFRReader:
         self.bufr_obj = BUFRInterfaceECMWF(raw_msg,
                                            section_sizes,
                                            section_start_locations,
-                                           expand_flags=self.expand_flags)
+                                           expand_flags=self.expand_flags,
+                                           verbose=self.verbose)
         self.bufr_obj.decode_sections_012()
         self.bufr_obj.setup_tables(self.table_b_to_use, self.table_c_to_use,
                                    self.table_d_to_use, self.tables_dir)
         self.bufr_obj.decode_data()
 
-        nsub = self.bufr_obj.get_num_subsets()
-        n = len(self.bufr_obj.values)/nsub
-        self.bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=n)
+        #nsub = int(self.bufr_obj.get_num_subsets())
+        #n = len(self.bufr_obj.values)/nsub
+        n = self.bufr_obj.actual_nr_of_expanded_descriptors
+        #self.bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=n)
+
+        self.bufr_obj.decode_sections_0123()
+        self.bufr_obj.fill_descriptor_list_subset(subset=1)
         
         self.msg_loaded = self.rbf.last_used_msg
         #  #]
@@ -202,6 +200,7 @@ class BUFRReader:
         """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
+
         return self.bufr_obj.get_num_elements()
         #  #]
     def get_value(self, descr_nr, subset_nr, get_cval=False):
@@ -224,7 +223,11 @@ class BUFRReader:
         """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
+
+        self.bufr_obj.delayed_repl_check_for_incorrect_use()
+
         vals = self.bufr_obj.get_values(descr_nr, get_cval)
+
         return vals
         #  #]
     def get_subset_values(self, subset_nr , get_cval=False):
@@ -235,7 +238,9 @@ class BUFRReader:
         """
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
+
         vals = self.bufr_obj.get_subset_values(subset_nr, get_cval)
+
         return vals
         #  #]
     def get_values_as_2d_array(self):
@@ -250,13 +255,15 @@ class BUFRReader:
             raise NoMsgLoadedError(txt)
 
         if self.expand_flags:
-            txt = ('ERROR: get_values_as_2d_array only returns numeric '+
-                   'results and cannot be used together with the '+
-                   'expand_flags option.'+
-                   'You will need to extract one element of one row of '+
-                   'elements at a time in this case.')
-            raise CannotExpandFlagsError(txt)
+            errtxt = ('ERROR: get_values_as_2d_array only returns numeric '+
+                      'results and cannot be used together with the '+
+                      'expand_flags option.'+
+                      'You will need to extract one element of one row of '+
+                      'elements at a time in this case.')
+            raise CannotExpandFlagsError(errtxt)
             
+        self.bufr_obj.delayed_repl_check_for_incorrect_use()
+
         num_subsets  = self.bufr_obj.get_num_subsets()
         num_elements = self.bufr_obj.get_num_elements()
         result = numpy.zeros([num_subsets, num_elements], dtype=float)
@@ -270,37 +277,32 @@ class BUFRReader:
 
         return result
         #  #]
-    def get_names(self):
-        #  #[
+    def get_names_and_units(self, subset=1):
+        #  #[ request name and unit of each descriptor for the given subset
+        if (self.msg_loaded == -1):
+            raise NoMsgLoadedError
+        
+        (list_of_names, list_of_units) = \
+                        self.bufr_obj.get_names_and_units(subset)
+
+        return (list_of_names, list_of_units)
+        #  #]
+    def get_names(self, subset=1):
+        #  #[ request name of each descriptor for the given subset
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
 
-        list_of_names = []
-        for cname in self.bufr_obj.cnames:
-            # glue the ndarray of characters together to form strings
-            cname_str = b''.join(cname).strip()
-            # append the string to the list and quote them
-            if python3:
-                list_of_names.append('"'+cname_str.decode()+'"')
-            else:
-                list_of_names.append('"'+cname_str+'"')
-
+        (list_of_names, list_of_units) = \
+                        self.bufr_obj.get_names_and_units(subset)
         return list_of_names
         #  #]
-    def get_units(self):
-        #  #[
+    def get_units(self, subset=1):
+        #  #[ request unit of each descriptor for the given subset
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
 
-        list_of_units = []
-        for cunit in self.bufr_obj.cunits:
-            # glue the ndarray of characters together to form strings
-            cunit_str = b''.join(cunit).strip()
-            # append the string to the list and quote them
-            if python3:
-                list_of_units.append('"'+cunit_str.decode()+'"')
-            else:
-                list_of_units.append('"'+cunit_str+'"')
+        (list_of_names, list_of_units) = \
+                        self.bufr_obj.get_names_and_units(subset)
 
         return list_of_units
         #  #]        

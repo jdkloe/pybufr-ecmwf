@@ -56,6 +56,8 @@ FORTRAN STDOUT:  BUFR MASTER TABLE                 0
 skipping section 2 [since it seems unused]
 ------------------------------
 calling: bufr.decode_data():
+calling: ecmwfbufr.bus012():
+calling: ecmwfbufr.busel2():
 ------------------------------
 Metadata for decoded BUFR message:
 ksup :  [  16    1    4    2   44  361    0 6598    3]

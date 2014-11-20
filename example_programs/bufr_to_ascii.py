@@ -17,6 +17,7 @@ to stdout or written to file, either in ascii or csv format.
 import sys # operating system functions
 import getopt # a simpler version of argparse, which was introduced in
               # python 2.7, and is not by default available for older versions
+import numpy  # import numerical capabilities
 
 # import the python file defining the RawBUFRFile class
 from pybufr_ecmwf.bufr import BUFRReader
@@ -54,8 +55,18 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
         list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
 
         if bob.msg_loaded == 1:
-            output_fd.write(separator.join(list_of_names) + "\n")
-            output_fd.write(separator.join(list_of_units) + "\n")
+            output_fd.write('"subset nr"'+separator)
+            for name in list_of_names[:-1]:
+                output_fd.write('"'+name+'"'+separator)
+            name = list_of_names[-1]
+            output_fd.write('"'+name+'"\n')
+            
+            output_fd.write('""'+separator)
+            for unit in list_of_units[:-1]:
+                output_fd.write('"'+unit+'"'+separator)
+            unit = list_of_units[-1]
+            output_fd.write('"'+unit+'"\n')
+
             list_of_unexp_descr_first_msg = bob.bufr_obj.py_unexp_descr_list
 
         data = bob.get_values_as_2d_array()
@@ -85,7 +96,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
             continue
 
         for subs in range(len(data[:, 0])):
-            output_fd.write(str(subs)+separator+
+            output_fd.write(str(subs+1)+separator+
                             separator.join(str(val) for val in data[subs, :])+
                             "\n")
         print 'converted BUFR msg nr. ', msg_nr
@@ -119,15 +130,23 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
 
         # add header strings
         if bob.msg_loaded == 1:
-            list_of_names = []
-            list_of_units = []
-            list_of_names.extend(bob.get_names())
-            list_of_units.extend(bob.get_units())
-            output_fd.write(separator.join(list_of_names) + "\n")
-            output_fd.write(separator.join(list_of_units) + "\n")
+            list_of_names = bob.get_names()
+            list_of_units = bob.get_units()
+
+            output_fd.write('"subset nr"'+separator)
+            for name in list_of_names[:-1]:
+                output_fd.write('"'+name+'"'+separator)
+            name = list_of_names[-1]
+            output_fd.write('"'+name+'"\n')
+
+            output_fd.write('""'+separator)
+            for unit in list_of_units[:-1]:
+                output_fd.write('"'+unit+'"'+separator)
+            unit = list_of_units[-1]
+            output_fd.write('"'+unit+'"\n')
 
         nsubsets = bob.get_num_subsets()
-        for subs in range(nsubsets):
+        for subs in range(1,nsubsets+1):
             nelements = bob.get_num_elements()
             data_list = []
             for descr_nr in range(nelements):
@@ -201,15 +220,21 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
                     cname_str = ''.join(cname).strip()
                     cunit_str = ''.join(cunit).strip()
 
+                # cnames is a bit over dimensioned, so check for empty values
+                if cname_str.strip()=='': break
+
                 # append the strings to the head list and quote them
                 list_of_names.append('"'+cname_str+'"')
                 list_of_units.append('"'+cunit_str+'"')
 
+            output_fd.write('"subset nr"'+separator)
             output_fd.write(separator.join(list_of_names) + '\n')
+
+            output_fd.write('""'+separator)
             output_fd.write(separator.join(list_of_units) + '\n')
 
         nsubsets = bufr_obj.get_num_subsets()
-        for subs in range(nsubsets):
+        for subs in range(1,nsubsets+1):
             nelements = bufr_obj.get_num_elements()
             data_list = []
             for descr_nr in range(nelements):
@@ -230,6 +255,67 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
 
     #  #]
 
+def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
+    #  #[ implementation 4
+    """
+    example implementation using the BUFRReader class
+    to decode a bufr file using delayed replication.
+    Since these files may have different descriptor lists
+    for each subset, a different call pattern is needed.
+    """
+
+    # get an instance of the BUFR class
+    # which automatically opens the file for reading and decodes it
+    bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
+                     verbose=False)
+
+    msg_nr = 0
+    while True:
+        try:
+            bob.get_next_msg()
+            msg_nr += 1
+        except EOFError:
+            break
+
+        # since this eample assumes a bufr file using delayed replication
+        # always request and add the header for each subset
+        nsubsets = bob.get_num_subsets()
+        for subs in range(1, nsubsets+1):
+
+            # add header strings
+            (list_of_names, list_of_units) = bob.get_names_and_units(subs)
+
+            list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
+            
+            data = bob.get_subset_values(subs)
+
+            # print('len(list_of_names) = ', len(list_of_names))
+            # print('len(list_of_units) = ', len(list_of_units))
+            # print('len(data) = ', len(data))
+            
+            if data.shape[0] == 0:
+                print 'NO DATA FOUND! this seems an empty BUFR message !'
+                continue
+
+            output_fd.write('"subset nr"'+separator+
+                            separator.join(list_of_names) + "\n")
+            output_fd.write('""'+separator+
+                            separator.join(list_of_units) + "\n")
+            output_fd.write(str(subs)+separator+
+                            separator.join(str(val) for val in data[:])+
+                            "\n")
+            
+        print 'converted BUFR msg nr. ', msg_nr
+        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
+            print 'skipping remainder of this BUFR file'
+            break
+
+    # close the file
+    bob.close()
+    if msg_nr == 0:
+        print 'no BUFR messages found, are you sure this is a BUFR file?'
+    #  #]
+
 def usage():
     #  #[
     """ a small routine to print the options that may be used
@@ -244,7 +330,7 @@ def usage():
     print '-i or --infile   defines the input BUFR file to be used [required]'
     print '-o or --outfile  defines the output file to be used'
     print '                 if this option is omitted, stdout will be used'
-    print '-1 or -2 or -3   test implementation 1, 2 or 3 [default is 1]'
+    print '-1, -2, -3 or -4 test implementation 1, 2, 3 or 4 [default is 1]'
     print '-m or --maxmsgnr defines max number of BUFR messages to convert'
     print '-h               display this help text'
     #  #]
@@ -258,7 +344,7 @@ def main():
     try:
         # command line handling; the ':' and '=' note that the
         # options must have a value following it
-        short_options = 'aci:o:m:h123'
+        short_options = 'aci:o:m:h1234'
         long_options = ['ascii', 'csv', 'infile=', 'outfile=',
                         'maxmsgnr=', 'help']
         (options, other_args) = getopt.getopt(sys.argv[1:],
@@ -297,6 +383,8 @@ def main():
             implementation_nr = 2
         elif opt == '-3':
             implementation_nr = 3
+        elif opt == '-4':
+            implementation_nr = 4
         elif (opt == '-m') or (opt == '--maxmsgnr'):
             max_msg_nr = int(value)
         else:
@@ -334,6 +422,9 @@ def main():
                             separator, max_msg_nr)
     elif implementation_nr == 3:
         print_bufr_content3(input_bufr_file, output_fd,
+                            separator, max_msg_nr)
+    elif implementation_nr == 4:
+        print_bufr_content4(input_bufr_file, output_fd,
                             separator, max_msg_nr)
 
     if output_file:

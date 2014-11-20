@@ -44,12 +44,8 @@ import glob
 import csv
 
 from pybufr_ecmwf.helpers import python3
+from pybufr_ecmwf.custom_exceptions import ProgrammingError
 #  #]
-
-class ProgrammingError(Exception):
-    """ an exception to indicate that a progromming error seems
-    present in the code (this should be reported to the author) """
-    pass
 
 class Descriptor: # [a simple table B entry]
     #  #[
@@ -1052,22 +1048,23 @@ class BufrTable:
             else:
                 success = False
                 nr_of_ignored_probl_entries += 1
-                print("ERROR: unexpected format in table B file...")
-                print("linecount: {}".format(i))
-                print("line: ["+line_copy+"]")
-                print("Line is too short, it should hold at "+
-                      "least 118 characters")
-                print("but seems to have only: {} characters.".
-                      format(len(line_copy)))
-                #print("txt_reference       = ["+line_copy[0:8]+"]")
-                #print("txt_name            = ["+line_copy[8:73]+"]")
-                #print("txt_unit            = ["+line_copy[73:98]+"]")
-                #print("txt_unit_scale      = ["+line_copy[98:102]+"]")
-                #print("txt_unit_reference  = ["+line_copy[102:115]+"]")
-                #print("txt_data_width      = ["+line_copy[115:118]+"]")
-                print("You could report this to the creator of this table "+
-                      "since this should never happen.")
-                print("Ignoring this entry .....")
+                if self.report_warnings:
+                    print("ERROR: unexpected format in table B file...")
+                    print("linecount: {}".format(i))
+                    print("line: ["+line_copy+"]")
+                    print("Line is too short, it should hold at "+
+                          "least 118 characters")
+                    print("but seems to have only: {} characters.".
+                          format(len(line_copy)))
+                    # print("txt_reference       = ["+line_copy[0:8]+"]")
+                    # print("txt_name            = ["+line_copy[8:73]+"]")
+                    # print("txt_unit            = ["+line_copy[73:98]+"]")
+                    # print("txt_unit_scale      = ["+line_copy[98:102]+"]")
+                    # print("txt_unit_reference  = ["+line_copy[102:115]+"]")
+                    # print("txt_data_width      = ["+line_copy[115:118]+"]")
+                    print("You could report this to the creator of this table "+
+                          "since this should never happen.")
+                    print("Ignoring this entry .....")
 
             if (success):
                 try:
@@ -1092,15 +1089,18 @@ class BufrTable:
                         # print("Ignoring a reserved entry: "+txt_reference)
                         pass
                     else:
-                        print("ERROR: unexpected format in table B file...")
-                        print("Could not convert one of the numeric "+
-                              "fields to integer.")
-                        print("txt_reference       = ["+txt_reference+"]")
-                        print("txt_unit_scale      = ["+txt_unit_scale+"]")
-                        print("txt_unit_reference  = ["+txt_unit_reference+"]")
-                        print("txt_data_width      = ["+txt_data_width+"]")
-                        print("txt_additional_info = ["+txt_additional_info+"]")
-                        print("Ignoring this entry .....")
+                        if self.report_warnings:
+                            print("ERROR: unexpected format in table B file...")
+                            print("Could not convert one of the numeric "+
+                                  "fields to integer.")
+                            print("txt_reference       = ["+txt_reference+"]")
+                            print("txt_unit_scale      = ["+txt_unit_scale+"]")
+                            print("txt_unit_reference  = ["+
+                                  txt_unit_reference+"]")
+                            print("txt_data_width      = ["+txt_data_width+"]")
+                            print("txt_additional_info = ["+
+                                  txt_additional_info+"]")
+                            print("Ignoring this entry .....")
                         
             if (success):
                 # add descriptor object to the list
@@ -1110,12 +1110,13 @@ class BufrTable:
                     #print("adding descr. key {}".format(reference))
                     self.table_b[reference] = b_descr
                 else:
-                    print("ERROR: multiple table B descriptors with "+
-                          "identical reference")
-                    print("number found. This should never happen !!!")
-                    print("problematic descriptor is: {}".format(b_descr))
+                    if self.report_warnings:
+                        print("ERROR: multiple table B descriptors with "+
+                              "identical reference")
+                        print("number found. This should never happen !!!")
+                        print("problematic descriptor is: {}".format(b_descr))
+                        print("Ignoring this entry .....")
                     self.table_b[reference].checkinit(b_descr)
-                    print("Ignoring this entry .....")
                     nr_of_ignored_probl_entries += 1
 
         if self.verbose:
@@ -1226,7 +1227,7 @@ class BufrTable:
                         # in stead
                         extra_comment = line[18:]
                         if not (extra_comment.strip() == ""):
-                            if self.verbose:
+                            if self.report_warnings:
                                 print("WARNING: ignoring extra comment on "+
                                       "continuation line: ")
                                 print("line: ["+line+"]")
@@ -1258,20 +1259,22 @@ class BufrTable:
                     raise IOError
                 
                 if len(descriptor_list)>count:
-                    print("WARNING: unexpected format in table D file...")
-                    print("problematic descriptor is: {}".format(reference))
-                    print("linecount: {}".format(i))
-                    print("line: ["+line+"]")
-                    print("This D-table entry defines more descriptors than")
-                    print("specified in the start line.")
-                    print("Please report this problem, together with")
-                    print("a copy of the bufr table you tried to read.")
-                    print("len(descriptor_list) = {}".
-                          format(len(descriptor_list)))
-                    print("count = {}".format(count))
-                    print("This is a formatting problem in the BUFR")
-                    print("Table but will not affect decoding.")
-                    print("ignoring excess descriptors for now...")
+                    if self.report_warnings:
+                        print("WARNING: unexpected format in table D file...")
+                        print("problematic descriptor is: {}".format(reference))
+                        print("linecount: {}".format(i))
+                        print("line: ["+line+"]")
+                        print("This D-table entry defines more "+
+                              "descriptors than")
+                        print("specified in the start line.")
+                        print("Please report this problem, together with")
+                        print("a copy of the bufr table you tried to read.")
+                        print("len(descriptor_list) = {}".
+                              format(len(descriptor_list)))
+                        print("count = {}".format(count))
+                        print("This is a formatting problem in the BUFR")
+                        print("Table but will not affect decoding.")
+                        print("ignoring excess descriptors for now...")
                     
                 
                 #print("************************storing result")
@@ -1281,16 +1284,17 @@ class BufrTable:
                     #print("adding descr. key {}".format(reference))
                     self.table_d[reference] = d_descr
                 else:
-                    print("WARNING: multiple table D descriptors "+
-                          "with identical reference")
-                    print("number found. This should never happen !!!")
-                    print("problematic descriptor is: {}".format(d_descr))
-                    print("Please report this problem, together with")
-                    print("a copy of the bufr table you tried to read.")
-                    print("This is a formatting problem in the BUFR")
-                    print("Table but will not affect decoding.")
-                    self.table_d[reference].checkinit(d_descr)
-                    print("Ignoring this entry for now.....")
+                    if self.report_warnings:
+                        print("WARNING: multiple table D descriptors "+
+                              "with identical reference")
+                        print("number found. This should never happen !!!")
+                        print("problematic descriptor is: {}".format(d_descr))
+                        print("Please report this problem, together with")
+                        print("a copy of the bufr table you tried to read.")
+                        print("This is a formatting problem in the BUFR")
+                        print("Table but will not affect decoding.")
+                        print("Ignoring this entry for now.....")
+                        self.table_d[reference].checkinit(d_descr)
                     
                 # mark this block as done
                 list_of_handled_blocks.append(d_entry_block)
@@ -1367,13 +1371,14 @@ class BufrTable:
             
         # verify consistency of C table definition
         if num_flags != len(fldef.flag_dict.keys()):
-            print('WARNING: C-table seems wrong for reference {}!'.
-                  format(reference))
-            print('expected number of flag values = {}'.format(num_flags))
-            print('found number of unique flag values = {}'.
-                  format(len(fldef.flag_dict.keys())))
-            #if num_flags==0:
-            print('==>ignoring this problem for now\n')
+            if self.report_warnings:
+                print('WARNING: C-table seems wrong for reference {}!'.
+                      format(reference))
+                print('expected number of flag values = {}'.format(num_flags))
+                print('found number of unique flag values = {}'.
+                      format(len(fldef.flag_dict.keys())))
+                # if num_flags==0:
+                print('==>ignoring this problem for now\n')
         else:
             #print('fldef {} \n{}'.format(reference,str(fldef)))
             # store the result

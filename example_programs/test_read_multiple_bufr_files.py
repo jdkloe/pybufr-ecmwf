@@ -39,15 +39,25 @@ def read_bufr_file(input_bufr_file):
         except EOFError:
             break
 
-        data = bob.get_values_as_2d_array()
+        nsubsets = bob.get_num_subsets()
+        data1 = bob.get_subset_values(1)
 
-        if data.shape[0]*data.shape[1] == 0:
+        if data1.shape[0] == 0:
             print 'NO DATA FOUND! this seems an empty BUFR message !'
             continue
 
-        print 'loaded BUFR msg nr. ', msg_nr, 'shape = ', data.shape
-        print 'data[:2,:2] = ', data[:2, :2]
+        print 'loaded BUFR msg nr. ', msg_nr, 'shape = ', data1.shape
+        print 'data1[:2] = ', data1[:2]
 
+        if nsubsets>1:
+            data2 = bob.get_subset_values(2)
+
+            if data2.shape[0] == 0:
+                print 'NO DATA FOUND! this seems an empty BUFR message !'
+                continue
+
+            print 'data2[:2] = ', data2[:2]
+        
     # close the file
     bob.close()
     if msg_nr == 0:

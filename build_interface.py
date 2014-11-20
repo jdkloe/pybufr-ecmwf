@@ -36,28 +36,9 @@ import urllib      # handling of url downloads
 import datetime    # date handling functions
 
 from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
-
-#  #]
-#  #[ exception definitions
-class BuildException(Exception):
-    """ a generic base exception for this build script """
-    pass
-class NetworkError(BuildException):
-    """ an exception to indicate that a network problem occurred """
-    pass
-class LibraryBuildError(BuildException):
-    """ an exception to indicate that building the ECMWF BUFR
-    library has failed """
-    pass
-class InterfaceBuildError(BuildException):
-    """ an exception to indicate that building the fortran-to-python
-    interface has failed """
-    pass
-class ProgrammingError(BuildException):
-    """ an exception to indicate that a progromming error seems
-    present in the code (this should be reported to the author) """
-    pass
-
+from pybufr_ecmwf.custom_exceptions import (ProgrammingError, BuildException,
+                                            NetworkError, LibraryBuildError,
+                                            InterfaceBuildError)
 #  #]
 #  #[ constants
 URL_ECMWF_WEBSITE = "http://old.ecmwf.int/"
