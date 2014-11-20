@@ -135,10 +135,9 @@ def decoding_example(input_bufr_file, custom_bufr_tables=None):
     print "calling: bufr.decode_data():"
     bufr.decode_data()
 
-    n = bufr.actual_nr_of_expanded_descriptors
     bufr.decode_sections_0123()
     bufr.fill_descriptor_list_subset(subset=1)
-    
+
     return bufr
     #  #]
 

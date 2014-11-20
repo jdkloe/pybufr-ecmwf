@@ -583,6 +583,7 @@ class CheckRawBUFRFile(unittest.TestCase):
             sys.stdout = devnull
             self.assertRaises(OSError, bufrfile.open, 123, 'rb')
             sys.stdout = stdout_saved
+            devnull.close()
         else:
             self.assertRaises(TypeError, bufrfile.open, 123, 'rb')
 
@@ -993,6 +994,9 @@ class CheckVersionInfo(unittest.TestCase):
     a class to test the retrieval of version info works correct
     '''
     def test_version_info(self):
+        '''
+        print some version info variables to ensure they are filled
+        '''
         testprog = "print_version_info.py"
         cmd = os.path.join(TEST_DIR, testprog)
         success = call_cmd_and_verify_output(cmd)

@@ -48,7 +48,7 @@ if version < '2.2.3':
 
 # suppres some pylint warnings caused by the internal implementation
 # of the build class
-#pylint: disable-msg=W0201,R0902,R0904
+#pylint: disable=W0201,R0902,R0904
 
 # note that pylint still complains about not being able to load the
 # build_interface module, even though the setup routine itself
@@ -358,7 +358,7 @@ class CustomInstallLib(_install_lib):
 #    pass
 
 # enable the disabled pylint warnings again
-#pylint: enable-msg=W0201,R0902,R0904
+#pylint: enable=W0201,R0902,R0904
 
 DESCR = "a python interface around the ECMWF-BUFR library."
 LONG_DESCR = """a python interface around the Fortran90 ECMWF-BUFR library

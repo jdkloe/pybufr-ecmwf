@@ -60,7 +60,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
                 output_fd.write('"'+name+'"'+separator)
             name = list_of_names[-1]
             output_fd.write('"'+name+'"\n')
-            
+
             output_fd.write('""'+separator)
             for unit in list_of_units[:-1]:
                 output_fd.write('"'+unit+'"'+separator)
@@ -146,7 +146,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
             output_fd.write('"'+unit+'"\n')
 
         nsubsets = bob.get_num_subsets()
-        for subs in range(1,nsubsets+1):
+        for subs in range(1, nsubsets+1):
             nelements = bob.get_num_elements()
             data_list = []
             for descr_nr in range(nelements):
@@ -221,7 +221,8 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
                     cunit_str = ''.join(cunit).strip()
 
                 # cnames is a bit over dimensioned, so check for empty values
-                if cname_str.strip()=='': break
+                if cname_str.strip() == '':
+                    break
 
                 # append the strings to the head list and quote them
                 list_of_names.append('"'+cname_str+'"')
@@ -234,7 +235,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
             output_fd.write(separator.join(list_of_units) + '\n')
 
         nsubsets = bufr_obj.get_num_subsets()
-        for subs in range(1,nsubsets+1):
+        for subs in range(1, nsubsets+1):
             nelements = bufr_obj.get_num_elements()
             data_list = []
             for descr_nr in range(nelements):
@@ -286,13 +287,13 @@ def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
             (list_of_names, list_of_units) = bob.get_names_and_units(subs)
 
             list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
-            
+
             data = bob.get_subset_values(subs)
 
             # print('len(list_of_names) = ', len(list_of_names))
             # print('len(list_of_units) = ', len(list_of_units))
             # print('len(data) = ', len(data))
-            
+
             if data.shape[0] == 0:
                 print 'NO DATA FOUND! this seems an empty BUFR message !'
                 continue
@@ -304,7 +305,7 @@ def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data[:])+
                             "\n")
-            
+
         print 'converted BUFR msg nr. ', msg_nr
         if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
             print 'skipping remainder of this BUFR file'

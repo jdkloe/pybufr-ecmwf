@@ -41,16 +41,16 @@ FILES_TO_DELETE = ['pybufr_ecmwf/libbufr.a', 'libbufr.a', 'MANIFEST',
                    'test/testdata/Testoutputfile2u.BUFR',
                    'test/testdata/Testoutputfile3u.BUFR']
 
-#pylint: disable-msg=C0103
+#pylint: disable=C0103
 dirs_to_delete = []
-#pylint: enable-msg=C0103
+#pylint: enable=C0103
 dirs_to_delete.extend(DIRS_TO_DELETE)
 for pattern in DIRS_GLOB_PATTERNS:
     dirs_to_delete.extend(glob.glob(pattern))
 
-#pylint: disable-msg=C0103
+#pylint: disable=C0103
 files_to_delete = []
-#pylint: enable-msg=C0103
+#pylint: enable=C0103
 files_to_delete.extend(FILES_TO_DELETE)
 for pattern in FILE_GLOB_PATTERNS:
     files_to_delete.extend(glob.glob(pattern))

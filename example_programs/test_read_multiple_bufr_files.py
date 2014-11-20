@@ -49,7 +49,7 @@ def read_bufr_file(input_bufr_file):
         print 'loaded BUFR msg nr. ', msg_nr, 'shape = ', data1.shape
         print 'data1[:2] = ', data1[:2]
 
-        if nsubsets>1:
+        if nsubsets > 1:
             data2 = bob.get_subset_values(2)
 
             if data2.shape[0] == 0:
@@ -57,7 +57,7 @@ def read_bufr_file(input_bufr_file):
                 continue
 
             print 'data2[:2] = ', data2[:2]
-        
+
     # close the file
     bob.close()
     if msg_nr == 0:
