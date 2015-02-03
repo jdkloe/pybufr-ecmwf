@@ -54,20 +54,31 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
         list_of_units.extend(bob.get_units())
         list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
 
+        #print('list_of_names = ',list_of_names)
+        #print('list_of_units = ',list_of_units)
+
         if bob.msg_loaded == 1:
             output_fd.write('"subset nr"'+separator)
-            for name in list_of_names[:-1]:
-                output_fd.write('"'+name+'"'+separator)
-            name = list_of_names[-1]
-            output_fd.write('"'+name+'"\n')
+            if list_of_names:
+                for name in list_of_names[:-1]:
+                    output_fd.write('"'+name+'"'+separator)
+                name = list_of_names[-1]
+                output_fd.write('"'+name+'"\n')
+            else:
+                output_fd.write('"[NO DATA]"\n')
 
             output_fd.write('""'+separator)
-            for unit in list_of_units[:-1]:
-                output_fd.write('"'+unit+'"'+separator)
-            unit = list_of_units[-1]
-            output_fd.write('"'+unit+'"\n')
-
+            if list_of_units:
+                for unit in list_of_units[:-1]:
+                    output_fd.write('"'+unit+'"'+separator)
+                unit = list_of_units[-1]
+                output_fd.write('"'+unit+'"\n')
+            else:
+                output_fd.write('"[NO DATA]"\n')
+            
             list_of_unexp_descr_first_msg = bob.bufr_obj.py_unexp_descr_list
+            #print('list_of_unexp_descr_first_msg = ',
+            #      list_of_unexp_descr_first_msg)
 
         data = bob.get_values_as_2d_array()
 
@@ -134,17 +145,23 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
             list_of_units = bob.get_units()
 
             output_fd.write('"subset nr"'+separator)
-            for name in list_of_names[:-1]:
-                output_fd.write('"'+name+'"'+separator)
-            name = list_of_names[-1]
-            output_fd.write('"'+name+'"\n')
-
+            if list_of_names:
+                for name in list_of_names[:-1]:
+                    output_fd.write('"'+name+'"'+separator)
+                name = list_of_names[-1]
+                output_fd.write('"'+name+'"\n')
+            else:
+                output_fd.write('"[NO DATA]"\n')
+            
             output_fd.write('""'+separator)
-            for unit in list_of_units[:-1]:
-                output_fd.write('"'+unit+'"'+separator)
-            unit = list_of_units[-1]
-            output_fd.write('"'+unit+'"\n')
-
+            if list_of_units:
+                for unit in list_of_units[:-1]:
+                    output_fd.write('"'+unit+'"'+separator)
+                unit = list_of_units[-1]
+                output_fd.write('"'+unit+'"\n')
+            else:
+                output_fd.write('"[NO DATA]"\n')
+                
         nsubsets = bob.get_num_subsets()
         for subs in range(1, nsubsets+1):
             nelements = bob.get_num_elements()

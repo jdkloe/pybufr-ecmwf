@@ -24,8 +24,8 @@ count_failed =  0
 
 results for files in BUFR_test_files:
 Totals:
-count_passed =  78
-count_failed =  19
+count_passed =  84
+count_failed =  17
 
 problematic files are the sn.00*.bin files from noaa (15 files)
 because I don't have the matching BUFR tables

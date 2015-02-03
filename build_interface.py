@@ -1362,7 +1362,7 @@ class InstallBUFRInterfaceECMWF(object):
             print("ERROR: no valid c compiler found,")
             print("installation is not possible")
             print("Please install a c compiler first.")
-            print("A good options is the free GNU compiler gcc")
+            print("A good option is the free GNU compiler gcc")
             print("which may be downloaded free of charge.")
             print("(see: http://gcc.gnu.org/ )")
             raise EnvironmentError

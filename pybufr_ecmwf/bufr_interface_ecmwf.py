@@ -1449,13 +1449,13 @@ class BUFRInterfaceECMWF:
 
         selection = (self.actual_kelem*(subset_nr-1) +
                      np.array(range(self.ktdexl)))
-        values = self.values[selection]
-
-        # todo:
-        # loop over values and exp_descr_list and manually
-        # do the delayed replication to get the proper descriptor list
-        # for the current subset
-
+        # it seems possible to have bufr messages without any
+        # descriptors, so make sure we return an empty list in this case.
+        if len(selection)>0:
+            values = self.values[selection]
+        else:
+            values = np.array([])
+        
         if get_cval:
             # this code is not yet tested, not sure if this still works
             cvalues = []

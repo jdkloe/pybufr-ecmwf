@@ -91,6 +91,13 @@ class Descriptor: # [a simple table B entry]
         except AssertionError as aerr:
             print('checkinit check failed !!!')
             print()
+            print('which means that the current B table contains multiple')
+            print('conflicting definitions for the same descriptor!')
+            print('This is a bug in the tables provided by ECMWF')
+            print('and should be reported to them to be solved.')
+            print('')
+            print('')
+            print()
             print(("self.reference       = [{:12s}]"
                    "other.reference      = [{:12s}]").
                   format(str(self.reference), str(other.reference)))
@@ -1106,18 +1113,42 @@ class BufrTable:
                 # add descriptor object to the list
                 b_descr = Descriptor(reference, name, unit,
                                      unit_scale, unit_reference, data_width)
-                if not self.table_b.has_key(reference):
-                    #print("adding descr. key {}".format(reference))
-                    self.table_b[reference] = b_descr
-                else:
-                    if self.report_warnings:
-                        print("ERROR: multiple table B descriptors with "+
-                              "identical reference")
-                        print("number found. This should never happen !!!")
-                        print("problematic descriptor is: {}".format(b_descr))
-                        print("Ignoring this entry .....")
-                    self.table_b[reference].checkinit(b_descr)
-                    nr_of_ignored_probl_entries += 1
+
+                # NOTE:
+                # the BUFR tables in the current ECMWF software, upto
+                # version 000403 at least, contain bugs. Multiple conflicting
+                # definitions occur for the same B descriptor in some tables.
+                # After reporting this to ECMWF, they responded that the
+                # problem will not be fixed because the software is to
+                # be phased out and replaced by a complete rewrite.
+                # They recommend to follow the way the fortran library
+                # handles these tables, i.e. just allow the later definition
+                # to overwrite the earlier definitions.
+                # (see the comments on issue SUP-1082 in the ECMWF
+                #  software bug tracking system, 24-nov.2014)
+                # Therefore the following test has been disabled for now,
+                # and is replaced by this simple assignment.
+                self.table_b[reference] = b_descr
+                
+                #if not self.table_b.has_key(reference):
+                #    #print("adding descr. key {}".format(reference))
+                #    self.table_b[reference] = b_descr
+                #else:
+                #    if self.report_warnings:
+                #        print("ERROR: multiple table B descriptors with "+
+                #              "identical reference")
+                #        print("number found. This should never happen !!!")
+                #        print("problematic descriptor is: {}".format(b_descr))
+                #        print("Ignoring this entry .....")
+                #    try:
+                #        self.table_b[reference].checkinit(b_descr)
+                #    except AssertionError:
+                #        print()
+                #        print('The current B table file is {}'.
+                #              format(bfile))
+                #        print()
+                #        raise # reraise
+                #    nr_of_ignored_probl_entries += 1
 
         if self.verbose:
             print("-------------")
