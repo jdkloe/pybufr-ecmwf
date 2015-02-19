@@ -14,6 +14,10 @@ C     code becomes impossible ...
 C
 C     Written by: J. de Kloe, 2013
 C
+C     Copyright J. de Kloe
+C     This software is licensed under the terms of the LGPLv3 Licence
+C     which can be obtained from https://www.gnu.org/licenses/lgpl.html
+C
 
       SUBROUTINE OPEN_FORTRAN_STDOUT(FILENAME)
       CHARACTER*(*) FILENAME

@@ -9,6 +9,10 @@ and show the bufr edition numbers for them.
 #
 # setenv PYTHONPATH `pwd`
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 import os, glob
 for f in glob.glob('pybufr_ecmwf/ecmwf_bufr_lib/000401/data/*.bufr'):
     cmd = 'example_programs/bufr_extract_edition.py '+f

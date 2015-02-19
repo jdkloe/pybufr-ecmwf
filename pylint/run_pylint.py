@@ -10,6 +10,10 @@ or like this:
       ./pylint/run_pylint.py <file1> <file2>
 """
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 import sys, os, glob
 
 try:

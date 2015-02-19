@@ -3,6 +3,10 @@
 '''a simple example script showing how to retrieve a description name
 from a descroptor code.'''
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 from pybufr_ecmwf.bufr_table import BufrTable
 
 BT = BufrTable()

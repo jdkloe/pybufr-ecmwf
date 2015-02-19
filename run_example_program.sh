@@ -3,6 +3,10 @@
 # perform some searches to ensure the PYTHONPATH points to a directory
 # that holds the compiled version of the pybufr-ecmwf module.
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 MODULELOCATION1='./'
 if test -e build; then
   MODULELOCATION2=`find build | grep ecmwfbufr.so | awk -F/ '{ print $1 "/" $2  "/"}'`

@@ -12,7 +12,9 @@ encoding a BUFR message.
 #
 # Written by: J. de Kloe, KNMI, Initial version 04-Sep-2011
 #
-# License: GPL v2.
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
 import os, sys     # operating system functions

@@ -7,6 +7,10 @@ this example code demonstrates how to:
 -use the template and BUFR tables to encode and decode a BUFR message
 """
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 # import pybufr_ecmwf
 from pybufr_ecmwf.bufr_table import Descriptor
 from pybufr_ecmwf.bufr_table import CompositeDescriptor

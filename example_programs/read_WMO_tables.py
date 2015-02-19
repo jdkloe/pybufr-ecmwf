@@ -5,10 +5,14 @@ a simple example script that shows how to load WMO csv formatted
 BUFR tables, and write them to the ECMWF specific format.
 '''
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 import os # , csv
 from pybufr_ecmwf.bufr_table import BufrTable
 
-# testwed with files from the BUFRCREX_21_0_0.zip package
+# tested with files from the BUFRCREX_21_0_0.zip package
 # downloaded from the WMO website.
 # see:
 # http://www.wmo.int/pages/prog/www/WMOCodes/WMO306_vI2/LatestVERSION/LatestVERSION.html

@@ -11,6 +11,12 @@ Therefore you need to install a 3rd party numpy rpm/deb package or install
 numpy from source first, before you can use the python3 version of this
 pybufr_ecmwf module. JK, 22-Apr-2011.
 """
+
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
+
 from __future__ import (absolute_import, division,
                         print_function) # , unicode_literals)
 import os, sys

@@ -4,6 +4,10 @@ a small example program to demonstrate how a new set of BUFR tables
 can be created from scratch, using the BufrTable class.
 """
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 from pybufr_ecmwf.bufr_table \
      import BufrTable, Descriptor, CompositeDescriptor, FlagDefinition
 

@@ -4,6 +4,11 @@
 a module containing helpers to handle sys.path juggling
 and python3 string handling cases
 """
+
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 from __future__ import (absolute_import, division,
                         print_function) #, unicode_literals)
 

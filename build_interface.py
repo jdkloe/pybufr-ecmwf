@@ -18,7 +18,9 @@ ECMWF to allow reading and writing the WMO BUFR file standard.
 #
 # Written by: J. de Kloe, KNMI (www.knmi.nl),
 #
-# License: GPL v2.
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
 #
 #  #]
 #  #[ imported modules
@@ -32,7 +34,6 @@ import tarfile     # handle tar archives
 import shutil      # portable file copying functions
 import subprocess  # support running additional executables
 import stat        # handling of file stat data
-import urllib      # handling of url downloads
 import datetime    # date handling functions
 
 from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3

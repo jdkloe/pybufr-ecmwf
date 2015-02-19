@@ -23,7 +23,10 @@ by providing several helper classes.
 #
 # Written by: J. de Kloe, KNMI (www.knmi.nl), Initial version 04-Feb-2010    
 #
-# License: GPL v2.
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 #  #]
 #  #[ some notes
 # see: WMO_BUFR_Guide_Layer3-English-only.pdf

@@ -11,7 +11,9 @@ and then write it to the output bufr file.
 #
 # Written by: J. de Kloe, KNMI, Initial version 04-Feb-2014
 #
-# License: GPL v2.
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
 import sys # operating system functions

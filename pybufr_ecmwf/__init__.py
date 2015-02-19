@@ -6,6 +6,10 @@ Author:  J. de Kloe, KNMI
 Created: 04-Feb-2010
 """
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 # I can't get this to work properly, so skip this for now.
 # if anyone knows how to do this, please drop me a note.
 

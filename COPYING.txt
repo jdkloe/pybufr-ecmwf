@@ -2,7 +2,16 @@ Different licenses apply to different files in this package.
 
 This package includes an unaltered copy of the ECMWF BUFR library
 source code in the ecmwf_bufr_lib_sources directory.
-This code remains copyright ECMWF and is LGPL licensed.
+This code remains copyright ECMWF and is Apache licensed.
 
 All other files in this package are copyright J. de Kloe, 
-and are GPLv2 licensed.
+and are LGPLv3 licensed, which in turn is an extension of the GPLv3 license.
+A copy of the license text can be found in the files 
+lgpl-3.0.txt and gpl-3.0.txt which are part of this software package.
+These files where downloaded from:
+https://www.gnu.org/licenses/lgpl.html
+and
+https://www.gnu.org/licenses/gpl.html
+and can also be found on that website.
+
+J. de Kloe, 19-Feb-2015.

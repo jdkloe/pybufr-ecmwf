@@ -1,3 +1,7 @@
+Release 0.81 (19-Feb-2015)
+-license change to LGPLv3
+-move to library version bufrdc_000403
+
 Release 0.80 (13-Nov-2014)
 -do no longer download the latest library version from ECMWF, to prevent
  breakage in case they redesign their website or software package,

@@ -12,7 +12,9 @@ of bufr files that use different BUFR tables.
 #
 # Written by: J. de Kloe, KNMI, Initial version 6-Nov-2014
 #
-# License: GPL v2. See the COPYING.txt file for details.
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
 import sys

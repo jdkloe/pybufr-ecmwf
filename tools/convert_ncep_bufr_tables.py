@@ -8,6 +8,11 @@ http://www.emc.ncep.noaa.gov/mmb/data_processing/...
 and convert it to BUFR Tables formatted such that the ECMWF library
 can use them.
 """
+
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 #  #[ imported modules
 import os, sys, urllib
 #  #]

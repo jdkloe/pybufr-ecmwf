@@ -3,6 +3,10 @@
 '''a simple example script showing how to retrieve a descriptor code
 when you only know (part of) a description name'''
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 from pybufr_ecmwf.bufr_table import BufrTable
 
 BTABLE = 'pybufr_ecmwf/ecmwf_bufrtables/B2550000000098006001.TXT'

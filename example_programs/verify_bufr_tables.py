@@ -5,6 +5,10 @@ this small example program loads the BUFR B- and D-tables
 and reports any inconsistencies it finds in the table definitions
 """
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 import sys
 from pybufr_ecmwf.bufr_table import BufrTable
 

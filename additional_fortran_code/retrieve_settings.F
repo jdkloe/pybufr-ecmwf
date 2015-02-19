@@ -11,6 +11,11 @@ C     c and python that actually work (i.e. use the correct integer types...)
 C
 C     Written by: J. de Kloe, 2013
 C
+C
+C     Copyright J. de Kloe
+C     This software is licensed under the terms of the LGPLv3 Licence
+C     which can be obtained from https://www.gnu.org/licenses/lgpl.html
+C
 
       SUBROUTINE RETRIEVE_SETTINGS(
      1     VAL_JSUP, VAL_JSEC0, VAL_JSEC1, VAL_JSEC2, VAL_JSEC3,

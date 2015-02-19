@@ -8,8 +8,9 @@ to enable users to easily catch them all.
 
 # Written by: J. de Kloe, KNMI (www.knmi.nl)
 #
-# License: GPL v2.
-#
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 # see: http://docs.python.org/library/exceptions.html
 # for a list of already available exceptions.

@@ -5,6 +5,10 @@ build options with the on the current system available
 fortran compilers.
 """
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 #  #[ plan:
 # search for available fortran (and c?) compilers
 #

@@ -9,6 +9,11 @@ This setup script can be used to build and install the pybufr-ecmwf
 module on your system.
 """
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
+
 #  #[ imported modules
 from __future__ import (absolute_import, division,
                         print_function) # , unicode_literals)
@@ -379,7 +384,7 @@ build options.
 CL = ["Development Status :: 3 - Alpha",
       "Environment :: Console",
       "Intended Audience :: Science/Research",
-      "License :: OSI Approved :: GNU General Public License (GPL)",
+      "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
       "Natural Language :: English",
       "Operating System :: POSIX",
       "Programming Language :: Fortran",
@@ -419,7 +424,7 @@ setup(cmdclass={'build'       : Build,
       download_url="http://code.google.com/p/pybufr-ecmwf/source/checkout",
       classifiers=CL,
       platforms=["POSIX"],
-      license="GPLv2",
+      license="LGPLv3",
       packages=['pybufr_ecmwf'],
       include_package_data=True,
       package_data=ECMWF_BUFR_DATA,

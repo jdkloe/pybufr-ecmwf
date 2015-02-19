@@ -6,6 +6,10 @@ generated during building and testing.
 (mostly usefull for re-testing over and over again during development)
 """
 
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 from __future__ import print_function
 import os, glob #, sys
 

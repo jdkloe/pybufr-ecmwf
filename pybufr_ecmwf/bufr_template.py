@@ -18,7 +18,10 @@ construction of BUFR templates
 #
 # Written by: J. de Kloe, KNMI (www.knmi.nl), Initial version 12-Nov-2009    
 #
-# License: GPL v2.
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
+
 #
 #  #]
 #  #[ imported modules

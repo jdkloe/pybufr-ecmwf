@@ -11,7 +11,9 @@ then printed to stdout.
 #
 # Written by: J. de Kloe, KNMI, Initial version 24-Sep-2010
 #
-# License: GPL v2.
+# Copyright J. de Kloe
+# This software is licensed under the terms of the LGPLv3 Licence
+# which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
 import sys     # operating system functions
