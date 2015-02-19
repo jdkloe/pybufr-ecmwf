@@ -36,9 +36,6 @@ USE_DELAYED_REPLICATION = True
 import __main__ as g
 # some dummy initialisations to prevent pylint from complaining
 # about undefined variables
-year, month, day = 0, 0, 0
-product_name, lat, lon = '', 0, 0
-variable1, variable2, variable3 = 0, 0, 0
 D_301192, D_301193 = 0, 0
 
 def create_bufr_tables(table_name):
@@ -46,6 +43,12 @@ def create_bufr_tables(table_name):
     '''
     compose the BUFR B and D tables
     '''
+
+    # some dummy initialisations to prevent pylint from complaining
+    # about undefined variables
+    year, month, day = 0, 0, 0
+    product_name, lat, lon = '', 0, 0
+    variable1, variable2 = 0, 0
 
     bufr_table_set = BufrTable()
 
@@ -84,10 +87,9 @@ def create_bufr_tables(table_name):
                     lon,        # Longitude
                     variable1,  # first variable
                     Replicator(3, [variable2,]), # second variable, 3x repeated
-                    ],
+                   ],
          "measurement information"),
         ]
-
 
     for (reference, descriptor_list, comment) in d_entries:
         varname = 'D_'+reference
@@ -117,6 +119,8 @@ def create_bufr_template():
     now use these definitions to create a BUFR template
     '''
     from pybufr_ecmwf.bufr_template import BufrTemplate
+
+    variable3 = 0
 
     template = BufrTemplate()
     template.add_descriptor(D_301192) # 4 items

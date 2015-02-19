@@ -75,7 +75,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
                 output_fd.write('"'+unit+'"\n')
             else:
                 output_fd.write('"[NO DATA]"\n')
-            
+
             list_of_unexp_descr_first_msg = bob.bufr_obj.py_unexp_descr_list
             #print('list_of_unexp_descr_first_msg = ',
             #      list_of_unexp_descr_first_msg)
@@ -152,7 +152,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
                 output_fd.write('"'+name+'"\n')
             else:
                 output_fd.write('"[NO DATA]"\n')
-            
+
             output_fd.write('""'+separator)
             if list_of_units:
                 for unit in list_of_units[:-1]:
@@ -161,7 +161,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
                 output_fd.write('"'+unit+'"\n')
             else:
                 output_fd.write('"[NO DATA]"\n')
-                
+
         nsubsets = bob.get_num_subsets()
         for subs in range(1, nsubsets+1):
             nelements = bob.get_num_elements()
@@ -303,7 +303,8 @@ def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
             # add header strings
             (list_of_names, list_of_units) = bob.get_names_and_units(subs)
 
-            list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
+            # currently not used
+            # list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
 
             data = bob.get_subset_values(subs)
 
@@ -311,7 +312,7 @@ def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
             # print('len(list_of_units) = ', len(list_of_units))
             # print('len(data) = ', len(data))
 
-            if data.shape[0] == 0:
+            if numpy.shape(data)[0] == 0:
                 print 'NO DATA FOUND! this seems an empty BUFR message !'
                 continue
 

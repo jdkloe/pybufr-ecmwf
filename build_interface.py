@@ -39,11 +39,9 @@ from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
 from pybufr_ecmwf.custom_exceptions import (ProgrammingError, BuildException,
                                             NetworkError, LibraryBuildError,
                                             InterfaceBuildError)
+from download_libsources import find_newest_library, download_bufrlib_sources
 #  #]
 #  #[ constants
-URL_ECMWF_WEBSITE = "http://old.ecmwf.int/"
-URL_BUFR_PAGE = URL_ECMWF_WEBSITE+"products/data/"+\
-                "software/download/bufr.html"
 
 # the first one found will be used, unless a preferred one is specified.
 POSSIBLE_F_COMPILERS = ['gfortran', 'g95', 'g77',
@@ -965,135 +963,6 @@ class InstallBUFRInterfaceECMWF(object):
         # return to the original location
         os.chdir(cwd)
         #  #]
-    def find_newest_library(self):
-        #  #[
-
-        """ a method to find the name of the most recent version of the
-        ECMWF BUFR library tarball on the ECMWF website """
-
-        if not os.path.exists(self.ecmwf_bufr_lib_dir):
-            os.makedirs(self.ecmwf_bufr_lib_dir)
-
-        if self.verbose:
-            print("setting up connection to ECMWF website")
-        try:
-            # Get a file-like object for this website
-            urlf = urllib.urlopen(URL_BUFR_PAGE)
-        except IOError:
-            print("connection failed......")
-            print("could not open url: ", URL_BUFR_PAGE)
-            return (None, None)
-
-        # Read from the object, storing the page's contents in a list of lines
-        lines = urlf.readlines()
-        urlf.close()
-        if self.verbose:
-            print("ECMWF download page retrieved successfully")
-
-        # a test print of the html of this webpage
-        #print("data:", s)
-
-        # do a simple parsing to retrieve the currently available
-        # BUFR library versions and their URLs for download:
-
-        # a little test to see how this regular expression grouping works:
-        # (to be executed manually on the python prompt)
-        # >import re
-        # >x="abc 123 def 456 ghi"
-        # >print re.match('.*(123).*(456).*', x).groups()
-        # The output you get is:
-        # ('123', '456')
-
-        # the lines we are interested in have this format:
-        # <TD WIDTH="37%"><A HREF="SOMEPATH/bufr_VERSION.tar.gz" \
-        # class="sowtware">bufr_VERSION.tar.gz</A>DATE</TD>
-        # so use this regular expression to parse these lines:
-        line_pattern = r'<TD .*><A HREF="(.*)" .*>(.*)</A>(.*)</TD>'
-
-        bufr_lib_versions = []
-        for tmp_line in lines:
-            if python3:
-                line = tmp_line.decode()
-            else:
-                line = tmp_line
-            if ".tar.gz" in line:
-                #print(line)
-                match_object = re.match(line_pattern, line)
-                if match_object:
-                    data = match_object.groups()
-                    #print(data)
-                    bufr_lib_versions.append(data)
-
-        # find most recent library version, for now just sort on name
-        # that should do the trick
-        most_recent_bufr_lib_url = ""
-        most_recent_bufr_tarfile_name = ""
-        #most_recent_bufr_lib_date = ""
-
-        # example values for data:
-        # data[0] = '/products/data/software/download/software_files/'+\
-        #           'bufr_000380.tar.gz'
-        # data[1] = 'bufr_000380.tar.gz'
-        # data[2] = ' 28.07.2009'
-        for data in bufr_lib_versions:
-            bufr_lib_url = data[0]
-            bufr_tarfile_name = data[1]
-            #bufr_lib_date = data[2]
-            if bufr_tarfile_name > most_recent_bufr_tarfile_name:
-                # store
-                most_recent_bufr_lib_url = bufr_lib_url
-                most_recent_bufr_tarfile_name = bufr_tarfile_name
-                #most_recent_bufr_lib_date = bufr_lib_date
-
-        # report the result
-        if self.verbose:
-            print("Most recent library version seems to be: ",
-                  most_recent_bufr_tarfile_name)
-
-        return (most_recent_bufr_lib_url,
-                most_recent_bufr_tarfile_name)
-
-        #  #]
-    def download_library(self, most_recent_bufr_lib_url,
-                         most_recent_bufr_tarfile_name):
-        #  #[
-        """ a method to download the most recent version of the
-        ECMWF BUFR library tarball from the ECMWF website """
-
-
-        #print('downloading the latest library version has been disabled')
-        #print('because this build script is not yet compatible with')
-        #print('recent changes in the ECMWF BUFR library source code.')
-        #return False
-
-        if self.verbose:
-            print("trying to download: ", most_recent_bufr_tarfile_name)
-
-        download_url = URL_ECMWF_WEBSITE+most_recent_bufr_lib_url
-        try:
-            # Get a file-like object for this website
-            urlf = urllib.urlopen(download_url)
-        except IOError:
-            print("connection failed......")
-            print("could not open url: ", download_url)
-            return False
-
-        tarfiledata = urlf.read()
-        urlf.close()
-        if self.verbose:
-            print("ECMWF download page retrieved successfully")
-
-        local_fullname = os.path.join(self.ecmwf_bufr_lib_dir,
-                                      most_recent_bufr_tarfile_name)
-        tfd = open(local_fullname, 'wb')
-        tfd.write(tarfiledata)
-        tfd.close()
-
-        if self.verbose:
-            print("created local copy of: ", most_recent_bufr_tarfile_name)
-
-        return True
-        #  #]
     def get_source_dir(self):
         #  #[
         """ a method to find the name of the current BUFR library
@@ -1157,11 +1026,11 @@ class InstallBUFRInterfaceECMWF(object):
                     # try to download the source code for the
                     # newest ECMWF bufr library
                     (most_recent_bufr_lib_url,
-                     most_recent_bufr_tarfile_name) = \
-                                self.find_newest_library()
+                     most_recent_bufr_tarfile_name) = find_newest_library()
                     if most_recent_bufr_lib_url is not None:
-                        success = self.download_library( \
+                        success = download_bufrlib_sources( \
                                        most_recent_bufr_lib_url,
+                                       self.ecmwf_bufr_lib_dir,
                                        most_recent_bufr_tarfile_name)
 
                 if not success:
@@ -2007,7 +1876,8 @@ if __name__ == "__main__":
         # gfortran v4.7.0 installed
         # successfully tested 29-Aug-2012
         BI = InstallBUFRInterfaceECMWF(verbose=True,
-                                       preferred_fortran_compiler='gfortran')
+                                       preferred_fortran_compiler='gfortran',
+                                       download_library_sources=True)
     elif TESTCASE == 3:
         # note that the "-O" flag is allways set for each fortran compiler
         # so no need to specify it to the fortran_flags parameter.
