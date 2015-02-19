@@ -17,14 +17,14 @@ See: https://caremad.io/blog/setup-vs-requirement/ for details.
 
 see my private ./BUFR_test_all_files.py script.
 
-results for files in pybufr_ecmwf/ecmwf_bufr_lib/000401/data:
+results for files in pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_000403/data:
 Totals:
-count_passed =  140
+count_passed =  141
 count_failed =  0
 
 results for files in BUFR_test_files:
 Totals:
-count_passed =  84
+count_passed =  83
 count_failed =  17
 
 problematic files are the sn.00*.bin files from noaa (15 files)
@@ -33,12 +33,10 @@ BUFR_test_files/noaa_mos/sn.0001.bin
 exit_status =  1
 ['KeyError: 2200', '']
 
-and a few rader BUFR files, fail for the same reason
-
 Finally a qscat file fails with a key error:
-BUFR_test_files/qscat/QS_D07060_S1821_E2002_B4009191_025.genws
+BUFR_test_files/MSS_S327121011_200_PAAL31_EGRR_231200
 exit_status =  1
-['KeyError: 312221', '']
+['KeyError: 321193', '']
 
 ---------------------------
 todo: add a little script to allow easy compilation and use of the
