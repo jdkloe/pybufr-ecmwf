@@ -297,7 +297,7 @@ def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
         except EOFError:
             break
 
-        # since this eample assumes a bufr file using delayed replication
+        # since this example assumes a bufr file using delayed replication
         # always request and add the header for each subset
         nsubsets = bob.get_num_subsets()
         for subs in range(1, nsubsets+1):
@@ -337,6 +337,98 @@ def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
         print 'no BUFR messages found, are you sure this is a BUFR file?'
     #  #]
 
+def print_bufr_content5(input_bufr_file, output_fd, separator, max_msg_nr):
+    #  #[ implementation 5
+    """
+    example implementation using the BUFRReader class
+    to decode a bufr file using delayed replication.
+    Since these files may have different descriptor lists
+    for each subset, a different call pattern is needed.
+    """
+
+    # testcases:
+    # ./example_programs/bufr_to_ascii.py -5 -c -o tmp.csv \
+    #     -i ./pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_000403/data/syno_1.bufr
+    #
+    # ./example_programs/bufr_to_ascii.py -5 -c -o tmp.csv \
+    #     -i ../BUFR_test_files/synop_knmi_via_ko_janssen/MSSAEOL_00002950.b
+    #
+
+    names_to_be_selected = ['temperature', 'wind']
+    names_to_be_excluded = ['minimum', 'maximum']
+    
+    write_names_and_units_just_once = True
+    
+    # get an instance of the BUFR class
+    # which automatically opens the file for reading and decodes it
+    bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
+                     verbose=False) # , expand_flags=True)
+
+    msg_nr = 0
+    not_yet_printed = True
+    while True:
+        try:
+            bob.get_next_msg()
+            msg_nr += 1
+        except EOFError:
+            break
+
+        # since this example assumes a bufr file using delayed replication
+        # always request and add the header for each subset
+        nsubsets = bob.get_num_subsets()
+        for subs in range(1, nsubsets+1):
+
+            print '==> subset ', subs
+            
+            # add header strings
+            (list_of_names, list_of_units) = bob.get_names_and_units(subs)
+            data = bob.get_subset_values(subs)
+
+            selected_names = []
+            selected_units = []
+            selected_values = []
+            for i, name in enumerate(list_of_names):
+                selected = False
+                for nm in names_to_be_selected:
+                    if nm in name.lower(): selected = True
+                for nm in names_to_be_excluded:
+                    if nm in name.lower(): selected = False
+                    
+                if selected:
+                    # print ' '*10,name,'=',data[i],list_of_units[i]
+                    selected_names.append(list_of_names[i])
+                    selected_units.append(list_of_units[i])
+                    selected_values.append(data[i])
+                
+            if len(selected_values) == 0:
+                print 'NO DATA SELECTED for BUFR message and subset {}!'.\
+                      format(msg_nr, subs)
+                continue
+
+            if write_names_and_units_just_once and not_yet_printed:
+                output_fd.write('"subset nr"'+separator+
+                                separator.join(selected_names) + "\n")
+                output_fd.write('""'+separator+
+                                separator.join(selected_units) + "\n")
+                not_yet_printed = False
+                
+            output_fd.write(str(subs)+separator+
+                            separator.join(str(val) for val in selected_values)+
+                            "\n")
+
+        print '='*25
+        print 'converted BUFR msg nr. ', msg_nr
+        print '='*25
+        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
+            print 'skipping remainder of this BUFR file'
+            break
+
+    # close the file
+    bob.close()
+    if msg_nr == 0:
+        print 'no BUFR messages found, are you sure this is a BUFR file?'
+    #  #]
+
 def usage():
     #  #[
     """ a small routine to print the options that may be used
@@ -351,7 +443,7 @@ def usage():
     print '-i or --infile   defines the input BUFR file to be used [required]'
     print '-o or --outfile  defines the output file to be used'
     print '                 if this option is omitted, stdout will be used'
-    print '-1, -2, -3 or -4 test implementation 1, 2, 3 or 4 [default is 1]'
+    print '-1, -2, -3, -4 or -5 test implementation 1 upto 5 [default is 1]'
     print '-m or --maxmsgnr defines max number of BUFR messages to convert'
     print '-h               display this help text'
     #  #]
@@ -365,7 +457,7 @@ def main():
     try:
         # command line handling; the ':' and '=' note that the
         # options must have a value following it
-        short_options = 'aci:o:m:h1234'
+        short_options = 'aci:o:m:h12345'
         long_options = ['ascii', 'csv', 'infile=', 'outfile=',
                         'maxmsgnr=', 'help']
         (options, other_args) = getopt.getopt(sys.argv[1:],
@@ -406,6 +498,8 @@ def main():
             implementation_nr = 3
         elif opt == '-4':
             implementation_nr = 4
+        elif opt == '-5':
+            implementation_nr = 5
         elif (opt == '-m') or (opt == '--maxmsgnr'):
             max_msg_nr = int(value)
         else:
@@ -447,7 +541,13 @@ def main():
     elif implementation_nr == 4:
         print_bufr_content4(input_bufr_file, output_fd,
                             separator, max_msg_nr)
-
+    elif implementation_nr == 5:
+        print_bufr_content5(input_bufr_file, output_fd,
+                            separator, max_msg_nr)
+    else:
+        print 'implementation nr. {} is not available...'.\
+              format(implementation_nr)
+    
     if output_file:
         # close the output file
         output_fd.close()

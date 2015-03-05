@@ -1643,7 +1643,9 @@ class BUFRInterfaceECMWF:
         ktdexp = list(self.ktdexp[select])
         ndr = ktdexp.count(BufrTemplate.Delayed_Descr_Repl_Factor)
 
-        select = np.where(self.ktdexp == BufrTemplate.Delayed_Descr_Repl_Factor)
+        select = np.where((self.ktdexp == BufrTemplate.Short_Delayed_Descr_Repl_Factor) +
+                          (self.ktdexp == BufrTemplate.Delayed_Descr_Repl_Factor) +
+                          (self.ktdexp == BufrTemplate.Extended_Delayed_Descr_Repl_Factor)   )
         delayed_repl_data = self.values[select]
         # print('delayed_repl_data = ', delayed_repl_data)
         return delayed_repl_data

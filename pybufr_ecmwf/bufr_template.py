@@ -40,10 +40,12 @@ class BufrTemplate:
     """
     
     #  #[ class constants
-    
-    Delayed_Descr_Repl_Factor = int('031001', 10)
+    Short_Delayed_Descr_Repl_Factor    = int('031000', 10)
+    Delayed_Descr_Repl_Factor          = int('031001', 10)
     Extended_Delayed_Descr_Repl_Factor = int('031002', 10)
-    
+    # 031011 DELAYED DESCRIPTOR AND DATA REPETITION FACTOR
+    # 031012 EXTENDED DELAYED DESCRIPTOR AND DATA REPETITION FACTOR
+
     #  #]
     def __init__(self):
         #  #[
