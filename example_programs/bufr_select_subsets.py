@@ -77,11 +77,11 @@ def select_subsets(input_bufr_file, output_bufr_file):
 
         new_nsub = new_data.shape[0]
         bob.bufr_obj.nr_subsets = new_nsub
-        BT = BufrTemplate()
-        BT.add_descriptors(*bob.bufr_obj.ktdlst)#[:self.ktdlen])
-        BT.nr_of_delayed_repl_factors = 1
-        BT.del_repl_max_nr_of_repeats_list = list(delayed_repl_data)
-        bob.bufr_obj.register_and_expand_descriptors(BT)
+        btm = BufrTemplate()
+        btm.add_descriptors(*bob.bufr_obj.ktdlst)#[:self.ktdlen])
+        btm.nr_of_delayed_repl_factors = 1
+        btm.del_repl_max_nr_of_repeats_list = list(delayed_repl_data)
+        bob.bufr_obj.register_and_expand_descriptors(btm)
 
         bob.bufr_obj.kdate = new_nsub*list(delayed_repl_data)
 
@@ -105,6 +105,6 @@ def select_subsets(input_bufr_file, output_bufr_file):
     #  #]
 
 # run the tool
-bufr_file_in = 'test/testdata/Testoutputfile1.BUFR'
-bufr_file_out = 'test/testdata/Testoutputfile1.BUFR.selected_subsets_only'
-select_subsets(bufr_file_in, bufr_file_out)
+BUFR_FILE_IN = 'test/testdata/Testoutputfile1.BUFR'
+BUFR_FILE_OUT = 'test/testdata/Testoutputfile1.BUFR.selected_subsets_only'
+select_subsets(BUFR_FILE_IN, BUFR_FILE_OUT)

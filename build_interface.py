@@ -28,7 +28,6 @@ from __future__ import (absolute_import, division,
                         print_function) # , unicode_literals)
 import os          # operating system functions
 import sys         # operating system functions
-import re          # regular expression handling
 import glob        # allow for filename expansion
 import tarfile     # handle tar archives
 import shutil      # portable file copying functions
@@ -37,9 +36,10 @@ import stat        # handling of file stat data
 import datetime    # date handling functions
 
 from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
-from pybufr_ecmwf.custom_exceptions import (ProgrammingError, BuildException,
+from pybufr_ecmwf.custom_exceptions import (ProgrammingError,
                                             NetworkError, LibraryBuildError,
                                             InterfaceBuildError)
+# not used: BuildException
 from download_libsources import find_newest_library, download_bufrlib_sources
 #  #]
 #  #[ constants
@@ -61,12 +61,10 @@ FFLAGS_NEEDED = {'g95': ['-i4', '-r8', '-fno-second-underscore'],
                  'f77': ['-i4', ],
                  'pgf90': ['-i4', ],
                  'pgf77': ['-i4', ],
-                 'ifort': ['-i4', ],
-                 }
+                 'ifort': ['-i4', ]}
 CFLAGS_NEEDED = {'gcc': [],
                  'icc': [],
-                 'cc':  [],
-                 }
+                 'cc':  []}
 
 for k in FFLAGS_NEEDED.keys():
     FFLAGS_NEEDED[k].extend(FFLAGS_COMMON)
@@ -485,8 +483,7 @@ def insert_pb_interface_definition(sfd, integer_sizes):
           "   integer*"+intlen+", intent(in)  :: offset",
           "   integer*"+intlen+", intent(in)  :: whence",
           "   integer*"+intlen+", intent(out) :: bufr_return_value",
-          "end subroutine pbseek",
-          ]
+          "end subroutine pbseek"]
 
     print("Inserting hardcoded interface to pbio routines in "+
           "signatures file ...")
@@ -1206,7 +1203,7 @@ class InstallBUFRInterfaceECMWF(object):
         if self.c_compiler_to_use is None:
             # a sanity check
             if self.preferred_c_compiler is not None:
-                if not (self.preferred_c_compiler in POSSIBLE_C_COMPILERS):
+                if self.preferred_c_compiler not in POSSIBLE_C_COMPILERS:
                     print("ERROR: unknown preferred c compiler "+
                           "specified:",
                           self.preferred_c_compiler)
@@ -1556,7 +1553,7 @@ class InstallBUFRInterfaceECMWF(object):
             if len(c_tables) > 0:
                 c_tables.sort()
                 # assume the highest numbered table is the most recent one
-                ct_path, ct_file = os.path.split(c_tables[-1])
+                ct_file = os.path.split(c_tables[-1])[1]
                 ct_base, ct_ext = os.path.splitext(ct_file)
                 newest_table_code = ct_base[1:]
                 newest_c_table = ct_file

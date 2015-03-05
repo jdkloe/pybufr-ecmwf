@@ -11,7 +11,7 @@ generated during building and testing.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 from __future__ import print_function
-import os, glob #, sys
+import os, glob, sys
 
 # delete these dirs
 DIRS_GLOB_PATTERNS = ['pybufr_ecmwf/ecmwf_bufr_lib/bufr_000*',
@@ -39,12 +39,24 @@ FILE_GLOB_PATTERNS = ['*~', '*/*~', '*/*/*~', '*.pyc', '*/*.pyc',
 FILES_TO_DELETE = ['pybufr_ecmwf/libbufr.a', 'libbufr.a', 'MANIFEST',
                    'ecmwfbufr.so',
                    'pybufr_ecmwf/ecmwf_bufr_lib/config_file',
-                   'ecmwf_bufr_lib/config_file', 
+                   'ecmwf_bufr_lib/config_file',
                    'pybufr_ecmwf/ecmwfbufr_parameters.py',
                    'pybufr_ecmwf/version.py',
                    'test/testdata/Testoutputfile1u.BUFR',
                    'test/testdata/Testoutputfile2u.BUFR',
                    'test/testdata/Testoutputfile3u.BUFR']
+
+if len(sys.argv) > 1:
+    if sys.argv[1] == '--all':
+        FILE_GLOB_PATTERNS.append('pybufr_ecmwf/ecmwf_bufr_lib/bufr*.gz')
+    if sys.argv[1] in ['--help', '-h']:
+        print('Usage:')
+        print('   ./clean.py')
+        print('or')
+        print('   ./clean.py --all')
+        print('or')
+        print('   ./clean.py --help')
+        sys.exit(1)
 
 #pylint: disable=C0103
 dirs_to_delete = []

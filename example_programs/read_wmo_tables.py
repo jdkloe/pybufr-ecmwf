@@ -19,16 +19,16 @@ from pybufr_ecmwf.bufr_table import BufrTable
 # and
 # http://www.wmo.int/pages/prog/www/WMOCodes/WMO306_vI2/PrevVERSIONS/PreviousVERSIONS.html
 
-wmo_tabledir = 'BUFRCREX_21_0_0'
-wmo_b_file = 'BUFRCREX_21_0_0_TableB_en.txt'
-wmo_d_file = 'BUFR_21_0_0_TableD_en.txt'
+WMO_TABLEDIR = 'BUFRCREX_21_0_0'
+WMO_B_FILE = 'BUFRCREX_21_0_0_TableB_en.txt'
+WMO_D_FILE = 'BUFR_21_0_0_TableD_en.txt'
 
-set_of_bufr_tables = BufrTable()
+SET_OF_BUFR_TABLES = BufrTable()
 
-filename = os.path.join(wmo_tabledir, wmo_b_file)
-set_of_bufr_tables.read_WMO_csv_table_b(filename)
+FILENAME = os.path.join(WMO_TABLEDIR, WMO_B_FILE)
+SET_OF_BUFR_TABLES.read_WMO_csv_table_b(FILENAME)
 
-filename = os.path.join(wmo_tabledir, wmo_d_file)
-set_of_bufr_tables.read_WMO_csv_table_d(filename)
+FILENAME = os.path.join(WMO_TABLEDIR, WMO_D_FILE)
+SET_OF_BUFR_TABLES.read_WMO_csv_table_d(FILENAME)
 
-set_of_bufr_tables.write_tables('_WMO_BUFR_TABLE.txt')
+SET_OF_BUFR_TABLES.write_tables('_WMO_BUFR_TABLE.txt')

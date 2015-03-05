@@ -356,9 +356,9 @@ def print_bufr_content5(input_bufr_file, output_fd, separator, max_msg_nr):
 
     names_to_be_selected = ['temperature', 'wind']
     names_to_be_excluded = ['minimum', 'maximum']
-    
+
     write_names_and_units_just_once = True
-    
+
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
@@ -379,7 +379,7 @@ def print_bufr_content5(input_bufr_file, output_fd, separator, max_msg_nr):
         for subs in range(1, nsubsets+1):
 
             print '==> subset ', subs
-            
+
             # add header strings
             (list_of_names, list_of_units) = bob.get_names_and_units(subs)
             data = bob.get_subset_values(subs)
@@ -389,19 +389,21 @@ def print_bufr_content5(input_bufr_file, output_fd, separator, max_msg_nr):
             selected_values = []
             for i, name in enumerate(list_of_names):
                 selected = False
-                for nm in names_to_be_selected:
-                    if nm in name.lower(): selected = True
-                for nm in names_to_be_excluded:
-                    if nm in name.lower(): selected = False
-                    
+                for name in names_to_be_selected:
+                    if name in name.lower():
+                        selected = True
+                for name in names_to_be_excluded:
+                    if name in name.lower():
+                        selected = False
+
                 if selected:
                     # print ' '*10,name,'=',data[i],list_of_units[i]
                     selected_names.append(list_of_names[i])
                     selected_units.append(list_of_units[i])
                     selected_values.append(data[i])
-                
+
             if len(selected_values) == 0:
-                print 'NO DATA SELECTED for BUFR message and subset {}!'.\
+                print 'NO DATA SELECTED for BUFR message {} and subset {}!'.\
                       format(msg_nr, subs)
                 continue
 
@@ -411,7 +413,7 @@ def print_bufr_content5(input_bufr_file, output_fd, separator, max_msg_nr):
                 output_fd.write('""'+separator+
                                 separator.join(selected_units) + "\n")
                 not_yet_printed = False
-                
+
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in selected_values)+
                             "\n")
@@ -547,7 +549,7 @@ def main():
     else:
         print 'implementation nr. {} is not available...'.\
               format(implementation_nr)
-    
+
     if output_file:
         # close the output file
         output_fd.close()
