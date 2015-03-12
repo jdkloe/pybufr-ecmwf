@@ -74,7 +74,7 @@ def run_shell_command(cmd, libpath=None,
     return (lines_stdout, lines_stderr)
     #  #]
 
-def port_2to3():
+def port_2to3(force_to_hg_version=None):
     #  #[
     '''
     a routine try to automatically convert the whole source code
@@ -121,6 +121,11 @@ def port_2to3():
             print(line, end='')
         sys.exit(1)
 
+    # force a certain repo version
+    if force_to_hg_version:
+        cmd = 'cd '+PY3_CONVERTED_PATH+'; hg update -r '+force_to_hg_version
+        (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
+    
     # do the actual conversion
     print('converting sources to python3')
     cmd = '2to3 -w '+PY3_CONVERTED_PATH
@@ -167,6 +172,12 @@ def port_2to3():
     #  #]
 
 # run the conversion tool
+
+if len(sys.argv)>1:
+    force_to_hg_version=sys.argv[1]
+    port_2to3(force_to_hg_version)
+    
+#port_2to3(force_to_hg_version=358)
 port_2to3()
 
 # todo: try to run the build and test stages
