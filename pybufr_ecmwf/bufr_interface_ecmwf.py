@@ -2102,12 +2102,18 @@ class BUFRInterfaceECMWF:
         num_bytes = size_sec0+size_sec1+size_sec2+size_sec3+size_sec4+size_sec5
         # add extra bytes to compensate for extra header bytes
         # and estimation errors in descriptor_bytes and data_bytes
-        num_bytes += 5000
+        num_bytes += 15000
+
+        # NOTE: this triggers a segmentation fault during encoding
+        # I have no idea how to reliably catch this.
+        # num_bytes += -10
         
         # print('num_bits = ',num_bits)
         # print('num_bytes = ',num_bytes)
 
         self.estimated_num_bytes_for_encoding = num_bytes
+        # print('self.estimated_num_bytes_for_encoding = ',
+        #       self.estimated_num_bytes_for_encoding)
 
         # these are filled as well after the call to buxdes
         # print("cnames = ", self.cnames)

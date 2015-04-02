@@ -62,7 +62,6 @@ def get_and_set_the_module_path(syspath):
     return (syspath, abs_module_path)
     #  #]
 
-
 python3=False
 try:
     if sys.version_info.major == 3:
