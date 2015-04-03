@@ -163,6 +163,9 @@ def create_bufr_file(output_bufr_file, template):
                       table_d_to_use='D'+TABLE_NAME)
     bufr.register_and_expand_descriptors(template)
 
+    # activate this one if the encoding crashes without clear cause:
+    # bufr.estimated_num_bytes_for_encoding = 25000
+
     # retrieve the length of the expanded descriptor list
     exp_descr_list_length = bufr.ktdexl
     print "exp_descr_list_length = ", exp_descr_list_length

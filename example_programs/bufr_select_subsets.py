@@ -83,6 +83,9 @@ def select_subsets(input_bufr_file, output_bufr_file):
         btm.del_repl_max_nr_of_repeats_list = list(delayed_repl_data)
         bob.bufr_obj.register_and_expand_descriptors(btm)
 
+        # activate this one if the encoding crashes without clear cause:
+        # bob.bufr_obj.estimated_num_bytes_for_encoding = 25000
+
         bob.bufr_obj.kdate = new_nsub*list(delayed_repl_data)
 
         print 'bob.bufr_obj.cvals.shape = ', bob.bufr_obj.cvals.shape

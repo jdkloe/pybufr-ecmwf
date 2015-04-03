@@ -70,6 +70,9 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
         # fill the list of replication factors
         bufr_obj.fill_delayed_repl_data(delayed_repl_data)
 
+        # activate this one if the encoding crashes without clear cause:
+        # bufr_obj.estimated_num_bytes_for_encoding = 25000
+
         # encode the data
         bufr_obj.encode_data(bufr_obj.values, bufr_obj.cvals)
         print 'Encode BUFR msg %i' % msg_nr

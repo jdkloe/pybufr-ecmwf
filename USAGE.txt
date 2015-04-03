@@ -20,7 +20,19 @@ examples for using the intermediate python API
 -example_for_using_bufrinterface_ecmwf_for_decoding.py
 -example_for_using_bufrinterface_ecmwf_for_encoding.py
 
-example for using additional tools:
+Note: the ecmwf library does not provide a way to request the needed
+storage size for the array used to store the encoded bufr message. The code
+has to guess before it defines (allocates) it. Therefore it may happen
+that the array to store the encoded bufr message is too small, and this
+causes a crash (segmentation error) of the python module. 
+This can be solved by adding this line to your code:
+     bufr.estimated_num_bytes_for_encoding = 25000
+(take a larger number if needed).
+The call to bufr.register_and_expand_descriptors(template) is the place
+where the code guesses this size, so you'll have to adjust the estimate
+after that, but before the actual encoding.
+
+Example for using additional tools:
 
 an example how the pb routines can be used (not portable at the moment,
  needs more testing!)
