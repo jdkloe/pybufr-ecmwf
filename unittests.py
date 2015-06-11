@@ -884,7 +884,7 @@ class CheckBufr(unittest.TestCase):
         # run the provided example code and verify the output
         testprog = "bufr_to_ascii.py"
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
-        cmd = cmd + ' -2 -a -i ' + self.testinputfile
+        cmd = cmd + ' -2 -a -f -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
@@ -899,6 +899,20 @@ class CheckBufr(unittest.TestCase):
         testprog = "bufr_to_ascii.py"
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -2 -c -i ' + self.testinputfile
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+    def test_run_decode_example2_csv_expflags(self):
+        #  #[
+        """
+        test the decoding example program and produce csv output
+        """
+
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' -2 -c -f -i ' + self.testinputfile
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
@@ -955,6 +969,20 @@ class CheckBufr(unittest.TestCase):
         testprog = "bufr_to_ascii.py"
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         cmd = cmd + ' -4 -c -i ' + self.testinputfile_gras
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+    def test_run_decode_gras_testfile_csv_expflags(self):
+        #  #[
+        """
+        test the decoding example program and produce csv output
+        """
+
+        # run the provided example code and verify the output
+        testprog = "bufr_to_ascii.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' -4 -c -f -i ' + self.testinputfile_gras
 
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)

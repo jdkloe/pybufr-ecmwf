@@ -29,7 +29,8 @@ from pybufr_ecmwf.helpers import python3
 
 #  #]
 
-def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
+def print_bufr_content1(input_bufr_file, output_fd, separator,
+                        max_msg_nr, expand_flags):
     #  #[ implementation 1
     """
     example implementation using the BUFRReader class
@@ -38,7 +39,8 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
 
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
+    bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
+                     expand_flags=expand_flags)
 
     msg_nr = 0
     while True:
@@ -123,7 +125,8 @@ def print_bufr_content1(input_bufr_file, output_fd, separator, max_msg_nr):
         print 'no BUFR messages found, are you sure this is a BUFR file?'
     #  #]
 
-def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
+def print_bufr_content2(input_bufr_file, output_fd, separator,
+                        max_msg_nr, expand_flags):
     #  #[ implementation 2
     """
     example implementation using the BUFRReader class
@@ -132,7 +135,8 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
 
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = BUFRReader(input_bufr_file, expand_flags=True)
+    bob = BUFRReader(input_bufr_file, expand_flags=expand_flags)
+
     msg_nr = 0
     while True:
         try:
@@ -186,12 +190,16 @@ def print_bufr_content2(input_bufr_file, output_fd, separator, max_msg_nr):
         print 'no BUFR messages found, are you sure this is a BUFR file?'
     #  #]
 
-def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
+def print_bufr_content3(input_bufr_file, output_fd, separator,
+                        max_msg_nr,  expand_flags):
     #  #[ implementation 3
     """
     example implementation using the BUFRInterfaceECMWF class
     """
-
+    if expand_flags:
+        print('Sorry, expand_flags is not yet implemented '+
+              'for example implementation 3')
+        
     # get an instance of the RawBUFRFile class
     rbf = RawBUFRFile()
 
@@ -275,7 +283,8 @@ def print_bufr_content3(input_bufr_file, output_fd, separator, max_msg_nr):
 
     #  #]
 
-def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
+def print_bufr_content4(input_bufr_file, output_fd, separator,
+                        max_msg_nr, expand_flags):
     #  #[ implementation 4
     """
     example implementation using the BUFRReader class
@@ -287,7 +296,7 @@ def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
-                     verbose=False)
+                     verbose=False, expand_flags=expand_flags)
 
     msg_nr = 0
     while True:
@@ -337,7 +346,8 @@ def print_bufr_content4(input_bufr_file, output_fd, separator, max_msg_nr):
         print 'no BUFR messages found, are you sure this is a BUFR file?'
     #  #]
 
-def print_bufr_content5(input_bufr_file, output_fd, separator, max_msg_nr):
+def print_bufr_content5(input_bufr_file, output_fd, separator,
+                        max_msg_nr, expand_flags):
     #  #[ implementation 5
     """
     example implementation using the BUFRReader class
@@ -362,7 +372,7 @@ def print_bufr_content5(input_bufr_file, output_fd, separator, max_msg_nr):
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
-                     verbose=False) # , expand_flags=True)
+                     verbose=False, expand_flags=expand_flags)
 
     msg_nr = 0
     not_yet_printed = True
@@ -447,6 +457,7 @@ def usage():
     print '                 if this option is omitted, stdout will be used'
     print '-1, -2, -3, -4 or -5 test implementation 1 upto 5 [default is 1]'
     print '-m or --maxmsgnr defines max number of BUFR messages to convert'
+    print '-f or --expand_flags converts flags to text using table C'
     print '-h               display this help text'
     #  #]
 
@@ -459,9 +470,9 @@ def main():
     try:
         # command line handling; the ':' and '=' note that the
         # options must have a value following it
-        short_options = 'aci:o:m:h12345'
+        short_options = 'aci:o:m:h12345f'
         long_options = ['ascii', 'csv', 'infile=', 'outfile=',
-                        'maxmsgnr=', 'help']
+                        'maxmsgnr=', 'help', 'expand_flags']
         (options, other_args) = getopt.getopt(sys.argv[1:],
                                               short_options, long_options)
     except getopt.GetoptError, err:
@@ -480,7 +491,8 @@ def main():
     output_file = None
     implementation_nr = 1
     max_msg_nr = -1
-
+    expand_flags = False
+    
     for (opt, value) in options:
         if   (opt == '-h') or (opt == '--help'):
             usage()
@@ -504,6 +516,8 @@ def main():
             implementation_nr = 5
         elif (opt == '-m') or (opt == '--maxmsgnr'):
             max_msg_nr = int(value)
+        elif (opt == '-f') or (opt == '--expand_flags'):
+            expand_flags = True
         else:
             print "Unhandled option: "+opt
             usage()
@@ -533,19 +547,19 @@ def main():
 
     if implementation_nr == 1:
         print_bufr_content1(input_bufr_file, output_fd,
-                            separator, max_msg_nr)
+                            separator, max_msg_nr, expand_flags)
     elif implementation_nr == 2:
         print_bufr_content2(input_bufr_file, output_fd,
-                            separator, max_msg_nr)
+                            separator, max_msg_nr, expand_flags)
     elif implementation_nr == 3:
         print_bufr_content3(input_bufr_file, output_fd,
-                            separator, max_msg_nr)
+                            separator, max_msg_nr, expand_flags)
     elif implementation_nr == 4:
         print_bufr_content4(input_bufr_file, output_fd,
-                            separator, max_msg_nr)
+                            separator, max_msg_nr, expand_flags)
     elif implementation_nr == 5:
         print_bufr_content5(input_bufr_file, output_fd,
-                            separator, max_msg_nr)
+                            separator, max_msg_nr, expand_flags)
     else:
         print 'implementation nr. {} is not available...'.\
               format(implementation_nr)
