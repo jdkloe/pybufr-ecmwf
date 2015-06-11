@@ -191,7 +191,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator,
     #  #]
 
 def print_bufr_content3(input_bufr_file, output_fd, separator,
-                        max_msg_nr,  expand_flags):
+                        max_msg_nr, expand_flags):
     #  #[ implementation 3
     """
     example implementation using the BUFRInterfaceECMWF class
@@ -199,7 +199,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
     if expand_flags:
         print('Sorry, expand_flags is not yet implemented '+
               'for example implementation 3')
-        
+
     # get an instance of the RawBUFRFile class
     rbf = RawBUFRFile()
 
@@ -492,7 +492,7 @@ def main():
     implementation_nr = 1
     max_msg_nr = -1
     expand_flags = False
-    
+
     for (opt, value) in options:
         if   (opt == '-h') or (opt == '--help'):
             usage()
