@@ -1476,8 +1476,8 @@ class BUFRInterfaceECMWF:
             return cvalues
         else:
             if self.expand_flags:
-                values = self.convert_flag_values_to_text(values, i)
-
+                values = [self.convert_flag_values_to_text([value,], i)
+                          for i, value in enumerate(values)]
             # print('i, self.values[selection] = '+str(i)+' '+str(values))
             return values
         #  #]
