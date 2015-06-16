@@ -206,7 +206,7 @@ class BUFRReader:
 
         return self.bufr_obj.get_num_elements()
         #  #]
-    def get_value(self, descr_nr, subset_nr, get_cval=False):
+    def get_value(self, descr_nr, subset_nr, autoget_cval=False):
         #  #[
         """
         request a value for a given subset and descriptor number
@@ -214,10 +214,10 @@ class BUFRReader:
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
 
-        val = self.bufr_obj.get_value(descr_nr, subset_nr, get_cval)
+        val = self.bufr_obj.get_value(descr_nr, subset_nr, autoget_cval)
         return val
         #  #]
-    def get_values(self, descr_nr, get_cval=False):
+    def get_values(self, descr_nr, autoget_cval=False):
 
         #  #[
         """
@@ -229,11 +229,11 @@ class BUFRReader:
 
         self.bufr_obj.delayed_repl_check_for_incorrect_use()
 
-        vals = self.bufr_obj.get_values(descr_nr, get_cval)
+        vals = self.bufr_obj.get_values(descr_nr, autoget_cval)
 
         return vals
         #  #]
-    def get_subset_values(self, subset_nr , get_cval=False):
+    def get_subset_values(self, subset_nr , autoget_cval=False):
          #  #[
         """
         request an array of values containing the values
@@ -242,11 +242,11 @@ class BUFRReader:
         if (self.msg_loaded == -1):
             raise NoMsgLoadedError
 
-        vals = self.bufr_obj.get_subset_values(subset_nr, get_cval)
+        vals = self.bufr_obj.get_subset_values(subset_nr, autoget_cval)
 
         return vals
         #  #]
-    def get_values_as_2d_array(self):
+    def get_values_as_2d_array(self,autoget_cval=False):
         #  #[
         """
         a convenience method to allow retrieving all data in
@@ -277,6 +277,7 @@ class BUFRReader:
         for descr_nr in range(num_elements):
             
             result[:, descr_nr] = self.bufr_obj.get_values(descr_nr)
+            # autoget_cval option not functional yet
 
         return result
         #  #]

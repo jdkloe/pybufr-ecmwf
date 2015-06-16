@@ -1322,7 +1322,7 @@ class BUFRInterfaceECMWF:
         # or C-table is missing or descriptor is numeric after all
         return values
         #  #]
-    def get_value(self, i, j, get_cval=False):
+    def get_value(self, i, j, autoget_cval=False):
         #  #[ get the i th value from subset j
         """
         a helper function to request the i th value from subset j
@@ -1354,24 +1354,26 @@ class BUFRInterfaceECMWF:
         selection = self.actual_kelem*(j-1) + i
         value = self.values[selection]
 
-        if get_cval:
-            exp_descr_list_length = self.ktdexl
-            template_offset = selection % exp_descr_list_length
-            descr = self.ktdexp[template_offset]
-            unit = self.bt.table_b[descr].unit
-            if unit == 'CCITT IA5':
-                cvals_index = int(value/1000)-1
-                text = ''.join(c for c in self.cvals[cvals_index,:])
-                return text.strip()
-            else:
-                return ''
-        else:
-            if self.expand_flags:
-                values = self.convert_flag_values_to_text([value,], i)
-                value = values[0]
-            return value
+        if autoget_cval:
+            descr = self.ktdexp[i]
+            try:
+                unit = self.bt.table_b[descr].unit
+                if unit == 'CCITTIA5':
+                    cvals_index = int(value/1000)-1
+                    text = ''.join(c for c in self.cvals[cvals_index,:])
+                    return text.strip()
+            except:
+                # this may happend for ModificationCommand descriptors
+                # like 224000, since these have no unit attribute
+                pass
+
+        if self.expand_flags:
+            values = self.convert_flag_values_to_text([value,], i)
+            value = values[0]
+
+        return value
         #  #]
-    def get_values(self, i, get_cval=False):
+    def get_values(self, i, autoget_cval=False):
         #  #[ get the i th value from each subset as an array
         """
         a helper function to request the i th value from each subset
@@ -1406,7 +1408,7 @@ class BUFRInterfaceECMWF:
         selection = self.actual_kelem*np.array(range(nsubsets))+i
         values = self.values[selection]
 
-        if get_cval:
+        if autoget_cval:
             cvalues = []
             exp_descr_list_length = self.ktdexl
             template_offset = selection % exp_descr_list_length
@@ -1417,17 +1419,15 @@ class BUFRInterfaceECMWF:
                     cvals_index = int(values[subset]/1000)-1
                     text = ''.join(c for c in self.cvals[cvals_index,:])
                     cvalues.append(text.strip())
-            else:
-                cvalues = ['',]*nsubsets
-            return cvalues
-        else:
-            if self.expand_flags:
-                values = self.convert_flag_values_to_text(values, i)
+                return cvalues
 
-            # print('i, self.values[selection] = '+str(i)+' '+str(values))
-            return values
+        if self.expand_flags:
+            values = self.convert_flag_values_to_text(values, i)
+            
+        # print('i, self.values[selection] = '+str(i)+' '+str(values))
+        return values
         #  #]
-    def get_subset_values(self, subset_nr, get_cval=False):
+    def get_subset_values(self, subset_nr, autoget_cval=False):
         #  #[ get the values for a given subset as an array
         """
         a helper function to request the values of the i th subset
@@ -1458,28 +1458,31 @@ class BUFRInterfaceECMWF:
             values = self.values[selection]
         else:
             values = np.array([])
+            return
         
-        if get_cval:
-            # this code is not yet tested, not sure if this still works
-            cvalues = []
-            exp_descr_list_length = self.ktdexl
-            template_offset = selection % exp_descr_list_length
-            descr = self.ktdexp[template_offset]
-            unit = self.bt.table_b[descr[0]].unit
-            if unit == 'CCITT IA5':
-                for subset in range(nsubsets):
-                    cvals_index = int(values[subset]/1000)-1
-                    text = ''.join(c for c in self.cvals[cvals_index,:])
-                    cvalues.append(text.strip())
-            else:
-                cvalues = ['',]*nsubsets
-            return cvalues
-        else:
-            if self.expand_flags:
-                values = [self.convert_flag_values_to_text([value,], i)[0]
-                          for i, value in enumerate(values)]
-            # print('i, self.values[selection] = '+str(i)+' '+str(values))
-            return values
+        if autoget_cval:
+            # convert numpy values array to standard list to ensure its mutable
+            values = list(values)
+            for i, descr in enumerate(self.ktdexp):
+                try:
+                    unit = self.bt.table_b[descr].unit
+                    if unit == 'CCITTIA5':
+                        selection = self.actual_kelem*(subset_nr-1) + i
+                        cvals_index = int(values[selection]/1000)-1
+                        text = ''.join(c for c in self.cvals[cvals_index,:])
+                        cvalue = text.strip()
+                        values[i] = cvalue
+                except:
+                    # this may happend for ModificationCommand descriptors
+                    # like 224000, since these have no unit attribute
+                    pass
+                
+        if self.expand_flags:
+            values = [self.convert_flag_values_to_text([value,], i)[0]
+                      for i, value in enumerate(values)]
+
+        # print('i, self.values[selection] = '+str(i)+' '+str(values))
+        return values
         #  #]
     def get_element_name_and_unit(self, i):
         #  #[ routine to get name and unit of a given element

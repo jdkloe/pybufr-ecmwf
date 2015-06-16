@@ -173,7 +173,7 @@ def print_bufr_content2(input_bufr_file, output_fd, separator,
             nelements = bob.get_num_elements()
             data_list = []
             for descr_nr in range(nelements):
-                data = bob.get_value(descr_nr, subs)
+                data = bob.get_value(descr_nr, subs, autoget_cval=True)
                 data_list.append(data)
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data_list)+
@@ -232,8 +232,13 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
          #                      table_d_to_use = d+'D0000000000085011012.TXT')
         # bufr_obj.print_sections_012()
         # bufr_obj.fill_descriptor_list()
+
+        # do the actual decoding
         bufr_obj.decode_data()
 
+        # needed to have the units ready, so autoget_cval will work
+        bufr_obj.decode_sections_0123()
+        
         # Create header lines from variable names and units
         if msg_nr == 1:
             list_of_names = []
@@ -263,10 +268,14 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
 
         nsubsets = bufr_obj.get_num_subsets()
         for subs in range(1, nsubsets+1):
+
+            # needed to have the units ready, so autoget_cval will work
+            bufr_obj.fill_descriptor_list_subset(subs)
+            
             nelements = bufr_obj.get_num_elements()
             data_list = []
             for descr_nr in range(nelements):
-                data = bufr_obj.get_value(descr_nr, subs)
+                data = bufr_obj.get_value(descr_nr, subs, autoget_cval=True)
                 data_list.append(data)
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data_list)+
@@ -311,13 +320,16 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
         nsubsets = bob.get_num_subsets()
         for subs in range(1, nsubsets+1):
 
+            # needed to have the units ready, so autoget_cval will work
+            bob.bufr_obj.fill_descriptor_list_subset(subs)
+
             # add header strings
             (list_of_names, list_of_units) = bob.get_names_and_units(subs)
 
             # currently not used
             # list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
 
-            data = bob.get_subset_values(subs)
+            data = bob.get_subset_values(subs, autoget_cval=True)
 
             # print('len(list_of_names) = ', len(list_of_names))
             # print('len(list_of_units) = ', len(list_of_units))
@@ -392,7 +404,7 @@ def print_bufr_content5(input_bufr_file, output_fd, separator,
 
             # add header strings
             (list_of_names, list_of_units) = bob.get_names_and_units(subs)
-            data = bob.get_subset_values(subs)
+            data = bob.get_subset_values(subs) #,autoget_cval=True)
 
             selected_names = []
             selected_units = []
