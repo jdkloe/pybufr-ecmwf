@@ -238,7 +238,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
 
         # needed to have the units ready, so autoget_cval will work
         bufr_obj.decode_sections_0123()
-        
+
         # Create header lines from variable names and units
         if msg_nr == 1:
             list_of_names = []
@@ -271,7 +271,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
 
             # needed to have the units ready, so autoget_cval will work
             bufr_obj.fill_descriptor_list_subset(subs)
-            
+
             nelements = bufr_obj.get_num_elements()
             data_list = []
             for descr_nr in range(nelements):
