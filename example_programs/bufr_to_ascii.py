@@ -56,7 +56,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
         list_of_units = []
         list_of_names.extend(bob.get_names())
         list_of_units.extend(bob.get_units())
-        list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
+        list_of_unexp_descr = bob.get_unexp_descr_list()
 
         #print('list_of_names = ',list_of_names)
         #print('list_of_units = ',list_of_units)
@@ -319,9 +319,6 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
         # always request and add the header for each subset
         nsubsets = bob.get_num_subsets()
         for subs in range(1, nsubsets+1):
-
-            # needed to have the units ready, so autoget_cval will work
-            bob.bufr_obj.fill_descriptor_list_subset(subs)
 
             # add header strings
             (list_of_names, list_of_units) = bob.get_names_and_units(subs)
