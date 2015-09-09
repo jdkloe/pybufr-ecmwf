@@ -1917,8 +1917,14 @@ class BUFRInterfaceECMWF:
         else:
             (year, month, day, hour, minute, second,
              weekday, julianday, isdaylightsavingstime) = time.localtime()
-            
-        self.ksec1[ 9-1] = (year-2000) # Without offset year - 2000
+
+        # edition 3 and before requires year-of-century
+        # edition 4 and later requires 4 digit years here
+        # (now you try to find this in the documentation ....)
+        if bufr_edition<4:
+            self.ksec1[ 9-1] = (year-2000) # Without offset year - 2000
+        else:
+            self.ksec1[ 9-1] = year
         self.ksec1[10-1] = month       # month
         self.ksec1[11-1] = day         # day
         self.ksec1[12-1] = hour        # hour
@@ -1936,10 +1942,19 @@ class BUFRInterfaceECMWF:
         # See bufrdc/buens1.F for some details.
 
         # ksec1 items 16 and above are to indicate local centre information
+        # for edition 3 and below
+        
         self.ksec1[16-1] = bufr_code_subcentre       # originating subcentre
         # (this determines the name of the BUFR table to be used)
-        self.ksec1[17-1] =   0
-        self.ksec1[18-1] =   0
+
+        if bufr_edition<4:
+            self.ksec1[17-1] = 0 # reserved
+            self.ksec1[18-1] = 0 # reserved
+        else:
+            self.ksec1[17-1] = 0 # international sub-category
+            self.ksec1[18-1] = second
+
+        # items 19 and above are Local ADP centre information (byte by byte)
 
         # a test for filling ksec2 is not yet defined
     
