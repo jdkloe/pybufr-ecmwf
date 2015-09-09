@@ -1363,7 +1363,7 @@ class BUFRInterfaceECMWF:
                     text = ''.join(c for c in self.cvals[cvals_index,:])
                     return text.strip()
             except:
-                # this may happend for ModificationCommand descriptors
+                # this may happen for ModificationCommand descriptors
                 # like 224000, since these have no unit attribute
                 pass
 
@@ -1461,7 +1461,7 @@ class BUFRInterfaceECMWF:
             return
         
         if autoget_cval:
-            # convert numpy values array to standard list to ensure its mutable
+            # convert numpy values array to standard list to make it mutable
             values = list(values)
             for i, descr in enumerate(self.ktdexp):
                 try:
