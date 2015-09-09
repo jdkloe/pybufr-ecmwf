@@ -1897,9 +1897,12 @@ class BUFRInterfaceECMWF:
         # however,a minimum of 22 is obliged here
         self.ksec1[ 2-1] = bufr_edition      # bufr edition
         self.ksec1[ 3-1] = bufr_code_centre  # originating centre
-        self.ksec1[ 4-1] =   1               # update sequence number
-        # usually 1, only updated if the same data is re-issued after
+        self.ksec1[ 4-1] =   0               # update sequence number
+        # usually 0, only updated if the same data is re-issued after
         # reprocessing or so to fix some bug/problem
+        # The ECMWF bufr_user_guide_2008.pdf writes:
+        #   Update sequence number (zero for original BUFR messages;
+        #   incremented by one for updates)
         self.ksec1[ 5-1] =   0               # (Flags presence of section 2)
         #                                     (0/128 = no/yes)
         self.ksec1[ 6-1] = bufr_obstype              # message type
