@@ -1882,6 +1882,9 @@ class BUFRInterfaceECMWF:
         hopefully prevent mistakes)
         """
 
+        # if needed,the update sequence number can be added to the
+        # input parameters of this method
+
         # fill section 0
         self.ksec0[1-1] = 0 # length of sec0 in bytes
         #                     [filled by the encoder]
