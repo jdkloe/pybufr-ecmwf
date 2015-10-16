@@ -14,14 +14,15 @@ or like this:
 # This software is licensed under the terms of the LGPLv3 Licence
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
+from __future__ import absolute_import, print_function
 import sys, os, glob
 
 try:
     from pylint import lint
 except ImportError:
-    print "Sorry, importing the pylint module failed"
-    print "probably you don't have pylint installed or your python"
-    print "module path needs to be set properly"
+    print("Sorry, importing the pylint module failed")
+    print("probably you don't have pylint installed or your python")
+    print("module path needs to be set properly")
     sys.exit(1)
 
 # this commandline option:
@@ -58,7 +59,7 @@ def check(msg, pycode, additional_args):
     #  #[
     """ a little helper function to run pylint on a python
     script or module directory """
-    print msg+pycode
+    print(msg+pycode)
     args = []
     args.extend(additional_args)
     args.extend(['--rcfile', 'pylint/pylintrc', pycode])
@@ -73,14 +74,14 @@ def check(msg, pycode, additional_args):
         lint.Run(args)
 
         # this point is never reached ...
-        print 'this point should not be used'
+        print('this point should not be used')
         return (-1, pycode)
     except SystemExit as sysexit:
         if sysexit.args[0] == 0:
-            print 'all seems fine'
+            print('all seems fine')
             return (0, pycode)
         else:
-            print "exception occurred; exit status: ", sysexit.args[0]
+            print("exception occurred; exit status: ", sysexit.args[0])
             return (1, pycode)
 
     #  #]
@@ -111,9 +112,9 @@ def check_pylint_numpy_handling():
         return use_numpy_checks
 
     # the code should not reach this point
-    print "Programming problem in check_pylint_numpy_handling:"
-    print "success = ", success
-    print "pycode = ", pycode
+    print("Programming problem in check_pylint_numpy_handling:")
+    print("success = ", success)
+    print("pycode = ", pycode)
     sys.exit(1)
     #  #]
 
@@ -128,11 +129,11 @@ def check_all_py_files():
     # (since some older pylint versions cannot properly handlethis dependency)
     use_numpy_checks = check_pylint_numpy_handling()
     if use_numpy_checks:
-        print '==>numpy imports can safely be checked by pylint'
+        print('==>numpy imports can safely be checked by pylint')
         additional_args = []
     else:
-        print '==>pylint does not handle numpy imports correctly'
-        print '==>ignoring this module from pylint checking'
+        print('==>pylint does not handle numpy imports correctly')
+        print('==>ignoring this module from pylint checking')
         additional_args = ['--ignored-classes=numpy']
 
     # check for presence of compiled ecmwfbufr.so shared object file
@@ -142,9 +143,9 @@ def check_all_py_files():
         #additional_args.append('--ignored-classes=ecmwfbufr')
         # note: this seems not to help at the moment ...
         # workaround: do the manual build first before running pylint
-        print 'Sorry, you need to manually build the ecmwfbufr.so file first'
-        print 'to allow correct running of the pylint checker, using this'
-        print 'command: ./build_interface.py'
+        print('Sorry, you need to manually build the ecmwfbufr.so file first')
+        print('to allow correct running of the pylint checker, using this')
+        print('command: ./build_interface.py')
         sys.exit(1)
 
     result = []
@@ -160,22 +161,22 @@ def check_all_py_files():
     num_not_ok = sum([r[0] for r in result])
     num_ok = len(result) - num_not_ok
 
-    print "done; nr of modules/scripts checked: ", len(result)
-    print "number of well validated modules/scripts: ", num_ok
-    print "number of problematic    modules/scripts: ", num_not_ok
+    print("done; nr of modules/scripts checked: ", len(result))
+    print("number of well validated modules/scripts: ", num_ok)
+    print("number of problematic    modules/scripts: ", num_not_ok)
 
-    print '\n'.join('status: %2i file %s' % (i, f) for (i, f) in result)
+    print('\n'.join('status: %2i file %s' % (i, f) for (i, f) in result))
 
     if num_not_ok > 0:
         # warning: dont use the word pylint followed by a colon ':'
         # in text strings, since pylint will interpret this as a
         # command and starts issuing warnings...
         # For this reason a space has been inserted below.
-        print '\nfor more details on the detected errors and warnings, '
-        print 'you can inspect the output files that have been generated'
-        print 'by pylint :'
+        print('\nfor more details on the detected errors and warnings, ')
+        print('you can inspect the output files that have been generated')
+        print('by pylint :')
         filelist = glob.glob('pylint_*.txt')
-        print '\n'.join(file for file in filelist)
+        print('\n'.join(file for file in filelist))
     #  #]
 
 check_all_py_files()

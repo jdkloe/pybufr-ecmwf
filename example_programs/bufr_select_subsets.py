@@ -17,6 +17,7 @@ to stdout or written to file, either in ascii or csv format.
 
 
 #  #[ imported modules
+from __future__ import print_function
 #import sys # operating system functions
 #import getopt # a simpler version of argparse, which was introduced in
 #              # python 2.7, and is not by default available for older versions
@@ -54,16 +55,16 @@ def select_subsets(input_bufr_file, output_bufr_file):
             break
 
         data = bob.get_values_as_2d_array()
-        print 'data.shape = ', data.shape
+        print('data.shape = ', data.shape)
 
         if data.shape[0]*data.shape[1] == 0:
-            print 'NO DATA FOUND! this seems an empty BUFR message !'
+            print('NO DATA FOUND! this seems an empty BUFR message !')
             continue
 
         # select every other subset
         new_data = data[::2, :]
 
-        print 'new_data.shape = ', new_data.shape
+        print('new_data.shape = ', new_data.shape)
         #bob.bufr_obj
 
         nsub = bob.bufr_obj.get_num_subsets()
@@ -88,7 +89,7 @@ def select_subsets(input_bufr_file, output_bufr_file):
 
         bob.bufr_obj.kdate = new_nsub*list(delayed_repl_data)
 
-        print 'bob.bufr_obj.cvals.shape = ', bob.bufr_obj.cvals.shape
+        print('bob.bufr_obj.cvals.shape = ', bob.bufr_obj.cvals.shape)
         bob.bufr_obj.encode_data(new_data, bob.bufr_obj.cvals[:32, :])
         rbf_out.write_raw_bufr_msg(bob.bufr_obj.encoded_message)
 
@@ -96,13 +97,13 @@ def select_subsets(input_bufr_file, output_bufr_file):
         #    output_fd.write(str(subs)+separator+
         #                    separator.join(str(val) for val in data[subs, :])+
         #                    "\n")
-        print 'converted BUFR msg nr. ', msg_nr
+        print('converted BUFR msg nr. ', msg_nr)
 
 
     # close the file
     bob.close()
     if msg_nr == 0:
-        print 'no BUFR messages found, are you sure this is a BUFR file?'
+        print('no BUFR messages found, are you sure this is a BUFR file?')
 
     rbf_out.close()
     #  #]

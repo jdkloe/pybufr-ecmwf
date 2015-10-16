@@ -16,6 +16,7 @@ to stdout.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
+from __future__ import print_function
 import sys # operating system functions
 
 # import the python file defining the RawBUFRFile class
@@ -46,7 +47,7 @@ def print_bufr_edition_number(input_bufr_file):
         bufr_obj = BUFRInterfaceECMWF(encoded_message=raw_msg)
         bufr_obj.decode_sections_012()
         bufr_edition = bufr_obj.ksec0[3-1]
-        print 'BUFR msg %i has version %i' % (msg_nr, bufr_edition)
+        print('BUFR msg %i has version %i' % (msg_nr, bufr_edition))
 
     # close the file
     rbf.close()
@@ -54,7 +55,7 @@ def print_bufr_edition_number(input_bufr_file):
 
 #  #[ run the tool
 if len(sys.argv) < 2:
-    print 'please give a BUFR file as argument'
+    print('please give a BUFR file as argument')
     sys.exit(1)
 
 INPUT_BUFR_FILE = sys.argv[1]

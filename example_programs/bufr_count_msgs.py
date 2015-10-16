@@ -16,6 +16,7 @@ then printed to stdout.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
+from __future__ import print_function
 import sys     # operating system functions
 
 # import the python file defining the RawBUFRFile class
@@ -41,7 +42,7 @@ def count_msgs(input_bufr_file):
     # extract the number of BUFR messages from the file
     num_msgs = rbf.get_num_bufr_msgs()
 
-    # print 'rbf.nr_of_bufr_messages = ',rbf.nr_of_bufr_messages
+    # print('rbf.nr_of_bufr_messages = ',rbf.nr_of_bufr_messages)
 
     # close the file
     rbf.close()
@@ -56,9 +57,9 @@ def count_msgs(input_bufr_file):
 
 #  #[ run the tool
 if len(sys.argv) < 2:
-    print 'please give a BUFR file as argument'
+    print('please give a BUFR file as argument')
     sys.exit(1)
 
 INPUT_BUFR_FILE = sys.argv[1]
-print count_msgs(INPUT_BUFR_FILE)
+print(count_msgs(INPUT_BUFR_FILE))
 #  #]
