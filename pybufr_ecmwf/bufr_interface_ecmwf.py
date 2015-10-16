@@ -40,6 +40,8 @@ import sys         # system functions
 import time        # handling of date and time
 import numpy as np # import numerical capabilities
 import struct      # allow converting c datatypes and structs
+import tempfile    # handling temporary files
+import uuid        # get unique id strings
 
 # import the raw wrapper interface to the ECMWF BUFR library
 try:
@@ -74,8 +76,6 @@ class BUFRInterfaceECMWF:
     size_ksec3 = ecmwfbufr_parameters.JSEC3
     size_ksec4 = ecmwfbufr_parameters.JSEC4
 
-    # filename to use to redirect the fortran stdout stream
-    fortran_stdout_tmp_file = 'tmp_fortran_stdout.txt'
     bufr_tables_env_setting_set_by_script = False
     
     #  #]
@@ -438,6 +438,27 @@ class BUFRInterfaceECMWF:
         # suppres the default ECMWF welcome message which
         # is not yet redirected to the above defined fileunit
         os.environ['PRINT_TABLE_NAMES'] = 'FALSE'
+
+        # Determine filename to use to redirect the fortran stdout stream
+        # Note that we cannot directly use the file object returned
+        # by tempfile.NamedTemporaryFile() because the actual file
+        # will be used inside the underlying fortran library.
+        # Therefore just extract the filename and close the file again.
+
+        try:
+            # add a random uuid as prefix
+            # and the PID as suffix to really make sure there
+            # will be no name clashes.
+            temp = tempfile.NamedTemporaryFile(suffix='_'+str(os.getpid()), 
+                                               prefix=str(uuid.uuid4())+'_', 
+                                               dir=self.temp_dir)
+
+            self.fortran_stdout_tmp_file = os.path.split(temp.name)[1]
+            temp.close()
+        except:
+            self.fortran_stdout_tmp_file = 'tmp_fortran_stdout.txt'
+        
+        # print('fortran_stdout_tmp_file = ', self.fortran_stdout_tmp_file)
 
         # self.outp_file = 'fort.'+str(outp_fileunit)
         self.outp_file = os.path.join(self.temp_dir,
