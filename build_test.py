@@ -110,7 +110,9 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         sys.path.append(os.getcwd())
         # print('sys.path = ', sys.path)
 
-        from build_interface import InstallBUFRInterfaceECMWF, BuildException
+        from build_interface import InstallBUFRInterfaceECMWF
+        from pybufr_ecmwf.custom_exceptions import BuildException
+
         BI = InstallBUFRInterfaceECMWF(verbose=True,
                                        preferred_fortran_compiler=fc,
                                        download_library_sources=False)
@@ -205,7 +207,8 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -verify the presence of the generated ecmwfbufr.so file
         so_files = glob.glob(os.path.join(temp_build_dir,
-                                      'build/lib*/pybufr_ecmwf/ecmwfbufr.so'))
+                                          'build/lib*/pybufr_ecmwf',
+                                          'ecmwfbufr.so'))
 
         this_result = []
         this_result.append('test results for build for: '+fc)
@@ -332,7 +335,8 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         # -verify the presence of the generated ecmwfbufr.so file
         so_files = glob.glob(os.path.join(unpacked_sdist_path,
-                                      'build/lib*/pybufr_ecmwf/ecmwfbufr.so'))
+                                          'build/lib*/pybufr_ecmwf',
+                                          'ecmwfbufr.so'))
 
         this_result.append('test results for sdist build for: '+fc)
         if len(so_files) > 0:
@@ -434,8 +438,7 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
         # -verify the output
         module_properly_loaded = False
         for l in  lines_stdout:
-            if (('pybufr_ecmwf.__file__' in l) and
-                ('__init__.py' in l)):
+            if ('pybufr_ecmwf.__file__' in l) and ('__init__.py' in l):
                 module_properly_loaded = True
         if module_properly_loaded:
             this_result.append('module_properly_loaded.')
@@ -505,59 +508,6 @@ for fc in AVAILABLE_POSSIBLE_COMPILERS:
 
         BI.build()
         del BI
-
-        # the py3 test almost works now. It fails in the f2py stage
-        # in the post-processing (stage 2) with this message:
-        # (seems to me this is a bug in f2py)
-
-        # Post-processing (stage 2)...
-        # Saving signatures to file "f2py_build/signatures.pyf"
-        # Traceback (most recent call last):
-        #  File "./run_f2py_tool.py", line 11, in <module>
-        #    main()
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/f2py2e.py", line 563, in main
-        #    run_main(sys.argv[1:])
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/f2py2e.py", line 342, in run_main
-        #    postlist=callcrackfortran(files,options)
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/f2py2e.py", line 279, in callcrackfortran
-        #    pyf=crackfortran.crack2fortran(postlist)
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2693, in crack2fortran
-        #    pyf=crack2fortrangen(block)+'\n'
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2465, in crack2fortrangen
-        #    ret=ret+crack2fortrangen(g,tab)
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2505, in crack2fortrangen
-        #    body=crack2fortrangen(block['body'],tab+tabchar)
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2465, in crack2fortrangen
-        #    ret=ret+crack2fortrangen(g,tab)
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2505, in crack2fortrangen
-        #    body=crack2fortrangen(block['body'],tab+tabchar)
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2465, in crack2fortrangen
-        #    ret=ret+crack2fortrangen(g,tab)
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2506, in crack2fortrangen
-        #    vars=vars2fortran(block,block['vars'],al,tab+tabchar)
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2655, in vars2fortran
-        #    lst = true_intent_list(vars[a])
-        #  File "/usr/lib64/python3.2/site-packages/numpy/f2py/crackfortran.py", line 2557, in true_intent_list
-        #    if c:
-        # UnboundLocalError: local variable 'c' referenced before assignment
-        # ERROR: build of python wrapper failed
-        # the signatures file could not be found
-        # Traceback (most recent call last):
-        #  File ".//build_test.py", line 388, in <module>
-        #    BI.build()
-        #  File "/home/jos/werk/pybufr_ecmwf_interface/pybufr-ecmwf/build_interface.py", line 543, in build
-        #    self.generate_python_wrapper(source_dir)
-        #  File "/home/jos/werk/pybufr_ecmwf_interface/pybufr-ecmwf/build_interface.py", line 1667, in generate_python_wrapper
-        #    raise InterfaceBuildError
-        # build_interface.InterfaceBuildError
-        #
-
-        # this bug in f2py has been reported here:
-        #        http://projects.scipy.org/numpy/ticket/1932
-        # and here:
-        #       https://github.com/numpy/numpy/issues/3192
-
-        #sys.exit(1)
 
         # restore the original directory
         os.chdir(saved_cwd)

@@ -54,6 +54,7 @@ class ProgrammingError(PybufrEcmwfBaseError):
     pass
 
 # build exceptions, used by the build_interface.py script
+# and the build_test.py script
 class BuildException(PybufrEcmwfBaseError):
     """ a generic base exception for this build script """
     pass

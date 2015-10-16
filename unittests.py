@@ -842,10 +842,12 @@ class CheckBufr(unittest.TestCase):
     testinputfile = os.path.join(TESTDATADIR, 'Testfile.BUFR')
     testinputfile_unpadded = os.path.join(TESTDATADIR,
                                           'ISXH58EUSR199812162225')
-    testinputfile_gras = os.path.join(TESTDATADIR,
-        'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR')
-    testinputfile_o3m = os.path.join(TESTDATADIR,
-        'S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr')
+    fname = 'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR'
+    testinputfile_gras = os.path.join(TESTDATADIR, fname)
+
+    fname = ('S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_'+
+             'N_O_20120911043724Z.bufr')
+    testinputfile_o3m = os.path.join(TESTDATADIR, fname)
 
     def test_run_decode_example1_ascii(self):
         #  #[

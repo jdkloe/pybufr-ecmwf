@@ -15,6 +15,15 @@ import urllib      # handling of url downloads
 import re          # handling of regular expressions
 from HTMLParser import HTMLParser # parsing of html
 
+#
+# disable the warning on too many records, since here this
+# is caused by the many methods in the HTMLParser
+# class that is used for html parsing, and there is really
+# nothing I can do to change this.
+#
+# disable warning: Too many public methods (../20)
+# pylint: disable=R0904
+#
 class MyHtmlParser(HTMLParser):
     #  #[ a custom parser class to parse the html
     '''
@@ -33,6 +42,9 @@ class MyHtmlParser(HTMLParser):
                       'href = ', bufr_lib_url)
                 self.bufr_lib_versions.append((bufr_tarfile_name, bufr_lib_url))
     #  #]
+
+# enable warning: Too many public methods (../20)
+# pylint: enable=R0904
 
 def find_newest_library(verbose=False, old=False):
     '''

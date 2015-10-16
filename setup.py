@@ -197,8 +197,7 @@ class BuildExt(_build_ext):
                                    ('c_flags',
                                     'c_flags'),
                                    ('download_library_sources',
-                                    'download_library_sources')
-                                   )
+                                    'download_library_sources'))
         _build_ext.finalize_options(self)
         #  #]
     #def run(self):
@@ -384,15 +383,15 @@ build options.
 CL = ["Development Status :: 3 - Alpha",
       "Environment :: Console",
       "Intended Audience :: Science/Research",
-      "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+      "License :: OSI Approved :: "+
+      "GNU Lesser General Public License v3 (LGPLv3)",
       "Natural Language :: English",
       "Operating System :: POSIX",
       "Programming Language :: Fortran",
       "Programming Language :: Python :: 2",
       "Programming Language :: Python :: 3",
       "Topic :: Scientific/Engineering",
-      "Topic :: Software Development :: Libraries"
-      ]
+      "Topic :: Software Development :: Libraries"]
 
 if sys.version_info[0] == 2:
     PACKAGE_NAME = 'pybufr-ecmwf'
@@ -430,12 +429,12 @@ setup(cmdclass={'build'       : Build,
       package_data=ECMWF_BUFR_DATA,
       ext_modules=[ECMWF_BUFR_EXT],
       requires=["numpy", "numpy.f2py"],
-      provides=["pybufr_ecmwf"]
+      provides=["pybufr_ecmwf"])
       # this requires use of the setup tools which needs to be installed
       # first (i.e. it makes the setup a little bit less portable)
       # see: http://peak.telecommunity.com/DevCenter/setuptools#test
       #test_suite = "pybufr_ecmwf.tests.run_unit_tests"
-      )
+      #)
 
 #  #[ usage examples for setup.py:
 
