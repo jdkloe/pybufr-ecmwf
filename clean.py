@@ -44,7 +44,11 @@ FILES_TO_DELETE = ['pybufr_ecmwf/libbufr.a', 'libbufr.a', 'MANIFEST',
                    'pybufr_ecmwf/version.py',
                    'test/testdata/Testoutputfile1u.BUFR',
                    'test/testdata/Testoutputfile2u.BUFR',
-                   'test/testdata/Testoutputfile3u.BUFR']
+                   'test/testdata/Testoutputfile3u.BUFR',
+                   'test/testdata/Testoutputfile1.BUFR',
+                   'test/testdata/Testoutputfile1.BUFR.selected_subsets_only',
+                   'test/testdata/Testoutputfile2.BUFR',
+                   'test/testdata/Testoutputfile3.BUFR']
 
 if len(sys.argv) > 1:
     if sys.argv[1] == '--all':
