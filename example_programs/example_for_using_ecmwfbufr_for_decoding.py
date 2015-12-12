@@ -31,6 +31,7 @@ used for decoding a BUFR message.
 #
 #  #]
 #  #[ imported modules
+from __future__ import print_function
 import os          # operating system functions
 import sys         # system functions
 import numpy as np # import numerical capabilities
@@ -61,8 +62,8 @@ def check_error_flag(name, kerr):
     to avoid duplicate code
     or pylint to complain about to many branches """
     if kerr != 0:
-        print "an error was reported by: ", name
-        print "kerr = ", kerr
+        print("an error was reported by: ", name)
+        print("kerr = ", kerr)
         sys.exit(1)
     #  #]
 
@@ -92,7 +93,7 @@ def decoding_example(input_bufr_file):
     # jsup   = length_ksup
 
     # handle BUFR tables
-    print '------------------------------'
+    print('------------------------------')
 
     # define our own location for storing (symlinks to) the BUFR tables
     private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
@@ -113,7 +114,7 @@ def decoding_example(input_bufr_file):
     elif os.path.exists(path2):
         ecmwf_bufr_tables_dir = path2
     else:
-        print "Error: could not find BUFR tables directory"
+        print("Error: could not find BUFR tables directory")
         raise IOError
 
     # make sure the path is absolute, otherwise the ECMWF library
@@ -138,8 +139,8 @@ def decoding_example(input_bufr_file):
     # to find the tables
     env = os.environ
     env["BUFR_TABLES"] = private_bufr_tables_dir+os.path.sep
-    # print 'private_bufr_tables_dir+os.path.sep=', \
-    #       private_bufr_tables_dir+os.path.sep
+    # print('private_bufr_tables_dir+os.path.sep=', \
+    #        private_bufr_tables_dir+os.path.sep)
 
     # redirect all fortran stdout to fileunit 12, so the text
     # will end-up in a file called 'fort.12'
@@ -159,35 +160,35 @@ def decoding_example(input_bufr_file):
     ksec2 = np.zeros(4096, dtype=np.int)
     kerr = 0
 
-    print "calling: ecmwfbufr.bus012():"
+    print("calling: ecmwfbufr.bus012():")
     ecmwfbufr.bus012(words, ksup, ksec0, ksec1, ksec2, kerr)
     check_error_flag('ecmwfbufr.bus012', kerr)
 
-    print 'ksup = ', ksup
-    print '------------------------------'
-    print "printing content of section 0:"
-    print "sec0 : ", ksec0
-    # print "sec0[hex] : ",[hex(i) for i in ksec0]
+    print('ksup = ', ksup)
+    print('------------------------------')
+    print("printing content of section 0:")
+    print("sec0 : ", ksec0)
+    # print("sec0[hex] : ",[hex(i) for i in ksec0])
     ecmwfbufr.buprs0(ksec0)
-    print '------------------------------'
-    print "printing content of section 1:"
-    print "sec1 : ", ksec1
-    # print "sec1[hex] : ",[hex(i) for i in ksec1]
+    print('------------------------------')
+    print("printing content of section 1:")
+    print("sec1 : ", ksec1)
+    # print("sec1[hex] : ",[hex(i) for i in ksec1])
     ecmwfbufr.buprs1(ksec1)
     key = np.zeros(46, dtype=np.int)
     sec2_len = ksec2[0]
-    print '------------------------------'
-    print "length of sec2: ", sec2_len
+    print('------------------------------')
+    print("length of sec2: ", sec2_len)
     if sec2_len > 0:
         # buukey expands local ECMWF information from section 2 to the key array
-        print '------------------------------'
-        print "calling buukey"
+        print('------------------------------')
+        print("calling buukey")
         ecmwfbufr.buukey(ksec1, ksec2, key, ksup, kerr)
-        print "sec2 : ", ksec2
-        print "printing content of section 2:"
+        print("sec2 : ", ksec2)
+        print("printing content of section 2:")
         ecmwfbufr.buprs2(ksup, key)
     else:
-        print 'skipping section 2 [since it seems unused]'
+        print('skipping section 2 [since it seems unused]')
 
     # these 4 are filled by the BUS012 call above
     # ksup   = np.zeros(         9, dtype = np.int)
@@ -195,7 +196,7 @@ def decoding_example(input_bufr_file):
     # ksec1  = np.zeros(        40, dtype = np.int)
     # ksec2  = np.zeros(      4096, dtype = np.int)
 
-    print '------------------------------'
+    print('------------------------------')
     ksec3 = np.zeros(4, dtype=np.int)
     ksec4 = np.zeros(2, dtype=np.int)
     cnames = np.zeros((kelem, 64), dtype=np.character)
@@ -204,21 +205,21 @@ def decoding_example(input_bufr_file):
     cvals = np.zeros((kvals, 80), dtype=np.character)
     kerr = 0
 
-    print "calling: ecmwfbufr.bufrex():"
+    print("calling: ecmwfbufr.bufrex():")
     ecmwfbufr.bufrex(words, ksup, ksec0, ksec1, ksec2, ksec3, ksec4,
                      cnames, cunits, values, cvals, kerr)
     check_error_flag('ecmwfbufr.bufrex', kerr)
 
     # print a selection of the decoded numbers
-    print '------------------------------'
-    print "Decoded BUFR message:"
-    print "ksup : ", ksup
-    print "sec0 : ", ksec0
-    print "sec1 : ", ksec1
-    print "sec2 : ", ksec2
-    print "sec3 : ", ksec3
-    print "sec4 : ", ksec4
-    print "cnames [cunits] : "
+    print('------------------------------')
+    print("Decoded BUFR message:")
+    print("ksup : ", ksup)
+    print("sec0 : ", ksec0)
+    print("sec1 : ", ksec1)
+    print("sec2 : ", ksec2)
+    print("sec3 : ", ksec3)
+    print("sec4 : ", ksec4)
+    print("cnames [cunits] : ")
     for (i, cnm) in enumerate(cnames):
         cun = cunits[i]
         if python3:
@@ -229,11 +230,11 @@ def decoding_example(input_bufr_file):
             txtu = ''.join(c for c in cun)
 
         if txtn.strip() != '':
-            print '[%3.3i]:%s [%s]' % (i, txtn, txtu)
+            print('[%3.3i]:%s [%s]' % (i, txtn, txtu))
 
-    print "values : ", values
+    print("values : ", values)
     txt = ''.join(str(v)+';' for v in values[:20] if v > 0.)
-    print "values[:20] : ", txt
+    print("values[:20] : ", txt)
 
     nsubsets = ksec3[2] # 361 # number of subsets in this BUFR message
 
@@ -250,11 +251,11 @@ def decoding_example(input_bufr_file):
         lat[subs] = values[index_lat]
         lon[subs] = values[index_lon]
         if 30*(subs//30) == subs:
-            print "subs = ", subs, "lat = ", lat[subs], " lon = ", lon[subs]
-            print "min/max lat", min(lat), max(lat)
-            print "min/max lon", min(lon), max(lon)
+            print("subs = ", subs, "lat = ", lat[subs], " lon = ", lon[subs])
+            print("min/max lat", min(lat), max(lat))
+            print("min/max lon", min(lon), max(lon))
 
-    print '------------------------------'
+    print('------------------------------')
     # busel: fill the descriptor list arrays (only needed for printing)
 
     # warning: this routine has no inputs, and acts on data stored
@@ -271,7 +272,7 @@ def decoding_example(input_bufr_file):
     ktdexp = np.zeros(max_nr_expanded_descriptors, dtype=np.int)
     kerr = 0
 
-    print "calling: ecmwfbufr.busel():"
+    print("calling: ecmwfbufr.busel():")
     ecmwfbufr.busel(ktdlen, # actual number of data descriptors
                     ktdlst, # list of data descriptors
                     ktdexl, # actual number of expanded data descriptors
@@ -279,44 +280,44 @@ def decoding_example(input_bufr_file):
                     kerr)   # error  message
     check_error_flag('ecmwfbufr.busel', kerr)
 
-    print 'busel result:'
-    print "ktdlen = ", ktdlen
-    print "ktdexl = ", ktdexl
+    print('busel result:')
+    print("ktdlen = ", ktdlen)
+    print("ktdexl = ", ktdexl)
 
     selection1 = np.where(ktdlst > 0)
     ktdlen = len(selection1[0])
     selection2 = np.where(ktdexp > 0)
     ktdexl = len(selection2[0])
 
-    print 'fixed lengths:'
-    print "ktdlen = ", ktdlen
-    print "ktdexl = ", ktdexl
+    print('fixed lengths:')
+    print("ktdlen = ", ktdlen)
+    print("ktdexl = ", ktdexl)
 
-    print 'descriptor lists:'
-    print "ktdlst = ", ktdlst[:ktdlen]
-    print "ktdexp = ", ktdexp[:ktdexl]
+    print('descriptor lists:')
+    print("ktdlst = ", ktdlst[:ktdlen])
+    print("ktdexp = ", ktdexp[:ktdexl])
 
-    print '------------------------------'
-    print "printing content of section 3:"
-    print "sec3 : ", ksec3
+    print('------------------------------')
+    print("printing content of section 3:")
+    print("sec3 : ", ksec3)
     ecmwfbufr.buprs3(ksec3, ktdlst, ktdexp, cnames)
     #  #]
 
 #  #[ run the example
 if len(sys.argv) < 2:
-    print 'please give a BUFR file as first argument'
+    print('please give a BUFR file as first argument')
     sys.exit(1)
 
 INP_BUFR_FILE = sys.argv[1]
 
-print "-"*50
-print "BUFR decoding example"
-print "-"*50
+print("-"*50)
+print("BUFR decoding example")
+print("-"*50)
 
 decoding_example(INP_BUFR_FILE)
-print 'succesfully decoded data from file: ', INP_BUFR_FILE
+print('succesfully decoded data from file: ', INP_BUFR_FILE)
 
-print "-"*50
-print "done"
-print "-"*50
+print("-"*50)
+print("done")
+print("-"*50)
 #  #]

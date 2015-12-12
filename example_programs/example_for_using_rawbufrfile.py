@@ -16,6 +16,7 @@ module may be used.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
+from __future__ import print_function
 import os          # operating system functions
 import sys         # system functions
 
@@ -42,7 +43,7 @@ def raw_file_reading_example(input_bufr_file):
 
     # print the number of BUFR messages in the file
     num_msgs = rbf.get_num_bufr_msgs()
-    print "This file contains: ", num_msgs, " BUFR messages."
+    print("This file contains: ", num_msgs, " BUFR messages.")
 
     # sequentially read the raw (undecoded) BUFR messages from the
     # class instance
@@ -56,17 +57,17 @@ def raw_file_reading_example(input_bufr_file):
     except EOFError:
         msg3 = None
 
-    print "a warning is expected here:"
+    print("a warning is expected here:")
     # msg4 =
     try:
         rbf.get_next_raw_bufr_msg()[0] # should raise an EOF error
     except EOFError:
-        print "Warning: EOF reached !"
+        print("Warning: EOF reached !")
 
     for i in range(1, num_msgs+1):
         # read a selected raw BUFR message from the class instance
         raw_data = rbf.get_raw_bufr_msg(i)[0]
-        print "msg ", i, " got ", len(raw_data), " words"
+        print("msg ", i, " got ", len(raw_data), " words")
 
     # close the file
     rbf.close()
@@ -129,7 +130,7 @@ def raw_file_appending_example(output_bufr_file, msg3):
 
 #  #[ run the example
 if len(sys.argv) < 3:
-    print 'please give 2 BUFR files as argument'
+    print('please give 2 BUFR files as argument')
     sys.exit(1)
 
 INP_BUFR_FILE = sys.argv[1]
@@ -138,25 +139,25 @@ OUTP_BUFR_FILE = sys.argv[2]
 if os.path.exists(OUTP_BUFR_FILE):
     os.remove(OUTP_BUFR_FILE)
 
-print "-"*50
-print "reading example"
-print "-"*50
+print("-"*50)
+print("reading example")
+print("-"*50)
 
 (MSG1, MSG2, MSG3) = raw_file_reading_example(INP_BUFR_FILE)
 
-print "-"*50
-print "writing example"
-print "-"*50
+print("-"*50)
+print("writing example")
+print("-"*50)
 
 raw_file_writing_example(OUTP_BUFR_FILE, MSG1, MSG2)
 
-print "-"*50
-print "appending example"
-print "-"*50
+print("-"*50)
+print("appending example")
+print("-"*50)
 
 raw_file_appending_example(OUTP_BUFR_FILE, MSG3)
 
-print "-"*50
-print "done"
-print "-"*50
+print("-"*50)
+print("done")
+print("-"*50)
 #  #]

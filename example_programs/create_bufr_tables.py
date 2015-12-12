@@ -8,6 +8,7 @@ can be created from scratch, using the BufrTable class.
 # This software is licensed under the terms of the LGPLv3 Licence
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
+from __future__ import print_function
 from pybufr_ecmwf.bufr_table \
      import BufrTable, Descriptor, CompositeDescriptor, FlagDefinition
 
@@ -93,19 +94,19 @@ def create_bufr_tables():
 
     bt1.add_to_D_table(descr_348001)
 
-    print '='*50
-    print "B-table:"
-    print '='*50
+    print('='*50)
+    print("B-table:")
+    print('='*50)
     bt1.print_B_table()
-    print '='*50
-    print "C-table:"
-    print '='*50
+    print('='*50)
+    print("C-table:")
+    print('='*50)
     bt1.print_C_table()
-    print '='*50
-    print "D-table:"
-    print '='*50
+    print('='*50)
+    print("D-table:")
+    print('='*50)
     bt1.print_D_table()
-    print '='*50
+    print('='*50)
 
     # define the table name without preceding 'B' or 'D' character
     # (which will be prepended by the below write method)

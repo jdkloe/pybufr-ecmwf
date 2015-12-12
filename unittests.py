@@ -597,7 +597,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         testfile = "tmp_testfile.read.BUFR"
         if os.path.exists(testfile):
             # force the file to be readwrite
-            os.chmod(testfile, 0666)
+            os.chmod(testfile, 0o666)
             os.remove(testfile)
 
         # create a small dummy file
@@ -612,14 +612,14 @@ class CheckRawBUFRFile(unittest.TestCase):
         # cleanup
         if os.path.exists(testfile):
             # force the file to be readwrite
-            os.chmod(testfile, 0666)
+            os.chmod(testfile, 0o666)
             os.remove(testfile)
 
         # check behaviour when writing to file without proper permission
         testfile = "tmp_testfile.write.BUFR"
         if os.path.exists(testfile):
             # force the file to be readwrite
-            os.chmod(testfile, 0666)
+            os.chmod(testfile, 0o666)
             os.remove(testfile)
 
         # create a small dummy fle
@@ -627,14 +627,14 @@ class CheckRawBUFRFile(unittest.TestCase):
         fdescr.write('dummy data')
         fdescr.close()
         # force the file to be readonly
-        os.chmod(testfile, 0444)
+        os.chmod(testfile, 0o444)
         # do the test
         self.assertRaises(IOError, bufrfile.open, testfile, 'wb',
                           silent=True)
         # cleanup
         if os.path.exists(testfile):
             # force the file to be readwrite
-            os.chmod(testfile, 0666)
+            os.chmod(testfile, 0o666)
             os.remove(testfile)
         #  #]
     def test_close(self):

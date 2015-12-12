@@ -11,9 +11,14 @@ library source code, and downloading it.
 
 from __future__ import print_function
 import os          # operating system functions
-import urllib      # handling of url downloads
 import re          # handling of regular expressions
-from HTMLParser import HTMLParser # parsing of html
+from pybufr_ecmwf.helpers import python3
+if python3:
+    from html.parser import HTMLParser # parsing of html
+    import urllib.request as urllib    # handling of url downloads
+else:
+    from HTMLParser import HTMLParser # parsing of html
+    import urllib      # handling of url downloads
 
 #
 # disable the warning on too many records, since here this

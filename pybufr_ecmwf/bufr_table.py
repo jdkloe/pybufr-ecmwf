@@ -123,7 +123,10 @@ class Descriptor: # [a simple table B entry]
             raise aerr
         #  #]
     def __long__(self):
-        return long(self.reference)
+        if python3:
+            return int(self.reference)
+        else:
+            return long(self.reference)
     def get_count(self):
         return 1
     def get_num_bits(self):
@@ -630,7 +633,7 @@ class BufrTable:
         # defined in bufr_interface_ecmwf (which in turn is called from
         # decode_data, because setup_tables is supposed to be used first,
         # and that one already alters the BUFR_TABLES env setting!
-        if os.environ.has_key('BUFR_TABLES'):
+        if 'BUFR_TABLES' in os.environ:
             # print('using user provided directory to look for BUFR tables: ')
             # print("==> os.environ['BUFR_TABLES'] = "+
             #       os.environ['BUFR_TABLES'])
@@ -680,12 +683,12 @@ class BufrTable:
                     # otherwise the wrong table_b is loaded
                     descr = self.table_b[int_descr]
                 if f_val == 1:
-                    if not self.specials.has_key(int_descr):
+                    if int_descr not in self.specials:
                         new_descr = SpecialCommand(int_descr)
                         self.specials[int_descr] = new_descr
                     descr = self.specials[int_descr]
                 if f_val == 2:
-                    if not self.modifiers.has_key(int_descr):
+                    if int_descr not in self.modifiers:
                         new_descr = ModificationCommand(int_descr)
                         self.modifiers[int_descr] = new_descr
                     descr = self.modifiers[int_descr]
@@ -840,9 +843,9 @@ class BufrTable:
         method that returns a different class instance,
         depending on the type of descriptor.
         """
-        if self.table_b.has_key(reference):
+        if reference in self.table_b:
             return self.table_b[reference]
-        if self.table_d.has_key(reference):
+        if reference in self.table_d:
             return self.table_d[reference]
         # get 1st digit
         f_val = int(reference/100000.)
@@ -850,7 +853,7 @@ class BufrTable:
         # and the cases f == 3 should already be part of table_d
         if f_val == 1:
             # this is a special code
-            if self.specials.has_key(reference):
+            if reference in self.specials:
                 return self.specials[reference]
             else:
                 # this is a new special
@@ -861,7 +864,7 @@ class BufrTable:
                 return special
         if f_val == 2:
             # this is a modifier
-            if self.modifiers.has_key(reference):
+            if reference in self.modifiers:
                 return self.modifiers[reference]
             else:
                 # this is a new modifier
@@ -1133,7 +1136,7 @@ class BufrTable:
                 # and is replaced by this simple assignment.
                 self.table_b[reference] = b_descr
                 
-                #if not self.table_b.has_key(reference):
+                #if reference not in self.table_b:
                 #    #print("adding descr. key {}".format(reference))
                 #    self.table_b[reference] = b_descr
                 #else:
@@ -1314,7 +1317,7 @@ class BufrTable:
                 #print("************************storing result")
                 d_descr = CompositeDescriptor(reference, descriptor_list,
                                               comment, self)
-                if not self.table_d.has_key(reference):
+                if reference not in self.table_d:
                     #print("adding descr. key {}".format(reference))
                     self.table_d[reference] = d_descr
                 else:
@@ -1404,13 +1407,13 @@ class BufrTable:
                 sys.exit(1)
             
         # verify consistency of C table definition
-        if num_flags != len(fldef.flag_dict.keys()):
+        if num_flags != len(fldef.flag_dict):
             if self.report_warnings:
                 print('WARNING: C-table seems wrong for reference {}!'.
                       format(reference))
                 print('expected number of flag values = {}'.format(num_flags))
                 print('found number of unique flag values = {}'.
-                      format(len(fldef.flag_dict.keys())))
+                      format(len(fldef.flag_dict)))
                 # if num_flags==0:
                 print('==>ignoring this problem for now\n')
         else:
@@ -1647,7 +1650,7 @@ class BufrTable:
                     # add descriptor object to the list
                     b_descr = Descriptor(reference, name, unit, unit_scale,
                                          unit_reference, data_width)
-                    if not table_b.has_key(reference):
+                    if reference not in table_b:
                         #print("adding descr. key {}".format(reference))
                         table_b[reference] = b_descr
                     else:
@@ -1690,8 +1693,7 @@ class BufrTable:
         # now convert the imported lists into proper
         # CompositeDescriptor instances
         while table_d:
-            keys = table_d.keys()
-            for reference in keys:
+            for reference in table_d:
                 descriptor_list = []
                 
                 postpone = False
@@ -1709,7 +1711,7 @@ class BufrTable:
                 comment = ''
                 d_descr = CompositeDescriptor(reference, descriptor_list,
                                               comment, self)
-                if not self.table_d.has_key(reference):
+                if reference not in self.table_d:
                     # print("adding descr. key {}".format(reference))
                     self.table_d[reference] = d_descr
                 else:
@@ -1831,29 +1833,23 @@ class BufrTable:
         #  #]
     def print_B_table(self):
         #  #[
-        ref_list = self.table_b.keys()
-        ref_list.sort()
-        for ref in ref_list:
+        for ref in sorted(self.table_b)
             print(str(self.table_b[ref]))
         #  #]
     def print_C_table(self):
         #  #[
-        ref_list = self.table_c.keys()
-        for ref in sorted(ref_list):
+        for ref in sorted(self.table_c):
             print('flag table for reference: {}\n{}'.
                   format(ref, str(self.table_c[ref])))
         #  #]
     def print_D_table(self):
         #  #[
-        ref_list = self.table_d.keys()
-        for ref in sorted(ref_list):
+        for ref in sorted(self.table_d):
             print(str(self.table_d[ref]))
         #  #]
     def write_B_table(self, fd):
         #  #[
-        ref_list = self.table_b.keys()
-        ref_list.sort()
-        for ref in ref_list:
+        for ref in sorted(self.table_b):
             # the B BUFR table reading in the ECMWF BUFR library code
             # uses the following format:
             # '(1X,I6,1x,64x,1x,24x,1x,I3,1x,I12,1x,I3)'
@@ -1888,11 +1884,10 @@ class BufrTable:
     def write_C_table(self, fd):
         #  #[
         max_text_length = 64
-        ref_list = self.table_c.keys()
-        for ref in sorted(ref_list):
-            flag_values = self.table_c[ref].flag_dict.keys()
-            num_keys = len(flag_values)
-            for i, flag_value in enumerate(sorted(flag_values)):
+        for ref in sorted(self.table_c):
+            flag_values = self.table_c[ref].flag_dict
+            num_keys = len(self.table_c[ref].flag_dict)
+            for i, flag_value in enumerate(sorted(self.table_c[ref].flag_dict)):
                 text = self.table_c[ref].flag_dict[flag_value]
                 this_line = text[:] # take a copy
                 text_lines = []
@@ -1920,9 +1915,7 @@ class BufrTable:
         #  #]
     def write_D_table(self, fd):
         #  #[
-        ref_list = self.table_d.keys()
-        ref_list.sort()
-        for ref in ref_list:
+        for ref in sorted(self.table_d):
             # the BUFR table reading in the ECMWF BUFR library code
             # uses the following format: '(1X,I6,I3)'
             # for the first 2 items, and: '(11X,I6)'

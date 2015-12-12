@@ -26,6 +26,7 @@ SystemError: NULL result without error in PyObject_Call
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
+from __future__ import print_function
 import os, sys     # system functions
 import numpy as np # import numerical capabilities
 
@@ -45,8 +46,8 @@ def pb_example(input_bufr_file):
     # pbopen test
     c_file_unit = 0
     bufr_error_flag = 0
-    print "input_bufr_file = ["+input_bufr_file+"]"
-    print "calling: ecmwfbufr.pbopen()"
+    print("input_bufr_file = ["+input_bufr_file+"]")
+    print("calling: ecmwfbufr.pbopen()")
     # unit and error_flag are of type fortint*
     # name and mode are of type string
     (c_file_unit, bufr_error_flag) = ecmwfbufr.pbopen(input_bufr_file, 'R')
@@ -57,8 +58,8 @@ def pb_example(input_bufr_file):
     # ecmwfbufr.pbopen(c_file_unit, input_bufr_file,
     #                  'R', bufr_error_flag)
 
-    print "c_file_unit = ", c_file_unit
-    print "pbopen: bufr_error_flag = ", bufr_error_flag
+    print("c_file_unit = ", c_file_unit)
+    print("pbopen: bufr_error_flag = ", bufr_error_flag)
 
     # pbbufr test
 
@@ -73,14 +74,14 @@ def pb_example(input_bufr_file):
         bufr_error_flag = 0
         msg_count += 1
 
-        print "calling: ecmwfbufr.pbbufr()"
+        print("calling: ecmwfbufr.pbbufr()")
         databuffer = np.zeros(buffer_size_words, dtype=np.int)
         ecmwfbufr.pbbufr(c_file_unit, databuffer, buffer_size_bytes,
                          msg_size_bytes, bufr_error_flag)
-        print "BUFR message: ", msg_count
+        print("BUFR message: ", msg_count)
 
         # this always gives zero so is not very useful
-        # print "pbbufr result: msg_size_bytes = ", msg_size_bytes
+        # print("pbbufr result: msg_size_bytes = ", msg_size_bytes)
 
         rawbytes = databuffer.tostring()
 
@@ -89,7 +90,7 @@ def pb_example(input_bufr_file):
         else:
             end_section = rawbytes.find('7777')
 
-        print 'end_section = ', end_section
+        print('end_section = ', end_section)
         if end_section == -1:
             break
 
@@ -99,20 +100,20 @@ def pb_example(input_bufr_file):
         msg_size_words = int(msg_size_bytes/4)
         if msg_size_bytes > msg_size_words*4:
             msg_size_words += 1
-        print "msg_size_bytes = ", msg_size_bytes
-        print "msg_size_words = ", msg_size_words
+        print("msg_size_bytes = ", msg_size_bytes)
+        print("msg_size_words = ", msg_size_words)
 
         # msg_size_words = len(np.where(databuffer>0)[0])
         # msg_size_bytes = msg_size_words*4
-        # print "(rough estimate) msg_size_bytes = ", msg_size_bytes
+        # print("(rough estimate) msg_size_bytes = ", msg_size_bytes)
 
-        print "raw words [0:4] = ", databuffer[0:4]
+        print("raw words [0:4] = ", databuffer[0:4])
         if python3:
-            print "raw bytes [0:4] = ", rawbytes[0:4].decode()
+            print("raw bytes [0:4] = ", rawbytes[0:4].decode())
         else:
-            print "raw bytes [0:4] = ", rawbytes[0:4]
-        # print "raw bytes [0:4] = ", [ord(b) for b in rawbytes[0:4]]
-        print "pbbufr: bufr_error_flag = ", bufr_error_flag
+            print("raw bytes [0:4] = ", rawbytes[0:4])
+        # print("raw bytes [0:4] = ", [ord(b) for b in rawbytes[0:4]])
+        print("pbbufr: bufr_error_flag = ", bufr_error_flag)
 
         # warning: on my system only the first 36 bytes (9 words)
         # of each BUFR message are read in this way, so for now
@@ -129,7 +130,7 @@ def pb_example(input_bufr_file):
         #whence = 1 # define offset to be calculated from current position
         # all inputs and outputs must be of type fortint* !
         #bufr_error_flag = ecmwfbufr.pbseek(c_file_unit, offset, whence)
-        #print "pbseek: bufr_error_flag = ", bufr_error_flag
+        #print("pbseek: bufr_error_flag = ", bufr_error_flag)
         # possible return values should be:
         #   -2 = error in handling file,
         #   -1 = end-of-file
@@ -139,24 +140,24 @@ def pb_example(input_bufr_file):
     # pbclose test
 
     bufr_error_flag = 0
-    print "calling: ecmwfbufr.pbclose()"
+    print("calling: ecmwfbufr.pbclose()")
     ecmwfbufr.pbclose(c_file_unit, bufr_error_flag)
-    print "pbclose: bufr_error_flag = ", bufr_error_flag
+    print("pbclose: bufr_error_flag = ", bufr_error_flag)
     #  #]
 
 # run the example
-print "-"*50
-print "pb usage example"
-print "-"*50
+print("-"*50)
+print("pb usage example")
+print("-"*50)
 
 if len(sys.argv) < 2:
-    print 'please give a BUFR file as first argument'
+    print('please give a BUFR file as first argument')
     sys.exit(1)
 
 INP_BUFR_FILE = sys.argv[1]
 pb_example(INP_BUFR_FILE)
-print 'succesfully read data from file: ', INP_BUFR_FILE
+print('succesfully read data from file: ', INP_BUFR_FILE)
 
-print "-"*50
-print "done"
-print "-"*50
+print("-"*50)
+print("done")
+print("-"*50)

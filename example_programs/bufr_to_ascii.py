@@ -16,6 +16,7 @@ to stdout or written to file, either in ascii or csv format.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
+from __future__ import print_function
 import sys # operating system functions
 import getopt # a simpler version of argparse, which was introduced in
               # python 2.7, and is not by default available for older versions
@@ -51,7 +52,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
             break
 
         # add header strings
-        # print 'DEBUG: bob.msg_loaded ',bob.msg_loaded
+        # print('DEBUG: bob.msg_loaded ',bob.msg_loaded)
         list_of_names = []
         list_of_units = []
         list_of_names.extend(bob.get_names())
@@ -87,42 +88,42 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
         data = bob.get_values_as_2d_array()
 
         if list_of_unexp_descr != list_of_unexp_descr_first_msg:
-            print '\n\n'
-            print 'WARNING: it seems different types of BUFR messages'
-            print 'are mixed in this BUFR file, meaning that the list of'
-            print 'descriptor names and units printed on the first 2 output'
-            print 'lines will not match with all lines of data.'
-            print 'To prevent confusion, therefore decoding is halted'
-            print 'It is recommended to first sort BUFR messages by type'
-            print 'before converting them to ascii or csv.'
-            print 'The example script soft_bufr_msgs.py can be used'
-            print 'sort a BUFR file.'
-            print '\n\n'
-            print 'Detailed info:'
-            print 'list_of_unexp_descr != list_of_unexp_descr_first_msg !'
-            print 'list_of_unexp_descr           = ', \
-                  list_of_unexp_descr
-            print 'list_of_unexp_descr_first_msg = ', \
-                  list_of_unexp_descr_first_msg
+            print('\n\n')
+            print('WARNING: it seems different types of BUFR messages')
+            print('are mixed in this BUFR file, meaning that the list of')
+            print('descriptor names and units printed on the first 2 output')
+            print('lines will not match with all lines of data.')
+            print('To prevent confusion, therefore decoding is halted')
+            print('It is recommended to first sort BUFR messages by type')
+            print('before converting them to ascii or csv.')
+            print('The example script soft_bufr_msgs.py can be used')
+            print('sort a BUFR file.')
+            print('\n\n')
+            print('Detailed info:')
+            print('list_of_unexp_descr != list_of_unexp_descr_first_msg !')
+            print('list_of_unexp_descr           = ',
+                  list_of_unexp_descr)
+            print('list_of_unexp_descr_first_msg = ',
+                  list_of_unexp_descr_first_msg)
             sys.exit(0)
 
         if data.shape[0]*data.shape[1] == 0:
-            print 'NO DATA FOUND! this seems an empty BUFR message !'
+            print('NO DATA FOUND! this seems an empty BUFR message !')
             continue
 
         for subs in range(len(data[:, 0])):
             output_fd.write(str(subs+1)+separator+
                             separator.join(str(val) for val in data[subs, :])+
                             "\n")
-        print 'converted BUFR msg nr. ', msg_nr
+        print('converted BUFR msg nr. ', msg_nr)
         if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
-            print 'skipping remainder of this BUFR file'
+            print('skipping remainder of this BUFR file')
             break
 
     # close the file
     bob.close()
     if msg_nr == 0:
-        print 'no BUFR messages found, are you sure this is a BUFR file?'
+        print('no BUFR messages found, are you sure this is a BUFR file?')
     #  #]
 
 def print_bufr_content2(input_bufr_file, output_fd, separator,
@@ -179,15 +180,15 @@ def print_bufr_content2(input_bufr_file, output_fd, separator,
                             separator.join(str(val) for val in data_list)+
                             "\n")
 
-        print 'converted BUFR msg nr. ', msg_nr
+        print('converted BUFR msg nr. ', msg_nr)
         if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
-            print 'skipping remainder of this BUFR file'
+            print('skipping remainder of this BUFR file')
             break
 
     # close the file
     bob.close()
     if msg_nr == 0:
-        print 'no BUFR messages found, are you sure this is a BUFR file?'
+        print('no BUFR messages found, are you sure this is a BUFR file?')
     #  #]
 
 def print_bufr_content3(input_bufr_file, output_fd, separator,
@@ -211,7 +212,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
     # extract the number of BUFR messages from the file
     num_msgs = rbf.get_num_bufr_msgs()
 
-    # print 'num_msgs = ',num_msgs
+    # print('num_msgs = ',num_msgs)
 
     for msg_nr in range(1, num_msgs+1):
         encoded_message, section_sizes, section_start_locations = \
@@ -221,8 +222,8 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
         #                              verbose=True)
         bufr_obj.decode_sections_012()
         bufr_obj.setup_tables()
-        # print 'num_subsets: ', bufr_obj.get_num_subsets()
-        # print 'num_elements: ',bufr_obj.get_num_elements()
+        # print('num_subsets: ', bufr_obj.get_num_subsets())
+        # print('num_elements: ',bufr_obj.get_num_elements())
         # bufr_obj.decode_sections_0123()
         # bufr_obj.print_sections_0123_metadata()
 
@@ -280,15 +281,15 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
             output_fd.write(str(subs)+separator+
                             separator.join(str(val) for val in data_list)+
                             "\n")
-        print 'converted BUFR msg nr. ', msg_nr
+        print('converted BUFR msg nr. ', msg_nr)
         if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
-            print 'skipping remainder of this BUFR file'
+            print('skipping remainder of this BUFR file')
             break
 
     # close the BUFR file
     rbf.close()
     if num_msgs == 0:
-        print 'no BUFR messages found, are you sure this is a BUFR file?'
+        print('no BUFR messages found, are you sure this is a BUFR file?')
 
     #  #]
 
@@ -333,7 +334,7 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
             # print('len(data) = ', len(data))
 
             if numpy.shape(data)[0] == 0:
-                print 'NO DATA FOUND! this seems an empty BUFR message !'
+                print('NO DATA FOUND! this seems an empty BUFR message !')
                 continue
 
             output_fd.write('"subset nr"'+separator+
@@ -344,15 +345,15 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
                             separator.join(str(val) for val in data[:])+
                             "\n")
 
-        print 'converted BUFR msg nr. ', msg_nr
+        print('converted BUFR msg nr. ', msg_nr)
         if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
-            print 'skipping remainder of this BUFR file'
+            print('skipping remainder of this BUFR file')
             break
 
     # close the file
     bob.close()
     if msg_nr == 0:
-        print 'no BUFR messages found, are you sure this is a BUFR file?'
+        print('no BUFR messages found, are you sure this is a BUFR file?')
     #  #]
 
 def print_bufr_content5(input_bufr_file, output_fd, separator,
@@ -397,7 +398,7 @@ def print_bufr_content5(input_bufr_file, output_fd, separator,
         nsubsets = bob.get_num_subsets()
         for subs in range(1, nsubsets+1):
 
-            print '==> subset ', subs
+            print('==> subset ', subs)
 
             # add header strings
             (list_of_names, list_of_units) = bob.get_names_and_units(subs)
@@ -416,14 +417,14 @@ def print_bufr_content5(input_bufr_file, output_fd, separator,
                         selected = False
 
                 if selected:
-                    # print ' '*10,name,'=',data[i],list_of_units[i]
+                    # print(' '*10,name,'=',data[i],list_of_units[i])
                     selected_names.append(list_of_names[i])
                     selected_units.append(list_of_units[i])
                     selected_values.append(data[i])
 
             if len(selected_values) == 0:
-                print 'NO DATA SELECTED for BUFR message {} and subset {}!'.\
-                      format(msg_nr, subs)
+                print('NO DATA SELECTED for BUFR message {} and subset {}!'.
+                      format(msg_nr, subs))
                 continue
 
             if write_names_and_units_just_once and not_yet_printed:
@@ -437,17 +438,17 @@ def print_bufr_content5(input_bufr_file, output_fd, separator,
                             separator.join(str(val) for val in selected_values)+
                             "\n")
 
-        print '='*25
-        print 'converted BUFR msg nr. ', msg_nr
-        print '='*25
+        print('='*25)
+        print('converted BUFR msg nr. ', msg_nr)
+        print('='*25)
         if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
-            print 'skipping remainder of this BUFR file'
+            print('skipping remainder of this BUFR file')
             break
 
     # close the file
     bob.close()
     if msg_nr == 0:
-        print 'no BUFR messages found, are you sure this is a BUFR file?'
+        print('no BUFR messages found, are you sure this is a BUFR file?')
     #  #]
 
 def usage():
@@ -455,19 +456,19 @@ def usage():
     """ a small routine to print the options that may be used
     with this example progra,
     """
-    print 'Usage: '
-    print sys.argv[0] + ' [OPTIONS]'
-    print ''
-    print 'With [OPTIONS] being one or more of these possibilities: '
-    print '-a or --ascii    selects ascii output'
-    print '-c or --csv      selects csv output'
-    print '-i or --infile   defines the input BUFR file to be used [required]'
-    print '-o or --outfile  defines the output file to be used'
-    print '                 if this option is omitted, stdout will be used'
-    print '-1, -2, -3, -4 or -5 test implementation 1 upto 5 [default is 1]'
-    print '-m or --maxmsgnr defines max number of BUFR messages to convert'
-    print '-f or --expand_flags converts flags to text using table C'
-    print '-h               display this help text'
+    print('Usage: ')
+    print(sys.argv[0] + ' [OPTIONS]')
+    print('')
+    print('With [OPTIONS] being one or more of these possibilities:')
+    print('-a or --ascii    selects ascii output')
+    print('-c or --csv      selects csv output')
+    print('-i or --infile   defines the input BUFR file to be used [required]')
+    print('-o or --outfile  defines the output file to be used')
+    print('                 if this option is omitted, stdout will be used')
+    print('-1, -2, -3, -4 or -5 test implementation 1 upto 5 [default is 1]')
+    print('-m or --maxmsgnr defines max number of BUFR messages to convert')
+    print('-f or --expand_flags converts flags to text using table C')
+    print('-h               display this help text')
     #  #]
 
 def main():
@@ -484,15 +485,15 @@ def main():
                         'maxmsgnr=', 'help', 'expand_flags']
         (options, other_args) = getopt.getopt(sys.argv[1:],
                                               short_options, long_options)
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         # print help information and exit:
-        print str(err) # will print something like "option -a not recognized"
+        print(str(err)) # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
 
     # test prints
-    #print 'options = ', options
-    #print 'other_args = ', other_args
+    #print('options = ', options)
+    #print('other_args = ', other_args)
 
     # defaults
     output_to_ascii = True
@@ -528,20 +529,20 @@ def main():
         elif (opt == '-f') or (opt == '--expand_flags'):
             expand_flags = True
         else:
-            print "Unhandled option: "+opt
+            print("Unhandled option: "+opt)
             usage()
             sys.exit(2)
 
     # ensure input_bufr_file is defined
     if input_bufr_file is None:
-        print "Missing input file!"
+        print("Missing input file!")
         usage()
         sys.exit(2)
 
     # warn about unused arguments
     if len(other_args) > 0:
-        print 'WARNING: there seem to be unused arguments:'
-        print other_args
+        print('WARNING: there seem to be unused arguments:')
+        print(other_args)
 
     # Open the output file
     if output_file:
@@ -570,17 +571,17 @@ def main():
         print_bufr_content5(input_bufr_file, output_fd,
                             separator, max_msg_nr, expand_flags)
     else:
-        print 'implementation nr. {} is not available...'.\
-              format(implementation_nr)
+        print('implementation nr. {} is not available...'.
+              format(implementation_nr))
 
     if output_file:
         # close the output file
         output_fd.close()
 
         if output_to_ascii:
-            print "ascii output written to file " + output_file
+            print("ascii output written to file " + output_file)
         else:
-            print "csv output written to file " + output_file
+            print("csv output written to file " + output_file)
 
 #  #]
 

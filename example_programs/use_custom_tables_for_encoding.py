@@ -17,6 +17,7 @@ encoding a BUFR message.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
+from __future__ import print_function
 import os, sys     # operating system functions
 import numpy as np # import numerical capabilities
 
@@ -84,7 +85,7 @@ def encoding_example(output_bufr_file):
 
     # retrieve the length of the expanded descriptor list
     exp_descr_list_length = bufr.ktdexl
-    print "exp_descr_list_length = ", exp_descr_list_length
+    print("exp_descr_list_length = ", exp_descr_list_length)
 
     # fill the values array with some dummy varying data
     num_values = exp_descr_list_length*num_subsets
@@ -125,7 +126,7 @@ def encoding_example(output_bufr_file):
 
 #  #[ run the example
 if len(sys.argv) < 2:
-    print 'please give a BUFR file as first argument'
+    print('please give a BUFR file as first argument')
     sys.exit(1)
 
 OUTP_BUFR_FILE = sys.argv[1]
@@ -134,14 +135,14 @@ OUTP_BUFR_FILE = sys.argv[1]
 if os.path.exists(OUTP_BUFR_FILE):
     os.remove(OUTP_BUFR_FILE)
 
-print "-"*50
-print "BUFR encoding example"
-print "-"*50
+print("-"*50)
+print("BUFR encoding example")
+print("-"*50)
 
 encoding_example(OUTP_BUFR_FILE)
-print 'succesfully written BUFR encoded data to file: ', OUTP_BUFR_FILE
+print('succesfully written BUFR encoded data to file: ', OUTP_BUFR_FILE)
 
-print "-"*50
-print "done"
-print "-"*50
+print("-"*50)
+print("done")
+print("-"*50)
 #  #]

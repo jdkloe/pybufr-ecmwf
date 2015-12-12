@@ -66,9 +66,9 @@ CFLAGS_NEEDED = {'gcc': [],
                  'icc': [],
                  'cc':  []}
 
-for k in FFLAGS_NEEDED.keys():
+for k in FFLAGS_NEEDED:
     FFLAGS_NEEDED[k].extend(FFLAGS_COMMON)
-for k in CFLAGS_NEEDED.keys():
+for k in CFLAGS_NEEDED:
     CFLAGS_NEEDED[k].extend(CFLAGS_COMMON)
 
 # python2 version
@@ -620,7 +620,7 @@ def adapt_f2py_signature_file(signature_file, integer_sizes):
 
         if 'dimension' in mod_line:
             #print("adapting line: ", mod_line)
-            for edit in edits.keys():
+            for edit in edits:
                 txt = '(('+edit.lower()+'))'
                 value = edits[edit]
                 if txt in mod_line:
@@ -1624,9 +1624,12 @@ class InstallBUFRInterfaceECMWF(object):
 
         #  #[ some settings
         signatures_filename = "signatures.pyf"
-        f2py_tool_name = './run_f2py_tool.py'
+        if python3:
+            f2py_tool_name = 'python3 ./run_f2py_tool.py'
+        else:
+            f2py_tool_name = 'python ./run_f2py_tool.py'
         #f2py_tool_name = 'f2py'
-        os.system('chmod u+x '+f2py_tool_name)
+        #os.system('chmod u+x '+f2py_tool_name)
 
         # open the config file used for building the ECMWF BUFR library
         config_file = os.path.join(self.ecmwf_bufr_lib_dir, "config_file")
@@ -1805,7 +1808,7 @@ file for convenience
         pfd.write('"""\n')
 
         # write the retrieved parameter values to a python file
-        for (key, val) in parameter_dict.iteritems():
+        for (key, val) in parameter_dict.items():
             txt = key+' = '+str(val)+'\n'
             pfd.write(txt)
 
@@ -1875,7 +1878,7 @@ if __name__ == "__main__":
         # successfully tested 29-Aug-2012
         BI = InstallBUFRInterfaceECMWF(verbose=True,
                                        preferred_fortran_compiler='gfortran',
-                                       download_library_sources=True)
+                                       download_library_sources=False)
     elif TESTCASE == 3:
         # note that the "-O" flag is allways set for each fortran compiler
         # so no need to specify it to the fortran_flags parameter.

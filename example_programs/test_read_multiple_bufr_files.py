@@ -17,6 +17,7 @@ of bufr files that use different BUFR tables.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
+from __future__ import print_function
 import sys, numpy
 from pybufr_ecmwf.bufr import BUFRReader
 
@@ -45,25 +46,25 @@ def read_bufr_file(input_bufr_file):
         data1 = bob.get_subset_values(1)
 
         if numpy.shape(data1)[0] == 0:
-            print 'NO DATA FOUND! this seems an empty BUFR message !'
+            print('NO DATA FOUND! this seems an empty BUFR message !')
             continue
 
-        print 'loaded BUFR msg nr. ', msg_nr, 'shape = ', numpy.shape(data1)
-        print 'data1[:2] = ', data1[:2]
+        print('loaded BUFR msg nr. ', msg_nr, 'shape = ', numpy.shape(data1))
+        print('data1[:2] = ', data1[:2])
 
         if nsubsets > 1:
             data2 = bob.get_subset_values(2)
 
             if numpy.shape(data2)[0] == 0:
-                print 'NO DATA FOUND! this seems an empty BUFR message !'
+                print('NO DATA FOUND! this seems an empty BUFR message !')
                 continue
 
-            print 'data2[:2] = ', data2[:2]
+            print('data2[:2] = ', data2[:2])
 
     # close the file
     bob.close()
     if msg_nr == 0:
-        print 'no BUFR messages found, are you sure this is a BUFR file?'
+        print('no BUFR messages found, are you sure this is a BUFR file?')
     #  #]
 
 def main():
@@ -74,7 +75,7 @@ def main():
     """
 
     input_bufr_files = sys.argv[1:]
-    print 'input_bufr_files = ', input_bufr_files
+    print('input_bufr_files = ', input_bufr_files)
     for input_bufr_file in input_bufr_files:
         read_bufr_file(input_bufr_file)
 

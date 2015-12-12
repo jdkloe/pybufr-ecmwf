@@ -31,6 +31,7 @@ used for encoding a BUFR message.
 #
 #  #]
 #  #[ imported modules
+from __future__ import print_function
 import os, sys     # operating system functions
 import numpy as np # import numerical capabilities
 import time        # handling of date and time
@@ -71,9 +72,9 @@ def encoding_example(output_bufr_file):
     # jsup   = length_ksup
 
     #  initialise all arrays
-    print '------------------------------'
-    print 'reinitialising all arrays...'
-    print '------------------------------'
+    print('------------------------------')
+    print('reinitialising all arrays...')
+    print('------------------------------')
     #ksup   = np.zeros(          9, dtype = np.int)
     ksec0 = np.zeros(3, dtype=np.int)
     ksec1 = np.zeros(40, dtype=np.int)
@@ -92,7 +93,7 @@ def encoding_example(output_bufr_file):
     kerr = 0
 
     # handle BUFR tables
-    print '------------------------------'
+    print('------------------------------')
 
     # define our own location for storing (symlinks to) the BUFR tables
     private_bufr_tables_dir = os.path.abspath("./tmp_BUFR_TABLES")
@@ -113,7 +114,7 @@ def encoding_example(output_bufr_file):
     elif os.path.exists(path2):
         ecmwf_bufr_tables_dir = path2
     else:
-        print "Error: could not find BUFR tables directory"
+        print("Error: could not find BUFR tables directory")
         raise IOError
 
     # make sure the path is absolute, otherwise the ECMWF library
@@ -278,9 +279,9 @@ def encoding_example(output_bufr_file):
     # iprint = 0 # default is to be silent
     iprint = 1
     if iprint == 1:
-        print "------------------------"
-        print " printing BUFR template "
-        print "------------------------"
+        print("------------------------")
+        print(" printing BUFR template ")
+        print("------------------------")
 
     # define and fill the list of replication factors
     num_del_repl_factors = 1
@@ -291,25 +292,25 @@ def encoding_example(output_bufr_file):
         # ECMWF library. It will allways just look at the first element
         # in the kdata array. (or do I misunderstand the BUFR format here?)
         kdata[i] = 2 # i+1
-    print "delayed replication factors: ", kdata
+    print("delayed replication factors: ", kdata)
 
     ecmwfbufr.buxdes(iprint, ksec1, ktdlst, kdata,
                      ktdexl, ktdexp, cnames, cunits, kerr)
-    print "ktdlst = ", ktdlst
+    print("ktdlst = ", ktdlst)
     selection = np.where(ktdexp > 0)
-    #print "selection = ",selection
-    print "ktdexp = ", ktdexp[selection]
-    print "ktdexl = ", ktdexl # this one seems not to be filled ...?
+    #print("selection = ",selection)
+    print("ktdexp = ", ktdexp[selection])
+    print("ktdexl = ", ktdexl) # this one seems not to be filled ...?
     if kerr != 0:
-        print "kerr = ", kerr
+        print("kerr = ", kerr)
         sys.exit(1)
 
-    # print "cnames = ", cnames
-    # print "cunits = ", cunits
+    # print("cnames = ", cnames)
+    # print("cunits = ", cunits)
 
     # retrieve the length of the expanded descriptor list
     exp_descr_list_length = len(np.where(ktdexp > 0)[0])
-    print "exp_descr_list_length = ", exp_descr_list_length
+    print("exp_descr_list_length = ", exp_descr_list_length)
 
     # fill the values array with some dummy varying data
     num_values = exp_descr_list_length*num_subsets
@@ -366,19 +367,19 @@ def encoding_example(output_bufr_file):
                      ktdlst, kdata, exp_descr_list_length,
                      values, cvals, words, kerr)
 
-    print "bufren call finished"
+    print("bufren call finished")
     if kerr != 0:
-        print "kerr = ", kerr
+        print("kerr = ", kerr)
         sys.exit(1)
 
-    print "words="
-    print words
+    print("words=")
+    print(words)
 
     nonzero_locations = np.where(words != 0)
-    #print 'nonzero_locations = ',nonzero_locations[0]
+    #print('nonzero_locations = ',nonzero_locations[0])
 
     numwords = nonzero_locations[0][-1] + 1
-    print "encoded size: ", numwords, " words or ", numwords*4, " bytes"
+    print("encoded size: ", numwords, " words or ", numwords*4, " bytes")
 
     encoded_message = words[:numwords]
 
@@ -394,7 +395,7 @@ def encoding_example(output_bufr_file):
 
 #  #[ run the example
 if len(sys.argv) < 2:
-    print 'please give a BUFR file as first argument'
+    print('please give a BUFR file as first argument')
     sys.exit(1)
 
 OUTP_BUFR_FILE = sys.argv[1]
@@ -403,14 +404,14 @@ OUTP_BUFR_FILE = sys.argv[1]
 if os.path.exists(OUTP_BUFR_FILE):
     os.remove(OUTP_BUFR_FILE)
 
-print "-"*50
-print "BUFR encoding example"
-print "-"*50
+print("-"*50)
+print("BUFR encoding example")
+print("-"*50)
 
 encoding_example(OUTP_BUFR_FILE)
-print 'succesfully written BUFR encoded data to file: ', OUTP_BUFR_FILE
+print('succesfully written BUFR encoded data to file: ', OUTP_BUFR_FILE)
 
-print "-"*50
-print "done"
-print "-"*50
+print("-"*50)
+print("done")
+print("-"*50)
 #  #]
