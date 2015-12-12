@@ -70,11 +70,19 @@ if 'build/lib' in MY_MODULE_PATH:
 #else:
 #    print('MY_MODULE_PATH = ', MY_MODULE_PATH)
 
-from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
-from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
-# from pybufr_ecmwf import bufr
-# from pybufr_ecmwf import bufr_table
-from pybufr_ecmwf import ecmwfbufr
+try:
+    from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
+    from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
+    # from pybufr_ecmwf import bufr
+    # from pybufr_ecmwf import bufr_table
+    from pybufr_ecmwf import ecmwfbufr
+except (SyntaxError, ImportError) as err:
+    # ensure the code reaches the point where the pybufr_ecmwf.renamed
+    # is renamed back to pybufr_ecmwf, so allow imports to fail
+    print('ERROR: some imports failed!!!')
+    # print('Error was: '+str(err))
+    pass
+    # raise
 
 #import ecmwfbufr # import the wrapper module
 

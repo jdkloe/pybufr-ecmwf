@@ -1833,7 +1833,7 @@ class BufrTable:
         #  #]
     def print_B_table(self):
         #  #[
-        for ref in sorted(self.table_b)
+        for ref in sorted(self.table_b):
             print(str(self.table_b[ref]))
         #  #]
     def print_C_table(self):
