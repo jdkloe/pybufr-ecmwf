@@ -1,3 +1,9 @@
+upcoming release:
+-move to library version bufrdc_000405
+-make all code portable between python2 and python3 to remove the
+ need to run the 2to3 tool
+-introduce travis testing
+
 Release 0.81 (19-Feb-2015)
 -license change to LGPLv3
 -move to library version bufrdc_000403
