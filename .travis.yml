@@ -8,7 +8,7 @@ python:
   - "3.5"
 
 before_install:
-   - sudo apg-get install -y gfortran
+   - sudo apt-get install -y gfortran
 
 # command to install dependencies
 install:
