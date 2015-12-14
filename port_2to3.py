@@ -22,6 +22,14 @@ from __future__ import (absolute_import, division,
 import os, sys
 import subprocess  # support running additional executables
 
+print('''
+Use of this script is deprecated!
+You can just use: python3 setup.py build
+if you wish to install a python3 version of the pybufr_ecmwf module.
+''')
+
+sys.exit(1)
+
 PY3_CONVERTED_PATH = 'tmp_2to3_converted_sources'
 
 def run_shell_command(cmd, libpath=None,

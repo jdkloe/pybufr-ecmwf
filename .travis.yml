@@ -1,0 +1,22 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+
+before_install:
+   - sudo apg-get install -y gfortran
+
+# command to install dependencies
+install:
+  - pip install numpy
+  - python setup.py install
+
+# command to run tests
+# script: nosetests
+script:
+  - python unittests.py
+
