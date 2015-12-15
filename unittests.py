@@ -49,7 +49,8 @@ import os, sys, shutil    # operating system functions
 import unittest   # import the unittest functionality
 import subprocess # support running additional executables
 
-from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
+from pybufr_ecmwf.helpers import (get_and_set_the_module_path, python3,
+                                  python_major_minor)
 
 DUMMY_SYS_PATH = sys.path[:] # provide a copy
 (DUMMY_SYS_PATH, MY_MODULE_PATH) = get_and_set_the_module_path(DUMMY_SYS_PATH)
@@ -1049,7 +1050,26 @@ os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
 
 # this just runs all tests
 print("Running unit tests:")
-unittest.main(exit=False)
+
+if python_major_minor <= '2.6':
+    # see: http://stackoverflow.com/questions/79754/unittest-causing-sys-exit
+    # and: https://docs.python.org/2/library/unittest.html#basic-example
+    testclasses = [CheckRawECMWFBUFR, CheckBUFRInterfaceECMWF,
+                   CheckRawBUFRFile, CheckBufrTable,
+                   CheckCustomTables, CheckBufr,
+                   CheckAddedFortranCode, CheckVersionInfo]
+    suites = [unittest.TestLoader().loadTestsFromTestCase(testclass)
+              for testclass in testclasses]
+    alltests = unittest.TestSuite(suites)
+    unittest.TextTestRunner().run(alltests)
+else:
+    # exit parameter was introduced in python 2.7
+    unittest.main(exit=False)
+
+# this will exit and not run any code following the next line!
+# unittest.main()
+# so we canot rely on the removal of the symlink below.
+
 # unittest.main(verbosity=2)
 
 # Problem: unittest.main() seems to call sys.exit()
@@ -1064,6 +1084,9 @@ if PYBUFR_ECMWF_MODULE_WAS_RENAMED:
         os.remove('pybufr_ecmwf')
         print('renaming pybufr_ecmwf.renamed to pybufr_ecmwf')
         shutil.move('pybufr_ecmwf.renamed', 'pybufr_ecmwf')
+
+# print('done with unit testing')
+# print('python_major_minor: ', python_major_minor)
 
 # still todo:
 #

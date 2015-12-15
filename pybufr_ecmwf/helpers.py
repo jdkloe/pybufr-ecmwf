@@ -70,3 +70,6 @@ except AttributeError:
     # python 2.6 and before has no major attibute in sys.version_info
     # so these will fall back to the default python3
     pass
+
+python_major_minor = '{}.{}'.format(sys.version_info.major,
+                                    sys.version_info.minor)
