@@ -73,5 +73,5 @@ except AttributeError:
 
 major = sys.version_info[0]
 minor = sys.version_info[1]
-python_major_minor = '{}.{}'.format(major, minor)
+python_major_minor = str(major)+'.'+str(minor)
     
