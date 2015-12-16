@@ -35,7 +35,7 @@ FILE_GLOB_PATTERNS = ['*~', '*/*~', '*/*/*~', '*.pyc', '*/*.pyc',
                       'pybufr_ecmwf/ecmwfbufr*.so',
                       'pybufr_ecmwf/expected_test_outputs/*.actual_std*',
                       'pybufr_ecmwf/GetByteSize*',
-                      'pylint_*.txt']
+                      'pylint_*.txt', '*_my_test_BUFR_table.txt']
 FILES_TO_DELETE = ['pybufr_ecmwf/libbufr.a', 'libbufr.a', 'MANIFEST',
                    'ecmwfbufr.so',
                    'pybufr_ecmwf/ecmwf_bufr_lib/config_file',

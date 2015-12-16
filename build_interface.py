@@ -1056,8 +1056,13 @@ class InstallBUFRInterfaceECMWF(object):
                     print("ERROR: no tarfile available for BUFR library.")
                     raise NetworkError
 
-                cmd = "cd "+self.ecmwf_bufr_lib_dir+\
-                      ";tar zxvf "+tarfile_to_install
+                if self.verbose:
+                    cmd = "cd "+self.ecmwf_bufr_lib_dir+\
+                          ";tar zxvf "+tarfile_to_install
+                else:
+                    cmd = "cd "+self.ecmwf_bufr_lib_dir+\
+                          ";tar zxf "+tarfile_to_install
+                
                 print("Executing command: ", cmd)
                 os.system(cmd)
             else:
@@ -1487,6 +1492,8 @@ class InstallBUFRInterfaceECMWF(object):
         # construct the compilation command:
         cmd = "cd "+source_dir+";make ARCH="+arch+" CNAME="+\
               cname+" R64="+r64+" A64="+a64
+        if not self.verbose:
+            cmd += " 2>1 > bufrdc_build.log"
 
         # now issue the Make command
         if libpath == "":
@@ -1671,6 +1678,9 @@ class InstallBUFRInterfaceECMWF(object):
                       " -h "+signatures_filename+\
                       " "+source_file_list
 
+            if not self.verbose:
+                cmd += " 2>1 > f2py_build.log"
+
             if libpath == "":
                 print("Executing command: ", cmd)
                 os.system(cmd)
@@ -1731,6 +1741,9 @@ class InstallBUFRInterfaceECMWF(object):
                   " --f77flags='"+fortran_compiler_flags+"'"+\
                   " --fcompiler="+fortran_compiler+\
                   " ./f2py_build/signatures.pyf -L./ -lbufr -c"
+
+        if not self.verbose:
+            cmd += " 2>1 >> f2py_build.log"
 
         if libpath == "":
             print("Executing command: ", cmd)

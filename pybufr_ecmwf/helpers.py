@@ -71,5 +71,7 @@ except AttributeError:
     # so these will fall back to the default python3
     pass
 
-python_major_minor = '{}.{}'.format(sys.version_info.major,
-                                    sys.version_info.minor)
+major = sys.version_info[0]
+minor = sys.version_info[1]
+python_major_minor = '{}.{}'.format(major, minor)
+    

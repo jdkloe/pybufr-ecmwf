@@ -1,4 +1,4 @@
-# this lists the files to be included in the sdist tgz fike
+# this lists the files to be included in the sdist tgz file
 # as created by: python setup.py sdist
 
 include *.txt
@@ -15,4 +15,14 @@ include example_programs/expected_test_outputs/Check*
 include ecmwf_bufr_lib_sources/*.gz
 
 # dirs to be excluded
-#prune dist
+
+# mainly for my own convenience (to run pylint)
+prune pylint
+
+# mainly for private build tests, not yet suitable for wider use
+# but unfortunately, pruning individual files seems not possible
+#prune build_test.py
+
+# very experimental code, not yet functional
+prune tools
+

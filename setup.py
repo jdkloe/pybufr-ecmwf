@@ -13,7 +13,6 @@ module on your system.
 # This software is licensed under the terms of the LGPLv3 Licence
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
-
 #  #[ imported modules
 from __future__ import (absolute_import, division,
                         print_function) # , unicode_literals)
@@ -32,6 +31,15 @@ from distutils.command.build import build as _build
 from distutils.command.build_ext import build_ext as _build_ext
 #from distutils.command.install import install as _install
 from distutils.command.install_lib import install_lib as _install_lib
+
+# make the build process more silent
+# (this setting is also passed on to InstallBUFRInterfaceECMWF)
+verbose = False
+    
+if not verbose:
+    # set the logging to WARN only
+    from distutils.log import set_verbosity
+    set_verbosity(0)
 
 # patch distutils if it can't cope with the "classifiers" or
 # "download_url" keywords
@@ -314,7 +322,7 @@ class BuildExt(_build_ext):
         # run the build method from the InstallBUFRInterfaceECMWF class
         # defined in the custom build script, to build the extension module
         ibi = InstallBUFRInterfaceECMWF(
-                  verbose=True,
+                  verbose=verbose,
                   preferred_fortran_compiler=self.preferred_fortran_compiler,
                   preferred_c_compiler=self.preferred_c_compiler,
                   fortran_compiler=self.fortran_compiler,
