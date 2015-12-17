@@ -261,8 +261,8 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True):
             print("to find out what happended execute this diff command:")
             print("xdiff "+actual_stderr+' '+expected_stderr)
             if verbose:
-                for l in lines_stdout:          print('output:      ['+l+']')
-                for l in expected_lines_stdout: print('exp. output: ['+l+']')
+                for l in lines_stderr:          print('output:      ['+l+']')
+                for l in expected_lines_stderr: print('exp. output: ['+l+']')
             success = False
             
     except IOError:
