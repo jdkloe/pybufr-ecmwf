@@ -149,7 +149,7 @@ def call_cmd(cmd, rundir=''):
         return (lines_stdout, lines_stderr)
     #  #]
 
-def call_cmd_and_verify_output(cmd, rundir=''):
+def call_cmd_and_verify_output(cmd, rundir='', verbose=True):
     #  #[
     """ a wrapper around run_shell_command for easier testing.
     It automatically constructs a name for the test output based
@@ -251,15 +251,20 @@ def call_cmd_and_verify_output(cmd, rundir=''):
             print("stdout differs from what was expected!!!")
             print("to find out what happended execute this diff command:")
             print("xdiff "+actual_stdout+' '+expected_stdout)
-            # for l in lines_stdout:          print('output:      ['+l+']')
-            # for l in expected_lines_stdout: print('exp. output: ['+l+']')
+            if verbose:
+                for l in lines_stdout:          print('output:      ['+l+']')
+                for l in expected_lines_stdout: print('exp. output: ['+l+']')
             success = False
 
         if lines_stderr != expected_lines_stderr:
             print("stderr differs from what was expected!!!")
             print("to find out what happended execute this diff command:")
             print("xdiff "+actual_stderr+' '+expected_stderr)
+            if verbose:
+                for l in lines_stdout:          print('output:      ['+l+']')
+                for l in expected_lines_stdout: print('exp. output: ['+l+']')
             success = False
+            
     except IOError:
         print("ERROR: expected output not found; probably because")
         print("you just defined a new unittest case.")
