@@ -2057,7 +2057,7 @@ class BUFRInterfaceECMWF:
             if not self.bt.is_defined(descr):
                 errtxt = ('you tried to use a descriptor in your template '+
                           'that is not available in the current ' +
-                          'BUFR tables: {}'.format(descr)
+                          'BUFR tables: '+str(descr)
                           )
                 raise EcmwfBufrLibError(errtxt)
         
@@ -2327,8 +2327,9 @@ class BUFRInterfaceECMWF:
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bufren'))
 
         #for i in range(len(values)):
-        #    print('i,cvals[i] = {} "{}"'.\
-        #          format(i,(''.join(c for c in cvals[i,:])).strip()))
+        #    print('i,cvals[i] = '+str(i)+' "'+
+        #          (''.join(c for c in cvals[i,:])).strip()+'"')
+        #          
 
         print("words = ")
         print(words)
@@ -2356,8 +2357,8 @@ class BUFRInterfaceECMWF:
         name = self.bt.table_b[descr].name
         if (v<minval) or (v>maxval):
             txt = ('ERROR: value to be packed it out of range! '+
-                   'descriptor: {} (name: {}) min/max: {} {} value: {}'.
-                   format(descr, name, minval, maxval, v))
+                   'descriptor: %s (name: %s) min/max: %s %s value: %s' %
+                   (str(descr), str(name), str(minval), str(maxval), str(v)))
             raise EcmwfBufrTableError(txt)
 
         #  #]

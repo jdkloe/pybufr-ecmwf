@@ -22,5 +22,8 @@ KEYS = BT.table_b.keys()
 for k in sorted(KEYS):
     obj = BT.get_descr_object(k)
     if SEARCH_STRING in obj.name:
-        print('descriptor: {:06d} name: {}'.format(k, obj.name))
+        # this is not python 2.6 compatible
+        #print('descriptor: {:06d} name: {}'.format(k, obj.name))
+        # so use this in stead
+        print('descriptor: %06d name: %s' % (k, obj.name))
 

@@ -170,6 +170,7 @@ for (mnemonic, data) in descriptor_defs.items():
 
     # for string formatting see:
     # http://docs.python.org/library/string.html#formatstrings
+    # NOTE: this is not python 2.6 compatible
     line = '{:>7} {:<64}{:<24}{:>4}{:>14}{:>4}'.format(\
            descriptor, name, unit, scale, reference, numbits)
     table_b_lines.append(line)

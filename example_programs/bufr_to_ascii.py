@@ -423,8 +423,8 @@ def print_bufr_content5(input_bufr_file, output_fd, separator,
                     selected_values.append(data[i])
 
             if len(selected_values) == 0:
-                print('NO DATA SELECTED for BUFR message {} and subset {}!'.
-                      format(msg_nr, subs))
+                print('NO DATA SELECTED for BUFR message %d and subset %d!' %
+                      (msg_nr, subs))
                 continue
 
             if write_names_and_units_just_once and not_yet_printed:
@@ -571,8 +571,8 @@ def main():
         print_bufr_content5(input_bufr_file, output_fd,
                             separator, max_msg_nr, expand_flags)
     else:
-        print('implementation nr. {} is not available...'.
-              format(implementation_nr))
+        print('implementation nr. %d is not available...' %
+              implementation_nr)
 
     if output_file:
         # close the output file

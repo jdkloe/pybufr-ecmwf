@@ -58,7 +58,7 @@ class BufrTemplate:
         """
         add a descriptor to the template
         """
-        print('adding descriptor: {}'.format(descriptor))
+        print('adding descriptor: '+str(descriptor))
         self.unexpanded_descriptor_list.append(descriptor)
         #  #]
     def add_descriptors(self, *descriptors):
@@ -67,7 +67,7 @@ class BufrTemplate:
         add a list of descriptors to the template
         """
         nr_of_descriptors = len(descriptors)
-        print('adding {} descriptors'.format(nr_of_descriptors))
+        print('adding '+str(nr_of_descriptors)+' descriptors')
         self.unexpanded_descriptor_list.extend(descriptors)
         #  #]
     def add_delayed_replic_descriptors(self, max_nr_of_repeats,
@@ -79,13 +79,15 @@ class BufrTemplate:
         nr_of_descriptors = len(descriptors)
         if 'extended' in kwargs:
             repl_factor = self.Extended_Delayed_Descr_Repl_Factor
-            print('adding extended delayed replication for {} descriptors'.
-                  format(nr_of_descriptors))
+            print('adding extended delayed replication for '+
+                  str(nr_of_descriptors)+' descriptors')
         else:
             repl_factor = self.Delayed_Descr_Repl_Factor
-            print('adding delayed replication for {} descriptors'.
-                  format(nr_of_descriptors))
-        print('replicating them at most {} times'.format(max_nr_of_repeats))
+            print('adding delayed replication for '+
+                  str(nr_of_descriptors)+' descriptors')
+
+        print('replicating them at most '+
+              str(max_nr_of_repeats)+' times')
         repl_code = self.get_replication_code(nr_of_descriptors, 0)
         self.unexpanded_descriptor_list.append(repl_code)
         self.unexpanded_descriptor_list.append(repl_factor)
@@ -99,9 +101,9 @@ class BufrTemplate:
         use normal replication to add a list of descriptors to the template
         """
         nr_of_descriptors = len(descriptors)
-        print('adding replication for {} descriptors'.
-              format(nr_of_descriptors))
-        print('replicating them {} times'.format(nr_of_repeats))
+        print('adding replication for '+
+              str(nr_of_descriptors)+' descriptors')
+        print('replicating them '+str(nr_of_repeats)+' times')
         repl_code = self.get_replication_code(nr_of_descriptors,
                                               nr_of_repeats)
         self.unexpanded_descriptor_list.append(repl_code)
@@ -146,11 +148,11 @@ class BufrTemplate:
         # ensure all descriptors are instances of bufr_table.Descriptor
         normalised_descriptor_list = \
                    bufrtables.normalise_descriptor_list(descriptor_list)
-        #print('debug: normalised_descriptor_list = {}'.
-        #      format(list(str(d) for d in normalised_descriptor_list)))
+        #print('debug: normalised_descriptor_list = '+
+        #      str(list(str(d) for d in normalised_descriptor_list)))
         while normalised_descriptor_list:
             descr = normalised_descriptor_list.pop(0)
-            # print('handling descr: {}'.format(descr))
+            # print('handling descr: '+str(descr))
             if isinstance(descr, (bufr_table.SpecialCommand,
                                   bufr_table.Replicator,
                                   bufr_table.DelayedReplicator)):
@@ -166,22 +168,22 @@ class BufrTemplate:
                     # print('replicator found !!')
                     repeat_count = int(descr.reference % 1000)
                     
-                # print('repeat_count = {}'.format(repeat_count))
+                # print('repeat_count = '+str(repeat_count))
 
                 repl_descr_list = \
                                 normalised_descriptor_list[:descr_count]
                 normalised_descriptor_list = \
                                 normalised_descriptor_list[descr_count:]
-                # print('repl_descr_list = {}'.
-                #       format(';'.join(str(d.reference)
-                #                       for d in repl_descr_list)))
-                # print('it has a size of: {}'.
-                #       format(self.get_max_size(repl_descr_list, bufrtables)))
+                # print('repl_descr_list = '+
+                #       str(';'.join(str(d.reference)
+                #                    for d in repl_descr_list)))
+                # print('it has a size of: '+
+                #       str(self.get_max_size(repl_descr_list, bufrtables)))
                 count += repeat_count*self.get_max_size(repl_descr_list,
                                                         bufrtables)
             elif isinstance(descr, bufr_table.CompositeDescriptor):
                 # a composite D-table descriptor
-                # print('D: {}'.format(descr))
+                # print('D: '+str(descr))
                 count += self.get_max_size(descr.descriptor_list,
                                            bufrtables)
             else:
@@ -196,7 +198,7 @@ class BufrTemplate:
         self.del_repl_count_list = self.del_repl_max_nr_of_repeats_list[:]
         # get the max size
         s = self.get_max_size(self.unexpanded_descriptor_list,bufrtables)
-        # print('s = {}'.format(s))
+        # print('s = '+str(s))
         return s
         #  #]
     #  #]

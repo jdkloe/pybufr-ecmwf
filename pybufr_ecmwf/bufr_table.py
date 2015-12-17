@@ -101,24 +101,24 @@ class Descriptor: # [a simple table B entry]
             print('')
             print('')
             print()
-            print(("self.reference       = [{:12s}]"
-                   "other.reference      = [{:12s}]").
-                  format(str(self.reference), str(other.reference)))
-            print(("self.name            = [{:12s}]"
-                   "other.name           = [{:12s}]").
-                  format(str(self.name), str(other.name)))
-            print(("self.unit            = [{:12s}]"
-                   "other.unit           = [{:12s}]").
-                  format(str(self.unit), str(other.unit)))
-            print(("self.unit_scale      = [{:12s}]"
-                   "other.unit_scale     = [{:12s}]").
-                  format(str(self.unit_scale), str(other.unit_scale)))
-            print(("self.unit_reference  = [{:12s}]"
-                   "other.unit_reference = [{:12s}]").
-                  format(str(self.unit_reference), str(other.unit_reference)))
-            print(("self.data_width     = [{:12s}]"
-                   "other.data_width    = [{:12s}]").
-                  format(str(self.data_width), str(other.data_width)))
+            print(("self.reference       = [%12s]"
+                   "other.reference      = [%12s]") %
+                  (str(self.reference), str(other.reference)))
+            print(("self.name            = [%12s]"
+                   "other.name           = [%12s]") %
+                  (str(self.name), str(other.name)))
+            print(("self.unit            = [%12s]"
+                   "other.unit           = [%12s]") %
+                  (str(self.unit), str(other.unit)))
+            print(("self.unit_scale      = [%12s]"
+                   "other.unit_scale     = [%12s]") %
+                  (str(self.unit_scale), str(other.unit_scale)))
+            print(("self.unit_reference  = [%12s]"
+                   "other.unit_reference = [%12s]") %
+                  (str(self.unit_reference), str(other.unit_reference)))
+            print(("self.data_width      = [%12s]"
+                   "other.data_width     = [%12s]") %
+                  (str(self.data_width), str(other.data_width)))
             #print('cls.__instance_dict__ = ', self.__class__.__instance_dict__)
             raise aerr
         #  #]
@@ -367,9 +367,9 @@ class Replicator(Descriptor):
         pass
     def __str__(self):
         #  #[
-        txt = "{} repeats of [{}]".format(self.repeats,
-                                          ";".join(str(d.reference) for d
-                                                   in self.descriptor_list))
+        txt = (str(self.repeats)+" repeats of ["+
+               str(";".join(str(d.reference) for d
+                            in self.descriptor_list))+"]")
         return txt
         #  #]
     def __getattr__(self, attr):
@@ -385,11 +385,11 @@ class Replicator(Descriptor):
         # xx = num. descr. to replicate
         # yyy = repl. count
         f = '1'
-        xx = '{:02}'.format(len(self.descriptor_list))
-        yyy = '{:03}'.format(self.repeats)
+        xx = '%02' % len(self.descriptor_list)
+        yyy = '%03' % self.repeats
         return int(f+xx+yyy)
-        #return f+xx+yyy+';{}'.format(";".join(str(d.reference) for d
-        #                                      in self.descriptor_list))
+        #return f+xx+yyy+';'+str(";".join(str(d.reference) for d
+        #                                 in self.descriptor_list))
         #  #]
     #  #]
 
@@ -577,7 +577,7 @@ class FlagDefinition:
     def __str__(self):
         text = []
         for k in sorted(self.flag_dict):
-            text.append('flag: {} value: {}'.format(k, self.flag_dict[k]))
+            text.append('flag: '+str(k)+' value: '+str(self.flag_dict[k]))
         return '\n'.join('==> '+l for l in text)
     
 class BufrTable:
@@ -858,7 +858,7 @@ class BufrTable:
             else:
                 # this is a new special
                 if self.verbose:
-                    print("adding special: {}".format(reference))
+                    print("adding special: "+str(reference))
                 special = SpecialCommand(reference)
                 self.specials[reference] = special
                 return special
@@ -869,7 +869,7 @@ class BufrTable:
             else:
                 # this is a new modifier
                 if self.verbose:
-                    print("adding modifier: {}".format(reference))
+                    print("adding modifier: "+str(reference))
                 modifier = ModificationCommand(reference)
                 self.modifiers[reference] = modifier
                 return modifier
@@ -912,7 +912,7 @@ class BufrTable:
         #    l = line.replace('\r', '').replace('\n', '')
         #    if len(l)>maxlen:
         #        maxlen = len(l)
-        #print("longest line is: {}".format(maxlen))
+        #print("longest line is: "+str(maxlen))
 
         (path, base) = os.path.split(tablefile)
         B_tablefile = os.path.join(path, 'B'+base[1:])
@@ -932,7 +932,7 @@ class BufrTable:
                 reload_tables = True
         else:
             print("ERROR: don't know what table this is")
-            print("(path, base) = {}".format((path, base)))
+            print("(path, base) = "+str((path, base)))
             raise IOError
         
         if reload_tables:
@@ -1015,8 +1015,8 @@ class BufrTable:
                   os.path.join(ecmwf_bufr_tables_dir, pattern)+'*')
             matches = glob.glob(os.path.join(ecmwf_bufr_tables_dir,
                                              pattern)+'*')
-            print("matches = {}".format(matches))
-            print("len(matches) = {}".format(len(matches)))
+            print("matches = "+str(matches))
+            print("len(matches) = "+str(len(matches)))
             if len(matches)>0:
                 source      = matches[0]
                 destination = os.path.join(self.tables_dir, t_file)
@@ -1063,12 +1063,12 @@ class BufrTable:
                 nr_of_ignored_probl_entries += 1
                 if self.report_warnings:
                     print("ERROR: unexpected format in table B file...")
-                    print("linecount: {}".format(i))
+                    print("linecount: "+str(i))
                     print("line: ["+line_copy+"]")
                     print("Line is too short, it should hold at "+
                           "least 118 characters")
-                    print("but seems to have only: {} characters.".
-                          format(len(line_copy)))
+                    print("but seems to have only: "+
+                          str(len(line_copy))+" characters.")
                     # print("txt_reference       = ["+line_copy[0:8]+"]")
                     # print("txt_name            = ["+line_copy[8:73]+"]")
                     # print("txt_unit            = ["+line_copy[73:98]+"]")
@@ -1137,21 +1137,20 @@ class BufrTable:
                 self.table_b[reference] = b_descr
                 
                 #if reference not in self.table_b:
-                #    #print("adding descr. key {}".format(reference))
+                #    #print("adding descr. key "+str(reference))
                 #    self.table_b[reference] = b_descr
                 #else:
                 #    if self.report_warnings:
                 #        print("ERROR: multiple table B descriptors with "+
                 #              "identical reference")
                 #        print("number found. This should never happen !!!")
-                #        print("problematic descriptor is: {}".format(b_descr))
+                #        print("problematic descriptor is: "+str(b_descr))
                 #        print("Ignoring this entry .....")
                 #    try:
                 #        self.table_b[reference].checkinit(b_descr)
                 #    except AssertionError:
                 #        print()
-                #        print('The current B table file is {}'.
-                #              format(bfile))
+                #        print('The current B table file is '+bfile)
                 #        print()
                 #        raise # reraise
                 #    nr_of_ignored_probl_entries += 1
@@ -1159,12 +1158,12 @@ class BufrTable:
         if self.verbose:
             print("-------------")
             if (nr_of_ignored_probl_entries>0):
-                print("nr_of_ignored_probl_entries = {}".
-                      format(nr_of_ignored_probl_entries))
-            print("Loaded: {} table B entries".format(len(self.table_b)))
+                print("nr_of_ignored_probl_entries = "+
+                      str(nr_of_ignored_probl_entries))
+            print("Loaded: "+str(len(self.table_b))+" table B entries")
             print("-------------")
-            # print("self.table_b[006001] = {}".
-            #       format(self.table_b[int('006001', 10)].reference))
+            # print("self.table_b[006001] = "+
+            #       str(self.table_b[int('006001', 10)].reference))
             # print("-------------")
 
         #  #]
@@ -1178,19 +1177,20 @@ class BufrTable:
         """
 
         # get object for ref_reference
-        #print("trying descriptor {}".format(ref_reference))
+        #print("trying descriptor "+str(ref_reference))
         descr = self.get_descr_object(ref_reference)
         if (descr == None):
             postpone = True
             if report_unhandled:
                 print("---")
-                print("descriptor {} is never defined but is used by".
-                      format(ref_reference))
-                print("D-table entry {} (line {})".format(reference, line_nr))
+                print("descriptor "+str(ref_reference)+
+                      " is never defined but is used by")
+                print("D-table entry "+str(reference)+
+                      " (line "+str(line_nr)+")")
                 #print("postponing processing of this one")
         else:
             # add this object to the list
-            #print("adding descriptor with ref: {}".format(ref_reference))
+            #print("adding descriptor with ref: "+str(ref_reference))
             descriptor_list.append(descr)
 
         return postpone
@@ -1232,7 +1232,7 @@ class BufrTable:
         handled_blocks = 0
         list_of_handled_blocks = []
         for d_entry_block in self.list_of_d_entry_lineblocks:
-            # print("d_entry_block = {}".format(d_entry_block))
+            # print("d_entry_block = "+str(d_entry_block))
 
             # ensure i and line are defined,
             # even if d_entry_block is an empty list
@@ -1282,33 +1282,33 @@ class BufrTable:
                 # first a safety check
                 if len(descriptor_list)<count:
                     print("ERROR: unexpected format in table D file...")
-                    print("problematic descriptor is: {}".format(reference))
-                    print("linecount: {}".format(i))
+                    print("problematic descriptor is: "+str(reference))
+                    print("linecount: "+str(i))
                     print("line: ["+line+"]")
                     print("This D-table entry defines less descriptors than")
                     print("specified in the start line.")
                     print("This error is unrecoverable.")
                     print("Please report this problem, together with")
                     print("a copy of the bufr table you tried to read.")
-                    print("len(descriptor_list) = {}".
-                          format(len(descriptor_list)))
-                    print("count = {}".format(count))
+                    print("len(descriptor_list) = "+
+                          str(len(descriptor_list)))
+                    print("count = "+str(count))
                     raise IOError
                 
                 if len(descriptor_list)>count:
                     if self.report_warnings:
                         print("WARNING: unexpected format in table D file...")
-                        print("problematic descriptor is: {}".format(reference))
-                        print("linecount: {}".format(i))
+                        print("problematic descriptor is: "+str(reference))
+                        print("linecount: "+str(i))
                         print("line: ["+line+"]")
                         print("This D-table entry defines more "+
                               "descriptors than")
                         print("specified in the start line.")
                         print("Please report this problem, together with")
                         print("a copy of the bufr table you tried to read.")
-                        print("len(descriptor_list) = {}".
-                              format(len(descriptor_list)))
-                        print("count = {}".format(count))
+                        print("len(descriptor_list) = "+
+                              str(len(descriptor_list)))
+                        print("count = "+str(count))
                         print("This is a formatting problem in the BUFR")
                         print("Table but will not affect decoding.")
                         print("ignoring excess descriptors for now...")
@@ -1318,14 +1318,14 @@ class BufrTable:
                 d_descr = CompositeDescriptor(reference, descriptor_list,
                                               comment, self)
                 if reference not in self.table_d:
-                    #print("adding descr. key {}".format(reference))
+                    #print("adding descr. key "+str(reference))
                     self.table_d[reference] = d_descr
                 else:
                     if self.report_warnings:
                         print("WARNING: multiple table D descriptors "+
                               "with identical reference")
                         print("number found. This should never happen !!!")
-                        print("problematic descriptor is: {}".format(d_descr))
+                        print("problematic descriptor is: "+str(d_descr))
                         print("Please report this problem, together with")
                         print("a copy of the bufr table you tried to read.")
                         print("This is a formatting problem in the BUFR")
@@ -1409,15 +1409,15 @@ class BufrTable:
         # verify consistency of C table definition
         if num_flags != len(fldef.flag_dict):
             if self.report_warnings:
-                print('WARNING: C-table seems wrong for reference {}!'.
-                      format(reference))
-                print('expected number of flag values = {}'.format(num_flags))
-                print('found number of unique flag values = {}'.
-                      format(len(fldef.flag_dict)))
+                print('WARNING: C-table seems wrong for reference '+
+                      str(reference)+'!')
+                print('expected number of flag values = '+str(num_flags))
+                print('found number of unique flag values = '+
+                      str(len(fldef.flag_dict)))
                 # if num_flags==0:
                 print('==>ignoring this problem for now\n')
         else:
-            #print('fldef {} \n{}'.format(reference,str(fldef)))
+            #print('fldef '+str(reference)+' \n'+str(fldef))
             # store the result
             self.table_c[reference] = fldef
         #  #]
@@ -1480,7 +1480,7 @@ class BufrTable:
         this_lineblock = None
         for (i, line) in enumerate(open(dfile, 'rt')):
             line_copy = line.replace('\r', '').replace('\n', '')
-            # print("considering line {}: ["+line_copy+"]".format(i))
+            # print("considering line "+str(i)+": ["+line_copy+"]")
 
             # this fails if more than 100 elements in one D-entry
             # parts = line_copy[:18].split()
@@ -1495,11 +1495,11 @@ class BufrTable:
                 continuation_line = True
             else:
                 print("ERROR: unexpected format in table D file...")
-                print("linecount: {}".format(i))
+                print("linecount: "+str(i))
                 print("line: ["+line_copy+"]")
                 print("first 17 characters should hold either 1 or 3 integer")
-                print("numbers, but in stead it holds: {} parts".
-                      format(len(parts)))
+                print("numbers, but in stead it holds: "+
+                      str(len(parts))+" parts")
                 print("You could report this to the creator of this table "+
                       "since this should never happen.")
                 raise IOError
@@ -1535,12 +1535,12 @@ class BufrTable:
         while (handled_blocks>0):
             loop_count += 1
             if self.verbose:
-                print("==============>loop count: {}".format(loop_count))
+                print("==============>loop count: "+str(loop_count))
             (handled_blocks, remaining_blocks) = self.decode_blocks()
 
         if self.verbose:
-            print("remaining blocks: {}".format(remaining_blocks))
-            print("decoded blocks:   {}".format(handled_blocks))
+            print("remaining blocks: "+str(remaining_blocks))
+            print("decoded blocks:   "+str(handled_blocks))
         if self.report_warnings:
             if remaining_blocks > 0:
                 print("---------------------------------------------------")
@@ -1555,11 +1555,11 @@ class BufrTable:
                 
         if self.verbose:
             print('-------------')
-            print('Loaded: {} table D entries'.format(self.num_d_blocks))
+            print('Loaded: '+str(self.num_d_blocks)+' table D entries')
             print('-------------')
             
         if self.verbose:
-            print("remaining_blocks = {}".format(remaining_blocks))
+            print("remaining_blocks = "+str(remaining_blocks))
             
         if (self.num_d_blocks == remaining_blocks):
             print("ERROR: it seems you forgot to load "+
@@ -1598,30 +1598,31 @@ class BufrTable:
                     
                 # check field widths
                 if len(FXY) > 8:
-                    print("ERROR: string too long for field: FXY {}".
-                          format(FXY))
+                    print("ERROR: string too long for field: FXY "+str(FXY))
                 if len(ElementName_en) > 64:
                     print("ERROR: string too long for field: "+
-                          "ElementName_en {} {}".
-                          format(len(ElementName_en), ElementName_en))
+                          "ElementName_en "+str(len(ElementName_en))+
+                          " "+str(ElementName_en))
                 if len(BUFR_Unit) > 24:
-                    print("ERROR: string too long for field: BUFR_Unit {} {}".
-                          format(len(BUFR_Unit), BUFR_Unit))
+                    print("ERROR: string too long for field: BUFR_Unit "+
+                          str(len(BUFR_Unit))+" "+str(BUFR_Unit))
                 if len(BUFR_Scale) > 4:
-                    print("ERROR: string too long for field: BUFR_Scale {} {}".
-                          format(len(BUFR_Scale), BUFR_Scale))
+                    print("ERROR: string too long for field: BUFR_Scale "+
+                          str(len(BUFR_Scale))+" "+str(BUFR_Scale))
                 if len(BUFR_ReferenceValue) > 14:
                     print("ERROR: string too long for field: "+
-                          "BUFR_ReferenceValue {} {}".
-                          format(len(BUFR_ReferenceValue), BUFR_ReferenceValue))
+                          "BUFR_ReferenceValue "+
+                          str(len(BUFR_ReferenceValue))+" "+
+                          str(BUFR_ReferenceValue))
                 if len(BUFR_DataWidth_Bits) > 4:
                     print("ERROR: string too long for field: "+
-                          "BUFR_DataWidth_Bits {} {}".
-                          format(len(BUFR_DataWidth_Bits), BUFR_DataWidth_Bits))
+                          "BUFR_DataWidth_Bits "+
+                          str(len(BUFR_DataWidth_Bits))+" "+
+                          str(BUFR_DataWidth_Bits))
         
-                #print a''.join('[{}]'.format(s) for s in
+                #print(''.join('['+str(s)+']' for s in
                 #              [FXY,ElementName_en,BUFR_Unit,BUFR_Scale,
-                #               BUFR_ReferenceValue,BUFR_DataWidth_Bits])
+                #               BUFR_ReferenceValue,BUFR_DataWidth_Bits]))
                 
                 try:
                     reference = int(FXY, 10)
@@ -1651,13 +1652,13 @@ class BufrTable:
                     b_descr = Descriptor(reference, name, unit, unit_scale,
                                          unit_reference, data_width)
                     if reference not in table_b:
-                        #print("adding descr. key {}".format(reference))
+                        #print("adding descr. key "+str(reference))
                         table_b[reference] = b_descr
                     else:
                         print("ERROR: multiple table B descriptors with "+
                               "identical reference")
                         print("number found. This should never happen !!!")
-                        print("problematic descriptor is: {}".format(b_descr))
+                        print("problematic descriptor is: "+str(b_descr))
                         self.table_b[reference].checkinit(b_descr)
                         print("Ignoring this entry .....")
                         nr_of_ignored_probl_entries += 1
@@ -1665,9 +1666,9 @@ class BufrTable:
                     
         print("-------------")
         if (nr_of_ignored_probl_entries>0):
-            print("nr_of_ignored_probl_entries = {}".
-                  format(nr_of_ignored_probl_entries))
-        print("Loaded: {} table B entries".format(len(table_b)))
+            print("nr_of_ignored_probl_entries = "+
+                  str(nr_of_ignored_probl_entries))
+        print("Loaded: "+st(len(table_b))+" table B entries")
         print("-------------")
         self.table_b = table_b
         #  #]
@@ -1712,13 +1713,13 @@ class BufrTable:
                 d_descr = CompositeDescriptor(reference, descriptor_list,
                                               comment, self)
                 if reference not in self.table_d:
-                    # print("adding descr. key {}".format(reference))
+                    # print("adding descr. key "+str(reference))
                     self.table_d[reference] = d_descr
                 else:
                     print("WARNING: multiple table D descriptors "+
                           "with identical reference")
                     print("number found. This should never happen !!!")
-                    print("problematic descriptor is: {}".format(d_descr))
+                    print("problematic descriptor is: "+str(d_descr))
                     print("Please report this problem, together with")
                     print("a copy of the bufr table you tried to read.")
                     print("This is a formatting problem in the BUFR")
@@ -1839,8 +1840,8 @@ class BufrTable:
     def print_C_table(self):
         #  #[
         for ref in sorted(self.table_c):
-            print('flag table for reference: {}\n{}'.
-                  format(ref, str(self.table_c[ref])))
+            print('flag table for reference: '+str(ref)+'\n'+
+                  str(self.table_c[ref]))
         #  #]
     def print_D_table(self):
         #  #[
@@ -1901,17 +1902,26 @@ class BufrTable:
 
                 # write first line of text
                 if i==0:
-                    fd.write('{:06d} {:04d} {:08d} {:02d} {}\n'.
-                             format(ref, num_keys, flag_value,
-                                    num_text_lines, text_lines[0]))
+                    # this is not python2.6 compatible
+                    #fd.write('{:06d} {:04d} {:08d} {:02d} {}\n'.
+                    # so use this in stead
+                    fd.write('%06d %04d %08d %02d %s\n' %
+                             (ref, num_keys, flag_value,
+                              num_text_lines, text_lines[0]))
                 else:
-                    fd.write('{} {:08d} {:02d} {}\n'.
-                             format(' '*11, flag_value,
-                                    num_text_lines, text_lines[0]))
+                    # this is not python2.6 compatible
+                    #fd.write('{} {:08d} {:02d} {}\n'.
+                    # so use this in stead
+                    fd.write('%s %08d %02d %s\n' %
+                             (' '*11, flag_value,
+                              num_text_lines, text_lines[0]))
                     
                 for l in text_lines[1:]:
                     # write remaining lines of text
-                    fd.write('{} {}\n'.format(' '*22, l))
+                    # this is not python2.6 compatible
+                    # fd.write('{} {}\n'.format(' '*22, l))
+                    # so use this in stead
+                    fd.write('%s %s\n' % (' '*22, l))
         #  #]
     def write_D_table(self, fd):
         #  #[
@@ -1964,7 +1974,7 @@ class BufrTable:
         check whether the given descriptor is available in the current
         set of BUFR tables or not
         '''
-        # print('checked: {}'.format(descr))
+        # print('checked: '+str(descr))
         f_val = int(descr/100000.)
         if f_val == 0:
             # check table B
@@ -2004,11 +2014,11 @@ if __name__ == "__main__":
         bufr_d_table = 'ecmwf_bufrtables/D0000000000099017001.TXT'
 
         BT.load(bufr_b_table)
-        print('loaded bufr B table: {}'.format(bufr_b_table))
+        print('loaded bufr B table: '+bufr_b_table)
         BT.load(bufr_c_table)
-        print('loaded bufr C table: {}'.format(bufr_c_table))
+        print('loaded bufr C table: '+bufr_c_table)
         BT.load(bufr_d_table)
-        print('loaded bufr D table: {}'.format(bufr_d_table))
+        print('loaded bufr D table: '+bufr_d_table)
     
         sys.exit()
     
@@ -2030,8 +2040,8 @@ if __name__ == "__main__":
         code = bufr_name[1:]
         
         if not os.path.exists(bufr_table):
-            print('ERROR: {} table missing for code: {}'.
-                  format(table_type,code))
+            print('ERROR: '+str(table_type)+
+                  ' table missing for code: '+str(code))
             return
 
         realname_bufr_table = os.path.split(os.path.realpath(bufr_table))[1]
@@ -2113,7 +2123,7 @@ if __name__ == "__main__":
     DESCR_LIST = []
     for c in CODES:
         DESCR_LIST.append(BT.get_descr_object(int(c, 10)))
-    print("DESCR_LIST = {}".format(DESCR_LIST))
+    print("DESCR_LIST = "+str(DESCR_LIST))
     
     MOD_DESCR_LIST = BT.apply_modification_commands(DESCR_LIST)
     

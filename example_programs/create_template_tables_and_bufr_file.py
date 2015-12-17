@@ -198,7 +198,9 @@ def create_bufr_file(output_bufr_file, template):
             i += 1
 
         # fill prod_name
-        txt = 'filename{}.txt'.format(subset)
+        # this is not python2.6 compatible
+        #txt = 'filename{}.txt'.format(subset)
+        txt = 'filename'+str(subset)+'.txt'
         cvals[cvals_index, :] = ' '
         for icval, cval in enumerate(txt):
             cvals[cvals_index, icval] = cval
