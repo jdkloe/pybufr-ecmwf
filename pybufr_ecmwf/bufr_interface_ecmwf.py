@@ -2303,7 +2303,7 @@ class BUFRInterfaceECMWF:
         num_bytes = self.estimated_num_bytes_for_encoding
         # num_bytes = 15000
         num_words = num_bytes/4
-        words = np.zeros(num_words, dtype=np.int)
+        words = np.zeros(int(num_words), dtype=np.int)
 
         # call BUFREN
         self.store_fortran_stdout()
