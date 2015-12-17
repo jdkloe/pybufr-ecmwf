@@ -585,6 +585,9 @@ class CheckRawBUFRFile(unittest.TestCase):
 
         # check behaviour when filename is not a string
         if python3:
+            expected_exception = OSError
+            if python_major_minor == '3.2':
+                expected_exception = TypeError
             # Note: the python3 case for this assert prints some info
             # to stdout in case the test succeeds, which doesn't give the
             # nice dotted lines when running unit tests that all pass...
@@ -592,7 +595,7 @@ class CheckRawBUFRFile(unittest.TestCase):
             devnull = open(os.devnull, 'w')
             stdout_saved = sys.stdout
             sys.stdout = devnull
-            self.assertRaises(OSError, bufrfile.open, 123, 'rb')
+            self.assertRaises(expected_exception, bufrfile.open, 123, 'rb')
             sys.stdout = stdout_saved
             devnull.close()
         else:
@@ -732,10 +735,15 @@ class CheckBufrTable(unittest.TestCase):
 
         # example_programs/
         testprog = "test_read_multiple_bufr_files.py"
-        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
-        cmd += " {} {} {} {}".format(testfile1, testfile1,
-                                     testfile2, testfile2)
 
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        # this is not python2.6 compatible
+        #cmd += " {} {} {} {}".format(testfile1, testfile1,
+        #                             testfile2, testfile2)
+        # so use this in stead:
+        for fn in (testfile1, testfile1, testfile2, testfile2):
+            cmd += ' '+fn
+        
         success = call_cmd_and_verify_output(cmd)#, rundir='pybufr_ecmwf')
         self.assertEqual(success, True)
         #  #]
@@ -1061,10 +1069,13 @@ if python_major_minor <= '2.6':
     suites = [unittest.TestLoader().loadTestsFromTestCase(testclass)
               for testclass in testclasses]
     alltests = unittest.TestSuite(suites)
-    unittest.TextTestRunner().run(alltests)
+    runner = unittest.TextTestRunner()
+    test_result = runner.run(alltests)
+    success = test_result.wasSuccessful()
 else:
     # exit parameter was introduced in python 2.7
-    unittest.main(exit=False)
+    test_result = unittest.main(exit=False)
+    success = test_result.result.wasSuccessful()
 
 # this will exit and not run any code following the next line!
 # unittest.main()
@@ -1087,6 +1098,9 @@ if PYBUFR_ECMWF_MODULE_WAS_RENAMED:
 
 # print('done with unit testing')
 # print('python_major_minor: ', python_major_minor)
+
+print('just before exit: success = ', success)
+sys.exit(not success)
 
 # still todo:
 #
