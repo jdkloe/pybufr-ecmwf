@@ -17,6 +17,7 @@ of unexpanded descriptors.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
+from __future__ import print_function
 import sys     # operating system functions
 
 # import the python file defining the RawBUFRFile class
@@ -24,6 +25,33 @@ import sys     # operating system functions
 from pybufr_ecmwf.bufr import BUFRReader
 
 #  #]
+
+def construct_unique_filename(list_of_unexp_descr, max_filename_len=75):
+    #  #[ construct a fileame based on the given template
+    '''
+    First try to combine the unexpanded descriptor list, by joining them
+    with underscores. This should make a guaranteed unique filename
+    fit for sorting a bufr file into different types of messages.
+    However, the filename can become too long for the current filesystem,
+    so implement a maximum length, and if the name is too long, truncate it
+    and add the hash of the full descriptor list to make it unique.
+    '''
+    output_filename = '_'.join(d for d in list_of_unexp_descr)
+    if len(output_filename) > max_filename_len:
+        import hashlib
+        m = hashlib.md5()
+        m.update(output_filename)
+        md5hexsum = m.hexdigest()
+        n=len(md5hexsum)
+        if n>max_filename_len:
+            print('Sorry, your setting for filename length is shorter than')
+            print('the md5 hexdigest hash length. This way the bufr messages')
+            print('cannot be sorted into files with guaranteerd unique names.')
+            print('Please choose a filename length of {} or above'.format(n))
+        output_filename = output_filename[:max_filename_len-n]+md5hexsum
+            
+    return output_filename
+    #  #]
 
 def sort_msgs(input_bufr_file):
     #  #[
@@ -42,13 +70,21 @@ def sort_msgs(input_bufr_file):
     while True:
         try:
             bob.get_next_msg()
-            msg_nr += 1
         except EOFError:
             break
-
-        print 'handling message nr ', msg_nr
+        except KeyError:
+            # allow sorting of BUFR messages that cannot be decoded
+            # because the needed key is not in the available set of
+            # BUFR table files. This tool only uses unexpanded descriptors
+            # so ability to decode should not be required.
+            # A user still may wish to first sort, and then decode
+            # a subset of messages that can be decoded.
+            pass
+        
+        msg_nr += 1
+        print('handling message nr ', msg_nr)
         list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
-        output_filename = '_'.join(d for d in list_of_unexp_descr)
+        output_filename = construct_unique_filename(list_of_unexp_descr)
         if files_dict.has_key(output_filename):
             fdescr = files_dict[output_filename][0]
             files_dict[output_filename][1] += 1 # increment count
@@ -61,7 +97,7 @@ def sort_msgs(input_bufr_file):
     generated_files = files_dict.keys()
     for k in files_dict.keys():
         count = files_dict[k][1]
-        print 'file ', k, ' contains ', count, ' messages'
+        print('file ', k, ' contains ', count, ' messages')
         files_dict[k][0].close()
 
     return generated_files
@@ -69,10 +105,11 @@ def sort_msgs(input_bufr_file):
 
 #  #[ run the tool
 if len(sys.argv) < 2:
-    print 'please give a BUFR file as argument'
+    print('please give a BUFR file as argument')
     sys.exit(1)
 
 INPUT_BUFR_FILE = sys.argv[1]
 GEN_FILES = sort_msgs(INPUT_BUFR_FILE)
-# print 'generated_files = ', GEN_FILES
+print('generated_files:')
+print('\n'.join('   {}'.format(fn) for fn in GEN_FILES))
 #  #]
