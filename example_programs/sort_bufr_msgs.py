@@ -64,12 +64,16 @@ def sort_msgs(input_bufr_file):
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
+    num_msgs = bob.rbf.get_num_bufr_msgs()
+    progress_step = max(1,int(num_msgs/20))
+    
     files_dict = {}
-
     msg_nr = 0
     while True:
+        can_be_decoded = False
         try:
             bob.get_next_msg()
+            can_be_decoded = True
         except EOFError:
             break
         except KeyError:
@@ -82,7 +86,9 @@ def sort_msgs(input_bufr_file):
             pass
         
         msg_nr += 1
-        print('handling message nr ', msg_nr)
+        if progress_step*int(msg_nr/progress_step) == msg_nr:
+            print('handling message nr {} out of {}'.format(msg_nr, num_msgs))
+            
         list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
         output_filename = construct_unique_filename(list_of_unexp_descr)
         if files_dict.has_key(output_filename):
@@ -91,25 +97,46 @@ def sort_msgs(input_bufr_file):
         else:
             fdescr = open(output_filename, 'wb')
             count = 1
-            files_dict[output_filename] = [fdescr, count]
+            files_dict[output_filename] = [fdescr, count, can_be_decoded,
+                                           list_of_unexp_descr]
         fdescr.write(bob.bufr_obj.encoded_message)
 
     generated_files = files_dict.keys()
-    for k in files_dict.keys():
-        count = files_dict[k][1]
-        print('file ', k, ' contains ', count, ' messages')
+    num_that_can_be_decoded = 0
+    num_that_cannot_be_decoded = 0
+    for k in files_dict:
+        fdescr, count, can_be_decoded, list_of_unexp_descr = files_dict[k]
+        print('file {} contains {} messages'.format(k[:25], count))
         files_dict[k][0].close()
-
+        if can_be_decoded:
+            num_that_can_be_decoded += 1
+        else:
+            num_that_cannot_be_decoded += 1
+            # check to see if local descriptors are present
+            for d in list_of_unexp_descr:
+                if int(d[3:]) >= 192:
+                    print('==>A local descriptor definition is present: ', d)
+            print('==>this template cannot be decoded with '+
+                  'standard WMO BUFR tables.')
+            
+    print('Sorting results:')
+    print('BUFR messages with {} different templates are present in this file'.
+          format(num_that_can_be_decoded+num_that_cannot_be_decoded))
+    if num_that_cannot_be_decoded > 0:
+        print('decoding is not possible for {} templates.'.
+              format(num_that_cannot_be_decoded))
+        
     return generated_files
     #  #]
 
-#  #[ run the tool
-if len(sys.argv) < 2:
-    print('please give a BUFR file as argument')
-    sys.exit(1)
+if __name__ == '__main__':
+    #  #[ run the tool
+    if len(sys.argv) < 2:
+        print('please give a BUFR file as argument')
+        sys.exit(1)
 
-INPUT_BUFR_FILE = sys.argv[1]
-GEN_FILES = sort_msgs(INPUT_BUFR_FILE)
-print('generated_files:')
-print('\n'.join('   {}'.format(fn) for fn in GEN_FILES))
-#  #]
+    INPUT_BUFR_FILE = sys.argv[1]
+    GEN_FILES = sort_msgs(INPUT_BUFR_FILE)
+    print('generated_files:')
+    print('\n'.join('   {}'.format(fn) for fn in GEN_FILES))
+    #  #]
