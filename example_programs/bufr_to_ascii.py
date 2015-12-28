@@ -586,4 +586,5 @@ def main():
 #  #]
 
 # run the tool
-main()
+if __name__ == '__main__':
+    main()

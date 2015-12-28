@@ -1815,7 +1815,7 @@ defining all array sizes in the interfaces to the ecmwf library.
 These constants are not available through the f2py interface.
 They are defined in file:
 ecmwf_bufr_lib/bufr_000380/bufrdc/parameter.F
-and are extracted from that file and store in this python
+and are extracted from that file and stored in this python
 file for convenience
 """)
         pfd.write('"""\n')
