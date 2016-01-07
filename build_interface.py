@@ -1892,6 +1892,7 @@ if __name__ == "__main__":
         BI = InstallBUFRInterfaceECMWF(verbose=True,
                                        preferred_fortran_compiler='gfortran',
                                        download_library_sources=False)
+        #                               c_flags="-fleading-underscore")
     elif TESTCASE == 3:
         # note that the "-O" flag is allways set for each fortran compiler
         # so no need to specify it to the fortran_flags parameter.
