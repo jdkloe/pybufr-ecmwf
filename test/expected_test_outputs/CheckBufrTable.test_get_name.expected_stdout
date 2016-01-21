@@ -2,6 +2,7 @@ loading B table from file: pybufr_ecmwf/ecmwf_bufrtables/B2550000000098006001.TX
 -------------
 Loaded: 985 table B entries
 -------------
+Loaded 985 B table entries
 loading C table from file: pybufr_ecmwf/ecmwf_bufrtables/C2550000000098006001.TXT
 WARNING: C-table seems wrong for reference 21070!
 expected number of flag values = 24
@@ -78,8 +79,10 @@ adding modifier: 204002
 ==============>loop count: 2
 ==============>loop count: 3
 ==============>loop count: 4
+==============>loop count: 5
 remaining blocks: 7
-decoded blocks:   0
+decoded blocks (prev try):   0
+decoded blocks (this try):   0
 ---------------------------------------------------
 Reporting problematic blocks:
 ---------------------------------------------------
@@ -109,5 +112,6 @@ D-table entry 310024 (line 1233)
 Loaded: 308 table D entries
 -------------
 remaining_blocks = 7
+Loaded 301 D table entries
 OBJ:  reference: [1001] name: [WMO BLOCK NUMBER] unit: [NUMERIC] unit_scale: [0] unit_reference: [0] data_width: [7] 
 OBJ.name:  WMO BLOCK NUMBER

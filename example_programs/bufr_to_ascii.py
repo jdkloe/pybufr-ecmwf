@@ -306,6 +306,7 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
+#                     verbose=True, expand_flags=expand_flags)
                      verbose=False, expand_flags=expand_flags)
 
     msg_nr = 0

@@ -125,6 +125,7 @@ class BUFRInterfaceECMWF:
         self.actual_nr_of_expanded_descriptors = None
         
         self.nr_of_descriptors_startval = 50
+        #self.nr_of_descriptors_maxval   = 400000000
         self.nr_of_descriptors_maxval   = 500000
         self.nr_of_descriptors_multiplyer = 10
         
@@ -427,7 +428,7 @@ class BUFRInterfaceECMWF:
         This is needed because otherwise the fortran and python/c
         output get written to 2 different output buffers, and will
         be mixed in inpredictable ways (which makes it impossible
-        to define unit test cases ...)
+        to interpret the output or to define unit test cases ...)
         """
         if 'STD_OUT' in os.environ:
             outp_fileunit = os.environ['STD_OUT']
@@ -863,7 +864,7 @@ class BUFRInterfaceECMWF:
         # finally load the tables into memory
         self.bt = BufrTable(tables_dir=self.private_bufr_tables_dir,
                             verbose=False, report_warnings=False)
-        #                    verbose=True, report_warnings=False)
+        #                    verbose=True, report_warnings=True)
         
         # setup_tables already has created the symlinks to the BUFR tables
         # so don't use this autolink feature for now
@@ -1658,6 +1659,7 @@ class BUFRInterfaceECMWF:
         #        self.py_expanded_descr_list.append(descr)
 
         # print('result:')
+        # print('self.delayed_repl_present = ', self.delayed_repl_present)
         # print('self.py_expanded_descr_list: ',self.py_expanded_descr_list)
         # print('with length: ',len(self.py_expanded_descr_list))
         #  #]

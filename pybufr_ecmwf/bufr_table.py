@@ -918,7 +918,7 @@ class BufrTable:
         B_tablefile = os.path.join(path, 'B'+base[1:])
         C_tablefile = os.path.join(path, 'C'+base[1:])
         D_tablefile = os.path.join(path, 'D'+base[1:])
-        
+
         reload_tables = False
         if base[0].upper() == 'B':
             #
@@ -1034,7 +1034,7 @@ class BufrTable:
         """
         if self.verbose:
             print("loading B table from file: "+bfile)
-            
+
         nr_of_ignored_probl_entries = 0
         for (i, line) in enumerate(open(bfile, 'rt')):
             success = True
@@ -1165,7 +1165,7 @@ class BufrTable:
             # print("self.table_b[006001] = "+
             #       str(self.table_b[int('006001', 10)].reference))
             # print("-------------")
-
+            print('Loaded {} B table entries'.format(len(self.table_b.keys())))
         #  #]
     def add_ref_to_descr_list(self, descriptor_list, reference,
                               ref_reference, line_nr,
@@ -1239,6 +1239,9 @@ class BufrTable:
             i = 0
             line = ''
             
+            # notes:
+            # i is the line number where this d_entry_block is defined
+            # j is the counter along all d_entry_blocks
             for (j, (i, line)) in enumerate(d_entry_block):
                 #print(j, "considering line ["+line+"]")
                 # this fails if more than 100 elements in one D-entry
@@ -1294,7 +1297,7 @@ class BufrTable:
                           str(len(descriptor_list)))
                     print("count = "+str(count))
                     raise IOError
-                
+
                 if len(descriptor_list)>count:
                     if self.report_warnings:
                         print("WARNING: unexpected format in table D file...")
@@ -1343,7 +1346,9 @@ class BufrTable:
             self.list_of_d_entry_lineblocks.remove(d_entry_block)
 
         remaining_blocks = len(self.list_of_d_entry_lineblocks)
-                
+
+        # print('DEBUG: handled_blocks   = ', handled_blocks)
+        # print('DEBUG: remaining_blocks = ', remaining_blocks)
         return (handled_blocks, remaining_blocks)
         #  #]
     def add_c_table_entry(self,lineblock):
@@ -1530,17 +1535,21 @@ class BufrTable:
             print("**** second pass ****")
             print("*********************")
             
-        handled_blocks = 1
+        handled_blocks_prev_try = 1
+        handled_blocks_this_try = 1
         loop_count = 0
-        while (handled_blocks>0):
+        while ( (handled_blocks_prev_try>0) or
+                (handled_blocks_this_try>0)    ):
+            handled_blocks_prev_try = handled_blocks_this_try
             loop_count += 1
             if self.verbose:
                 print("==============>loop count: "+str(loop_count))
-            (handled_blocks, remaining_blocks) = self.decode_blocks()
-
+            (handled_blocks_this_try, remaining_blocks) = self.decode_blocks()
+            
         if self.verbose:
             print("remaining blocks: "+str(remaining_blocks))
-            print("decoded blocks:   "+str(handled_blocks))
+            print("decoded blocks (prev try):   "+str(handled_blocks_prev_try))
+            print("decoded blocks (this try):   "+str(handled_blocks_this_try))
         if self.report_warnings:
             if remaining_blocks > 0:
                 print("---------------------------------------------------")
@@ -1569,8 +1578,13 @@ class BufrTable:
             print("first, because it is needed to apply consistency "+
                   "checking on the")
             print("D-table during the read process.")
+            print("")
+            print("Alternatively, this could point to D table entries")
+            print("that have no definition in the provided B table.")
             raise ProgrammingError
 
+        if self.verbose:
+            print('Loaded {} D table entries'.format(len(self.table_d.keys())))
         #  #]
     def read_WMO_csv_table_b(self, b_filename):
         #  #[ load table B from WMO csv file
