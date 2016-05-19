@@ -1165,8 +1165,6 @@ class BufrTable:
             # print("self.table_b[006001] = "+
             #       str(self.table_b[int('006001', 10)].reference))
             # print("-------------")
-            #num_B_entries = len(self.table_b.keys())
-            #print('Loaded '+str(num_B_entries)+' B table entries')
         #  #]
     def add_ref_to_descr_list(self, descriptor_list, reference,
                               ref_reference, line_nr,
@@ -1585,7 +1583,10 @@ class BufrTable:
             raise ProgrammingError
 
         if self.verbose:
-            print('Loaded {} D table entries'.format(len(self.table_d.keys())))
+            # this is not python2.6 compatible
+            #print('Loaded {} D table entries'.format(len(self.table_d.keys())))
+            num_d_keys = len(self.table_d.keys())
+            print('Loaded '+str(num_d_keys)+' D table entries')
         #  #]
     def read_WMO_csv_table_b(self, b_filename):
         #  #[ load table B from WMO csv file
