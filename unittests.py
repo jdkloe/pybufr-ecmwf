@@ -172,7 +172,7 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
 
     # force verbose output (usefull to see what happens if
     # travis fails for a python version I dont have locally)
-    #verbose = True
+    verbose = True
 
     #  #[ some old notes
     #print("__name__ = ", __name__)
