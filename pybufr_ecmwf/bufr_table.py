@@ -1165,7 +1165,8 @@ class BufrTable:
             # print("self.table_b[006001] = "+
             #       str(self.table_b[int('006001', 10)].reference))
             # print("-------------")
-            print('Loaded {} B table entries'.format(len(self.table_b.keys())))
+            print('Loaded {} B table entries'.
+                  format(str(len(self.table_b.keys()))))
         #  #]
     def add_ref_to_descr_list(self, descriptor_list, reference,
                               ref_reference, line_nr,
