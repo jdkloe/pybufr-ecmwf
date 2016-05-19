@@ -170,6 +170,10 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
     # assume at first that all will work as planned
     success = True
 
+    # force verbose output (usefull to see what happens if
+    # travis fails for a python version I dont have locally)
+    verbose = True
+
     #  #[ some old notes
     #print("__name__ = ", __name__)
     #print("__file__ = ", __file__)

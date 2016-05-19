@@ -732,8 +732,13 @@ def symlink_to_all_files(source_dir, dest_dir):
     for fnm in filelist:
         filename = os.path.split(fnm)[1]
         if not os.path.islink(fnm):
-            shutil.copy(fnm, os.path.join(dest_dir, filename))
-
+            dest = os.path.join(dest_dir, filename)
+            shutil.copy(fnm, dest)
+            # and make sure they are world readable
+            # to ensure the module can be used by all, even if
+            # the setup.py build was done as root or using sudo
+            os.chmod(dest, 0o0644)
+            
     # then create all symlinks
     links = []
     for fnm in filelist:
@@ -752,6 +757,45 @@ def symlink_to_all_files(source_dir, dest_dir):
     # print(filelist)
     # sys.exit(1)
 
+    #  #]
+def generate_c_underscore_wrapper(source_dir):
+    #  #[ create macosx wrapper code
+    print('starting generate_c_underscore_wrapper')
+    source_file_list = source_dir+"/bufrdc/*.F "+\
+                       source_dir+"/pbio/pbbufr.F"
+    # print(source_file_list)
+    wrapper_name = source_dir+"/pbio/c_macosx_wrapper.c"
+    fd_out = open(wrapper_name,'w')
+    for pattern in source_file_list.split():
+        for fortran_file in glob.glob(pattern):
+            cmd = 'grep -i subroutine '+fortran_file
+            (lines_stdout, lines_stderr) = run_shell_command(cmd, verbose=False)
+            # these lines are unicode strings in python3
+            for line in lines_stdout:
+                def_line = line.strip()
+                #print('['+def_line+']')
+                if def_line=='':
+                    continue
+                if def_line[0]!='C':
+                    subr_name = def_line.split()[1].split('(')[0]
+                    #print('file: '+fortran_file,
+                    #      'subr_name: '+subr_name)
+                    fd_out.write('extern void *{}_();\n'.\
+                                 format(subr_name))
+                    fd_out.write('void *_{}_() {{ return {}_(); }}\n\n'.\
+                                 format(subr_name, subr_name))
+
+    # manually add the 4 needed c-functions from pbio.c
+    for c_func in ['pbopen', 'pbclose', 'pbwrite', 'pbseek']:
+        fd_out.write('extern void *{}();\n'.\
+                     format(c_func))
+        fd_out.write('void *_{}() {{ return {}(); }}\n\n'.\
+                     format(c_func, c_func))
+
+    fd_out.close()
+
+    print('Created wrapper: '+wrapper_name)
+    return wrapper_name
     #  #]
 
 class InstallBUFRInterfaceECMWF(object):
@@ -1672,11 +1716,12 @@ class InstallBUFRInterfaceECMWF(object):
 
             # call f2py and create a signature file that defines the
             # interfacing to the fortran routines in this library
-            cmd = f2py_tool_name+\
-                      " --build-dir "+self.wrapper_build_dir+\
-                      " -m "+self.wrapper_module_name+\
-                      " -h "+signatures_filename+\
-                      " "+source_file_list
+            cmd = (f2py_tool_name+
+                      " --overwrite-signature "+
+                      " --build-dir "+self.wrapper_build_dir+
+                      " -m "+self.wrapper_module_name+
+                      " -h "+signatures_filename+
+                      " "+source_file_list)
 
             if not self.verbose:
                 cmd += " 2>1 > f2py_build.log"
@@ -1711,6 +1756,27 @@ class InstallBUFRInterfaceECMWF(object):
             adapt_f2py_signature_file(signatures_fullfilename,
                                       self.integer_sizes)
             #  #]
+
+            add_macosx_wrapper = False
+            if add_macosx_wrapper:
+                wrapper_name = generate_c_underscore_wrapper(source_dir)
+                wrapper_object = os.path.splitext(wrapper_name)[0]+'.o'
+
+                # compile the c wrapper code
+                cmd = 'gcc -c '+wrapper_name+' -o '+wrapper_object
+                os.system(cmd)
+                
+                # options
+                # -r: insert into archive with replacement
+                # -l: not used
+                # -c: create the archive if it does not exist
+                # -s: add/update an index to the archive
+                # -v: verbose output
+
+                # update the archive
+                cmd = 'ar -rlcsv {} {}'.\
+                      format(self.bufr_lib_file, wrapper_object)
+                os.system(cmd)
 
         #  #[ create the wrapper interface
         # it might be usefull for debugging to include this option: --debug-capi

@@ -17,8 +17,15 @@ if python3:
     from html.parser import HTMLParser # parsing of html
     import urllib.request as urllib    # handling of url downloads
 else:
-    from HTMLParser import HTMLParser # parsing of html
-    import urllib      # handling of url downloads
+    try:
+        from HTMLParser import HTMLParser # parsing of html
+        import urllib      # handling of url downloads
+    except ImportError:
+        # it seems when installing using pip3, the python3 switch
+        # does not allways have the correct value, so retry the import
+        # by trying to load the python3 modules
+        from html.parser import HTMLParser # parsing of html
+        import urllib.request as urllib    # handling of url downloads
 
 #
 # disable the warning on too many records, since here this
