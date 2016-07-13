@@ -548,6 +548,50 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
 
     #  #]
 
+
+class CheckBUFRReader(unittest.TestCase):
+    #  #[ 2 tests
+    """
+    a class to check the bufr_reader class
+    """
+    # common settings for the following tests
+    testinputfileGRAS = os.path.join(
+        TESTDATADIR,
+        'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR')
+    testinputfileGOME = os.path.join(
+        TESTDATADIR,
+        'S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr')
+
+    def test_run_decoding_example_GRAS(self):
+        #  #[
+        """
+        test the decoding example program
+        """
+
+        # run the provided example code and verify the output
+        testprog = "example_for_using_bufr_reader_for_decoding.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' ' + self.testinputfileGRAS
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+
+    def test_run_decoding_example_GOME(self):
+        #  #[
+        """
+        test the decoding example program
+        """
+
+        # run the provided example code and verify the output
+        testprog = "example_for_using_bufr_reader_for_decoding.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' ' + self.testinputfileGOME
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+
 class CheckRawBUFRFile(unittest.TestCase):
     #  #[ 4 tests
     """
