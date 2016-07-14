@@ -184,3 +184,22 @@ for subs in range(1, nsubsets+1):
     print(str(subs)+','+','.join(str(val) for val in data[:]))
 
 bob.close()
+
+######################################################
+# reopen the BUFR file as test an try message iterator
+######################################################
+
+
+print('*'*50)
+
+input_bufr_file = output_bufr_file
+bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
+bob.setup_tables(table_b_to_use='B'+table_name,
+                 table_d_to_use='D'+table_name)
+
+for data, names, units in bob.messages():
+    print(data)
+    print(names)
+    print(units)
+
+bob.close()
