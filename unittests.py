@@ -45,7 +45,9 @@ are planned as well.
 from __future__ import (absolute_import, division,
                         print_function) # , unicode_literals)
 
-import os, sys, shutil    # operating system functions
+import os         # operating system functions
+import sys        # operating system functions
+import shutil     # operating system functions
 import unittest   # import the unittest functionality
 import subprocess # support running additional executables
 
@@ -82,7 +84,7 @@ except (SyntaxError, ImportError) as err:
     # is renamed back to pybufr_ecmwf, so allow imports to fail
     print('ERROR: some imports failed!!!')
     # print('Error was: '+str(err))
-    pass
+    # pass
     # raise
 
 #import ecmwfbufr # import the wrapper module
@@ -256,7 +258,7 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
             print("to find out what happended execute this diff command:")
             print("xdiff "+actual_stdout+' '+expected_stdout)
             if verbose:
-                for l in lines_stdout:          print('output:      ['+l+']')
+                for l in lines_stdout: print('output:      ['+l+']')
                 for l in expected_lines_stdout: print('exp. output: ['+l+']')
             success = False
 
@@ -265,10 +267,10 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
             print("to find out what happended execute this diff command:")
             print("xdiff "+actual_stderr+' '+expected_stderr)
             if verbose:
-                for l in lines_stderr:          print('output:      ['+l+']')
+                for l in lines_stderr: print('output:      ['+l+']')
                 for l in expected_lines_stderr: print('exp. output: ['+l+']')
             success = False
-            
+
     except IOError:
         print("ERROR: expected output not found; probably because")
         print("you just defined a new unittest case.")
@@ -559,7 +561,8 @@ class CheckBUFRReader(unittest.TestCase):
         'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR')
     testinputfileGOME = os.path.join(
         TESTDATADIR,
-        'S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr')
+        'S-O3M_GOME_NOP_02_M02_20120911034158Z_'+
+        '20120911034458Z_N_O_20120911043724Z.bufr')
 
     def test_run_decoding_example_GRAS(self):
         #  #[
@@ -796,7 +799,7 @@ class CheckBufrTable(unittest.TestCase):
         # so use this in stead:
         for fn in (testfile1, testfile1, testfile2, testfile2):
             cmd += ' '+fn
-        
+
         success = call_cmd_and_verify_output(cmd)#, rundir='pybufr_ecmwf')
         self.assertEqual(success, True)
         #  #]
@@ -1122,7 +1125,7 @@ class CheckDelayedReplication(unittest.TestCase):
         b_table_file = 'B_test_table.txt'
         c_table_file = 'C_test_table.txt'
         d_table_file = 'D_test_table.txt'
-        
+
         testprog = "delayed_replication_example.py"
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         success = call_cmd_and_verify_output(cmd)
@@ -1154,11 +1157,11 @@ if python_major_minor <= '2.6':
     alltests = unittest.TestSuite(suites)
     runner = unittest.TextTestRunner()
     test_result = runner.run(alltests)
-    success = test_result.wasSuccessful()
+    test_success = test_result.wasSuccessful()
 else:
     # exit parameter was introduced in python 2.7
     test_result = unittest.main(exit=False)
-    success = test_result.result.wasSuccessful()
+    test_success = test_result.result.wasSuccessful()
 
 # this will exit and not run any code following the next line!
 # unittest.main()
@@ -1182,8 +1185,8 @@ if PYBUFR_ECMWF_MODULE_WAS_RENAMED:
 # print('done with unit testing')
 # print('python_major_minor: ', python_major_minor)
 
-print('just before exit: success = ', success)
-sys.exit(not success)
+print('just before exit: success = ', test_success)
+sys.exit(not test_success)
 
 # still todo:
 #

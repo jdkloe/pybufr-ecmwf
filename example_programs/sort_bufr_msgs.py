@@ -39,17 +39,18 @@ def construct_unique_filename(list_of_unexp_descr, max_filename_len=75):
     output_filename = '_'.join(d for d in list_of_unexp_descr)
     if len(output_filename) > max_filename_len:
         import hashlib
-        m = hashlib.md5()
-        m.update(output_filename)
-        md5hexsum = m.hexdigest()
-        n=len(md5hexsum)
-        if n>max_filename_len:
+        md5 = hashlib.md5()
+        md5.update(output_filename)
+        md5hexsum = md5.hexdigest()
+        md5_len = len(md5hexsum)
+        if md5_len > max_filename_len:
             print('Sorry, your setting for filename length is shorter than')
             print('the md5 hexdigest hash length. This way the bufr messages')
             print('cannot be sorted into files with guaranteerd unique names.')
-            print('Please choose a filename length of {} or above'.format(n))
-        output_filename = output_filename[:max_filename_len-n]+md5hexsum
-            
+            print('Please choose a filename length of {} or above'.
+                  format(md5_len))
+        output_filename = output_filename[:max_filename_len-md5_len]+md5hexsum
+
     return output_filename
     #  #]
 
@@ -65,8 +66,8 @@ def sort_msgs(input_bufr_file):
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
     num_msgs = bob.rbf.get_num_bufr_msgs()
-    progress_step = max(1,int(num_msgs/20))
-    
+    progress_step = max(1, int(num_msgs/20))
+
     files_dict = {}
     msg_nr = 0
     while True:
@@ -84,11 +85,11 @@ def sort_msgs(input_bufr_file):
             # A user still may wish to first sort, and then decode
             # a subset of messages that can be decoded.
             pass
-        
+
         msg_nr += 1
         if progress_step*int(msg_nr/progress_step) == msg_nr:
             print('handling message nr {} out of {}'.format(msg_nr, num_msgs))
-            
+
         list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
         output_filename = construct_unique_filename(list_of_unexp_descr)
         if files_dict.has_key(output_filename):
@@ -113,19 +114,20 @@ def sort_msgs(input_bufr_file):
         else:
             num_that_cannot_be_decoded += 1
             # check to see if local descriptors are present
-            for d in list_of_unexp_descr:
-                if int(d[3:]) >= 192:
-                    print('==>A local descriptor definition is present: ', d)
+            for descr in list_of_unexp_descr:
+                if int(descr[3:]) >= 192:
+                    print('==>A local descriptor definition is present: ',
+                          descr)
             print('==>this template cannot be decoded with '+
                   'standard WMO BUFR tables.')
-            
+
     print('Sorting results:')
     print('BUFR messages with {} different templates are present in this file'.
           format(num_that_can_be_decoded+num_that_cannot_be_decoded))
     if num_that_cannot_be_decoded > 0:
         print('decoding is not possible for {} templates.'.
               format(num_that_cannot_be_decoded))
-        
+
     return generated_files
     #  #]
 
