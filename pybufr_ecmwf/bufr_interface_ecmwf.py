@@ -2304,7 +2304,7 @@ class BUFRInterfaceECMWF:
         # define the output buffer
         num_bytes = self.estimated_num_bytes_for_encoding
         # num_bytes = 15000
-        num_words = num_bytes/4
+        num_words = num_bytes//4
         words = np.zeros(int(num_words), dtype=np.int)
 
         # call BUFREN
@@ -2324,7 +2324,8 @@ class BUFRInterfaceECMWF:
                          kerr)  # output: an error flag
         lines = self.get_fortran_stdout()
         self.display_fortran_stdout(lines)
-        print("bufren call finished")
+        if self.verbose:
+            print("bufren call finished")
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'bufren'))
 
@@ -2333,13 +2334,15 @@ class BUFRInterfaceECMWF:
         #          (''.join(c for c in cvals[i,:])).strip()+'"')
         #          
 
-        print("words = ")
-        print(words)
+        if self.verbose:
+            print("words = ")
+            print(words)
 
         nonzero_locations = np.where(words!=0)
         #print('nonzero_locations = ',nonzero_locations[0])
         nw = nonzero_locations[0][-1] + 1
-        print("encoded size: ", nw, " words or ", nw*4, " bytes")
+        if self.verbose:
+            print("encoded size: ", nw, " words or ", nw*4, " bytes")
 
         self.encoded_message = words[:nw]
         
