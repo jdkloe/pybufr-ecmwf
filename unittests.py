@@ -548,7 +548,6 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
 
     #  #]
 
-
 class CheckBUFRReader(unittest.TestCase):
     #  #[ 2 tests
     """
@@ -591,6 +590,7 @@ class CheckBUFRReader(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
         #  #]
+    #  #]
 
 class CheckRawBUFRFile(unittest.TestCase):
     #  #[ 4 tests
@@ -1103,6 +1103,36 @@ class CheckVersionInfo(unittest.TestCase):
         cmd = os.path.join(TEST_DIR, testprog)
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
+    #  #]
+
+class CheckDelayedReplication(unittest.TestCase):
+    #  #[
+    '''
+    a class to test the encoding and decoding of BUFR files
+    using delayed replication with different replication
+    factors for subsequent subsets in the same message
+    '''
+    def test_delayed_replication(self):
+        '''
+        * composes custom BUFR tables
+        * then encodes a test BUFR message
+        * then decodes the same message again
+        '''
+        test_bufr_file = 'dummy_bufr_file.bfr'
+        b_table_file = 'B_test_table.txt'
+        c_table_file = 'C_test_table.txt'
+        d_table_file = 'D_test_table.txt'
+        
+        testprog = "delayed_replication_example.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+
+        # clean up
+        os.remove(b_table_file)
+        os.remove(c_table_file)
+        os.remove(d_table_file)
+        os.remove(test_bufr_file)
     #  #]
 
 # cleanup old tmp_BUFR_TABLES dir that may have been created by a previous run

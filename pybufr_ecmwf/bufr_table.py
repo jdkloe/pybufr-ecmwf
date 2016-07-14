@@ -385,8 +385,8 @@ class Replicator(Descriptor):
         # xx = num. descr. to replicate
         # yyy = repl. count
         f = '1'
-        xx = '%02' % len(self.descriptor_list)
-        yyy = '%03' % self.repeats
+        xx = '%02d' % len(self.descriptor_list)
+        yyy = '%03d' % self.repeats
         return int(f+xx+yyy)
         #return f+xx+yyy+';'+str(";".join(str(d.reference) for d
         #                                 in self.descriptor_list))
