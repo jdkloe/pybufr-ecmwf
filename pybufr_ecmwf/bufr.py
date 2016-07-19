@@ -276,15 +276,19 @@ class BUFRReaderBUFRDC:
 
         num_subsets  = self.bufr_obj.get_num_subsets()
         num_elements = self.bufr_obj.get_num_elements()
-        result = numpy.zeros([num_subsets, num_elements], dtype=float)
 
         #print('DEBUG: num_subsets = ', num_subsets)
         #print('DEBUG: num_elements = ', num_elements)
 
-        for descr_nr in range(num_elements):
-            
-            result[:, descr_nr] = self.bufr_obj.get_values(descr_nr)
-            # autoget_cval option not functional yet
+        # The BUFR reader reads an array that is actually larger than the data.
+        # Here we reshape the data to an array of this bigger size and then
+        # slice it down to the actual size of the data. reshape data into 2D
+        # array of size that was actually read
+        factor = int(len(self.bufr_obj.values) / self.bufr_obj.actual_kelem)
+        result = self.bufr_obj.values.reshape(
+            (factor, self.bufr_obj.actual_kelem))[:num_subsets, :num_elements]
+
+        # autoget_cval option not functional yet
 
         return result
         #  #]
