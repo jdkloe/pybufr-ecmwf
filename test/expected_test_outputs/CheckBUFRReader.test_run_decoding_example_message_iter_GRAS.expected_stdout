@@ -1,0 +1,11 @@
+--------------------------------------------------
+BUFR decoding example
+--------------------------------------------------
+loading testfile:  test/testdata/S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR
+(7210,)
+7210
+7210
+succesfully decoded data from file:  test/testdata/S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR
+--------------------------------------------------
+done
+--------------------------------------------------

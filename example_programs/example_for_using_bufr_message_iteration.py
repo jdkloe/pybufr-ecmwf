@@ -2,14 +2,18 @@
 
 """
 This is a small example program intended to demonstrate how the highest
-level pybufr_ecmwf.bufr_reader interface to the ECMWF BUFR library may be used
-for decoding a BUFR message.
+level pybufr_ecmwf.bufr interface to the ECMWF BUFR library may be used
+for decoding a BUFR message via iteration.
+
+This interface only works for BUFR files that contain messages which
+can be represented as 2D arrays.
 """
 
+from __future__ import print_function
 import sys
 import os
 
-from pybufr_ecmwf.bufr_reader import BUFRReader
+from pybufr_ecmwf.bufr import BUFRReader
 
 def decoding_example(input_bufr_file):
     """
@@ -25,9 +29,10 @@ def decoding_example(input_bufr_file):
     # read the binary data using the BUFRReader class
     print('loading testfile: ', input_bufr_file)
     with BUFRReader(input_bufr_file) as bufr:
-        for data, units in bufr.messages():
-            print(data)
-            print(units)
+        for data, names, units in bufr.messages():
+                print(data.shape)
+                print(len(names))
+                print(len(units))
 
 
 if len(sys.argv) < 2:

@@ -36,7 +36,7 @@ import numpy   # array functionality
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF
 from .helpers import python3
-from .custom_exceptions import NoMsgLoadedError, CannotExpandFlagsError
+from .custom_exceptions import NoMsgLoadedError, CannotExpandFlagsError, IncorrectUsageError
 #  #]
 
 # not used
@@ -276,15 +276,19 @@ class BUFRReaderBUFRDC:
 
         num_subsets  = self.bufr_obj.get_num_subsets()
         num_elements = self.bufr_obj.get_num_elements()
-        result = numpy.zeros([num_subsets, num_elements], dtype=float)
 
         #print('DEBUG: num_subsets = ', num_subsets)
         #print('DEBUG: num_elements = ', num_elements)
 
-        for descr_nr in range(num_elements):
-            
-            result[:, descr_nr] = self.bufr_obj.get_values(descr_nr)
-            # autoget_cval option not functional yet
+        # The BUFR reader reads an array that is actually larger than the data.
+        # Here we reshape the data to an array of this bigger size and then
+        # slice it down to the actual size of the data. reshape data into 2D
+        # array of size that was actually read
+        factor = int(len(self.bufr_obj.values) / self.bufr_obj.actual_kelem)
+        result = self.bufr_obj.values.reshape(
+            (factor, self.bufr_obj.actual_kelem))[:num_subsets, :num_elements]
+
+        # autoget_cval option not functional yet
 
         return result
         #  #]
@@ -337,6 +341,46 @@ class BUFRReaderBUFRDC:
         list_of_unexp_descr = self.bufr_obj.py_unexp_descr_list
         return list_of_unexp_descr
         #  #]
+
+    def messages(self):
+        """
+        Iterate over BUFR messages. If the message can be represented as a
+        2D array then the data will be returned as such. Otherwise 1D arrays
+        will be returned.
+
+        Yields
+        ------
+        data : numpy.ndarray
+            Array of the data in the BUFR message. Can be a 2D array or a 1D array.
+        names: list
+            List of variable names. If data is a 2D array these are the names
+            of the variables along the second axis of the array. So if the data array
+            has a shape of e.g. (361 ,44) there will be 44 elements in this list.
+        units: list
+            The units of each variable in the names list. Same length as the names list.
+        """
+        for i in numpy.arange(self.num_msgs) + 1:
+            self.get_next_msg()
+            try:
+                values = self.get_values_as_2d_array()
+                cnames, cunits = self.get_names_and_units()
+                yield values, cnames, cunits
+            except IncorrectUsageError:
+                # no 2D representation possible. Return 1D arrays instead. If
+                # there are multiple subsets yield them one after the other.
+                nsubsets = self.get_num_subsets()
+                for subs in range(1, nsubsets+1):
+                    cnames, cunits = self.get_names_and_units(subs)
+                    values = self.get_subset_values(subs)
+                    yield values, cnames, cunits
+
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc, val, trace):
+        self.close()
+
     def close(self):
         #  #[
         """
@@ -618,6 +662,42 @@ class BUFRReaderECCODES:
         
         return list_of_unexp_descr
         #  #]
+
+    def messages(self):
+        """
+        Raises
+        ------
+        IncorrectUsageError
+            if message can not be packed into a 2D array.
+
+        Yields
+        ------
+        data : dict
+            Dictionary of the data in the BUFR message.
+            Keys are the names of the variables.
+        units: dict
+            The units of each data field in the data dictionary.
+            Keys are the same as in the data dictionary.
+        """
+        for i in numpy.arange(self.num_msgs) + 1:
+            self.get_next_msg()
+            values = self.get_values_as_2d_array()
+            cnames, cunits = self.get_names_and_units()
+
+            data = {}
+            units = {}
+            for i, name in enumerate(cnames):
+                data[name] = values[:, i]
+                units[name] = cunits[i]
+
+            yield data, units
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc, val, trace):
+        self.close()
+
     def close(self):
         #  #[
         """
