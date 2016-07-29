@@ -50,6 +50,13 @@ from pybufr_ecmwf.helpers import python3
 from pybufr_ecmwf.custom_exceptions import ProgrammingError
 #  #]
 
+# some constants
+Short_Delayed_Descr_Repl_Factor       = int('031000', 10)
+Delayed_Descr_Repl_Factor             = int('031001', 10)
+Extended_Delayed_Descr_Repl_Factor    = int('031002', 10)
+Delayed_Descr_and_Data_Rep_Factor     = int('031011', 10)
+Ext_Delayed_Descr_and_Data_Rep_Factor = int('031012', 10)
+
 class Descriptor: # [a simple table B entry]
     #  #[
     """
@@ -144,6 +151,10 @@ class Descriptor: # [a simple table B entry]
         min_allowed_value = self.unit_reference * step
         max_allowed_value = ((2**self.data_width)-1+self.unit_reference)*step
         return (min_allowed_value, max_allowed_value, step)
+        #  #]
+    def __len__(self):
+        #  #[ returns length, redefine in subclass if larger than 1
+        return 1
         #  #]
     #  #]
 
@@ -311,7 +322,7 @@ class ModificationCommand(Descriptor): # F=2 [table C entry]
     # 243255 cancel 243yyy
     #  #]
 
-# todo: look-up the possibilities in the documentation
+# this one is used to store the replication reference codes
 class SpecialCommand(Descriptor): # F=1
     #  #[
     """
@@ -352,18 +363,20 @@ class SpecialCommand(Descriptor): # F=1
 
 # is this identical to SpecialCommand ?x
 # see also the F=1 case in the expand method of CompositeDescriptor
-class Replicator(Descriptor):
+class Replicator:
     #  #[
     """
     a base class for replicators
     """
-    def __init__(self,repeats,descriptor_list):
+    def __init__(self, repeats, descriptor_list):
         #  #[ init
+        self.name = 'Replicator'
         self.repeats = repeats
         self.descriptor_list = descriptor_list
+        self.repl_code = None
         #  #]
     def checkinit(self):
-        # checkinit is probably not needed for this type
+        # checkinit is probably not needed for replicator types
         pass
     def __str__(self):
         #  #[
@@ -385,30 +398,133 @@ class Replicator(Descriptor):
         # xx = num. descr. to replicate
         # yyy = repl. count
         f = '1'
-        xx = '%02d' % len(self.descriptor_list)
+        xx = '%02d' % len(self)
         yyy = '%03d' % self.repeats
         return int(f+xx+yyy)
         #return f+xx+yyy+';'+str(";".join(str(d.reference) for d
         #                                 in self.descriptor_list))
         #  #]
+    def __len__(self):
+        #  #[ returns len of descriptor list
+        n = 0
+        for d in self.descriptor_list:
+            if isinstance(d, DelayedReplicator):
+                n += 2
+            elif isinstance(d, Replicator):
+                n += 1
+
+            n += len(d)
+
+        return n
+        #  #]
+        
     #  #]
 
-class DelayedReplicator(Descriptor):
-    #  #[
+class DelayedReplicator(Replicator):
+    #  #[ coded as 031001
     """
-    a base class for delayed replicators
+    a class for delayed replicators
     """
-    def __init__(self):
-        pass
-    def checkinit(self):
-        """
-        a function to be called when an instance is created for a
-        delayed replicator command that had been instantiated before.
-        """
-        pass
-    #  ==>maximum-replication-count = 4
-    #  ==>actual-replication-count-list ] [1, 2, 3, 4]
-    #  ==>list-of-descriptor-objects = []
+    def __init__(self, descriptor_list):
+        #  #[ calls base class init
+        Replicator.__init__(self, 0, descriptor_list)
+        self.name = 'DelayedReplicator'
+        self.repl_code = Delayed_Descr_Repl_Factor
+        #  #]
+    def __str__(self):
+        #  #[ convert to text
+        txt = ("delayed replication of ["+
+               str(";".join(str(d.reference) for d
+                            in self.descriptor_list))+"]")
+        return txt
+        #  #]
+    
+    #  #]
+
+class ShortDelayedReplicator(DelayedReplicator):
+    #  #[ coded as 031000
+    """
+    a class for short delayed replicators
+    """
+    def __init__(self, descriptor_list):
+        #  #[ calls base class init
+        DelayedReplicator.__init__(self, descriptor_list)
+        self.name = 'ShortDelayedReplicator'
+        self.repl_code = Short_Delayed_Descr_Repl_Factor
+        #  #]
+    def __str__(self):
+        #  #[ convert to text
+        txt = ("short delayed replication of ["+
+               str(";".join(str(d.reference) for d
+                            in self.descriptor_list))+"]")
+        return txt
+        #  #]
+    
+    #  #]
+
+class ExtendedDelayedReplicator(DelayedReplicator):
+    #  #[ coded as 031002
+    """
+    a class for extended delayed replicators
+    """
+    def __init__(self, descriptor_list):
+        #  #[ calls base class init
+        DelayedReplicator.__init__(self, descriptor_list)
+        self.name = 'ExtendedDelayedReplicator'
+        self.repl_code = Extended_Delayed_Descr_Repl_Factor
+        #  #]
+    def __str__(self):
+        #  #[ convert to text
+        txt = ("extended delayed replication of ["+
+               str(";".join(str(d.reference) for d
+                            in self.descriptor_list))+"]")
+        return txt
+        #  #]
+    
+    #  #]
+
+class DelayedRepeater(DelayedReplicator):
+    #  #[ repeats data if needed; coded as 031011
+    """
+    a class to handle delated repetition of descriptors and data
+    (typically used in radar templates)
+    """
+    def __init__(self, descriptor_list):
+        #  #[ init
+        DelayedReplicator.__init__(self, descriptor_list)
+        self.name = 'DelayedRepeater'
+        self.repl_code = Delayed_Descr_and_Data_Rep_Factor
+        #  #]
+    def __str__(self):
+        #  #[
+        txt = ("delayed descriptor and data repeats of ["+
+               str(";".join(str(d.reference) for d
+                            in self.descriptor_list))+"]")
+        return txt
+        #  #]
+
+    #  #]
+
+class ExtendedDelayedRepeater(DelayedReplicator):
+    #  #[ repeats data if needed; coded as 031012
+    """
+    a class to handle delated repetition of descriptors and data
+    (typically used in radar templates)
+    """
+    def __init__(self, descriptor_list):
+        #  #[ init
+        DelayedReplicator.__init__(self, descriptor_list)
+        self.name = 'ExtendedDelayedRepeater'
+        self.repl_code = Ext_Delayed_Descr_and_Data_Rep_Factor
+        #  #]
+    def __str__(self):
+        #  #[
+        txt = ("extended delayed descriptor and data repeats of ["+
+               str(";".join(str(d.reference) for d
+                            in self.descriptor_list))+"]")
+        return txt
+        #  #]
+
     #  #]
 
 class CompositeDescriptor(Descriptor): # [table D entry]
@@ -420,20 +536,35 @@ class CompositeDescriptor(Descriptor): # [table D entry]
         #  #[
         self.reference = reference
 
-        self.descriptor_list = []
-        for d in descriptor_list:
-            if isinstance(d, DelayedReplicator):
-                raise NotImplementedError('adding a DelayedReplicator')
-            elif isinstance(d, Replicator):
-                self.descriptor_list.append(d)
-                self.descriptor_list.extend(d.descriptor_list)
-            else:
-                self.descriptor_list.append(d)
-            
         self.comment = comment
         # set of BUFR tables to which this D descriptor belongs
         # (essential information to enable unpacking this D descriptor!)
         self.bufr_table_set = bufr_table_set
+
+        self.descriptor_list = \
+             self.handle_descriptors_and_handle_replication(descriptor_list)
+        #  #]
+    def handle_descriptors_and_handle_replication(self, descriptor_list):
+        #  #[ recursively handle replication
+        '''
+        a little method to allow recursive handling
+        of relication and repetition descriptors
+        '''
+        proper_list = []
+        for d in descriptor_list:
+            if isinstance(d, Replicator):
+                proper_list.append(d)
+                if isinstance(d, DelayedReplicator):
+                    repl = self.bufr_table_set.table_b[d.repl_code]
+                    proper_list.append(repl)
+                nested_list = \
+                       self.handle_descriptors_and_handle_replication(\
+                                   d.descriptor_list)
+                proper_list.extend(nested_list)
+            else:
+                proper_list.append(d)
+            
+        return proper_list
         #  #]
     def __str__(self):
         #  #[
@@ -571,6 +702,10 @@ class CompositeDescriptor(Descriptor): # [table D entry]
     #  #]
 
 class FlagDefinition:
+    #  #[ handling of flag definitions
+    '''
+    a class to handle flag definitions as defined in table C
+    '''
     def __init__(self, reference):
         self.reference = reference
         self.flag_dict = {}
@@ -579,6 +714,7 @@ class FlagDefinition:
         for k in sorted(self.flag_dict):
             text.append('flag: '+str(k)+' value: '+str(self.flag_dict[k]))
         return '\n'.join('==> '+l for l in text)
+    #  #]
     
 class BufrTable:
     #  #[
@@ -663,7 +799,8 @@ class BufrTable:
         normalised_descriptor_list = []
         for tmp_descr in descr_list:
 
-            if isinstance(tmp_descr, Descriptor):
+            if (isinstance(tmp_descr, Descriptor) or
+                isinstance(tmp_descr, Replicator)   ):
                 normalised_descriptor_list.append(tmp_descr)
             elif isinstance(tmp_descr,list):
                 # we have got a list ...
@@ -756,7 +893,7 @@ class BufrTable:
                     print('xx = ', xx, ' = num. descr. to replicate')
                     print('yyy = ', yyy, ' = repl. count')
                 
-                # note: we van only handle normal replication here
+                # note: we can only handle normal replication here
                 # Delayed replication can only be expanded if the data
                 # is available as well, and cannot be done based on
                 # a descriptor list alone.
@@ -789,7 +926,8 @@ class BufrTable:
                                 normalised_descriptor_list[i+2:i+2+xx]
                     tmp_list, tmp_del_repl_present = \
                        self.expand_descriptor_list(descr_list_to_be_replicated)
-                    expanded_descriptor_list.append(delayed_repl_operator.reference)
+                    expanded_descriptor_list.append(delayed_repl_operator.
+                                                    reference)
                     expanded_descriptor_list.append(tmp_list)
                     delayed_repl_present = True
                     num_descr_to_skip += 1

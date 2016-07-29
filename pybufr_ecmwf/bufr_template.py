@@ -39,14 +39,6 @@ class BufrTemplate:
     a class of to help create a BUFR template in a more structured way
     """
     
-    #  #[ class constants
-    Short_Delayed_Descr_Repl_Factor    = int('031000', 10)
-    Delayed_Descr_Repl_Factor          = int('031001', 10)
-    Extended_Delayed_Descr_Repl_Factor = int('031002', 10)
-    # 031011 DELAYED DESCRIPTOR AND DATA REPETITION FACTOR
-    # 031012 EXTENDED DELAYED DESCRIPTOR AND DATA REPETITION FACTOR
-
-    #  #]
     def __init__(self):
         #  #[
         self.unexpanded_descriptor_list = []
@@ -77,12 +69,16 @@ class BufrTemplate:
         use delayed replication to add a list of descriptors to the template
         """
         nr_of_descriptors = len(descriptors)
-        if 'extended' in kwargs:
-            repl_factor = self.Extended_Delayed_Descr_Repl_Factor
+        if 'short' in kwargs:
+            repl_factor = bufr_table.Short_Delayed_Descr_Repl_Factor
+            print('adding short delayed replication for '+
+                  str(nr_of_descriptors)+' descriptors')            
+        elif 'extended' in kwargs:
+            repl_factor = bufr_table.Extended_Delayed_Descr_Repl_Factor
             print('adding extended delayed replication for '+
                   str(nr_of_descriptors)+' descriptors')
         else:
-            repl_factor = self.Delayed_Descr_Repl_Factor
+            repl_factor = bufr_table.Delayed_Descr_Repl_Factor
             print('adding delayed replication for '+
                   str(nr_of_descriptors)+' descriptors')
 
@@ -154,11 +150,10 @@ class BufrTemplate:
             descr = normalised_descriptor_list.pop(0)
             # print('handling descr: '+str(descr))
             if isinstance(descr, (bufr_table.SpecialCommand,
-                                  bufr_table.Replicator,
-                                  bufr_table.DelayedReplicator)):
+                                  bufr_table.Replicator)):
                 descr_count = int((descr.reference-100000)/1000)
                 if int(descr.reference % 1000) == 0:
-                    # print('delayed replicator found !!')
+                    # print('(ext) delayed replicator found !!')
                     # pop the obligatory 31001 code as well
                     normalised_descriptor_list.pop(0)
                     # count the obligatory 31001 code as well
@@ -197,7 +192,7 @@ class BufrTemplate:
         # init list that is modified in the recursive get_max_size function
         self.del_repl_count_list = self.del_repl_max_nr_of_repeats_list[:]
         # get the max size
-        s = self.get_max_size(self.unexpanded_descriptor_list,bufrtables)
+        s = self.get_max_size(self.unexpanded_descriptor_list, bufrtables)
         # print('s = '+str(s))
         return s
         #  #]

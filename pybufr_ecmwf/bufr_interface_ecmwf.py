@@ -53,7 +53,12 @@ except ImportError as e:
 
 from . import ecmwfbufr_parameters
 from .bufr_template import BufrTemplate
-from .bufr_table import BufrTable
+from .bufr_table import (BufrTable,
+                         Short_Delayed_Descr_Repl_Factor,
+                         Delayed_Descr_Repl_Factor,
+                         Extended_Delayed_Descr_Repl_Factor,
+                         Delayed_Descr_and_Data_Rep_Factor,
+                         Ext_Delayed_Descr_and_Data_Rep_Factor)
 from .helpers import python3
 from .custom_exceptions import (EcmwfBufrLibError, EcmwfBufrTableError,
                                 IncorrectUsageError)
@@ -1667,11 +1672,14 @@ class BUFRInterfaceECMWF:
         #  #[ extract these factors from the self.ktdexp array
         select = np.where(self.ktdexp != 0)
         ktdexp = list(self.ktdexp[select])
-        ndr = ktdexp.count(BufrTemplate.Delayed_Descr_Repl_Factor)
+        ndr = ktdexp.count(Delayed_Descr_Repl_Factor)
 
-        select = np.where((self.ktdexp == BufrTemplate.Short_Delayed_Descr_Repl_Factor) +
-                          (self.ktdexp == BufrTemplate.Delayed_Descr_Repl_Factor) +
-                          (self.ktdexp == BufrTemplate.Extended_Delayed_Descr_Repl_Factor)   )
+        select = np.where(self.ktdexp in
+                          [Short_Delayed_Descr_Repl_Factor,
+                           Delayed_Descr_Repl_Factor,
+                           Extended_Delayed_Descr_Repl_Factor,
+                           Delayed_Descr_and_Data_Rep_Factor,
+                           Ext_Delayed_Descr_and_Data_Rep_Factor])
         delayed_repl_data = self.values[select]
         # print('delayed_repl_data = ', delayed_repl_data)
         return delayed_repl_data
