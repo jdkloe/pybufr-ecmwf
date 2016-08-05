@@ -1707,18 +1707,19 @@ class BufrTable:
         if self.verbose:
             print("remaining_blocks = "+str(remaining_blocks))
             
-        if (self.num_d_blocks == remaining_blocks):
-            print("ERROR: it seems you forgot to load "+
-                  "the B-table before trying")
-            print("to load the D-table. It is required to load "+
-                  "the corresponding B-table")
-            print("first, because it is needed to apply consistency "+
-                  "checking on the")
-            print("D-table during the read process.")
-            print("")
-            print("Alternatively, this could point to D table entries")
-            print("that have no definition in the provided B table.")
-            raise ProgrammingError
+        if remaining_blocks > 0:
+            if (self.num_d_blocks == remaining_blocks):
+                print("ERROR: it seems you forgot to load "+
+                      "the B-table before trying")
+                print("to load the D-table. It is required to load "+
+                      "the corresponding B-table")
+                print("first, because it is needed to apply consistency "+
+                      "checking on the")
+                print("D-table during the read process.")
+                print("")
+                print("Alternatively, this could point to D table entries")
+                print("that have no definition in the provided B table.")
+                raise ProgrammingError
 
         if self.verbose:
             # this is not python2.6 compatible
