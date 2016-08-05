@@ -1,0 +1,44 @@
+==================================================
+B-table:
+==================================================
+reference: [31012] name: [DELAYED DESCRIPTOR AND DATA REPETITION FACTOR] unit: [NUMERIC] unit_scale: [0] unit_reference: [0] data_width: [16] 
+reference: [63251] name: [DUMMY VARIABLE] unit: [DUMMY UNIT] unit_scale: [0] unit_reference: [0] data_width: [25] 
+==================================================
+D-table:
+==================================================
+reference: [363192] refers to: 63251;101000;31012;63251
+==================================================
+adding descriptor: reference: [363192] refers to: 63251;101000;31012;63251
+Warning: no matching C table available for B,D tables
+==> B_test_table.txt
+==> D_test_table.txt
+Table names expected by the library:
+B0000000000000000000.TXT
+C0000000000000000000.TXT
+D0000000000000000000.TXT
+Tables to be used:
+B_test_table.txt
+[C table is missing]
+D_test_table.txt
+unexpanded nr of descriptors =  1
+The current list is:  [363192]
+ktdlst =  [363192]
+ktdexp =  [63251 31012 63251]
+exp_descr_list_length =  3
+num_values =  14
+values:  [23456.0, 3.0, 34567.0, 23456.0, 5.0, 34567.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+bufren call finished
+words = 
+[1380341058   71303168    1441792 ...,          0          0          0]
+encoded size:  16  words or  64  bytes
+**************************************************
+Warning: no matching C table available for B,D tables
+==> B_test_table.txt
+==> D_test_table.txt
+num_subsets =  2
+"subset nr",DUMMY VARIABLE,DELAYED DESCRIPTOR AND DATA REPETITION FACTOR,DUMMY VARIABLE
+"",DUMMY UNIT,NUMERIC,DUMMY UNIT
+1,23456.0,3.0,34567.0
+"subset nr",DUMMY VARIABLE,DELAYED DESCRIPTOR AND DATA REPETITION FACTOR,DUMMY VARIABLE
+"",DUMMY UNIT,NUMERIC,DUMMY UNIT
+2,23456.0,5.0,34567.0

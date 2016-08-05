@@ -1132,24 +1132,47 @@ class CheckDelayedReplication(unittest.TestCase):
     a class to test the encoding and decoding of BUFR files
     using delayed replication with different replication
     factors for subsequent subsets in the same message
-    '''
-    def test_delayed_replication(self):
-        '''
+
+    The tests in this class follow the following sequence:
         * composes custom BUFR tables
         * then encodes a test BUFR message
         * then decodes the same message again
-        '''
-        test_bufr_file = 'dummy_bufr_file.bfr'
-        b_table_file = 'B_test_table.txt'
-        c_table_file = 'C_test_table.txt'
-        d_table_file = 'D_test_table.txt'
-
+    '''
+    def test_delayed_replication_in_example_dir(self):
+        '''run the example program'''
         testprog = "delayed_replication_example.py"
         cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
 
+    def test_delayed_replication(self):
+        '''run the special test in the test folder'''
+        testprog = "test_delayed_replication.py"
+        cmd = os.path.join(TEST_DIR, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+
+    def test_delayed_replication_nested(self):
+        '''run the special test in the test folder'''
+        testprog = "test_delayed_replication_nested.py"
+        cmd = os.path.join(TEST_DIR, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+
+    def test_delayed_repetition(self):
+        '''run the special test in the test folder'''
+        testprog = "test_delayed_repetition.py"
+        cmd = os.path.join(TEST_DIR, testprog)
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+
+    def tearDown(self):
         # clean up
+        test_bufr_file = 'dummy_bufr_file.bfr'
+        b_table_file = 'B_test_table.txt'
+        c_table_file = 'C_test_table.txt'
+        d_table_file = 'D_test_table.txt'
+
         os.remove(b_table_file)
         os.remove(c_table_file)
         os.remove(d_table_file)
