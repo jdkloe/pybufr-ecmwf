@@ -230,12 +230,8 @@ class RawBUFRFile:
             if edition_number > 1:
                 # get bytes 5 to 7 which should hold the total length of the
                 # current BUFR message
-                if python3:
-                    raw_bytes = b'\0'+self.data[start_section0+5-1:
-                                                start_section0+7]
-                else:
-                    raw_bytes = chr(0)+self.data[start_section0+5-1:
-                                                 start_section0+7]
+                raw_bytes = b'\x00'+self.data[start_section0+5-1:
+                                              start_section0+7]
                 try:
                     msg_size = struct.unpack(dataformat, raw_bytes)[0]
                 except:
@@ -325,8 +321,8 @@ class RawBUFRFile:
             start_section2 = start_location + offset
             if section2_present:
                 # get length of section 2 from bytes 1 to 3
-                raw_bytes = chr(0)+self.data[start_section2+1-1:
-                                             start_section2+3]
+                raw_bytes = b'\x00'+self.data[start_section2+1-1:
+                                              start_section2+3]
                 try:
                     size_section2 = struct.unpack(dataformat, raw_bytes)[0]
                 except:

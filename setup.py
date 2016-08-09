@@ -339,6 +339,8 @@ class BuildExt(_build_ext):
 
         # remove all object files to prevent them from ending up
         # in the binary or rpm distribution packages
+        # disable this line in case of trouble to enable debugging
+        # or access to the log files below ecmwf_bufr_lib
         ibi.clean()
 
         os.chdir(cwd)

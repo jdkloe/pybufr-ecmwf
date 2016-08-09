@@ -27,7 +27,8 @@ DIRS_TO_DELETE = ['pybufr_ecmwf/example_programs/tmp_BUFR_TABLES',
                   'pybufr_ecmwf/__pycache__', '__pycache__',
                   'tmp_2to3_converted_sources',
                   'example_programs/tmp_BUFR_TABLES',
-                  'test/actual_test_outputs']
+                  'test/actual_test_outputs',
+                  'sample_bufr_files']
 
 # delete these files
 FILE_GLOB_PATTERNS = ['*~', '*/*~', '*/*/*~', '*.pyc', '*/*.pyc',

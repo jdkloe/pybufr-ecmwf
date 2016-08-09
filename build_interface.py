@@ -35,7 +35,8 @@ import subprocess  # support running additional executables
 import stat        # handling of file stat data
 import datetime    # date handling functions
 
-from pybufr_ecmwf.helpers import get_and_set_the_module_path, python3
+from pybufr_ecmwf.helpers import (get_and_set_the_module_path,
+                                  get_software_root, python3)
 from pybufr_ecmwf.custom_exceptions import (ProgrammingError,
                                             NetworkError, LibraryBuildError,
                                             InterfaceBuildError)
@@ -79,7 +80,7 @@ if python3:
 
 #  #]
 
-# some helper functions
+#  #[ some helper functions
 def rem_quotes(txt):
     #  #[
     """ a little helper function to remove quotes from a string."""
@@ -797,12 +798,14 @@ def generate_c_underscore_wrapper(source_dir):
     print('Created wrapper: '+wrapper_name)
     return wrapper_name
     #  #]
+#  #]
 
 class InstallBUFRInterfaceECMWF(object):
-    #  #[
+    #  #[ the main builder class
     """
-    a class that downloads and builds the interface between the ECMWF
-    BUFR library and python
+    a class that builds the interface between the ECMWF
+    BUFR library and python,
+    and optionally downloads the source code.
     """
     def __init__(self, verbose=False,
                  preferred_fortran_compiler=None,
@@ -890,6 +893,9 @@ class InstallBUFRInterfaceECMWF(object):
 
         print('storing version info')
         extract_version()
+
+        print('copying sample files')
+        self.copy_sample_files()
         #  #]
     def rebuild(self):
         #  #[ rebuild the software
@@ -1132,7 +1138,6 @@ class InstallBUFRInterfaceECMWF(object):
                 print('Please report this bug.')
                 raise ProgrammingError
             #  #]
-
             #  #[ add a few small fortran routines
             add_fortran_dir_list = \
                 descend_dirpath_and_find(os.getcwd(),
@@ -1166,7 +1171,21 @@ class InstallBUFRInterfaceECMWF(object):
             fds.write(''.join(line for line in sources_lines[5:]))
             fds.close()
             #  #]
-
+            #  #[ apply a smal patch to the 000409 test.sh script
+            if tarfile_to_install == 'bufrdc_000409.tar.gz':
+                scr_file = os.path.join(source_dir, 'test.sh')
+                os.rename(scr_file, scr_file+'.orig')
+                fds_in = open(scr_file+'.orig', 'rb')
+                fds_out = open(scr_file, 'wb')
+                for line in fds_in.readlines():
+                    if not ( (b'set -ex' in line) or
+                             (b'BUFR_TABLES=/var/tmp' in line) ):
+                        fds_out.write(line)
+                fds_in.close()
+                fds_out.close()
+                os.chmod(scr_file, 0o755)
+            #  #]
+            
         #  #[ find a suitable fortran compiler to use
 
         #if (self.verbose):
@@ -1536,8 +1555,8 @@ class InstallBUFRInterfaceECMWF(object):
         # construct the compilation command:
         cmd = "cd "+source_dir+";make ARCH="+arch+" CNAME="+\
               cname+" R64="+r64+" A64="+a64
-        if not self.verbose:
-            cmd += " 2>1 > bufrdc_build.log"
+        #if not self.verbose:
+        cmd += " 2>1 > bufrdc_build.log"
 
         # now issue the Make command
         if libpath == "":
@@ -1548,7 +1567,27 @@ class InstallBUFRInterfaceECMWF(object):
             #      run_shell_command(cmd, libpath = libpath)
             run_shell_command(cmd, libpath=libpath, catch_output=False)
         #  #]
+        #  #[ scan the build log for possible problems
+        logfile = os.path.join(source_dir, 'bufrdc_build.log')
+        fds = open(logfile,'rb')
+        text = fds.read()
+        problem_detected = False
+        if b'failed' in text:
+            problem_detected = True
+        if b'FAILED' in text:
+            problem_detected = True
 
+        if problem_detected:
+            print('\n\n')
+            print('A problem was detected in the logfile: {}'.
+                  format(os.path.join(os.getcwd(), logfile)))
+            print("Please investigate it or send it to the developer of")
+            print("this module for analysis.")
+            print("Build failed, aborting")
+            sys.exit(1)
+
+        fds.close()
+        #  #]
         #  #[ check the result and move the library file
         fullname_bufr_lib_file = os.path.join(source_dir, self.bufr_lib_file)
         if os.path.exists(fullname_bufr_lib_file):
@@ -1923,6 +1962,30 @@ file for convenience
         ensure_permissions(python_parameter_file, 'x')
 
         #  #]
+    def copy_sample_files(self):
+        #  #[ copy sample bufr files
+        ''' copy sample bufr files provided by the ECMWF library
+        to ensure they are available for testing, even after the
+        build directory has been deleted again.
+        '''
+
+        swroot = get_software_root()
+        source_dir = self.get_source_dir()[0]
+        data_dir = os.path.join(source_dir, 'data')
+        sapp_sample_dir = os.path.join(source_dir, 'sapp_sample')
+
+        target_dir = os.path.join(swroot, 'sample_bufr_files')
+        if not os.path.exists(target_dir):
+            os.mkdir(target_dir)
+            
+        for sample_dir in [data_dir, sapp_sample_dir]:
+            for fn in os.listdir(sample_dir):
+                src = os.path.join(sample_dir, fn)
+                dst = os.path.join(target_dir, fn)
+                if not os.path.exists(dst):
+                    print('src: {} dst: {}'.format(src, dst))
+                    shutil.copy(src, dst)
+    #  #]
 
     #  #]
 

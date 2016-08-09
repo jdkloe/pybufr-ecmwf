@@ -62,6 +62,28 @@ def get_and_set_the_module_path(syspath):
     return (syspath, abs_module_path)
     #  #]
 
+def get_software_root():
+    #  #[ find the software root 
+    # i.e. find the parent dir that holds build_interface.py
+    # (differs when doing "python setup.py build"
+    #  or when calling directly build_interface.py)
+
+    current_path = os.getcwd()
+    build_dir = os.path.abspath(current_path)
+    
+    software_root = None
+    tmp_dir = build_dir
+    while software_root is None:
+        files = os.listdir(tmp_dir)
+        if 'build_interface.py' in files:
+            software_root = tmp_dir
+        else:
+            tmp_dir, subdir = os.path.split(tmp_dir)
+            if subdir == '':
+                break
+    return software_root
+    #  #]
+
 python3=False
 try:
     if sys.version_info.major == 3:
