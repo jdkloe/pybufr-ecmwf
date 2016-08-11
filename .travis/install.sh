@@ -13,6 +13,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     # install gcc (which should include gfortran)
     # install Homebrew that provides python 2.7 and 3.5
     brew update
+    brew unlink gcc
     brew install gcc
     brew brew tap Homebrew/python
     
@@ -21,12 +22,12 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
         py27)
             # install Python 2.7 and numpy on OS X
             brew install python
-            brew install numpy
+            brew install homebrew/python/numpy
             ;;
         py35)
             # install Python 3.5 and numpy on OS X
             brew install python3
-            brew install numpy --with-python3
+            brew install homebrew/python/numpy --with-python3
             ;;
     esac
 else

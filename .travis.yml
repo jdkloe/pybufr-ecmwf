@@ -8,28 +8,18 @@ matrix:
     include:
         - os: linux
           sudo: required
-          python: 2.6
-        - os: linux
-          sudo: required
-          python: 2.7
-        - os: linux
-          sudo: required
-          python: 3.2
-        - os: linux
-          sudo: required
-          python: 3.3
-        - os: linux
-          sudo: required
-          python: 3.4
-        - os: linux
-          sudo: required
-          python: 3.5
+          python:
+#             2.6
+#             2.7
+#             3.2
+#             3.3
+#             3.4
+              3.5
         - os: osx
           language: generic
-          env: TOXENV=py27
-        - os: osx
-          language: generic
-          env: TOXENV=py35
+          env:
+              TOXENV=py27
+              TOXENV=py35
 
 # command to install dependencies
 install:
