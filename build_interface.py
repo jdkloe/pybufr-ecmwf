@@ -355,7 +355,7 @@ r"""
 int main()
 {
   int testinteger;
-  printf("%i\n",sizeof(testinteger));
+  printf("%zu\n",sizeof(testinteger));
   return 0;
 }
 """
@@ -370,7 +370,7 @@ r"""
 int main()
 {
   long testinteger;
-  printf("%i\n",sizeof(testinteger));
+  printf("%zu\n",sizeof(testinteger));
   return 0;
 }
 """

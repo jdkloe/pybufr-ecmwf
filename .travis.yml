@@ -1,4 +1,5 @@
 language: python
+sudo: required
 
 cache:
   directories:
@@ -7,19 +8,19 @@ cache:
 matrix:
     include:
         - os: linux
-          sudo: required
           python:
-#             2.6
-#             2.7
-#             3.2
-#             3.3
-#             3.4
-              3.5
+             - "2.6"
+             - "2.7"
+             - "3.2"
+             - "3.3"
+             - "3.4"
+             - "3.5"
+             - "nightly" # currently points to 3.6-dev
         - os: osx
           language: generic
           env:
-              TOXENV=py27
-              TOXENV=py35
+             - TOXENV=py27
+             - TOXENV=py35
 
 # command to install dependencies
 install:
