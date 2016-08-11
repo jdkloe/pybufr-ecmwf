@@ -2,7 +2,10 @@
 
 """
 a module to allow easier handling of BUFR files and messages
-by providing several helper classes.
+by providing several helper classes. This module defines the
+following classes for general use:
+* BUFRReader: for reading and decoding BUFR messages from a file
+*
 """
 
 #  #[ documentation
@@ -351,13 +354,16 @@ class BUFRReaderBUFRDC:
         Yields
         ------
         data : numpy.ndarray
-            Array of the data in the BUFR message. Can be a 2D array or a 1D array.
+            Array of the data in the BUFR message. Can be a 2D array or a
+            1D array.
         names: list
             List of variable names. If data is a 2D array these are the names
-            of the variables along the second axis of the array. So if the data array
-            has a shape of e.g. (361 ,44) there will be 44 elements in this list.
+            of the variables along the second axis of the array. So if the
+            data array has a shape of e.g. (361 ,44) there will be 44 elements
+            in this list.
         units: list
-            The units of each variable in the names list. Same length as the names list.
+            The units of each variable in the names list. Same length as the
+            names list.
         """
         for i in numpy.arange(self.num_msgs) + 1:
             self.get_next_msg()

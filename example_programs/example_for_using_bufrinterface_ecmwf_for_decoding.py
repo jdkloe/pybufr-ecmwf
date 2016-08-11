@@ -86,6 +86,12 @@ def display_results(bufr):
     print('------------------------------')
     print("printing content of section 3:")
     bufr.print_descriptors()
+    print('------------------------------')
+    print("printing header dict:")
+    hdr_info = bufr.get_header_info()
+    for key in sorted(hdr_info):
+        print('{0}:{1}'.format(key, hdr_info[key]))
+    print('------------------------------')
     #  #]
 def decoding_example(input_bufr_file, custom_bufr_tables=None):
     #  #[

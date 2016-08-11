@@ -2375,4 +2375,141 @@ class BUFRInterfaceECMWF:
             raise EcmwfBufrTableError(txt)
 
         #  #]
+    def get_header_info(self):
+        #  #[ get all header info in a dictionary
+        if (not self.data_decoded):
+            errtxt = ("Sorry, retrieving header info is only possible after "+
+                      "a BUFR message has been decoded with a call to "+
+                      "decode_data")
+            raise EcmwfBufrLibError(errtxt)
+
+        bufr_edition = self.ksec0[3-1]
+
+        if bufr_edition < 2:
+            # older edition 0 and 1 dont have bufr msg size in sec0
+            defs_ksec0 = ['Length of section 0 in bytes',          # 1
+                          'Bufr Edition number']                   # 2
+        else:
+            defs_ksec0 = ['Length of section 0 in bytes',          # 1
+                          'Total length of Bufr message in bytes', # 2
+                          'Bufr Edition number']                   # 3
+        
+        defs_ksec1 = ['Length of section 1 in bytes',       # 1
+                      'Bufr Edition number',                # 2
+                      'Originating centre',                 # 3
+                      'Update sequence number',             # 4
+                      'Flag (presence of Section 2 in the message)', # 5
+                      'Bufr message type (Bufr Table A)',   # 6 or DataCategory
+                      'Bufr message subtype (local use)',   # 7
+                      'Version number of local table used', # 8
+                      'Year',   #  9 includes century for bufr_edition > 3
+                      'Month',  # 10
+                      'Day',    # 11
+                      'Hour',   # 12
+                      'Minute', # 13
+                      'Bufr Master Table used',              # 14
+                      ]
+        if bufr_edition > 1:
+            defs_ksec1.extend([
+                      'Version number of Master table used', # 15
+                      ])
+        if bufr_edition == 3:
+            defs_ksec1.extend([
+                      'Originating sub-centre',              # 16
+                      'Reserved',                            # 17
+                      ])
+                      # items 18 and onward are Local ADP centre
+                      # information (byte by byte) and can not be interpreted
+                      # in a generic way
+
+        if bufr_edition > 3:
+            defs_ksec1.extend([
+                      'Originating sub-centre',              # 16
+                      'International sub-category',          # 17
+                      'Second', # 18
+                      # metadata items, commented out in ECMWF source code
+                      # so they are not available for the moment
+                      #'year',   # 19
+                      #'month',  # 20
+                      #'day',    # 21
+                      #'hour',   # 22
+                      #'minute', # 23
+                      #'Second', # 24
+                      #'year',   # 25
+                      #'month',  # 26
+                      #'day',    # 27
+                      #'hour',   # 28
+                      #'minute', # 29
+                      #'Second', # 30
+                      #'most southern latitude (-90 to 90)', # 31
+                      #'most western longitude (0-360)', # 32
+                      #'most northern latitude (-90 to 90)', # 33
+                      #'most eastern longitude (0-360)', # 34
+                      ])
+                      # items 35 and onward are Local ADP centre
+                      # information (byte by byte) and can not be interpreted
+                      # in a generic way
+        
+        defs_ksec2 = ['Length of Section 2 in bytes',        # 1
+                      'Report Data Base key in packed form', # 2-
+                      ]
+                      
+        defs_ksec3 = ['Length of Section 3 in bytes',  # 1
+                      'Reserved',                      # 2
+                      'Number of subsets',             # 3
+                      'Flag (data type, compression)', # 4
+                      ]
+        
+        defs_ksec4 = ['Length of Section 4 in bytes', # 1
+                      'Reserved',                     # 2-
+                      ]
+                      
+        defs_ksup = ['Dimension of KSEC1 array',               # 1
+                     'Dimension of KSEC2 array',               # 2
+                     'Dimension of KSEC3 array',               # 3
+                     'Dimension of KSEC4 array',               # 4
+                     'Real number of expanded elements',       # 5
+                     'Number of subsets',                      # 6
+                     'Real number of elements in CVALS array', # 7
+                     'Total Bufr message length in bytes',     # 8
+                     'Dimension of KSEC0 array',               # 9
+                     ]
+
+        #  convert kseco,1,2,3,4 and ksup to a dict
+        hdr_info = {}
+
+        for key_defs, sec_name, section in \
+                [(defs_ksec0, 'ksec0', self.ksec0),
+                 (defs_ksec1, 'ksec1', self.ksec1),
+                 (defs_ksec2, 'ksec2', self.ksec2),
+                 (defs_ksec3, 'ksec3', self.ksec3),
+                 (defs_ksec4, 'ksec4', self.ksec4),
+                 (defs_ksup, 'ksup', self.ksup),
+                 ]:
+            for i, key in enumerate(key_defs):
+                if key is not 'Reserved':
+                    hdr_info[sec_name+'.'+key] = section[i]
+        
+        #for i, key in enumerate(defs_ksec0):
+        #    hdr_info['ksec0.'+key] = self.ksec0[i]
+
+        #for i, key in enumerate(defs_ksec1):
+        #    hdr_info['ksec1.'+key] = self.ksec1[i]
+
+        #for i, key in enumerate(defs_ksec2):
+        #    hdr_info['ksec2.'+key] = self.ksec2[i]
+
+        #for i, key in enumerate(defs_ksec3):
+        #    hdr_info['ksec3.'+key] = self.ksec3[i]
+
+        #for i, key in enumerate(defs_ksec4):
+        #    hdr_info['ksec4.'+key] = self.ksec4[i]
+
+        #for i, key in enumerate(defs_ksup):
+        #    hdr_info['ksup.'+key] = self.ksup[i]
+
+        #self.key
+        
+        return hdr_info
+        #  #]
 #  #]
