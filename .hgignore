@@ -43,6 +43,7 @@ f2py_build/
 tmp_BUFR_TABLES/
 ecmwf_bufrtables/
 old_bufr_libs/
+sample_bufr_files/
 tmp_2to3_converted_sources/
 temp_test/
 

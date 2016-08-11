@@ -781,16 +781,16 @@ def generate_c_underscore_wrapper(source_dir):
                     subr_name = def_line.split()[1].split('(')[0]
                     #print('file: '+fortran_file,
                     #      'subr_name: '+subr_name)
-                    fd_out.write('extern void *{}_();\n'.\
+                    fd_out.write('extern void *{0}_();\n'.\
                                  format(subr_name))
-                    fd_out.write('void *_{}_() {{ return {}_(); }}\n\n'.\
+                    fd_out.write('void *_{0}_() {{ return {1}_(); }}\n\n'.\
                                  format(subr_name, subr_name))
 
     # manually add the 4 needed c-functions from pbio.c
     for c_func in ['pbopen', 'pbclose', 'pbwrite', 'pbseek']:
-        fd_out.write('extern void *{}();\n'.\
+        fd_out.write('extern void *{0}();\n'.\
                      format(c_func))
-        fd_out.write('void *_{}() {{ return {}(); }}\n\n'.\
+        fd_out.write('void *_{0}() {{ return {1}(); }}\n\n'.\
                      format(c_func, c_func))
 
     fd_out.close()
@@ -1579,7 +1579,7 @@ class InstallBUFRInterfaceECMWF(object):
 
         if problem_detected:
             print('\n\n')
-            print('A problem was detected in the logfile: {}'.
+            print('A problem was detected in the logfile: {0}'.
                   format(os.path.join(os.getcwd(), logfile)))
             print("Please investigate it or send it to the developer of")
             print("this module for analysis.")
@@ -1813,7 +1813,7 @@ class InstallBUFRInterfaceECMWF(object):
                 # -v: verbose output
 
                 # update the archive
-                cmd = 'ar -rlcsv {} {}'.\
+                cmd = 'ar -rlcsv {0} {1}'.\
                       format(self.bufr_lib_file, wrapper_object)
                 os.system(cmd)
 
@@ -1983,7 +1983,7 @@ file for convenience
                 src = os.path.join(sample_dir, fn)
                 dst = os.path.join(target_dir, fn)
                 if not os.path.exists(dst):
-                    print('src: {} dst: {}'.format(src, dst))
+                    #print('src: {0} dst: {1}'.format(src, dst))
                     shutil.copy(src, dst)
     #  #]
 
