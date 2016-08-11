@@ -221,6 +221,40 @@ FORTRAN STDOUT:     49  000000                                                  
 FORTRAN STDOUT:     50  000000                                                                  
 FORTRAN STDOUT:     51  000000                                                                  
 FORTRAN STDOUT:     52  000000                                                                  
+------------------------------
+printing header dict:
+ksec0.Bufr Edition number:0
+ksec0.Length of section 0 in bytes:4
+ksec1.Bufr Edition number:0
+ksec1.Bufr Master Table used:0
+ksec1.Bufr message subtype (local use):8
+ksec1.Bufr message type (Bufr Table A):12
+ksec1.Day:16
+ksec1.Flag (presence of Section 2 in the message):0
+ksec1.Hour:22
+ksec1.Length of section 1 in bytes:18
+ksec1.Minute:25
+ksec1.Month:12
+ksec1.Originating centre:210
+ksec1.Update sequence number:0
+ksec1.Version number of local table used:1
+ksec1.Year:98
+ksec2.Length of Section 2 in bytes:0
+ksec2.Report Data Base key in packed form:0
+ksec3.Flag (data type, compression):192
+ksec3.Length of Section 3 in bytes:10
+ksec3.Number of subsets:361
+ksec4.Length of Section 4 in bytes:6562
+ksup.Dimension of KSEC0 array:3
+ksup.Dimension of KSEC1 array:16
+ksup.Dimension of KSEC2 array:1
+ksup.Dimension of KSEC3 array:4
+ksup.Dimension of KSEC4 array:2
+ksup.Number of subsets:361
+ksup.Real number of elements in CVALS array:0
+ksup.Real number of expanded elements:44
+ksup.Total Bufr message length in bytes:6598
+------------------------------
 succesfully decoded data from file:  test/testdata/Testfile.BUFR
 --------------------------------------------------
 done

@@ -30,7 +30,7 @@ This should be the easiest interface to use.
 Also, ECMWF is in the middle of a transition to a new library
 called ecCodes (which is currently in beta stage).
 The plan is to include an interface to this new library as well in this
-python model, with identical high level python interface, so you don't
+python module, with identical high level python interface, so you don't
 need to adapt your scripts.
 However, the lower level python routines may change significantly,
 to enable this.
@@ -101,7 +101,7 @@ may still be a problem.
 
 ## Documentation
 
-For examples on its usage see the file USAGE.txt
+For usage examples for pybufr_ecmwf see the file USAGE.txt
 
 For more information on this module please consult the documentation at:
 ... [to be written]
@@ -113,14 +113,16 @@ http://www.wmo.int/pages/prog/www/WMOCodes.html
 The file format standard is described in the official WMO documentation
 which can be downloaded from:
 http://www.wmo.int/pages/prog/www/WMOCodes/Guides/BUFRCREXPreface_en.html
-A direct link to the file format standard is:
+A direct link to the file format standard is in pdf format:
 http://www.wmo.int/pages/prog/www/WMOCodes/Guides/BUFRCREX/Layer3-English-only.pdf
 
-The ECMWF BUFRDC library documentation is available an the ECMWF website at
+The ECMWF BUFRDC library documentation is available at the ECMWF website at
 https://software.ecmwf.int/wiki/display/BUFR/BUFRDC+Home
 A link to the bufr_user_guide.pdf document is available on this page.
 
-The new 
+The new ecCodes library can be downloaded from the ECMWF website:
+https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home
+
 ## Copyright
 
 The python source code for this module
