@@ -1971,6 +1971,15 @@ file for convenience
 
         swroot = get_software_root()
         source_dir = self.get_source_dir()[0]
+
+        if source_dir is None:
+            # this happens when the "setup.py build" stage has run
+            # since that stage removes the library sources.
+            # However, a "setup.py install" command reruns the build
+            # and will trigger this condition.
+            # No copying is needed anymore, so just return
+            return
+        
         data_dir = os.path.join(source_dir, 'data')
         sapp_sample_dir = os.path.join(source_dir, 'sapp_sample')
 
