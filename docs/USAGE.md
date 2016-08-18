@@ -1,3 +1,32 @@
+Pybufr_ecmwf is a python module for reading and of writing BUFR files
+and for composing BUFR templates.
+This file tries to explain how this works.
+
+READING
+
+
+WRITING
+
+
+TEMPLATE DESIGN
+
+On top of the functionality provided by the bufrdc fortran library,
+this python module also adds the possibility to create BUFR templates
+and write the results as BUFR tables that can be used by the
+ECMWF BUFRDC library
+
+However, please note that the format of these bufr tables
+is not regulated by any standard and will not be compatible in any
+way with other bufr reading software.
+Unfortunately this also includes the new ecCodes library.
+A conversion to the new ECMWF ecCodes bufr tables may be provided
+in a future version of this module.
+
+
+..............
+
+
+
 The pybufr_ecmwf module provides functionality to read and write files in 
 BUFR format. 
 The API consists of several layers:

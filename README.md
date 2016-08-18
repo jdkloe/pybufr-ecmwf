@@ -1,4 +1,4 @@
-#pybufr_ecmwf
+# pybufr_ecmwf
 
 ## Introduction
 
@@ -9,21 +9,22 @@ and for composing BUFR templates.
 
 The pybufr_ecmwf module provides a python interface to the ECMWF bufrdc
 library and allows to read and write files in BUFR format.
-This python module adds the possibility to create BUFR templates
+On top of the functionality provided by the bufrdc fortran library,
+this python module also adds the possibility to create BUFR templates
 and write the results as BUFR tables that can be used by the
-ECMWF BUFRDC library.
+ECMWF BUFRDC library
 
 The API consists of several layers:
-* the raw/bare c API that connects python to the fortran library
+* the raw/bare fortran/c API that connects python to the fortran library
   (pybufr_ecmwf.ecmwfbufr)
 
 * an intermediate python API around this raw layer
   (pybufr_ecmwf.bufr_interface_ecmwf)
   
 * a high level API which allows a pythonic object 
- oriented usage. (pybufr_ecmwf.bufr)
- (for now, only for reading of BUFR files,
-  for writing the intermediate layer is still needed.)
+  oriented usage. (pybufr_ecmwf.bufr)
+  (for now, only for reading of BUFR files,
+   for writing and template creation the intermediate layer is still needed.)
 
 It is recommended to only use the high level API whenever possible,
 This should be the easiest interface to use.
@@ -42,62 +43,30 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home
 
 ## Requirements
 
-* python 2.6 or above
+* python 2.6 or above or python 3.x
 
 * numpy (and its f2py component)
-
+  (note that on linux they may be packaged separately, for example
+   Fedora splits them in python2-numpy and python2-numpy-f2py)
+  
 * gcc and gfortran
+
+## Compatibility
+
+This module should work and has CI tests on travis for:
+
+* linux (any recent version should work)
+
+* Mac OSX + homebrew
 
 ## Installation
 
-For building and installation use the setup.py script.
-The usual invocation should work:
+Installation details are given in these files:
+* for Linux see:   [docs/INSTALL_LINUX.md](docs/INSTALL_LINUX.md)
+* for MacOSX see:  [docs/INSTALL_MACOSX.md](docs/INSTALL_MACOSX.md)
 
-### for python2 users:
-```
-python2 setup.py build
-python2 unittest.py
-python2 setup.py install --user
-```
-or
-```
-python2 setup.py build
-python2 unittest.py
-sudo python2 setup.py install
-```
-### for python3 users:
-```
-python3 setup.py build
-python3 unittest.py
-python3 setup.py install --user
-```
-or
-```
-python3 setup.py build
-python3 unittest.py
-sudo python3 setup.py install
-```
-
-Explanations about some non-standard options can be found in
-the setup.cfg file, where things like which fortran compiler to use for
-building the interface can be choosen.
-Use 'setup.py --help' to get a list of all possibilities.
-
-For manual building outside the setup.py script you can manually execute 
-the build_interface.py script. This is mainly intended for testing
-and debugging purposes.
-
-For manual testing go to the software root (where this readme file is located)
-and execute the run_example_program.sh script.
-
-WARNING for python3 users:
-the f2py tool that comes with numpy was broken, and crashed during 
-the build process.
-The problem has been reported to the numpy developers (see
-http://projects.scipy.org/numpy/ticket/1932 and
-https://github.com/numpy/numpy/pull/3230), and the bug was fixed
-in may 2013. However, if your numpy version is older than that this 
-may still be a problem.
+Unfortunately Windows is currently not supported.
+For details wahy see: [docs/NOTES_WINDOWS.md](docs/NOTES_WINDOWS.md)
 
 ## Documentation
 
@@ -137,4 +106,4 @@ Questions, issues and requests for new features can be posted
 on the issues page: https://github.com/jdkloe/pybufr-ecmwf/issues
 or directly emailed to me at josdekloe@gmail.com
 
-Jos de Kloe, 11-Aug-2016.
+Jos de Kloe, 18-Aug-2016.

@@ -6,6 +6,8 @@ upcoming release:
 -addition of a simple read interface in BUFRReader
  (thanks to Christoph Paulik)
 -reorganize documentation files
+-addition of a first few lines to start building an interface
+ to the new ECMWF ecCodes library
 
 Release 0.81 (19-Feb-2015)
 -license change to LGPLv3

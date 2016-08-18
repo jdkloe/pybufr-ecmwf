@@ -41,7 +41,6 @@ from pybufr_ecmwf.custom_exceptions import (ProgrammingError,
                                             NetworkError, LibraryBuildError,
                                             InterfaceBuildError)
 # not used: BuildException
-from download_libsources import find_newest_library, download_bufrlib_sources
 #  #]
 #  #[ constants
 
@@ -805,7 +804,6 @@ class InstallBUFRInterfaceECMWF(object):
     """
     a class that builds the interface between the ECMWF
     BUFR library and python,
-    and optionally downloads the source code.
     """
     def __init__(self, verbose=False,
                  preferred_fortran_compiler=None,
@@ -816,8 +814,7 @@ class InstallBUFRInterfaceECMWF(object):
                  c_compiler=None,
                  c_ld_library_path=None,
                  c_flags=None,
-                 debug_f2py_c_api=False,
-                 download_library_sources=False):
+                 debug_f2py_c_api=False):
         #  #[
 
         # first remove any quotes that may be around the strings
@@ -831,7 +828,6 @@ class InstallBUFRInterfaceECMWF(object):
         self.fortran_flags = rem_quotes(fortran_flags)
         self.c_flags = rem_quotes(c_flags)
         self.debug_f2py_c_api = debug_f2py_c_api
-        self.download_library_sources = download_library_sources
 
         # save the verbose setting
         self.verbose = verbose
@@ -928,13 +924,7 @@ class InstallBUFRInterfaceECMWF(object):
     def find_copy_of_library(self):
         #  #[
         """ a method to search some standard places, to see whether
-        a copy of the ECMWF BUFR library has already been downloaded. """
-        # note 1: especially during testing of the build stage,
-        # it is usefull to be able to just take an already downloaded
-        # copy of this library, in stead of re-downloading it each time.
-        # This will also give the user the possibility to insert his
-        # preferred version of the library before initiating the build
-
+        a copy of the ECMWF BUFR library can be found. """
         # note 2: the build script in pybufr_ecmwf/ searches for the tarfile
         # of the bufr library in directory ecmwf_bufr_lib/
         # However, during the setup-build stage the code is run
@@ -976,11 +966,10 @@ class InstallBUFRInterfaceECMWF(object):
         # return to the original location
         os.chdir(cwd)
         #  #]
-    def use_fallback_library_copy(self):
+    def use_bundled_library_copy(self):
         #  #[
-        """ fallback option: copy the (possibly outdated version)
-        of the library sources stored in ecmwf_bufr_lib_sources
-        (usefull on systems with no internet access).
+        """ copy the bundled version
+        of the library sources stored in ecmwf_bufr_lib_sources.
         We must descend the directory tree first to find the root
         before doing this copy. """
 
@@ -1054,7 +1043,7 @@ class InstallBUFRInterfaceECMWF(object):
         """ a method to compile the ECMWF BUFR library """
 
         if not remake:
-            #  #[ download and unpack the ECMWF BUFR library tar file
+            #  #[ find and unpack the ECMWF BUFR library tar file
 
             # first see if there is already a tarfile available
             # (the user may have provided one)
@@ -1063,31 +1052,17 @@ class InstallBUFRInterfaceECMWF(object):
             # if not available, search some possible alternative locations
             if source_dir is None:
                 self.find_copy_of_library()
-                # retry (maybe we already had downloaded a copy in a different
-                # location, in which case downloading in not needed)
+                # retry (maybe we already have a copy in a different location)
                 (source_dir, tarfile_to_install) = self.get_source_dir()
 
-            # if still not found download, or use spare copy
+            # if still not found use the bundled copy
             if source_dir is None:
-                success = False
-                if self.download_library_sources:
-                    # try to download the source code for the
-                    # newest ECMWF bufr library
-                    (most_recent_bufr_lib_url,
-                     most_recent_bufr_tarfile_name) = find_newest_library()
-                    if most_recent_bufr_lib_url is not None:
-                        success = download_bufrlib_sources( \
-                                       most_recent_bufr_lib_url,
-                                       self.ecmwf_bufr_lib_dir,
-                                       most_recent_bufr_tarfile_name)
-
-                if not success:
-                    # fallback option: copy the (possibly outdated version)
-                    # of the library sources stored in ecmwf_bufr_lib_sources
-                    print('Using fall back library copy...')
-                    self.use_fallback_library_copy()
-
-                # retry (hopefully we have a copy of the tarfile now)
+                # copy the bundled version
+                # of the library sources stored in ecmwf_bufr_lib_sources
+                print('Using bundled library copy...')
+                self.use_bundled_library_copy()
+                
+                # retry (now we should have a copy of the tarfile)
                 (source_dir, tarfile_to_install) = self.get_source_dir()
             else:
                 # debug print
@@ -2028,8 +2003,7 @@ if __name__ == "__main__":
         # gfortran v4.7.0 installed
         # successfully tested 29-Aug-2012
         BI = InstallBUFRInterfaceECMWF(verbose=True,
-                                       preferred_fortran_compiler='gfortran',
-                                       download_library_sources=False)
+                                       preferred_fortran_compiler='gfortran')
         #                               c_flags="-fleading-underscore")
     elif TESTCASE == 3:
         # note that the "-O" flag is allways set for each fortran compiler
