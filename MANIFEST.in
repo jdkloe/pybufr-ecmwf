@@ -2,6 +2,8 @@
 # as created by: python setup.py sdist
 
 include *.txt
+include *.md
+include docs/*.md
 include *.sh
 include pybufr_ecmwf/alt_bufr_tables/*.TXT
 include *.py

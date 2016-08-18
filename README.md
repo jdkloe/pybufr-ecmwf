@@ -75,6 +75,9 @@ For usage examples for pybufr_ecmwf see the file [docs/USAGE.md](docs/USAGE.md)
 For more information on this module please consult the documentation at:
 ... [to be written]
 
+Some details on how to start testing with the optional
+ecCodes interface can be found here ... [to be written]
+
 The World Meteorological Organization (WMO) has a set of webpages
 describing the meteorological codes:
 http://www.wmo.int/pages/prog/www/WMOCodes.html
