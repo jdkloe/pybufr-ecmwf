@@ -9,7 +9,7 @@ code and in some example files), and their use is not recommended.
 ### READING
 
 To open a bufr file, iterate over its messages, and
-extract the date, you can use some python code like this:
+extract the data, you can use some python code like this:
 ```python
 from pybufr_ecmwf.bufr import BUFRReader
 with BUFRReader(input_bufr_file) as bufr:
@@ -20,6 +20,10 @@ in this simple case there is no need to specify which bufr tables
 to load or where they should be found.
 The defaults set by the pybufr-ecmwf module are sufficient
 do decode most bufr messages.
+It least all official WMO templates update version 26
+(released 4-May-2016, see:
+ http://www.wmo.int/pages/prog/www/WMOCodes/WMO306_vI2/LatestVERSION/LatestVERSION.html),
+and most local ECMWF templates should be supported.
 
 A full example program showing decoding is included in the module:
 
@@ -28,16 +32,23 @@ A full example program showing decoding is included in the module:
 Another example tool to demonstrate how to extract the data from a BUFR file
 and convert it to ASCII of CSV format is this one:
 
-* bufr_to_ascii.py
+* example_programs/bufr_to_ascii.py
 
 In case your BUFR files are mixed and have several message types in a
-single file, it is convenient to sort them first before using them
+single file, it is convenient to sort them first before decoding.
 To do this you can use the script:
-* sort_bufr_msgs.py
+* example_programs/sort_bufr_msgs.py
 
 ### WRITING
 
+higher level interface:
+
 ... [to be written] ...
+
+currently only the intermediate level interface is fully implemented.
+An example on how to use it can be found in this example script:
+
+* example_programs/example_for_using_bufrinterface_ecmwf_for_encoding.py
 
 ### TEMPLATE DESIGN
 
@@ -53,6 +64,11 @@ Unfortunately this also includes the new ecCodes library.
 A conversion to the new ECMWF ecCodes bufr tables may be provided
 in a future version of this module.
 
+higher level interface:
+
+... [to be written] ...
+
+currently only the intermediate level interface is fully implemented.
 An example tool to demonstrate how to create a set of BUFR tables from
 scratch, and another tool that uses these tables for encoding:
 -create_bufr_tables.py
