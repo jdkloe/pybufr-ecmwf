@@ -53,7 +53,7 @@ python ./unittests.py
 python setup.py install --user --user --prefix=
 ```
 
-* of install the pybufr-ecmwf software for python3:
+* or install the pybufr-ecmwf software for python3:
 ```bash
 python3 setup.py build
 python3 ./unittests.py

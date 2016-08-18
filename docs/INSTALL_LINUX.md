@@ -19,17 +19,24 @@ Then choose one of these:
 
 The easiest method is using pip.
 Use this command to install using pip for python2:
-'''bash
+```bash
 pip install pybufr-ecmwf
 ```
 or this command to install using pip for python3:
-'''bash
+```bash
 pip3 install pybufr-ecmwf
 ```
 
 This will download and install the latest release version
 from pypi and compiles and installs it for you.
 (see https://pypi.python.org/pypi/pybufr-ecmwf/)
+
+You can use options like --user to install in your own
+user account, or --prefix to relocate the module.
+To get a list of all options issue:
+```
+pip install --help
+```
 
 ## Use virtualenv and pip
 
@@ -38,7 +45,7 @@ installation, without affecting your normal python environment.
 After finishing your test, it is easy to delete the test directory with
 all its contents, and your normal python setup should be unchanged.
 Use these commands to install it in this way:
-'''bash
+```bash
 virtualenv myenv --system-site-packages
 . myenv/bin/activate
 pip install pybufr-ecmwf
@@ -48,6 +55,12 @@ If you prefer csh above bash, activate virtualenv with:
 source myenv/bin/activate.csh
 ```
 
+and clean up afterwards with:
+```
+deactivate
+rm -rf myenv
+```
+
 ## Manually download and install the latest tarball:
 
 * visit https://pypi.python.org/pypi/pybufr-ecmwf/
@@ -55,13 +68,13 @@ source myenv/bin/activate.csh
   Then unpack the software.
   This will get you the latest released version.
 ```bash
-tar zxvf pybufr-ecmwf-master.tar.gz
+tar zxvf pybufr-ecmwf-$VERSION.tar.gz
 cd pybufr-ecmwf-$VERSION
 ```
 * OR visit https://github.com/jdkloe/pybufr-ecmwf
-  then use the clone or download button button,
-  and then the "Download ZIP" button,
-  and unpack the software.
+  then use the "Clone or Download" button button,
+  and then the "Download ZIP" button to do the actual download.
+  Finally unpack the software.
   This will get you the latest development version.
 ```bash
 unzip pybufr-ecmwf-master.tar.gz
@@ -78,7 +91,7 @@ sudo python2 setup.py install
 python2 setup.py install --user
 ```
 * for an install in a non-default location, for example a network
-  disk, so other users in your network can use the module, use:
+  disk, so other users in your network can use the module as well, use:
 ```bash
 python2 setup.py install --prefix=/some/dir
 ```
@@ -95,6 +108,18 @@ https://github.com/numpy/numpy/pull/3230), and the bug was fixed
 in may 2013. However, if your numpy version is older than that this 
 may still be a problem.
 
+## Check out this mercurial repository and run setup.py:
+
+Also this will get you the latest development version.
+This method assumes you have the git tool installed
+
+```bash
+git clone https://github.com/jdkloe/pybufr-ecmwf.git
+cd pybufr-ecmwf
+```
+then continue with the instructions given above for
+"Manually download and install the latest tarball".
+
 ## Customised builds
 
 Explanations about some non-standard options can be found in
@@ -109,29 +134,29 @@ and debugging purposes.
 For manual testing after you have build the software
 go to the software root and execute the run_example_program.sh script.
 
-## Check out this mercurial repository and run setup.py:
-
-Also this will get you the latest development version.
-This method assumes you have the git tool installed
-
-```bash
-git clone https://github.com/jdkloe/pybufr-ecmwf.git
-cd pybufr-ecmwf
-```
-then continue with the instructions given above for
-"Manually download and install the latest tarball".
-
 ## Advanced options
 
 It is possible to manually download a different version of the
-bufrdc library from ECMWF and have the pybufr-ecmwfuse it.
+bufrdc library from ECMWF and have the pybufr-ecmwf module use it.
 To do this, copy the tarball of the bufrdc source code
 into the pybufr_ecmwf/ecmwf_bufr_lib/ directory before starting
-the build stage.
+the build stage (and remove possible other tar files that may be located
+in that directory).
+
+Please note that the bufrdc library needs to be compiled using
+the -fPIC option to both the gfortran and gcc compilers
+to generate position independent code.
+This is needed to allow linking the library into a shared object file,
+which in turn is needed to create a binary python module on linux.
+For this reason using a pre-installed bufrdc version on your
+machine will probably not work, since the default bufrdc build
+system does not apply the -fPIC option.
+The build stage of the pybufr-ecmwf module therefore contains its
+own build of the bufrdc library, and takes care of this.
 
 ## Packaged versions
 
-The following pre-packaged version are available:
+The following pre-packaged version is available:
 
 Christoph Paulik provides a conda package:
 * https://anaconda.org/cpaulik/pybufr-ecmwf

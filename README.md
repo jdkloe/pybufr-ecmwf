@@ -33,8 +33,9 @@ called ecCodes (which is currently in beta stage).
 The plan is to include an interface to this new library as well in this
 python module, with identical high level python interface, so you don't
 need to adapt your scripts.
-However, the lower level python routines may change significantly,
-to enable this.
+However, to enable this the lower level python routines
+may change significantly.
+
 Also please note that this new ecCodes library implements its own
 python API which is significantly different from the interface
 implemented by the pybufr_ecmwf module.
@@ -53,7 +54,8 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home
 
 ## Compatibility
 
-This module should work and has CI tests on travis for:
+This module should work and has CI tests on
+[https://travis-ci.org/jdkloe/pybufr-ecmwf](travis) for:
 
 * linux (any recent version should work)
 
@@ -66,7 +68,7 @@ Installation details are given in these files:
 * for MacOSX see:  [docs/INSTALL_MACOSX.md](docs/INSTALL_MACOSX.md)
 
 Unfortunately Windows is currently not supported.
-For details wahy see: [docs/NOTES_WINDOWS.md](docs/NOTES_WINDOWS.md)
+For details why see: [docs/NOTES_WINDOWS.md](docs/NOTES_WINDOWS.md)
 
 ## Documentation
 
