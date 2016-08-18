@@ -1,14 +1,45 @@
+## Usage of the pybufr-ecmwf module
+
 Pybufr_ecmwf is a python module for reading and of writing BUFR files
 and for composing BUFR templates.
-This file tries to explain how this works.
+This file explains how the high level interface works.
+The intermediate and low level interface is not documented here (only in the
+code and in some example files), and their use is not recommended.
 
-READING
+### READING
 
+To open a bufr file, iterate over its messages, and
+extract the date, you can use some python code like this:
+```python
+from pybufr_ecmwf.bufr import BUFRReader
+with BUFRReader(input_bufr_file) as bufr:
+    for data, names, units in bufr.messages():
+        <some code using the data>
+```
+in this simple case there is no need to specify which bufr tables
+to load or where they should be found.
+The defaults set by the pybufr-ecmwf module are sufficient
+do decode most bufr messages.
 
-WRITING
+A full example program showing decoding is included in the module:
 
+* example_programs/example_for_using_bufr_message_iteration.py
 
-TEMPLATE DESIGN
+Another example tool to demonstrate how to extract the data from a BUFR file
+and convert it to ASCII of CSV format is this one:
+
+* bufr_to_ascii.py
+
+In case your BUFR files are mixed and have several message types in a
+single file, it is convenient to sort them first before using them
+To do this you can use the script:
+* sort_bufr_msgs.py
+
+### WRITING
+
+... [to be written] ...
+
+### TEMPLATE DESIGN
 
 On top of the functionality provided by the bufrdc fortran library,
 this python module also adds the possibility to create BUFR templates
@@ -22,77 +53,19 @@ Unfortunately this also includes the new ecCodes library.
 A conversion to the new ECMWF ecCodes bufr tables may be provided
 in a future version of this module.
 
-
-..............
-
-
-
-The pybufr_ecmwf module provides functionality to read and write files in 
-BUFR format. 
-The API consists of several layers:
--the raw/bare c API that connects python to the fortran library
--an intermediate python API around this raw layer
--[not finished yet] a high level API which should allow a pythonic object 
- oriented usage
-
-For examples on its usage you can take a look at the programs in the
-example_programs directory in the source code.
-The run_example_program.sh shell script allows easy testing of all of
-these programs. 
-All needed test data files are provided in the test/testdata directory.
-
-examples for using the raw/bare API are:
--example_for_using_ecmwfbufr_for_decoding.py
--example_for_using_ecmwfbufr_for_encoding.py
-
-examples for using the intermediate python API 
--example_for_using_bufrinterface_ecmwf_for_decoding.py
--example_for_using_bufrinterface_ecmwf_for_encoding.py
-
-Note: the ecmwf library does not provide a way to request the needed
-storage size for the array used to store the encoded bufr message. The code
-has to guess before it defines (allocates) it. Therefore it may happen
-that the array to store the encoded bufr message is too small, and this
-causes a crash (segmentation error) of the python module. 
-This can be solved by adding this line to your code:
-     bufr.estimated_num_bytes_for_encoding = 25000
-(take a larger number if needed).
-The call to bufr.register_and_expand_descriptors(template) is the place
-where the code guesses this size, so you'll have to adjust the estimate
-after that, but before the actual encoding.
-
-Example for using additional tools:
-
-an example how the pb routines can be used (not portable at the moment,
- needs more testing!)
--example_for_using_pb_routines.py
-
-an example how the raw_bufr_file class can be used to replace the pb routines
--example_for_using_rawbufrfile.py
-
-an example of a tool that can be used to verify the internal consistency 
-of BUFR table files
--verify_bufr_tables.py
-
-example tools to count the number of BUFR messages in a file,
-and to extract the data category of the BUFR messages in a file
--bufr_count_msgs.py
--bufr_extract_data_category.py
-
-an example tool to demonstrate how to create a set of BUFR tables from
+An example tool to demonstrate how to create a set of BUFR tables from
 scratch, and another tool that uses these tables for encoding:
 -create_bufr_tables.py
 -use_custom_tables_for_encoding.py
 
-an example tool to demonstrate how to extract the data from a BUFR file
-and convert it to ASCII of CSV format.
--bufr_to_ascii.py
+### general remark
 
-In case your BUFR files are mixed and have several message types in a
-single file, it is preferable to sort them first before converting
-them to ascii. To do this you can use the script:
--sort_bufr_msgs.py
+For usage examples you can take a look at the programs in the
+example_programs and test directories in the source code.
+The run_example_program.sh shell script allows easy testing of all of
+these programs. 
+All needed test data files are provided in the test/testdata directory.
 
 If you have any questions or requests feel free to contact me by email.
 
-Jos de Kloe, 8-Dec-2013.
+Jos de Kloe, 18-Aug-2016

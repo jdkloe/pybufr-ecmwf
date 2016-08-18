@@ -55,7 +55,7 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home
 ## Compatibility
 
 This module should work and has CI tests on
-[https://travis-ci.org/jdkloe/pybufr-ecmwf](travis) for:
+[travis](https://travis-ci.org/jdkloe/pybufr-ecmwf) for:
 
 * linux (any recent version should work)
 
