@@ -1,8 +1,11 @@
 upcoming release:
--move to library version bufrdc_000405
+-move to library version bufrdc_000409
 -make all code portable between python2 and python3 to remove the
  need to run the 2to3 tool
--introduce travis testing
+-introduce travis testing for linux and MacOSX+Homebrew
+-addition of a simple read interface in BUFRReader
+ (thanks to Christoph Paulik)
+-reorganize documentation files
 
 Release 0.81 (19-Feb-2015)
 -license change to LGPLv3

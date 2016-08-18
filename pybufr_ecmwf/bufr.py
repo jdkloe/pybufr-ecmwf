@@ -405,7 +405,7 @@ except:
     eccodes_available = False
 
 # eccodes is not functional yet, so deactivate it for now
-eccodes_available=False
+#eccodes_available=False
 
 class BUFRReaderECCODES:
     #  #[
@@ -718,7 +718,9 @@ class BUFRReaderECCODES:
 
 BUFRReader = BUFRReaderBUFRDC
 if eccodes_available:
+    print('Using ecCodes')
     BUFRReader = BUFRReaderECCODES
+    #sys.exit(1)
 
 if __name__ == "__main__":
     #  #[ test program

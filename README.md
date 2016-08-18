@@ -101,7 +101,7 @@ may still be a problem.
 
 ## Documentation
 
-For usage examples for pybufr_ecmwf see the file USAGE.txt
+For usage examples for pybufr_ecmwf see the file [docs/USAGE.md](docs/USAGE.md)
 
 For more information on this module please consult the documentation at:
 ... [to be written]
