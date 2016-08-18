@@ -71,8 +71,10 @@ higher level interface:
 currently only the intermediate level interface is fully implemented.
 An example tool to demonstrate how to create a set of BUFR tables from
 scratch, and another tool that uses these tables for encoding:
--create_bufr_tables.py
--use_custom_tables_for_encoding.py
+
+*  example_programs/create_bufr_tables.py
+
+*  example_programs/use_custom_tables_for_encoding.py
 
 ### general remark
 
