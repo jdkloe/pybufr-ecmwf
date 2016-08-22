@@ -22,18 +22,20 @@ def decoding_example(input_bufr_file):
     scope (since most of these variables are not constants at all))
     """
 
-
     # suppres the default ECMWF welcome message which
     # is not yet redirected to the above defined fileunit
     os.environ['PRINT_TABLE_NAMES'] = 'FALSE'
     # read the binary data using the BUFRReader class
     print('loading testfile: ', input_bufr_file)
     with BUFRReader(input_bufr_file) as bufr:
-        for data, names, units in bufr.messages():
+        for msg in bufr:
+            for msg_or_subset_data in msg:
+                data = msg_or_subset_data.data
+                names = msg_or_subset_data.names
+                units = msg_or_subset_data.units
                 print(data.shape)
                 print(len(names))
                 print(len(units))
-
 
 if len(sys.argv) < 2:
     print('please give a BUFR file as first argument')

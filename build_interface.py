@@ -38,7 +38,7 @@ import datetime    # date handling functions
 from pybufr_ecmwf.helpers import (get_and_set_the_module_path,
                                   get_software_root, python3)
 from pybufr_ecmwf.custom_exceptions import (ProgrammingError,
-                                            NetworkError, LibraryBuildError,
+                                            LibraryBuildError,
                                             InterfaceBuildError)
 # not used: BuildException
 #  #]
@@ -1073,13 +1073,13 @@ class InstallBUFRInterfaceECMWF(object):
             # safety catch
             if source_dir is None:
                 print("ERROR: extracting source_dir failed")
-                raise NetworkError
+                raise LibraryBuildError
 
             if not os.path.exists(source_dir):
                 # safety catch
                 if tarfile_to_install == None:
                     print("ERROR: no tarfile available for BUFR library.")
-                    raise NetworkError
+                    raise LibraryBuildError
 
                 if self.verbose:
                     cmd = "cd "+self.ecmwf_bufr_lib_dir+\

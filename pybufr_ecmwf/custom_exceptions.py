@@ -53,14 +53,15 @@ class ProgrammingError(PybufrEcmwfBaseError):
     present in the code (this should be reported to the author) """
     pass
 
+class NotYetImplementedError(PybufrEcmwfBaseError):
+    """ an exception to indicate that a network problem occurred """
+    pass
+
+
 # build exceptions, used by the build_interface.py script
 # and the build_test.py script
 class BuildException(PybufrEcmwfBaseError):
     """ a generic base exception for this build script """
-    pass
-
-class NetworkError(BuildException):
-    """ an exception to indicate that a network problem occurred """
     pass
 
 class LibraryBuildError(BuildException):

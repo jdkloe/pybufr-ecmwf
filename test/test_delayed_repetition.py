@@ -158,23 +158,21 @@ bf1.close()
 print('*'*50)
 
 input_bufr_file = output_bufr_file
-bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
-bob.setup_tables(table_b_to_use='B'+table_name,
-                 table_d_to_use='D'+table_name)
+bufr = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
+bufr.setup_tables(table_b_to_use='B'+table_name,
+                  table_d_to_use='D'+table_name)
 
-# just 1 msg in this test file, so no looping needed
-bob.get_next_msg()
-nsubsets = bob.get_num_subsets()
-print('num_subsets = ', nsubsets)
-for subs in range(1, nsubsets+1):
-    # add header strings
-    (list_of_names, list_of_units) = bob.get_names_and_units(subs)
-    data = bob.get_subset_values(subs)
-    print('"subset nr"'+','+','.join(list_of_names))
-    print('""'+','+','.join(list_of_units))
-    print(str(subs)+','+','.join(str(val) for val in data[:]))
+for msg in bufr:
+    print('num_subsets = ', msg.get_num_subsets())
+    for subs, msg_or_subset_data in enumerate(msg):
+        list_of_names = msg_or_subset_data.names
+        list_of_units = msg_or_subset_data.units
+        data = msg_or_subset_data.data
+        print('"subset nr"'+','+','.join(list_of_names))
+        print('""'+','+','.join(list_of_units))
+        print(str(subs+1)+','+','.join(str(val) for val in data[:]))
 
-bob.close()
+bufr.close()
 
 # NOTE:
 # currently, decoding data with delayed repetation does not work

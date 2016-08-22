@@ -40,56 +40,60 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
 
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
-                     expand_flags=expand_flags)
+    bufr = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
+                      expand_flags=expand_flags)
+    msg_nr = -1
+    for msg_nr, msg in enumerate(bufr):
+        num_subsets = msg.get_num_subsets()
+        list_of_unexp_descr = msg.get_unexp_descr_list()
 
-    msg_nr = 0
-    while True:
-        try:
-            bob.get_next_msg()
-            msg_nr += 1
-        except EOFError:
-            break
+        for subs, msg_or_subset_data in enumerate(msg):
+            # get the actual values
+            data = msg_or_subset_data.data
 
-        # add header strings
-        # print('DEBUG: bob.msg_loaded ',bob.msg_loaded)
-        list_of_names = []
-        list_of_units = []
-        list_of_names.extend(bob.get_names())
-        list_of_units.extend(bob.get_units())
-        list_of_unexp_descr = bob.get_unexp_descr_list()
+            if msg_nr == 0 and subs == 0:
+                list_of_unexp_descr_first_msg = list_of_unexp_descr[:]
 
-        #print('list_of_names = ',list_of_names)
-        #print('list_of_units = ',list_of_units)
+                # add header strings
+                list_of_names = msg_or_subset_data.names
+                list_of_units = msg_or_subset_data.units
+                output_fd.write('"subset nr"'+separator)
+                if list_of_names:
+                    for name in list_of_names[:-1]:
+                        output_fd.write('"'+name+'"'+separator)
+                    name = list_of_names[-1]
+                    output_fd.write('"'+name+'"\n')
+                else:
+                    output_fd.write('"[NO DATA]"\n')
 
-        if bob.msg_loaded == 1:
-            output_fd.write('"subset nr"'+separator)
-            if list_of_names:
-                for name in list_of_names[:-1]:
-                    output_fd.write('"'+name+'"'+separator)
-                name = list_of_names[-1]
-                output_fd.write('"'+name+'"\n')
-            else:
-                output_fd.write('"[NO DATA]"\n')
+                output_fd.write('""'+separator)
+                if list_of_units:
+                    for unit in list_of_units[:-1]:
+                        output_fd.write('"'+unit+'"'+separator)
+                    unit = list_of_units[-1]
+                    output_fd.write('"'+unit+'"\n')
+                else:
+                    output_fd.write('"[NO DATA]"\n')
 
-            output_fd.write('""'+separator)
-            if list_of_units:
-                for unit in list_of_units[:-1]:
-                    output_fd.write('"'+unit+'"'+separator)
-                unit = list_of_units[-1]
-                output_fd.write('"'+unit+'"\n')
-            else:
-                output_fd.write('"[NO DATA]"\n')
-
-            list_of_unexp_descr_first_msg = bob.bufr_obj.py_unexp_descr_list
-            #print('list_of_unexp_descr_first_msg = ',
-            #      list_of_unexp_descr_first_msg)
-
-        data = bob.get_values_as_2d_array()
+            try:
+                ns = numpy.shape(data)[0]
+                for subs_cnt in range(ns):
+                    output_fd.write(str(subs_cnt+1)+separator+
+                                    separator.join(str(val)
+                                                   for val in data[subs_cnt, :])+
+                                    "\n")
+            except TypeError:
+                # in case of delayed replication or when character strings are
+                # present (i.e. expand_flags = True) data will be returned as
+                # a 1D list in stead of a 2D numpy array.
+                # This generates a TypeError in the data[subs, :] indexing above
+                output_fd.write(str(subs+1)+separator+
+                                separator.join(str(val) for val in data[:])+
+                                "\n")
 
         if list_of_unexp_descr != list_of_unexp_descr_first_msg:
             print('\n\n')
-            print('WARNING: it seems different types of BUFR messages')
+            print('ERROR: it seems different types of BUFR messages')
             print('are mixed in this BUFR file, meaning that the list of')
             print('descriptor names and units printed on the first 2 output')
             print('lines will not match with all lines of data.')
@@ -105,89 +109,20 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
                   list_of_unexp_descr)
             print('list_of_unexp_descr_first_msg = ',
                   list_of_unexp_descr_first_msg)
-            sys.exit(0)
+            sys.exit(1)
 
-        if data.shape[0]*data.shape[1] == 0:
+        if numpy.shape(data)[0] == 0:
             print('NO DATA FOUND! this seems an empty BUFR message !')
             continue
 
-        for subs in range(len(data[:, 0])):
-            output_fd.write(str(subs+1)+separator+
-                            separator.join(str(val) for val in data[subs, :])+
-                            "\n")
-        print('converted BUFR msg nr. ', msg_nr)
+        print('converted BUFR msg nr. ', msg_nr+1)
         if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
             print('skipping remainder of this BUFR file')
             break
 
     # close the file
-    bob.close()
-    if msg_nr == 0:
-        print('no BUFR messages found, are you sure this is a BUFR file?')
-    #  #]
-
-def print_bufr_content2(input_bufr_file, output_fd, separator,
-                        max_msg_nr, expand_flags):
-    #  #[ implementation 2
-    """
-    example implementation using the BUFRReader class
-    combined with the get_value method
-    """
-
-    # get an instance of the BUFR class
-    # which automatically opens the file for reading and decodes it
-    bob = BUFRReader(input_bufr_file, expand_flags=expand_flags)
-
-    msg_nr = 0
-    while True:
-        try:
-            bob.get_next_msg()
-            msg_nr += 1
-        except EOFError:
-            break
-
-        # add header strings
-        if bob.msg_loaded == 1:
-            list_of_names = bob.get_names()
-            list_of_units = bob.get_units()
-
-            output_fd.write('"subset nr"'+separator)
-            if list_of_names:
-                for name in list_of_names[:-1]:
-                    output_fd.write('"'+name+'"'+separator)
-                name = list_of_names[-1]
-                output_fd.write('"'+name+'"\n')
-            else:
-                output_fd.write('"[NO DATA]"\n')
-
-            output_fd.write('""'+separator)
-            if list_of_units:
-                for unit in list_of_units[:-1]:
-                    output_fd.write('"'+unit+'"'+separator)
-                unit = list_of_units[-1]
-                output_fd.write('"'+unit+'"\n')
-            else:
-                output_fd.write('"[NO DATA]"\n')
-
-        nsubsets = bob.get_num_subsets()
-        for subs in range(1, nsubsets+1):
-            nelements = bob.get_num_elements()
-            data_list = []
-            for descr_nr in range(nelements):
-                data = bob.get_value(descr_nr, subs, autoget_cval=True)
-                data_list.append(data)
-            output_fd.write(str(subs)+separator+
-                            separator.join(str(val) for val in data_list)+
-                            "\n")
-
-        print('converted BUFR msg nr. ', msg_nr)
-        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
-            print('skipping remainder of this BUFR file')
-            break
-
-    # close the file
-    bob.close()
-    if msg_nr == 0:
+    bufr.close()
+    if msg_nr == -1:
         print('no BUFR messages found, are you sure this is a BUFR file?')
     #  #]
 
@@ -305,35 +240,21 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
 
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
+    bufr = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
 #                     verbose=True, expand_flags=expand_flags)
                      verbose=False, expand_flags=expand_flags)
 
-    msg_nr = 0
-    while True:
-        try:
-            bob.get_next_msg()
-            msg_nr += 1
-        except EOFError:
-            break
-
+    msg_nr = -1
+    for msg_nr, msg in enumerate(bufr):
         # since this example assumes a bufr file using delayed replication
         # always request and add the header for each subset
-        nsubsets = bob.get_num_subsets()
-        for subs in range(1, nsubsets+1):
+        nsubsets = msg.get_num_subsets()
 
+        for subs, msg_or_subset_data in enumerate(msg):
             # add header strings
-            (list_of_names, list_of_units) = bob.get_names_and_units(subs)
-
-            # currently not used
-            # list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
-
-            data = bob.get_subset_values(subs, autoget_cval=True)
-
-            # print('len(list_of_names) = ', len(list_of_names))
-            # print('len(list_of_units) = ', len(list_of_units))
-            # print('len(data) = ', len(data))
-
+            list_of_names = msg_or_subset_data.names
+            list_of_units = msg_or_subset_data.units
+            data = msg_or_subset_data.data
             if numpy.shape(data)[0] == 0:
                 print('NO DATA FOUND! this seems an empty BUFR message !')
                 continue
@@ -342,18 +263,18 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
                             separator.join(list_of_names) + "\n")
             output_fd.write('""'+separator+
                             separator.join(list_of_units) + "\n")
-            output_fd.write(str(subs)+separator+
+            output_fd.write(str(subs+1)+separator+
                             separator.join(str(val) for val in data[:])+
                             "\n")
 
-        print('converted BUFR msg nr. ', msg_nr)
-        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
+        print('converted BUFR msg nr. ', msg_nr+1)
+        if (max_msg_nr >= 0) and (msg_nr >= max_msg_nr):
             print('skipping remainder of this BUFR file')
             break
 
     # close the file
-    bob.close()
-    if msg_nr == 0:
+    bufr.close()
+    if msg_nr == -1:
         print('no BUFR messages found, are you sure this is a BUFR file?')
     #  #]
 
@@ -560,7 +481,7 @@ def main():
         print_bufr_content1(input_bufr_file, output_fd,
                             separator, max_msg_nr, expand_flags)
     elif implementation_nr == 2:
-        print_bufr_content2(input_bufr_file, output_fd,
+        print_bufr_content1(input_bufr_file, output_fd,
                             separator, max_msg_nr, expand_flags)
     elif implementation_nr == 3:
         print_bufr_content3(input_bufr_file, output_fd,

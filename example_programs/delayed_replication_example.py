@@ -160,31 +160,6 @@ bf1.write_raw_bufr_msg(bufr.encoded_message)
 # close the file
 bf1.close()
 
-##############################
-# reopen the BUFR file as test
-##############################
-
-print('*'*50)
-
-input_bufr_file = output_bufr_file
-bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
-bob.setup_tables(table_b_to_use='B'+table_name,
-                 table_d_to_use='D'+table_name)
-
-# just 1 msg in this test file, so no looping needed
-bob.get_next_msg()
-nsubsets = bob.get_num_subsets()
-print('num_subsets = ', nsubsets)
-for subs in range(1, nsubsets+1):
-    # add header strings
-    (list_of_names, list_of_units) = bob.get_names_and_units(subs)
-    data = bob.get_subset_values(subs)
-    print('"subset nr"'+','+','.join(list_of_names))
-    print('""'+','+','.join(list_of_units))
-    print(str(subs)+','+','.join(str(val) for val in data[:]))
-
-bob.close()
-
 ######################################################
 # reopen the BUFR file as test an try message iterator
 ######################################################
@@ -193,13 +168,17 @@ bob.close()
 print('*'*50)
 
 input_bufr_file = output_bufr_file
-bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
-bob.setup_tables(table_b_to_use='B'+table_name,
-                 table_d_to_use='D'+table_name)
+bufr = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
+bufr.setup_tables(table_b_to_use='B'+table_name,
+                  table_d_to_use='D'+table_name)
 
-for data, names, units in bob.messages():
+for msg in bufr:
+    for msg_or_subset_data in msg:
+        names = msg_or_subset_data.names
+        units = msg_or_subset_data.units
+        data = msg_or_subset_data.data
     print(data)
     print(names)
     print(units)
 
-bob.close()
+bufr.close()

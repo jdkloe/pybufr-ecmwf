@@ -39,7 +39,9 @@ import numpy   # array functionality
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF
 from .helpers import python3
-from .custom_exceptions import NoMsgLoadedError, CannotExpandFlagsError, IncorrectUsageError
+from .custom_exceptions import \
+     (NoMsgLoadedError, CannotExpandFlagsError,
+      IncorrectUsageError, NotYetImplementedError)
 #  #]
 
 # not used
@@ -65,84 +67,278 @@ from .custom_exceptions import NoMsgLoadedError, CannotExpandFlagsError, Incorre
 #    #  ==>pointer to the associated descriptor object
     #  #]
 
-# not used
-#class BUFRMessage: # [moved here from pybufr_ecmwf.py]
+class BUFRMessage: # [moved here from pybufr_ecmwf.py]
     #  #[
-#    """
-#    a base class for BUFR messages
-#    """
-#    def __init__(self):
-#        self.store_something = None
-#        # pass
-#    def do_something(self):
-#        """ do something """
-#        self.store_something = 1.2345
-#        # pass
-#    def do_somethingelse(self):
-#        """ do something else """
-#        self.store_something = 5.4321
-#        # pass
-#
-    #  ==>properties-list = [sec0, sec1, sec2, sec3 data]
-    #  ==>list-of-descriptor-objects = []
-    #  ==>finish (set num subsets, num delayed replications)
-    #  ==>2D-data-array of data objects (num subsets x expanded num descriptors)
-    #
-    # possible methods:
-    # -add_descriptor
-    # -expand_descriptorList
-    # -encode
-    # -decode
-    # -print_sections_012
-    # -get_descriptor_properties
-    # -fill_one_real_value
-    # -fill_one_string_value
-    # -get_one_real_value
-    # -get_one_string_value
-    # -...
+    """
+    a class that implements iteration over the data in
+    a given bufr message
+    """
+    def __init__(self, raw_msg,
+                 section_sizes, section_start_locations,
+                 expand_flags, msg_index, verbose,
+                 table_b_to_use, table_c_to_use,
+                 table_d_to_use, tables_dir):
+        #  #[ initialise and decode
+        ''' delegate the actual work to BUFRInterfaceECMWF '''
+        self._bufr_obj = BUFRInterfaceECMWF(raw_msg,
+                                            section_sizes,
+                                            section_start_locations,
+                                            expand_flags=expand_flags,
+                                            verbose=verbose)
+        self._bufr_obj.decode_sections_012()
+        self._bufr_obj.setup_tables(table_b_to_use, table_c_to_use,
+                                    table_d_to_use, tables_dir)
+        self._bufr_obj.decode_data()
+        self._bufr_obj.decode_sections_0123()
+        self._bufr_obj.fill_descriptor_list_subset(subset=1)
+        self.msg_index = msg_index
+        self.expand_flags = expand_flags
+        #  #]
+    def get_num_subsets(self):
+        #  #[
+        """
+        request the number of subsets in the current BUFR message
+        """
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+        return self._bufr_obj.get_num_subsets()
+        #  #]
+    def get_num_elements(self):
+        #  #[
+        """
+        request the number of elements (descriptors) in the current subset
+        """
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+
+        return self._bufr_obj.get_num_elements()
+        #  #]
+    def get_value(self, descr_nr, subset_nr, autoget_cval=False):
+        #  #[
+        """
+        request a value for a given subset and descriptor number
+        """
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+
+        val = self._bufr_obj.get_value(descr_nr, subset_nr, autoget_cval)
+        return val
+        #  #]
+    def get_values(self, descr_nr, autoget_cval=False):
+        #  #[
+        """
+        request an array of values containing the values
+        for a given descriptor number for all subsets
+        """
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+
+        self._bufr_obj.delayed_repl_check_for_incorrect_use()
+
+        vals = self._bufr_obj.get_values(descr_nr, autoget_cval)
+
+        return vals
+        #  #]
+    def get_subset_values(self, subset_nr , autoget_cval=False):
+         #  #[
+        """
+        request an array of values containing the values
+        for a given subset for this bufr message
+        """
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+
+        # needed to have the units ready, so autoget_cval will work
+        self._bufr_obj.fill_descriptor_list_subset(subset_nr)
+
+        vals = self._bufr_obj.get_subset_values(subset_nr, autoget_cval)
+
+        return vals
+        #  #]
+    def get_values_as_2d_array(self,autoget_cval=False):
+        #  #[
+        """
+        a convenience method to allow retrieving all data in
+        a bufr message in the form of a 2D array. This first index
+        runs over the subsets, the second over the descriptors.
+        """
+        if (self.msg_index == -1):
+            txt = 'Sorry, no BUFR messages available'
+            raise NoMsgLoadedError(txt)
+
+        #if self.expand_flags:
+        #    errtxt = ('ERROR: get_values_as_2d_array only returns numeric '+
+        #              'results and cannot be used together with the '+
+        #              'expand_flags option.'+
+        #              'You will need to extract one element of one row of '+
+        #              'elements at a time in this case.')
+        #    raise CannotExpandFlagsError(errtxt)
+            
+        self._bufr_obj.delayed_repl_check_for_incorrect_use()
+
+        num_subsets  = self._bufr_obj.get_num_subsets()
+        num_elements = self._bufr_obj.get_num_elements()
+
+        #print('DEBUG: num_subsets = ', num_subsets)
+        #print('DEBUG: num_elements = ', num_elements)
+
+        # The BUFR reader reads an array that is actually larger than the data.
+        # Here we reshape the data to an array of this bigger size and then
+        # slice it down to the actual size of the data. reshape data into 2D
+        # array of size that was actually read
+        factor = int(len(self._bufr_obj.values) / self._bufr_obj.actual_kelem)
+        result = self._bufr_obj.values.reshape(
+            (factor, self._bufr_obj.actual_kelem))[:num_subsets, :num_elements]
+
+        # autoget_cval option not functional yet
+        # for data retrieval in a 2D numpy array
+        # this is delegated to self.get_subset_values()
+        # in data_iterator below
+        
+        return result
+        #  #]
+    def get_names_and_units(self, subset=1):
+        #  #[ request name and unit of each descriptor for the given subset
+        '''
+        wrapper around  self._bufr_obj.get_names_and_units
+        '''
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+        
+        (list_of_names, list_of_units) = \
+                        self._bufr_obj.get_names_and_units(subset)
+
+        return (list_of_names, list_of_units)
+        #  #]
+    def get_names(self, subset=1):
+        #  #[ request name of each descriptor for the given subset
+        '''
+        wrapper around  self._bufr_obj.get_names_and_units
+        '''
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+
+        (list_of_names, list_of_units) = \
+                        self._bufr_obj.get_names_and_units(subset)
+        return list_of_names
+        #  #]
+    def get_units(self, subset=1):
+        #  #[ request unit of each descriptor for the given subset
+        '''
+        wrapper around  self._bufr_obj.get_names_and_units
+        '''
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+
+        (list_of_names, list_of_units) = \
+                        self._bufr_obj.get_names_and_units(subset)
+
+        return list_of_units
+        #  #]        
+    def get_unexp_descr_list(self):
+        #  #[ get unexpanded descfriptor list
+        '''
+        wrapper around  self._bufr_obj.py_unexp_descr_list
+        '''
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+
+        list_of_unexp_descr = self._bufr_obj.py_unexp_descr_list
+        return list_of_unexp_descr
+        #  #]
+    def data_iterator(self):
+        #  #[ define iteration
+        """
+        Iterate over the data from a given BUFR message.
+        If the message can be represented as a 2D array then
+        the data will be returned as such. Otherwise 1D arrays
+        will be returned.
+
+        Yields
+        ------
+        data : numpy.ndarray
+            Array of the data in the BUFR message. Can be a 2D array or a
+            1D array.
+        names: list
+            List of variable names. If data is a 2D array these are the names
+            of the variables along the second axis of the array. So if the
+            data array has a shape of e.g. (361 ,44) there will be 44 elements
+            in this list.
+        units: list
+            The units of each variable in the names list. Same length as the
+            names list.
+        """
+        walk_over_subsets = False
+        if self.expand_flags:
+            walk_over_subsets = True
+
+        if not walk_over_subsets:
+            try:
+                values = self.get_values_as_2d_array()
+                names, units = self.get_names_and_units()
+                # store the results as attributes of self and yield self
+                self.data = values
+                self.names = names
+                self.units = units
+                yield self
+            except IncorrectUsageError:
+                walk_over_subsets = True
+
+        if walk_over_subsets:
+            # no 2D representation possible. Return 1D arrays instead. If
+            # there are multiple subsets yield them one after the other.
+            nsubsets = self.get_num_subsets()
+            for subs in range(1, nsubsets+1):
+                names, units = self.get_names_and_units(subs)
+                values = self.get_subset_values(subs)
+                self.data = values
+                self.names = names
+                self.units = units
+                yield self
+        #  #]
+    def __iter__(self):
+        #  #[ return the iterator
+        '''returns the above defined iterator'''
+        return self.data_iterator()
+        #  #]
+    #def __getattr__(self, key):
+    #    #print('inside __getattr__: key = ', key)
+    #    #sys.exit(1)
+    #    if key == 'data':
+    #        # try to get the data as 2D array
+    #        ...
+    
     #  #]
 
-# not used
-#class BUFRFile(RawBUFRFile):
-    #  #[
-#    """
-#    a base class for BUFR files
-#    """
-#    pass
-#    # bufr-file [can reuse much functionality from what I have now in the
-#    #            RawBUFRFile class in pybufr_ecmwf.py]
-#    #  ==>some meta data
-#    #  ==>list-of-bufr-msgs = []
-    #  #]
-
-# this class implements combined reading and decoding
-# based on the older BUFRDC library
 class BUFRReaderBUFRDC:
     #  #[
     """
     a class that combines reading and decoding of a BUFR file
     to allow easier reading and usage of BUFR files
+    It implements a file like interface for
+    combined reading and decoding and allows iteration
+    over the messages in this file.
     """
     def __init__(self, input_bufr_file, warn_about_bufr_size=True,
                  expand_flags=False, verbose=False):
         #  #[
         # get an instance of the RawBUFRFile class
-        self.rbf = RawBUFRFile(warn_about_bufr_size=warn_about_bufr_size)
+        self._rbf = RawBUFRFile(warn_about_bufr_size=warn_about_bufr_size)
 
         self.verbose = verbose
         
         # open the file for reading, count nr of BUFR messages in it
         # and store its content in memory, together with
         # an array of pointers to the start and end of each BUFR message
-        self.rbf.open(input_bufr_file, 'rb')
+        self._rbf.open(input_bufr_file, 'rb')
     
         # extract the number of BUFR messages from the file
-        self.num_msgs = self.rbf.get_num_bufr_msgs()
+        self.num_msgs = self._rbf.get_num_bufr_msgs()
 
         # keep track of which bufr message has been loaded and
         # decoded from this file
-        self.msg_loaded = -1
-        self.bufr_obj = None
+        self.msg_index = -1
+        self._bufr_obj = None
 
         # allow manual choice of tables
         self.table_b_to_use = None
@@ -171,178 +367,15 @@ class BUFRReaderBUFRDC:
         step to the next BUFR message in the open file
         """
         (raw_msg, section_sizes, section_start_locations) = \
-                 self.rbf.get_next_raw_bufr_msg()
-        # print('(raw_msg, section_sizes, section_start_locations) = ',\
-        #       (raw_msg, section_sizes, section_start_locations))
-        self.bufr_obj = BUFRInterfaceECMWF(raw_msg,
-                                           section_sizes,
-                                           section_start_locations,
-                                           expand_flags=self.expand_flags,
-                                           verbose=self.verbose)
-        self.bufr_obj.decode_sections_012()
-        self.bufr_obj.setup_tables(self.table_b_to_use, self.table_c_to_use,
-                                   self.table_d_to_use, self.tables_dir)
-        self.bufr_obj.decode_data()
+                 self._rbf.get_next_raw_bufr_msg()
+        msg_index = self._rbf.last_used_msg
+        self.msg = BUFRMessage(raw_msg,
+                               section_sizes, section_start_locations,
+                               self.expand_flags, msg_index, self.verbose,
+                               self.table_b_to_use, self.table_c_to_use,
+                               self.table_d_to_use, self.tables_dir)
 
-        #nsub = int(self.bufr_obj.get_num_subsets())
-        #n = len(self.bufr_obj.values)/nsub
-        n = self.bufr_obj.actual_nr_of_expanded_descriptors
-        #self.bufr_obj.fill_descriptor_list(nr_of_expanded_descriptors=n)
-
-        self.bufr_obj.decode_sections_0123()
-        self.bufr_obj.fill_descriptor_list_subset(subset=1)
-        
-        self.msg_loaded = self.rbf.last_used_msg
-        #  #]
-    def get_num_subsets(self):
-        #  #[
-        """
-        request the number of subsets in the current BUFR message
-        """
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-        return self.bufr_obj.get_num_subsets()
-        #  #]
-    def get_num_elements(self):
-        #  #[
-        """
-        request the number of elements (descriptors) in the current subset
-        """
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-
-        return self.bufr_obj.get_num_elements()
-        #  #]
-    def get_value(self, descr_nr, subset_nr, autoget_cval=False):
-        #  #[
-        """
-        request a value for a given subset and descriptor number
-        """
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-
-        val = self.bufr_obj.get_value(descr_nr, subset_nr, autoget_cval)
-        return val
-        #  #]
-    def get_values(self, descr_nr, autoget_cval=False):
-
-        #  #[
-        """
-        request an array of values containing the values
-        for a given descriptor number for all subsets
-        """
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-
-        self.bufr_obj.delayed_repl_check_for_incorrect_use()
-
-        vals = self.bufr_obj.get_values(descr_nr, autoget_cval)
-
-        return vals
-        #  #]
-    def get_subset_values(self, subset_nr , autoget_cval=False):
-         #  #[
-        """
-        request an array of values containing the values
-        for a given subset for this bufr message
-        """
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-
-        # needed to have the units ready, so autoget_cval will work
-        self.bufr_obj.fill_descriptor_list_subset(subset_nr)
-
-        vals = self.bufr_obj.get_subset_values(subset_nr, autoget_cval)
-
-        return vals
-        #  #]
-    def get_values_as_2d_array(self,autoget_cval=False):
-        #  #[
-        """
-        a convenience method to allow retrieving all data in
-        a bufr message in the form of a 2D array. This first index
-        runs over the subsets, the second over the descriptors.
-        """
-        if (self.msg_loaded == -1):
-            txt = 'Sorry, no BUFR messages available'
-            raise NoMsgLoadedError(txt)
-
-        if self.expand_flags:
-            errtxt = ('ERROR: get_values_as_2d_array only returns numeric '+
-                      'results and cannot be used together with the '+
-                      'expand_flags option.'+
-                      'You will need to extract one element of one row of '+
-                      'elements at a time in this case.')
-            raise CannotExpandFlagsError(errtxt)
-            
-        self.bufr_obj.delayed_repl_check_for_incorrect_use()
-
-        num_subsets  = self.bufr_obj.get_num_subsets()
-        num_elements = self.bufr_obj.get_num_elements()
-
-        #print('DEBUG: num_subsets = ', num_subsets)
-        #print('DEBUG: num_elements = ', num_elements)
-
-        # The BUFR reader reads an array that is actually larger than the data.
-        # Here we reshape the data to an array of this bigger size and then
-        # slice it down to the actual size of the data. reshape data into 2D
-        # array of size that was actually read
-        factor = int(len(self.bufr_obj.values) / self.bufr_obj.actual_kelem)
-        result = self.bufr_obj.values.reshape(
-            (factor, self.bufr_obj.actual_kelem))[:num_subsets, :num_elements]
-
-        # autoget_cval option not functional yet
-
-        return result
-        #  #]
-    def get_names_and_units(self, subset=1):
-        #  #[ request name and unit of each descriptor for the given subset
-        '''
-        wrapper around  self.bufr_obj.get_names_and_units
-        '''
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-        
-        (list_of_names, list_of_units) = \
-                        self.bufr_obj.get_names_and_units(subset)
-
-        return (list_of_names, list_of_units)
-        #  #]
-    def get_names(self, subset=1):
-        #  #[ request name of each descriptor for the given subset
-        '''
-        wrapper around  self.bufr_obj.get_names_and_units
-        '''
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-
-        (list_of_names, list_of_units) = \
-                        self.bufr_obj.get_names_and_units(subset)
-        return list_of_names
-        #  #]
-    def get_units(self, subset=1):
-        #  #[ request unit of each descriptor for the given subset
-        '''
-        wrapper around  self.bufr_obj.get_names_and_units
-        '''
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-
-        (list_of_names, list_of_units) = \
-                        self.bufr_obj.get_names_and_units(subset)
-
-        return list_of_units
-        #  #]        
-    def get_unexp_descr_list(self):
-        #  #[ get unexpanded descfriptor list
-        '''
-        wrapper around  self.bufr_obj.py_unexp_descr_list
-        '''
-        if (self.msg_loaded == -1):
-            raise NoMsgLoadedError
-
-        list_of_unexp_descr = self.bufr_obj.py_unexp_descr_list
-        return list_of_unexp_descr
+        self.msg_index = msg_index
         #  #]
 
     def messages(self):
@@ -353,33 +386,19 @@ class BUFRReaderBUFRDC:
 
         Yields
         ------
-        data : numpy.ndarray
-            Array of the data in the BUFR message. Can be a 2D array or a
-            1D array.
-        names: list
-            List of variable names. If data is a 2D array these are the names
-            of the variables along the second axis of the array. So if the
-            data array has a shape of e.g. (361 ,44) there will be 44 elements
-            in this list.
-        units: list
-            The units of each variable in the names list. Same length as the
-            names list.
+        msg:
+            An instance of BUFRMessage that gives access
+            to the actual data, names and units for the
+            current bufr message (if it can be represented as 2D array)
+            or for the current subset of the current bufr message
+            in which case it will be a 1D array.
         """
         for i in numpy.arange(self.num_msgs) + 1:
             self.get_next_msg()
-            try:
-                values = self.get_values_as_2d_array()
-                cnames, cunits = self.get_names_and_units()
-                yield values, cnames, cunits
-            except IncorrectUsageError:
-                # no 2D representation possible. Return 1D arrays instead. If
-                # there are multiple subsets yield them one after the other.
-                nsubsets = self.get_num_subsets()
-                for subs in range(1, nsubsets+1):
-                    cnames, cunits = self.get_names_and_units(subs)
-                    values = self.get_subset_values(subs)
-                    yield values, cnames, cunits
+            yield self.msg
 
+    def __iter__(self):
+        return self.messages()
 
     def __enter__(self):
         return self
@@ -392,7 +411,7 @@ class BUFRReaderBUFRDC:
         """
         close the file object
         """
-        self.rbf.close()
+        self._rbf.close()
         #  #]
     #  #]
 
@@ -431,7 +450,7 @@ class BUFRReaderECCODES:
     
         # keep track of which bufr message has been loaded and
         # decoded from this file
-        self.msg_loaded = -1
+        self.msg_index = -1
         self.bufr_id = -1
 
         # allow manual choice of tables
@@ -462,15 +481,15 @@ class BUFRReaderECCODES:
         """
         print('getting next message')
         
-        if self.msg_loaded < self.num_msgs:
-            self.msg_loaded += 1
+        if self.msg_index < self.num_msgs:
+            self.msg_index += 1
             # get an instance of the eccodes bufr class
             self.bufr_id = eccodes.codes_bufr_new_from_file(self.fd)
             print('self.bufr_id = ', self.bufr_id)
             if self.bufr_id is None:
                 raise StopIteration
         else:
-            self.msg_loaded = -1
+            self.msg_index = -1
             self.bufr_id = -1
             raise StopIteration
 
@@ -478,7 +497,7 @@ class BUFRReaderECCODES:
         eccodes.codes_set(self.bufr_id,'unpack',1)
 
         # possibly extract descriptor list here
-        # self.bufr_obj.fill_descriptor_list_subset(subset=1)
+        # self._bufr_obj.fill_descriptor_list_subset(subset=1)
         
         #  #]
     def get_num_subsets(self):
@@ -486,7 +505,7 @@ class BUFRReaderECCODES:
         """
         request the number of subsets in the current BUFR message
         """
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         return eccodes.codes_get(self.bufr_id,"numberOfSubsets")
@@ -496,7 +515,7 @@ class BUFRReaderECCODES:
         """
         request the number of elements (descriptors) in the current subset
         """
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         fieldnames = eccodes.codes_get_array(self.bufr_id, 'expandedNames')
@@ -516,7 +535,7 @@ class BUFRReaderECCODES:
         """
         request a value for a given subset and descriptor number
         """
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         print('getting value for subset ', subset_nr)
@@ -531,7 +550,7 @@ class BUFRReaderECCODES:
         for a given descriptor number for all subsets
         NOTE: this may not work for templates using delayed replication.
         """
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         list_of_names = self._get_abbr_names()
@@ -555,7 +574,7 @@ class BUFRReaderECCODES:
         request an array of values containing the values
         for a given subset for this bufr message
         """
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         data = []
@@ -584,7 +603,7 @@ class BUFRReaderECCODES:
         a bufr message in the form of a 2D array. This first index
         runs over the subsets, the second over the descriptors.
         """
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             txt = 'Sorry, no BUFR messages available'
             raise NoMsgLoadedError(txt)
 
@@ -596,7 +615,7 @@ class BUFRReaderECCODES:
                       'elements at a time in this case.')
             raise CannotExpandFlagsError(errtxt)
             
-        #self.bufr_obj.delayed_repl_check_for_incorrect_use()
+        #self._bufr_obj.delayed_repl_check_for_incorrect_use()
 
         num_subsets  = self.get_num_subsets()
         num_elements = self.get_num_elements()
@@ -614,14 +633,14 @@ class BUFRReaderECCODES:
         #  #]
     def get_names_and_units(self, subset=1):
         #  #[ request name and unit of each descriptor for the given subset
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
         
         return (self.get_names(subset), self.get_units(subset))
         #  #]
     def get_names(self, subset=1):
         #  #[ request name of each descriptor for the given subset
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         return eccodes.codes_get_array(self.bufr_id, 'expandedNames')
@@ -631,7 +650,7 @@ class BUFRReaderECCODES:
         '''
         internal method to get the key name needed to extract the data
         '''
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         # remove entries that are not expanded and numeric.
@@ -645,7 +664,7 @@ class BUFRReaderECCODES:
         #  #]
     def get_units(self, subset=1):
         #  #[ request unit of each descriptor for the given subset
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         return eccodes.codes_get_array(self.bufr_id, 'expandedUnits')
@@ -653,9 +672,9 @@ class BUFRReaderECCODES:
     def get_unexp_descr_list(self):
         #  #[ get unexpanded descfriptor list
         '''
-        wrapper around  self.bufr_obj.py_unexp_descr_list
+        wrapper around  self._bufr_obj.py_unexp_descr_list
         '''
-        if (self.msg_loaded == -1):
+        if (self.msg_index == -1):
             raise NoMsgLoadedError
 
         n = eccodes.codes_get(self.bufr_id, 'numberOfUnexpandedDescriptors')
@@ -668,7 +687,6 @@ class BUFRReaderECCODES:
         
         return list_of_unexp_descr
         #  #]
-
     def messages(self):
         """
         Raises

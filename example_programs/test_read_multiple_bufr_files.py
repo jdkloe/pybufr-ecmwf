@@ -32,38 +32,32 @@ def read_bufr_file(input_bufr_file):
 
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
-    bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
-
-    msg_nr = 0
-    while True:
-        try:
-            bob.get_next_msg()
-            msg_nr += 1
-        except EOFError:
-            break
-
-        nsubsets = bob.get_num_subsets()
-        data1 = bob.get_subset_values(1)
-
-        if numpy.shape(data1)[0] == 0:
-            print('NO DATA FOUND! this seems an empty BUFR message !')
-            continue
-
-        print('loaded BUFR msg nr. ', msg_nr, 'shape = ', numpy.shape(data1))
-        print('data1[:2] = ', data1[:2])
-
-        if nsubsets > 1:
-            data2 = bob.get_subset_values(2)
-
-            if numpy.shape(data2)[0] == 0:
+    bufr = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
+    msg_nr = -1
+    for msg_nr, msg in enumerate(bufr):
+        num_subsets = msg.get_num_subsets()
+        for subs, msg_or_subset_data in enumerate(msg):
+            #names = msg_or_subset_data.names
+            #units = msg_or_subset_data.units
+            data = msg_or_subset_data.data
+            if data.shape[0] == 0:
                 print('NO DATA FOUND! this seems an empty BUFR message !')
                 continue
 
-            print('data2[:2] = ', data2[:2])
+            print('loaded BUFR msg nr. ', msg_nr,
+                  'shape = ', data.shape)
+
+            if len(data.shape) == 1:
+                print('data[:2] = ', data[:2])
+            else:
+                print('data[:2,:2] = ', data[:2,:2])
+
+            if subs > 1:
+                break
 
     # close the file
-    bob.close()
-    if msg_nr == 0:
+    bufr.close()
+    if msg_nr == -1:
         print('no BUFR messages found, are you sure this is a BUFR file?')
     #  #]
 
