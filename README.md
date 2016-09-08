@@ -61,6 +61,8 @@ This module should work and has CI tests on
 
 * Mac OSX + homebrew
 
+If you manage to get it working on other types of systems please tell me.
+
 ## Installation
 
 Installation details are given in these files:

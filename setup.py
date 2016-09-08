@@ -361,12 +361,6 @@ The equivalent subroutines to the ones in the ECMWF-BUFR
 library are made available to python, but also a set of wrapper
 routines/classes is implemented to
 create also a more object-oriented/pythonic interface.
-Building the interface is still a bit rough, and may require some
-editing of the setup.cfg file to choose the correct fortran and c-compiler.
-Alternatively some dedicated commandline options have been
-added to the setup.py script to allow changing these settings.
-Run 'setup.py build --help' to get a list of the currently available
-build options.
 """
 
 # define the list of classifiers
@@ -383,13 +377,7 @@ CL = ["Development Status :: 3 - Alpha",
       "Topic :: Scientific/Engineering",
       "Topic :: Software Development :: Libraries"]
 
-if sys.version_info[0] == 2:
-    PACKAGE_NAME = 'pybufr-ecmwf'
-elif sys.version_info[0] == 3:
-    PACKAGE_NAME = 'pybufr-ecmwf3'
-else:
-    ERRTXT = 'This python version is not supported: '+sys.version
-    raise NotImplementedError(ERRTXT)
+PACKAGE_NAME = 'pybufr-ecmwf'
 
 # passing a python file to do the build does not work, it gives this error:
 # error: unknown file type '.py' (from 'pybufr_ecmwf/build_interface.py')
@@ -404,13 +392,13 @@ setup(cmdclass={'build'       : Build,
                 'build_ext'   : BuildExt,
                 'install_lib' : CustomInstallLib},
       name=PACKAGE_NAME,
-      version='0.82dev',
+      version='0.82',
       description=DESCR,
       long_description=LONG_DESCR,
       author='Jos de Kloe',
       author_email='josdekloe@gmail.com',
-      url='http://code.google.com/p/pybufr-ecmwf/',
-      download_url="http://code.google.com/p/pybufr-ecmwf/source/checkout",
+      url='https://github.com/jdkloe/pybufr-ecmwf/',
+      download_url="https://github.com/jdkloe/pybufr-ecmwf/archive/master.zip",
       classifiers=CL,
       platforms=["POSIX"],
       license="LGPLv3",

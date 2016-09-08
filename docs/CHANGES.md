@@ -1,4 +1,4 @@
-upcoming release:
+Release 0.82 (08-Sep-2016)
 -move to library version bufrdc_000409
 -make all code portable between python2 and python3 to remove the
  need to run the 2to3 tool
@@ -7,7 +7,7 @@ upcoming release:
  (thanks to Christoph Paulik)
 -reorganize documentation files
 -addition of a first few lines to start building an interface
- to the new ECMWF ecCodes library
+ to the new ECMWF ecCodes library (still very experimental)
 
 Release 0.81 (19-Feb-2015)
 -license change to LGPLv3
@@ -25,7 +25,7 @@ Release 0.80 (13-Nov-2014)
 -fix a bug that happens if multiple bufr files using different templates
  from different bufr table files are used in the same script.
 -fase out the singletom trick since it made things too complicated
- (and was only experimnental anyway)
+ (and was only experimental anyway)
 
 Release 0.73 (08-Dec-2013)
 -fix pip install issue and add pip install test to build_test.py 
