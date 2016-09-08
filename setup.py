@@ -355,7 +355,7 @@ class CustomInstallLib(_install_lib):
 #pylint: enable=W0201,R0902,R0904
 
 DESCR = "a python interface around the ECMWF-BUFR library."
-LONG_DESCR = """a python interface around the Fortran90 ECMWF-BUFR library
+LONG_DESCR = """a python interface around the Fortran ECMWF-BUFR library
 constructed using the f2py interface generation tool.
 The equivalent subroutines to the ones in the ECMWF-BUFR
 library are made available to python, but also a set of wrapper
@@ -392,7 +392,7 @@ setup(cmdclass={'build'       : Build,
                 'build_ext'   : BuildExt,
                 'install_lib' : CustomInstallLib},
       name=PACKAGE_NAME,
-      version='0.82',
+      version='0.83dev',
       description=DESCR,
       long_description=LONG_DESCR,
       author='Jos de Kloe',

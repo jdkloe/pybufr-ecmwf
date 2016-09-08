@@ -1,3 +1,6 @@
+Upcoming release:
+-
+
 Release 0.82 (08-Sep-2016)
 -move to library version bufrdc_000409
 -make all code portable between python2 and python3 to remove the
