@@ -67,7 +67,7 @@ from .custom_exceptions import \
 #    #  ==>pointer to the associated descriptor object
     #  #]
 
-class BUFRMessage: # [moved here from pybufr_ecmwf.py]
+class BUFRMessage:
     #  #[
     """
     a class that implements iteration over the data in
@@ -93,6 +93,7 @@ class BUFRMessage: # [moved here from pybufr_ecmwf.py]
         self._bufr_obj.fill_descriptor_list_subset(subset=1)
         self.msg_index = msg_index
         self.expand_flags = expand_flags
+        self.current_subset = None
         #  #]
     def get_num_subsets(self):
         #  #[
@@ -289,6 +290,7 @@ class BUFRMessage: # [moved here from pybufr_ecmwf.py]
             # there are multiple subsets yield them one after the other.
             nsubsets = self.get_num_subsets()
             for subs in range(1, nsubsets+1):
+                self.current_subset = subs
                 names, units = self.get_names_and_units(subs)
                 values = self.get_subset_values(subs)
                 self.data = values

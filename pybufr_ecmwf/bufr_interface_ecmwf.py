@@ -1503,10 +1503,15 @@ class BUFRInterfaceECMWF:
                     # this may happend for ModificationCommand descriptors
                     # like 224000, since these have no unit attribute
                     pass
-                
+
         if self.expand_flags:
             values = [self.convert_flag_values_to_text([value,], i)[0]
                       for i, value in enumerate(values)]
+
+        if self.expand_flags or autoget_cval:
+            # finally convert to a numpy array of type object
+            # for user convenience
+            values = np.array(values, dtype='object')
 
         # print('i, self.values[selection] = '+str(i)+' '+str(values))
         return values

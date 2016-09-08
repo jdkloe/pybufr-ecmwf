@@ -76,12 +76,32 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
                     output_fd.write('"[NO DATA]"\n')
 
             try:
-                ns = numpy.shape(data)[0]
-                for subs_cnt in range(ns):
-                    output_fd.write(str(subs_cnt+1)+separator+
+                data_is_2d = True
+                if len(numpy.shape(data)) == 1:
+                    data_is_2d = False
+
+                if data_is_2d:
+                    ns = numpy.shape(data)[0]
+                    for subs_cnt in range(ns):
+                        output_fd.write(str(subs_cnt+1)+separator+
+                                        separator.join(str(val)
+                                                       for val in
+                                                       data[subs_cnt, :])+
+                                        "\n")
+                else:
+                    # 1D data is returned if character values may be present
+                    # in the data (in case autoget_cval or expand_flags
+                    # are active)
+                    # it may also happen if the message uses delayed
+                    # replication and has variable lengths for the
+                    # different subsets
+                    subs_cnt = msg_or_subset_data.current_subset
+                    output_fd.write(str(subs_cnt)+separator+
                                     separator.join(str(val)
-                                                   for val in data[subs_cnt, :])+
+                                                   for val in
+                                                   data[:])+
                                     "\n")
+
             except TypeError:
                 # in case of delayed replication or when character strings are
                 # present (i.e. expand_flags = True) data will be returned as
