@@ -16,6 +16,7 @@ adding replication for 2 descriptors
 replicating them 3 times
 unexpanded nr of descriptors =  9
 The current list is:  [301011 301012 102000  31001   7004  12001 102003   5001   6001]
+The current template uses 1 delayed replications.
 ktdlst =  [301011 301012 102000  31001   7004  12001 102003   5001   6001]
 ktdexp =  [ 4001  4002  4003  4004  4005 31001  7004 12001  7004 12001  5001  6001
   5001  6001  5001  6001]

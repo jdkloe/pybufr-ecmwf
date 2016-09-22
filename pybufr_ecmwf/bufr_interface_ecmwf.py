@@ -2034,7 +2034,7 @@ class BUFRInterfaceECMWF:
             for max_repeats in del_repl_max_nr_of_repeats_list:
                 self.kdata[i] = max_repeats
                 i += 1
-                
+
         # print("DEBUG: delayed replication factors: ", self.kdata)
         #  #]
     def register_and_expand_descriptors(self, BT):
@@ -2060,7 +2060,7 @@ class BUFRInterfaceECMWF:
         unexpanded_descriptor_list = BT.get_unexpanded_descriptor_list()
         self.ktdlen = len(unexpanded_descriptor_list)
         # convert the unexpanded descriptor list to a numpy array
-        # print("DEBUG: ",[str(d) for d in unexpanded_descriptor_list])
+        #print("DEBUG: ",[str(d) for d in unexpanded_descriptor_list])
 
         self.ktdlst = np.array(unexpanded_descriptor_list, dtype=np.int)
         print("unexpanded nr of descriptors = ", self.ktdlen)
@@ -2075,9 +2075,27 @@ class BUFRInterfaceECMWF:
                           'BUFR tables: '+str(descr)
                           )
                 raise EcmwfBufrLibError(errtxt)
+
+        size, num_del_repl_found = BT.get_max_nr_expanded_descriptors(self.bt)
+        self.max_nr_expanded_descriptors = size
+        if num_del_repl_found > 0:
+            print('The current template uses {} delayed replications.'.
+                  format(num_del_repl_found))
+
+        # safety check for delayed replication
+        if (len(BT.del_repl_max_nr_of_repeats_list) < num_del_repl_found):
+            errtxt = ('The current BUFR template uses {} delayed'+
+                      'replication descriptors, so you should provide '+
+                      'an array of expected delayed replication counts of '+
+                      'this size. However, the length of the '+
+                      'del_repl_max_nr_of_repeats_list parameter in your '+
+                      'BUFR template is only: {}.').\
+                      format(num_del_repl_found,
+                             len(BT.del_repl_max_nr_of_repeats_list))
+            raise IncorrectUsageError(errtxt)
         
-        self.max_nr_expanded_descriptors = \
-                BT.get_max_nr_expanded_descriptors(self.bt)
+        #print('DEBUG:  self.max_nr_expanded_descriptors = ',
+        #      self.max_nr_expanded_descriptors)
 
         #sys.exit(1)
 
@@ -2104,6 +2122,8 @@ class BUFRInterfaceECMWF:
             print("------------------------")
 
         # define and fill the list of replication factors
+        #print('DEBUG: BT.del_repl_max_nr_of_repeats_list = ',
+        #      BT.del_repl_max_nr_of_repeats_list)
         self.fill_delayed_repl_data(BT.del_repl_max_nr_of_repeats_list)
 
         # print('DEBUG: self.ksec1 ',self.ksec1)

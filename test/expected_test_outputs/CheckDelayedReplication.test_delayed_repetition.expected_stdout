@@ -22,6 +22,7 @@ B_test_table.txt
 D_test_table.txt
 unexpanded nr of descriptors =  1
 The current list is:  [363192]
+The current template uses 1 delayed replications.
 ktdlst =  [363192]
 ktdexp =  [63251 31012 63251]
 exp_descr_list_length =  3

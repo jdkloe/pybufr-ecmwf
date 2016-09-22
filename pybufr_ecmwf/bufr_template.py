@@ -31,6 +31,7 @@ from __future__ import (absolute_import, division,
 #import os          # operating system functions
 #import sys         # system functions
 from . import bufr_table
+from .custom_exceptions import IncorrectUsageError
 #  #]
 
 class BufrTemplate:
@@ -44,6 +45,7 @@ class BufrTemplate:
         self.unexpanded_descriptor_list = []
         self.nr_of_delayed_repl_factors = 0
         self.del_repl_max_nr_of_repeats_list = []
+        self.debug = False
         #  #]
     def add_descriptor(self, descriptor):
         #  #[
@@ -141,11 +143,14 @@ class BufrTemplate:
     def get_max_size(self, descriptor_list, bufrtables):
         #  #[
         count = 0
+        num_del_repl_found = 0
         # ensure all descriptors are instances of bufr_table.Descriptor
         normalised_descriptor_list = \
                    bufrtables.normalise_descriptor_list(descriptor_list)
-        #print('debug: normalised_descriptor_list = '+
-        #      str(list(str(d) for d in normalised_descriptor_list)))
+        if self.debug:
+            print('DEBUG: normalised_descriptor_list = '+
+                  str(list(str(d.reference)
+                           for d in normalised_descriptor_list)))
         while normalised_descriptor_list:
             descr = normalised_descriptor_list.pop(0)
             # print('handling descr: '+str(descr))
@@ -153,12 +158,37 @@ class BufrTemplate:
                                   bufr_table.Replicator)):
                 descr_count = int((descr.reference-100000)/1000)
                 if int(descr.reference % 1000) == 0:
-                    # print('(ext) delayed replicator found !!')
+                    if self.debug:
+                        print('DEBUG: (ext) delayed replicator found !!')
+                        print('DEBUG: descr = '+str(descr.reference))
                     # pop the obligatory 31001 code as well
-                    normalised_descriptor_list.pop(0)
+                    popped_value = normalised_descriptor_list.pop(0)
+                    if self.debug:
+                        print('DEBUG: popped value: '+
+                              str(popped_value.reference))
                     # count the obligatory 31001 code as well
                     count += 1
-                    repeat_count = self.del_repl_count_list.pop(0)
+                    
+                    # warning: don't use this one directly in this method:
+                    # self.del_repl_max_nr_of_repeats_list
+                    # the entry point of this get_max_size() method is the
+                    # get_max_nr_expanded_descriptors() which makes a copy
+                    # of this array to  self.del_repl_count_list
+                    # before calling get_max_size(), so this ensures it is
+                    # safe to modify this list in get_max_size()
+
+                    try:
+                        repeat_count = self.del_repl_count_list.pop(0)
+                    except:
+                        errtxt = ('Sorry, your template uses a '+
+                                  'del_repl_max_nr_of_repeats_list '+
+                                  'that is too short! Please provide enough '+
+                                  'elements to cover all delayed '+
+                                  'replication factors in your template')
+                        raise IncorrectUsageError(errtxt)
+
+                    num_del_repl_found += 1
+
                 elif int(descr.reference/100000) == 1:
                     # print('replicator found !!')
                     repeat_count = int(descr.reference % 1000)
@@ -169,31 +199,39 @@ class BufrTemplate:
                                 normalised_descriptor_list[:descr_count]
                 normalised_descriptor_list = \
                                 normalised_descriptor_list[descr_count:]
-                # print('repl_descr_list = '+
-                #       str(';'.join(str(d.reference)
-                #                    for d in repl_descr_list)))
+                #print('repl_descr_list = '+
+                #      str(';'.join(str(d.reference)
+                #                   for d in repl_descr_list)))
                 # print('it has a size of: '+
                 #       str(self.get_max_size(repl_descr_list, bufrtables)))
-                count += repeat_count*self.get_max_size(repl_descr_list,
-                                                        bufrtables)
+                size, num_del_repl = self.get_max_size(repl_descr_list,
+                                                             bufrtables)
+                count += repeat_count*size
+                num_del_repl_found += repeat_count*num_del_repl
             elif isinstance(descr, bufr_table.CompositeDescriptor):
                 # a composite D-table descriptor
-                # print('D: '+str(descr))
-                count += self.get_max_size(descr.descriptor_list,
-                                           bufrtables)
+                if self.debug:
+                    print('DEBUG: expanding D: '+str(descr.reference)+
+                          ' expands into:')
+                size, num_del_repl = self.get_max_size(descr.descriptor_list,
+                                                       bufrtables)
+                count += size
+                num_del_repl_found += num_del_repl
             else:
                 # a normal B-table descriptor
-                count += descr.get_count()
+                count += 1
+                #count += descr.get_count()
             
-        return count
+        return count, num_del_repl_found
         #  #]
     def get_max_nr_expanded_descriptors(self, bufrtables):
         #  #[
         # init list that is modified in the recursive get_max_size function
         self.del_repl_count_list = self.del_repl_max_nr_of_repeats_list[:]
         # get the max size
-        s = self.get_max_size(self.unexpanded_descriptor_list, bufrtables)
+        size, num_del_repl_found = \
+              self.get_max_size(self.unexpanded_descriptor_list, bufrtables)
         # print('s = '+str(s))
-        return s
+        return size, num_del_repl_found
         #  #]
     #  #]
