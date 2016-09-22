@@ -45,6 +45,7 @@ import os, stat
 import sys
 import glob
 import csv
+import string
 
 from pybufr_ecmwf.helpers import python3
 from pybufr_ecmwf.custom_exceptions import ProgrammingError
@@ -1336,9 +1337,23 @@ class BufrTable:
         #  #[ split a flag table line in parts
         part0 = line[:6]
         part1 = line[7:11]
-        part2 = line[12:20]
-        part3 = line[21:23]
-        part4 = line[24:]
+        #part2 = line[12:20]
+        #part3 = line[21:23]
+        #part4 = line[24:]
+        if line[12:16].strip() == '':
+            # this is a continuation line
+            part2 = ''
+            part3 = ''
+            part4 = line[12:].strip()
+        else:
+            remaining_parts = string.split(line[12:],maxsplit=2)
+            part2 = remaining_parts[0]
+            part3 = remaining_parts[1]
+            # sometimes the description part seems missing ...
+            try:
+                part4 = remaining_parts[2]
+            except:
+                part4 = ''
         return (part0, part1, part2, part3, part4)
         #  #]
     def custom_d_split(self, line):
@@ -1509,7 +1524,7 @@ class BufrTable:
         while copied_lineblock:
             current_line = copied_lineblock.pop(0)
             #if self.verbose:
-            #    print('parsing: ', current_line)
+            #   print('parsing: ', current_line)
             parts = self.custom_c_split(current_line)
             if parts[2].strip() == '':
                 # this is a continuation line

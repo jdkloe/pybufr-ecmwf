@@ -571,6 +571,11 @@ class BUFRInterfaceECMWF:
     def setup_tables(self, table_b_to_use=None, table_c_to_use=None,
                      table_d_to_use=None, tables_dir=None):
         #  #[ routine for easier handling of tables
+#...
+#... zien of ik deze info kan toevoegen
+#... pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_000409/bufrtables/links.sh
+#... 
+
         """
         helper routine, to enable automatic or manual setting of table names,
         which in turn are transferred to the ECMWF library using an
