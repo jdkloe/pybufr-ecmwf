@@ -1355,7 +1355,7 @@ class BufrTable:
             part4 = line[12:].strip()
         else:
             try:
-                remaining_parts = line[12:].split(maxsplit=2)
+                remaining_parts = line[12:].split(None, maxsplit=2)
             except TypeError:
                 import string
                 remaining_parts = string.split(line[12:],maxsplit=2)
