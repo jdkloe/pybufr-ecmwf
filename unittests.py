@@ -151,7 +151,8 @@ def call_cmd(cmd, rundir=''):
         return (lines_stdout, lines_stderr)
     #  #]
 
-def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
+#def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
+def call_cmd_and_verify_output(cmd, rundir='', verbose=True):
     #  #[
     """ a wrapper around run_shell_command for easier testing.
     It automatically constructs a name for the test output based
