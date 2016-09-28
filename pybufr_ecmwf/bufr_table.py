@@ -49,9 +49,6 @@ import csv
 from pybufr_ecmwf.helpers import python3
 from pybufr_ecmwf.custom_exceptions \
      import ProgrammingError, EcmwfBufrTableError
-
-if not python3:
-    import string
 #  #]
 
 # some constants
@@ -1357,9 +1354,10 @@ class BufrTable:
             part3 = ''
             part4 = line[12:].strip()
         else:
-            if python3:
+            try:
                 remaining_parts = line[12:].split(maxsplit=2)
-            else:
+            except TypeError:
+                import string
                 remaining_parts = string.split(line[12:],maxsplit=2)
             part2 = remaining_parts[0]
             part3 = remaining_parts[1]
