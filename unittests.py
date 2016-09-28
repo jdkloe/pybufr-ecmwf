@@ -292,7 +292,7 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
 print("Starting test program:")
 
 class CheckRawECMWFBUFR(unittest.TestCase):
-    #  #[ 3 tests
+    #  #[ 4 tests
     """
     a class to check the ecmwf_bufr_lib interface
     """
@@ -420,7 +420,7 @@ class CheckRawECMWFBUFR(unittest.TestCase):
     #  #]
 
 class CheckBUFRInterfaceECMWF(unittest.TestCase):
-    #  #[ 4 tests
+    #  #[ 5 tests
     """
     a class to check the bufr_interface_ecmwf class
     """
@@ -551,7 +551,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
     #  #]
 
 class CheckBUFRReader(unittest.TestCase):
-    #  #[ 1 tests
+    #  #[ 3 tests
     """
     a class to check the BUFRReader class
     """
@@ -581,7 +581,6 @@ class CheckBUFRReader(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
         #  #]
-    #  #]
 
     def test_run_decoding_example_message_iter_GOME(self):
         #  #[
@@ -613,8 +612,31 @@ class CheckBUFRReader(unittest.TestCase):
         self.assertEqual(success, True)
         #  #]
 
+    #  #]
+
+class CheckBUFRWriter(unittest.TestCase):
+    #  #[ 1 test
+    def test_run_test_simple_wmo_template(self):
+        #  #[
+        """
+        test a simple writer without delayed replication
+        """
+
+        # run the provided example code and verify the output
+        testprog = "test_simple_wmo_template.py"
+        cmd = os.path.join(TEST_DIR, testprog)
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+    def tearDown(self):
+        # cleanup after running the tests from this class
+        # print('tearDown running')
+        os.system('\\rm -f dummy_bufr_file*')
+    #  #]
+
 class CheckRawBUFRFile(unittest.TestCase):
-    #  #[ 4 tests
+    #  #[ 5 tests
     """
     a class to check the raw_bufr_file class
     """
@@ -761,7 +783,7 @@ class CheckRawBUFRFile(unittest.TestCase):
     #  #]
 
 class CheckBufrTable(unittest.TestCase):
-    #  #[
+    #  #[ 4 tests
     """
     a class to check the bufr_table.py file
     """
@@ -824,7 +846,7 @@ class CheckBufrTable(unittest.TestCase):
     #  #]
 
 class CheckCustomTables(unittest.TestCase):
-    #  #[
+    #  #[ 2 tests
     """
     a class to check the creation and use of custom BUFR table files
     """
@@ -925,7 +947,7 @@ class CheckCustomTables(unittest.TestCase):
     #  #]
 
 class CheckBufr(unittest.TestCase):
-    #  #[
+    #  #[ 11 tests
     """
     a class to check the bufr.py file
     """
@@ -1097,7 +1119,7 @@ class CheckBufr(unittest.TestCase):
     #  #]
 
 class CheckAddedFortranCode(unittest.TestCase):
-    #  #[
+    #  #[ 1 test
     '''
     a class to test some fortran code added to the BUFR library
     '''
@@ -1112,7 +1134,7 @@ class CheckAddedFortranCode(unittest.TestCase):
     #  #]
 
 class CheckVersionInfo(unittest.TestCase):
-    #  #[
+    #  #[ 1 test
     '''
     a class to test the retrieval of version info works correct
     '''
@@ -1127,7 +1149,7 @@ class CheckVersionInfo(unittest.TestCase):
     #  #]
 
 class CheckDelayedReplication(unittest.TestCase):
-    #  #[
+    #  #[ 4 tests
     '''
     a class to test the encoding and decoding of BUFR files
     using delayed replication with different replication
