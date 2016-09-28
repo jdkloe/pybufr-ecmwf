@@ -2084,17 +2084,17 @@ class BUFRInterfaceECMWF:
         size, num_del_repl_found = BT.get_max_nr_expanded_descriptors(self.bt)
         self.max_nr_expanded_descriptors = size
         if num_del_repl_found > 0:
-            print('The current template uses {} delayed replications.'.
+            print('The current template uses {0} delayed replications.'.
                   format(num_del_repl_found))
 
         # safety check for delayed replication
         if (len(BT.del_repl_max_nr_of_repeats_list) < num_del_repl_found):
-            errtxt = ('The current BUFR template uses {} delayed'+
+            errtxt = ('The current BUFR template uses {0} delayed'+
                       'replication descriptors, so you should provide '+
                       'an array of expected delayed replication counts of '+
                       'this size. However, the length of the '+
                       'del_repl_max_nr_of_repeats_list parameter in your '+
-                      'BUFR template is only: {}.').\
+                      'BUFR template is only: {1}.').\
                       format(num_del_repl_found,
                              len(BT.del_repl_max_nr_of_repeats_list))
             raise IncorrectUsageError(errtxt)

@@ -36,7 +36,6 @@ from __future__ import (absolute_import, division,
                         print_function) #, unicode_literals)
 import sys # os
 import numpy   # array functionality
-from collections import OrderedDict
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF
 from .helpers import python3
@@ -356,7 +355,7 @@ class BUFRMessage_W:
         # a bufr_template instance as input
         for descr in args:
             # inputs may be integer, string or a Descriptor instance
-            print('adding descriptor: ', descr, ' of type ', type(descr))
+            # print('adding descriptor: ', descr, ' of type ', type(descr))
             self.template.add_descriptor(descr)
         
         self.bufr_obj.register_and_expand_descriptors(self.template)
@@ -386,8 +385,15 @@ class BUFRMessage_W:
         self.cvals = numpy.zeros((self.num_cvalues, 80), dtype=numpy.character)
         self.cvals_index = 0
 
+        # dont use this, it is not compatible to python 2.6:
+        # from collections import OrderedDict
+
+        # since I cannot use an orderddict due to missing compatibility
+        # to python 2.6, I'll use an additional (ordered) list of keys
+        
         # fill an ordered dict with field properties for convenience
-        self.field_properties = OrderedDict()
+        self.field_properties = {}
+        self.field_properties_keys = []
         for idx, descr in enumerate(self.normalised_descriptor_list):
             (min_allowed_value,
              max_allowed_value, step) = descr.get_min_max_step()
@@ -397,13 +403,14 @@ class BUFRMessage_W:
                  'max_allowed_value,':max_allowed_value,
                  'step':step}
             self.field_properties[descr.reference] = p
+            self.field_properties_keys.append(descr.reference)
         #  #]
     def copy_template_from_bufr_msg(self, msg):
         pass
     def get_field_names(self):
         #  #[ request field names
         names = []
-        for key in self.field_properties:
+        for key in self.field_properties_keys:
             p = self.field_properties[key]
             names.append(p['name'])
         return names
@@ -429,7 +436,7 @@ class BUFRMessage_W:
         # print('searching for: ', this_key)
         possible_matches = []
         names_of_possible_matches = []
-        for key in self.field_properties:
+        for key in self.field_properties_keys:
             p = self.field_properties[key]
             if this_key in p['name']:
                 possible_matches.append(key)
