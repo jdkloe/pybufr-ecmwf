@@ -47,7 +47,8 @@ import glob
 import csv
 
 from pybufr_ecmwf.helpers import python3
-from pybufr_ecmwf.custom_exceptions import ProgrammingError
+from pybufr_ecmwf.custom_exceptions \
+     import ProgrammingError, EcmwfBufrTableError
 
 if not python3:
     import string
@@ -978,7 +979,7 @@ class BufrTable:
         env = os.environ
         env["BUFR_TABLES"] = self.tables_dir
         #  #]
-    def get_descr_object(self, reference):
+    def get_descr_object(self, reference, allow_failure=False):
         #  #[
         """
         method that returns a different class instance,
@@ -1014,8 +1015,15 @@ class BufrTable:
                 modifier = ModificationCommand(reference)
                 self.modifiers[reference] = modifier
                 return modifier
-            
-        return None
+
+        if allow_failure:
+            return None
+        else:
+            errtxt = ('Unknown descriptor: '+str(reference)+
+                      ' This descriptor is not defined by the current BUFR '+
+                      'tables. Maybe you need to specify local tables to '+
+                      'be used?')
+            raise EcmwfBufrTableError(errtxt)
         #  #]
     def load(self, t_file):
         #  #[
@@ -1318,7 +1326,8 @@ class BufrTable:
 
         # get object for ref_reference
         #print("trying descriptor "+str(ref_reference))
-        descr = self.get_descr_object(ref_reference)
+        descr = self.get_descr_object(ref_reference,
+                                      allow_failure=True)
         if (descr == None):
             postpone = True
             if report_unhandled:

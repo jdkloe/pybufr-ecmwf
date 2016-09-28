@@ -3,6 +3,9 @@
 """
 This file defines the BufrTemplate class, to allow easier
 construction of BUFR templates
+Common template sequences can be found in the official WMO documentation
+on: http://www.wmo.int/pages/prog/www/WMOCodes/WMO306_vI2/LatestVERSION/LatestVERSION.html
+See for example 305038 in table D (moored buoys)
 """
 
 #  #[ documentation

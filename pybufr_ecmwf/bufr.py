@@ -36,12 +36,14 @@ from __future__ import (absolute_import, division,
                         print_function) #, unicode_literals)
 import sys # os
 import numpy   # array functionality
+from collections import OrderedDict
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF
 from .helpers import python3
 from .custom_exceptions import \
      (NoMsgLoadedError, CannotExpandFlagsError,
       IncorrectUsageError, NotYetImplementedError)
+from pybufr_ecmwf.bufr_template import BufrTemplate
 #  #]
 
 # not used
@@ -67,11 +69,11 @@ from .custom_exceptions import \
 #    #  ==>pointer to the associated descriptor object
     #  #]
 
-class BUFRMessage:
-    #  #[
+class BUFRMessage_R:
+    #  #[ bufr msg class for reading
     """
     a class that implements iteration over the data in
-    a given bufr message
+    a given bufr message for reading
     """
     def __init__(self, raw_msg,
                  section_sizes, section_start_locations,
@@ -248,7 +250,7 @@ class BUFRMessage:
         return list_of_unexp_descr
         #  #]
     def data_iterator(self):
-        #  #[ define iteration
+        #  #[ define iteration for reading
         """
         Iterate over the data from a given BUFR message.
         If the message can be represented as a 2D array then
@@ -312,8 +314,165 @@ class BUFRMessage:
     
     #  #]
 
+# todo: see how much of this class can be added/merged into
+#       the above BUFRMessage class
+class BUFRMessage_W:
+    #  #[ bufr msg class for writing
+    """
+    a class that implements iteration over the data in
+    a given bufr message for reading
+    """    
+    def __init__(self, parent, num_subsets=1):
+        #  #[ initialise a message for writing
+        self.parent = parent
+        self.bufr_obj = BUFRInterfaceECMWF(verbose=True)
+        # fill sections 0, 1, 2 and 3 with default values
+        self.num_subsets = num_subsets
+        self.bufr_obj.fill_sections_0123(
+            bufr_code_centre =   0, # use official WMO tables
+            bufr_obstype     =   3, # sounding
+            bufr_subtype     = 253, # L2B
+            bufr_table_local_version  =  0, # dont use local tables
+            bufr_table_master         =  0,
+            bufr_table_master_version = 26, # use latest WMO version
+            bufr_code_subcentre = 0, # L2B processing facility
+            num_subsets = num_subsets,
+            bufr_compression_flag = 64)
+            # 64=compression/0=no compression
+
+        #table_name = 'default'
+        # self.bufr_obj.setup_tables(table_b_to_use='B'+table_name,
+        #                            table_d_to_use='D'+table_name)
+
+        # use information from sections 0123 to construct the BUFR table
+        # names expected by the ECMWF BUFR library
+        self.bufr_obj.setup_tables()
+        #  #]
+    def set_template(self, *args):
+        #  #[ set the template
+        self.template = BufrTemplate()
+
+        # todo: see if it is possible to also allow
+        # a bufr_template instance as input
+        for descr in args:
+            # inputs may be integer, string or a Descriptor instance
+            print('adding descriptor: ', descr, ' of type ', type(descr))
+            self.template.add_descriptor(descr)
+        
+        self.bufr_obj.register_and_expand_descriptors(self.template)
+
+        # retrieve the length of the expanded descriptor list
+        exp_descr_list_length = self.bufr_obj.ktdexl
+        print("exp_descr_list_length = ", exp_descr_list_length)
+        exp_descr_list = self.bufr_obj.ktdexp
+        print("exp_descr_list = ",  self.bufr_obj.ktdexp)
+        self.num_fields = exp_descr_list_length
+
+        # ensure all descriptors are instances of bufr_table.Descriptor
+        self.normalised_descriptor_list = \
+            self.bufr_obj.bt.normalise_descriptor_list(exp_descr_list)
+
+        # allocate the needed values and cvalues arrays
+
+        self.num_values = self.num_subsets*self.num_fields
+        self.values = numpy.zeros(self.num_values, dtype=numpy.float64)
+        # note: float64 is the default but it doesnt hurt to be explicit
+        print("self.num_values = ", self.num_values)
+        
+        # note: these two must be identical for now, otherwise the
+        # python to fortran interface breaks down. This also ofcourse is the
+        # cause of the huge memory use of cvals in case num_values is large.
+        self.num_cvalues = self.num_values
+        self.cvals = numpy.zeros((self.num_cvalues, 80), dtype=numpy.character)
+        self.cvals_index = 0
+
+        # fill an ordered dict with field properties for convenience
+        self.field_properties = OrderedDict()
+        for idx, descr in enumerate(self.normalised_descriptor_list):
+            (min_allowed_value,
+             max_allowed_value, step) = descr.get_min_max_step()
+            p = {'index':idx,
+                 'name':descr.name,
+                 'min_allowed_value':min_allowed_value,
+                 'max_allowed_value,':max_allowed_value,
+                 'step':step}
+            self.field_properties[descr.reference] = p
+        #  #]
+    def copy_template_from_bufr_msg(self, msg):
+        pass
+    def get_field_names(self):
+        #  #[ request field names
+        names = []
+        for key in self.field_properties:
+            p = self.field_properties[key]
+            names.append(p['name'])
+        return names
+        #  #]
+    def add_subset_data(self, data):
+        pass
+    def write_msg_to_file(self):
+        #  #[ write out the current message
+        # do the encoding to binary format
+        self.bufr_obj.encode_data(self.values,
+                                  self.cvals)
+
+        # check if file was properly opened
+        if not self.parent.is_open:
+            errtxt = 'please open the bufr file before writing data to it!'
+            raise IncorrectUsageError(errtxt)
+        
+        # write the encoded BUFR message
+        self.parent.raw_bf.write_raw_bufr_msg(self.bufr_obj.encoded_message)
+        #  #]
+    def __setitem__(self, this_key, this_value):
+        #  #[ allow addition of date with dict like interface
+        # print('searching for: ', this_key)
+        possible_matches = []
+        names_of_possible_matches = []
+        for key in self.field_properties:
+            p = self.field_properties[key]
+            if this_key in p['name']:
+                possible_matches.append(key)
+                names_of_possible_matches.append(p['name'])
+        
+        # print('possible matches for key: ', possible_matches)
+        if len(possible_matches) == 1:
+            #  ok, proper location found
+            key = possible_matches[0]
+            p = self.field_properties[key]
+            index_to_use = p['index']
+            # print('filling row:', p)
+        elif len(possible_matches) == 0:
+            errtxt = ('ERROR: the current BUFRmessage does not contain any '+
+                      'fields that have [{}] in their name.'.format(this_key))
+            raise IncorrectUsageError(errtxt)
+        else:
+            errtxt = ('ERROR: the current BUFRmessage has multiple '+
+                      'fields that have [{}] in their name.'.format(this_key)+
+                      ' Please add an index to indicate which '+
+                      'field should be used. Key [{}] matches with {}.'.
+                      format(this_key, names_of_possible_matches))
+            raise IncorrectUsageError(errtxt)
+
+        # check length of input (scalar or array?)
+        try:
+            n = len(this_value)
+        except:
+            n = 1
+        
+        # fill the requested row with data
+        for subset in range(self.num_subsets):
+            i = subset*self.num_fields
+            j = i + index_to_use
+            if n==1:
+                self.values[j] = this_value
+            else:
+                self.values[j] = this_value[subset]
+        #  #]
+    #  #]
+
 class BUFRReaderBUFRDC:
-    #  #[
+    #  #[ bufrdc reader class
     """
     a class that combines reading and decoding of a BUFR file
     to allow easier reading and usage of BUFR files
@@ -371,16 +530,17 @@ class BUFRReaderBUFRDC:
         (raw_msg, section_sizes, section_start_locations) = \
                  self._rbf.get_next_raw_bufr_msg()
         msg_index = self._rbf.last_used_msg
-        self.msg = BUFRMessage(raw_msg,
-                               section_sizes, section_start_locations,
-                               self.expand_flags, msg_index, self.verbose,
-                               self.table_b_to_use, self.table_c_to_use,
-                               self.table_d_to_use, self.tables_dir)
+        self.msg = BUFRMessage_R(raw_msg,
+                                 section_sizes, section_start_locations,
+                                 self.expand_flags, msg_index, self.verbose,
+                                 self.table_b_to_use, self.table_c_to_use,
+                                 self.table_d_to_use, self.tables_dir)
 
         self.msg_index = msg_index
         #  #]
 
     def messages(self):
+        #  #[ iterate over messages for reading
         """
         Iterate over BUFR messages. If the message can be represented as a
         2D array then the data will be returned as such. Otherwise 1D arrays
@@ -398,22 +558,55 @@ class BUFRReaderBUFRDC:
         for i in numpy.arange(self.num_msgs) + 1:
             self.get_next_msg()
             yield self.msg
-
+        #  #]
     def __iter__(self):
+        #  #[ return the above iterator
         return self.messages()
-
+        #  #]
     def __enter__(self):
+        #  #[ enters the 'with' context
         return self
-
+        #  #]
     def __exit__(self, exc, val, trace):
+        #  #[ exits the 'with' context
         self.close()
-
+        #  #]
     def close(self):
-        #  #[
+        #  #[ close the file
         """
         close the file object
         """
         self._rbf.close()
+        #  #]
+    #  #]
+
+class BUFRWriterBUFRDC:
+    #  #[ bufrdc writer class
+    """
+    a class that makes it easier do encode a BUFR message
+    and to create BUFR files
+    It implements a file like interface for user convenience.
+    """
+    def __init__(self, ):
+        pass
+    def add_new_msg(self, num_subsets=1):
+        #  #[ initialise a new bufr message
+        self.msg = BUFRMessage_W(parent=self, num_subsets=num_subsets)
+        return self.msg
+        #  #]
+    def open(self, filename):
+        #  #[ open a new bufr file for writing
+        # get an instance of the RawBUFRFile class
+        self.raw_bf = RawBUFRFile()
+
+        # open the file for writing
+        self.raw_bf.open(filename, 'wb')
+        self.is_open = True
+        #  #]
+    def close(self):
+        #  #[ close the file
+        self.raw_bf.close()
+        self.is_open = False
         #  #]
     #  #]
 
@@ -737,10 +930,15 @@ class BUFRReaderECCODES:
     #  #]
 
 BUFRReader = BUFRReaderBUFRDC
+BUFRWriter = BUFRWriterBUFRDC
+
 if eccodes_available:
     print('Using ecCodes')
     BUFRReader = BUFRReaderECCODES
+    #not yet implemented:
+    #BUFRWriter = BUFRWriterECCODES
     #sys.exit(1)
+
 
 if __name__ == "__main__":
     #  #[ test program
@@ -749,7 +947,7 @@ if __name__ == "__main__":
     # this is how I think the BUFR module interfacing should look like
     
     # get a msg instance
-    BMSG = BUFRMessage()
+    BMSG = BUFRMessage_R()
     # all sections should be filled with sensible defaults but ofcourse
     # the user should be able to change all of them
     # also the user should be able to insert a bufr table name to be
