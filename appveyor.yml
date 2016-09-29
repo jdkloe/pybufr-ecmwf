@@ -1,0 +1,39 @@
+# appveyor configuration, based on the example provided by
+# https://github.com/timcera/wdmtoolbox/blob/master/appveyor.yml
+
+environment:
+  matrix:
+    - PYTHON_VERSION: "2.7"
+    - PYTHON_VERSION: "3.4"
+
+platform:
+  - x86
+  - x64
+
+matrix:
+  fast_finish: false
+
+install:
+  - set PATH=C:\Miniconda\Scripts
+  - ps: If ($env:Platform -Match "x64") {$env:PATH="C:\Miniconda-x64\Scripts"}
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION% 
+  - activate python%PYTHON_VERSION%
+  - pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy
+  - conda install -q --name python%PYTHON_VERSION% setuptools numpy wheel
+  - python.exe setup.py build --compiler=mingw32 --fcompiler=gfortran
+  - python.exe setup.py install
+
+build: off
+
+#test_script:
+#  - nosetests
+
+after_test:
+  # This step builds your wheels.
+  - python.exe setup.py bdist_wheel
+
+artifacts:
+  # bdist_wheel puts your built wheel in the dist directory
+  - path: dist\*.whl
