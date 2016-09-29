@@ -26,7 +26,7 @@ install:
   - dir %PATH%
   - echo %PYTHONHOME%
   - echo "===== content of activate:"
-  - type activate
+  - type %PATH%\activate
   - echo "===== end of content of activate:"
   - activate python%PYTHON_VERSION%
   - pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy
