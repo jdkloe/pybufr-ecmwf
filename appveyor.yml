@@ -16,7 +16,7 @@ matrix:
   # fast_finish: false
 
 install:
-  - set PATH=C:\Miniconda\Scripts
+  - set PATH=%PATH%; C:\Miniconda\Scripts
   # excecute this test in powershell
   - ps: if ($env:Platform -Match "x64") {$env:PATH="C:\Miniconda-x64\Scripts"}
   - conda config --set always_yes yes --set changeps1 no
@@ -28,7 +28,7 @@ install:
   - echo "===== content of activate.bat:"
   - type %PATH%\activate.bat
   - echo "===== end of content of activate:"
-  - activate.bat python%PYTHON_VERSION%
+  - activate python%PYTHON_VERSION%
   - pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy
   - conda install -q --name python%PYTHON_VERSION% setuptools numpy wheel
   - python.exe -c "print 'numpy test:'; import numpy; print numpy.__file__"
