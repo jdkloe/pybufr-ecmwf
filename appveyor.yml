@@ -21,8 +21,11 @@ install:
   - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION% 
   - activate python%PYTHON_VERSION%
   - pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy
-  - conda install -q --name python%PYTHON_VERSION% setuptools numpy wheel
-  - python.exe setup.py build --compiler=mingw32 --fcompiler=gfortran
+  - conda install -q --name python%PYTHON_VERSION% setuptools numpy matplotlib nose pandas wheel scipy
+  - pip install -q mando tstoolbox baker
+  - python.exe setup.py config_fc
+  - python.exe setup.py config --compiler=mingw32 --fcompiler=gfortran
+  - python.exe setup.py build --compiler=mingw32
   - python.exe setup.py install
 
 build: off
