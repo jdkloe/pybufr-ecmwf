@@ -25,10 +25,10 @@ install:
   - echo %PATH%
   - dir %PATH%
   - echo %PYTHONHOME%
-  - echo "===== content of activate:"
-  - type %PATH%\activate
+  - echo "===== content of activate.bat:"
+  - type %PATH%\activate.bat
   - echo "===== end of content of activate:"
-  - activate python%PYTHON_VERSION%
+  - activate.bat python%PYTHON_VERSION%
   - pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy
   - conda install -q --name python%PYTHON_VERSION% setuptools numpy wheel
   - python.exe -c "print 'numpy test:'; import numpy; print numpy.__file__"
