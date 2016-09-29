@@ -22,6 +22,12 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION% 
+  - echo %PATH%
+  - dir %PATH%
+  - echo %PYTHONHOME%
+  - echo "===== content of activate:"
+  - type activate
+  - echo "===== end of content of activate:"
   - activate python%PYTHON_VERSION%
   - pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy
   - conda install -q --name python%PYTHON_VERSION% setuptools numpy wheel
