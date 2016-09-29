@@ -41,11 +41,34 @@ To do this you can use the script:
 
 ### WRITING
 
-higher level interface:
+To create new BUFR files the easy way, the BUFRWriter class can be used.
+This class forms the higher level interface.
+It allows you to select a default template that defines
+the available fields in your file (whenever possible, try to use the
+templates defined in the official WMO list).
+Once this template is selected, it is very easy to fill one or
+all subsets (rows) of data with numbers by providing one value
+or an array of values (one for each subset for a given field).
 
-... [to be written] ...
+A script to write BUFR files could like like this:
+```
+from pybufr_ecmwf.bufr import BUFRWriter
+bwr = BUFRWriter()
+bwr.open(output_bufr_file)
+msg = bwr.add_new_msg(num_subsets=3)
+msg.set_template('301033')
+msg['YEAR'] = 2016
+msg['LATITUDE'] = [55.2, 66.3, 77.4]
+msg.write_msg_to_file()
+bwr.close()
+```
+A fully implemented example script can be found in:
+* test/test_simple_wmo_template.py 
 
-currently only the intermediate level interface is fully implemented.
+The high level interface does not yet support more advanced features
+like delayed replication. If you need to use a template that uses this
+then you have the option to use the intermediate level interface
+which is fully implemented.
 An example on how to use it can be found in this example script:
 
 * example_programs/example_for_using_bufrinterface_ecmwf_for_encoding.py
@@ -65,6 +88,7 @@ A conversion to the new ECMWF ecCodes bufr tables may be provided
 in a future version of this module.
 
 higher level interface:
+
 
 ... [to be written] ...
 
@@ -86,4 +110,4 @@ All needed test data files are provided in the test/testdata directory.
 
 If you have any questions or requests feel free to contact me by email.
 
-Jos de Kloe, 18-Aug-2016
+Jos de Kloe, 29-Sep-2016

@@ -19,9 +19,14 @@ from __future__ import (absolute_import, division,
 
 import os
 import sys
+
 from distutils.core import setup, Extension
 from distutils import log
 from distutils.errors import DistutilsSetupError
+
+# TODO: see if I can use this as replacement
+# from numpy.distutils.core import Extension, setup
+
 # see: /usr/lib64/python2.6/distutils/errors.py
 # for all available error classes
 

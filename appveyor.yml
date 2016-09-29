@@ -11,18 +11,25 @@ platform:
   - x64
 
 matrix:
-  fast_finish: false
+  # set this flag to immediately finish build once one of the jobs fails.
+  fast_finish: true
+  # fast_finish: false
 
 install:
   - set PATH=C:\Miniconda\Scripts
-  - ps: If ($env:Platform -Match "x64") {$env:PATH="C:\Miniconda-x64\Scripts"}
+  # excecute this test in powershell
+  - ps: if ($env:Platform -Match "x64") {$env:PATH="C:\Miniconda-x64\Scripts"}
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION% 
   - activate python%PYTHON_VERSION%
   - pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy
-  - conda install -q --name python%PYTHON_VERSION% setuptools numpy matplotlib nose pandas wheel scipy
-  - pip install -q mando tstoolbox baker
+  - conda install -q --name python%PYTHON_VERSION% setuptools numpy wheel
+  - python.exe -c "print 'numpy test:'; import numpy; print numpy.__file__"
+  - python.exe -c "print 'wheel test:'; import wheel; print wheel.__file__"
+  #### to use this, I'll probably need to use numpy.distutils.core
+  #- python.exe setup.py build --compiler=mingw32 --fcompiler=gfortran
+  #### why does this not work?
   - python.exe setup.py build --preferred-c-compiler=mingw32 --preferred-fortran-compiler=gfortran
   - python.exe setup.py install
 
