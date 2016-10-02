@@ -45,27 +45,21 @@ from .custom_exceptions import \
 from pybufr_ecmwf.bufr_template import BufrTemplate
 #  #]
 
-# not used
-#class DataValue:
-    #  #[
-#    """
-#    a base class for data values
-#    """
-#    def __init__(self):
-#        self.value = None
-#        # pass
-#    def set_value(self, value):
-#        """ a method to set a value """
-#        self.value = value
-#        # pass
-#    def get_value(self):
-#        """ a method to get a value """
-#        return self.value
-#        # pass
-#    
-#    #  ==>value or string-value
-#    #  ==>already filled or not?
-#    #  ==>pointer to the associated descriptor object
+def check_range(p, value):
+    #  #[ ensure data can be packed
+    in_range = True
+    if value < p['min_allowed_value']:
+        in_range = False
+    if value > p['max_allowed_value']:
+        in_range = False
+
+    if not in_range:
+        errtxt = ('current value {0} cannot be packed in this field. '.
+                  format(value)+
+                  'Allowed range is {0} upto {1}.'.
+                  format(p['min_allowed_value'],
+                         p['max_allowed_value']))
+        raise ValueError(errtxt)
     #  #]
 
 class BUFRMessage_R:
@@ -321,12 +315,15 @@ class BUFRMessage_W:
     a class that implements iteration over the data in
     a given bufr message for reading
     """    
-    def __init__(self, parent, num_subsets=1):
+    def __init__(self, parent, num_subsets=1, verbose=False,
+                 do_range_check=False):
         #  #[ initialise a message for writing
         self.parent = parent
-        self.bufr_obj = BUFRInterfaceECMWF(verbose=True)
-        # fill sections 0, 1, 2 and 3 with default values
         self.num_subsets = num_subsets
+        self.verbose = verbose
+        self.do_range_check = do_range_check
+        self.bufr_obj = BUFRInterfaceECMWF(verbose=verbose)
+        # fill sections 0, 1, 2 and 3 with default values
         self.bufr_obj.fill_sections_0123(
             bufr_code_centre =   0, # use official WMO tables
             bufr_obstype     =   3, # sounding
@@ -362,9 +359,11 @@ class BUFRMessage_W:
 
         # retrieve the length of the expanded descriptor list
         exp_descr_list_length = self.bufr_obj.ktdexl
-        print("exp_descr_list_length = ", exp_descr_list_length)
+        if self.verbose:
+            print("exp_descr_list_length = ", exp_descr_list_length)
         exp_descr_list = self.bufr_obj.ktdexp
-        print("exp_descr_list = ",  self.bufr_obj.ktdexp)
+        if self.verbose:
+            print("exp_descr_list = ",  self.bufr_obj.ktdexp)
         self.num_fields = exp_descr_list_length
 
         # ensure all descriptors are instances of bufr_table.Descriptor
@@ -376,7 +375,8 @@ class BUFRMessage_W:
         self.num_values = self.num_subsets*self.num_fields
         self.values = numpy.zeros(self.num_values, dtype=numpy.float64)
         # note: float64 is the default but it doesnt hurt to be explicit
-        print("self.num_values = ", self.num_values)
+        if self.verbose:
+            print("self.num_values = ", self.num_values)
         
         # note: these two must be identical for now, otherwise the
         # python to fortran interface breaks down. This also ofcourse is the
@@ -400,7 +400,7 @@ class BUFRMessage_W:
             p = {'index':idx,
                  'name':descr.name,
                  'min_allowed_value':min_allowed_value,
-                 'max_allowed_value,':max_allowed_value,
+                 'max_allowed_value':max_allowed_value,
                  'step':step}
             self.field_properties[descr.reference] = p
             self.field_properties_keys.append(descr.reference)
@@ -466,7 +466,22 @@ class BUFRMessage_W:
             n = len(this_value)
         except:
             n = 1
-        
+
+        if n != 1:
+            if n != self.num_subsets:
+                errtxt = ('Please provide an array of size num_subsets! '+
+                          'Current array has size {0} '.format(n)+
+                          'but num_subsets is {0}'.format(self.num_subsets))
+                raise IncorrectUsageError(errtxt)
+
+        # optional, since this may make the code slower
+        if self.do_range_check:
+            if n == 1:
+                check_range(p, this_value)
+            else:
+                for val in this_value[:]:
+                    check_range(p, val)
+            
         # fill the requested row with data
         for subset in range(self.num_subsets):
             i = subset*self.num_fields
@@ -594,11 +609,12 @@ class BUFRWriterBUFRDC:
     and to create BUFR files
     It implements a file like interface for user convenience.
     """
-    def __init__(self, ):
-        pass
+    def __init__(self, verbose=False):
+        self.verbose = verbose
     def add_new_msg(self, num_subsets=1):
         #  #[ initialise a new bufr message
-        self.msg = BUFRMessage_W(parent=self, num_subsets=num_subsets)
+        self.msg = BUFRMessage_W(parent=self, num_subsets=num_subsets,
+                                 verbose=self.verbose)
         return self.msg
         #  #]
     def open(self, filename):

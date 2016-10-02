@@ -126,7 +126,7 @@ def create_bufr_template():
 
     variable3 = 0
 
-    template = BufrTemplate()
+    template = BufrTemplate(verbose=True)
     template.add_descriptor(D_301192) # 4 items
     template.add_descriptor(D_301193) # 6 items
     if USE_DELAYED_REPLICATION:

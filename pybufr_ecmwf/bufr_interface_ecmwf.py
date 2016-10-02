@@ -2068,8 +2068,9 @@ class BUFRInterfaceECMWF:
         #print("DEBUG: ",[str(d) for d in unexpanded_descriptor_list])
 
         self.ktdlst = np.array(unexpanded_descriptor_list, dtype=np.int)
-        print("unexpanded nr of descriptors = ", self.ktdlen)
-        print("The current list is: ", self.ktdlst)
+        if self.verbose:
+            print("unexpanded nr of descriptors = ", self.ktdlen)
+            print("The current list is: ", self.ktdlst)
 
         # ensure all descriptors mentioned in the template exist in the
         # choosen BUFR tables
@@ -2156,12 +2157,14 @@ class BUFRInterfaceECMWF:
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'buxdes'))
 
-        print("ktdlst = ", self.ktdlst)
+        if self.verbose:
+            print("ktdlst = ", self.ktdlst)
         selection = np.where(self.ktdexp > 0)
 
         # note: this seems to be an empty list in case
         #       delayed replication is used!
-        print("ktdexp = ", self.ktdexp[selection])
+        if self.verbose:
+            print("ktdexp = ", self.ktdexp[selection])
         #print("ktdexl = ", self.ktdexl) # this one seems not to be filled ...?
 
         # It is not clear to me why buxdes seems to correctly produce

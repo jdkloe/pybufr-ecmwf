@@ -53,6 +53,7 @@ import subprocess # support running additional executables
 
 from pybufr_ecmwf.helpers import (get_and_set_the_module_path, python3,
                                   python_major_minor)
+from pybufr_ecmwf.custom_exceptions import IncorrectUsageError
 
 DUMMY_SYS_PATH = sys.path[:] # provide a copy
 (DUMMY_SYS_PATH, MY_MODULE_PATH) = get_and_set_the_module_path(DUMMY_SYS_PATH)
@@ -634,6 +635,70 @@ class CheckBUFRWriter(unittest.TestCase):
         # cleanup after running the tests from this class
         # print('tearDown running')
         os.system('\\rm -f dummy_bufr_file*')
+    #  #]
+
+class CheckBUFRMessage_W(unittest.TestCase):
+    #  #[ test filling BUFRMessage_W instances
+    # for the default WMO definitions see:
+    # pybufr_ecmwf/ecmwf_bufrtables/B0000000000000026000.TXT
+    # pybufr_ecmwf/ecmwf_bufrtables/D0000000000000026000.TXT
+    #
+    def setUp(self):
+        #  #[ setup BUFRWriter and BUFRMessage_W instances
+        #print('doing setup')
+        from pybufr_ecmwf.bufr import BUFRWriter
+
+        self.bwr = BUFRWriter()
+        #self.bwr.open(output_bufr_file)
+        self.msg = self.bwr.add_new_msg(num_subsets=3)
+        #  #]
+    def test_single_descriptor(self):
+        #  #[ take a single descriptor for pressure in [Pa]
+        self.msg.set_template('010004')
+        names = self.msg.get_field_names()
+        self.assertEqual(names, ['PRESSURE',])
+        props = self.msg.field_properties[10004]
+        self.assertEqual(props['min_allowed_value'], 0.0)
+        self.assertEqual(props['max_allowed_value'], 163830.0)
+        self.assertEqual(props['step'], 10.0)
+        #  #]
+    def test_range_single_descriptor(self):
+        #  #[ take a single descriptor for pressure in [Pa]
+        self.msg.set_template('010004')
+        self.msg['PRESS'] = -10.0
+        def assign(msg, value):
+            msg['PRESS'] = value
+            return True
+
+        self.assertRaises(IncorrectUsageError, assign, self.msg, [])
+        self.assertRaises(IncorrectUsageError, assign, self.msg, [10., 20.])
+        self.assertEquals(assign(self.msg, 123.), True)
+        self.assertEquals(assign(self.msg, [10., 20., 30.]), True)
+
+        self.msg.do_range_check = False # default
+        self.assertEquals(assign(self.msg, -120.), True)
+        self.msg.do_range_check = True
+        self.assertRaises(ValueError, assign, self.msg, -120.)
+        
+        #  #]
+    def test_simple_sequence(self):
+        #  #[ take a shore sequence
+        self.msg.set_template('301033')
+        names = self.msg.get_field_names()
+        self.assertEqual(names, 
+                         ['BUOY/PLATFORM IDENTIFIER',
+                          'TYPE OF STATION',
+                          'YEAR',
+                          'MONTH',
+                          'DAY',
+                          'HOUR',
+                          'MINUTE',
+                          'LATITUDE (HIGH ACCURACY)',
+                          'LONGITUDE (HIGH ACCURACY)'])
+        #  #]
+    def tearDown(self):
+        #print('doing teardown')
+        pass
     #  #]
 
 class CheckRawBUFRFile(unittest.TestCase):

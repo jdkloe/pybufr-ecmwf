@@ -74,7 +74,7 @@ num_subsets = 3
 num_replications1 = [1, 2, 3]
 num_replications2 = [[1, ], [2, 2, ], [3, 3, 3]]
 
-template = BufrTemplate()
+template = BufrTemplate(verbose=True)
 template.add_descriptor(D_363192) # 1 item
 template.del_repl_max_nr_of_repeats_list = ([max_nr_of_replications,]*
                                             max_nr_of_replications*num_subsets)

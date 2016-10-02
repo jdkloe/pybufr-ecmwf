@@ -11,6 +11,7 @@ from pybufr_ecmwf.bufr import BUFRReader, BUFRWriter
 output_bufr_file = 'dummy_bufr_file.bfr'
 
 bwr = BUFRWriter()
+#bwr = BUFRWriter(verbose=True)
 bwr.open(output_bufr_file)
 
 msg = bwr.add_new_msg(num_subsets=3)

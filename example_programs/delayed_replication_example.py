@@ -74,7 +74,7 @@ bufr_table_set.write_tables(table_name)
 
 # now use these definitions to create a BUFR template
 max_nr_of_repeats = 5
-template = BufrTemplate()
+template = BufrTemplate(verbose=True)
 template.add_descriptor(var1) # 1 item
 template.add_delayed_replic_descriptors(max_nr_of_repeats,
                                         D_363192) # max. 1 + 5*5 items

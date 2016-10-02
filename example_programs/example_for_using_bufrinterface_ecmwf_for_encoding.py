@@ -94,7 +94,7 @@ def encoding_example(output_bufr_file):
     bufr.setup_tables()
 
     # define a descriptor list
-    template = BufrTemplate()
+    template = BufrTemplate(verbose=True)
 
     template.add_descriptors(DD_D_DATE_YYYYMMDD, # 0
                              DD_D_TIME_HHMM)     # 1

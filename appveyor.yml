@@ -16,7 +16,7 @@ matrix:
   # fast_finish: false
 
 install:
-  - set PATH=%PATH%; C:\Miniconda\Scripts
+  - set PATH= C:\Miniconda\Scripts
   # excecute this test in powershell
   - ps: if ($env:Platform -Match "x64") {$env:PATH="C:\Miniconda-x64\Scripts"}
   - conda config --set always_yes yes --set changeps1 no

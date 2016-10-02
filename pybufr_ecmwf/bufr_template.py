@@ -43,19 +43,21 @@ class BufrTemplate:
     a class of to help create a BUFR template in a more structured way
     """
     
-    def __init__(self):
+    def __init__(self, verbose=False):
         #  #[
         self.unexpanded_descriptor_list = []
         self.nr_of_delayed_repl_factors = 0
         self.del_repl_max_nr_of_repeats_list = []
         self.debug = False
+        self.verbose = verbose
         #  #]
     def add_descriptor(self, descriptor):
         #  #[
         """
         add a descriptor to the template
         """
-        print('adding descriptor: '+str(descriptor))
+        if self.verbose:
+            print('adding descriptor: '+str(descriptor))
         self.unexpanded_descriptor_list.append(descriptor)
         #  #]
     def add_descriptors(self, *descriptors):
@@ -64,7 +66,8 @@ class BufrTemplate:
         add a list of descriptors to the template
         """
         nr_of_descriptors = len(descriptors)
-        print('adding '+str(nr_of_descriptors)+' descriptors')
+        if self.verbose:
+            print('adding '+str(nr_of_descriptors)+' descriptors')
         self.unexpanded_descriptor_list.extend(descriptors)
         #  #]
     def add_delayed_replic_descriptors(self, max_nr_of_repeats,

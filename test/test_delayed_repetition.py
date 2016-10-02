@@ -68,7 +68,7 @@ max_nr_of_repeats = 5
 num_subsets = 2
 num_repetitions = [3, 5] # actual number to be used
 
-template = BufrTemplate()
+template = BufrTemplate(verbose=True)
 template.add_descriptor(D_363192) # 1 item
 template.del_repl_max_nr_of_repeats_list = [max_nr_of_repeats,]*num_subsets
 
