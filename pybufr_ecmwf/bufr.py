@@ -361,7 +361,9 @@ class BUFRMessage_W:
         exp_descr_list_length = self.bufr_obj.ktdexl
         if self.verbose:
             print("exp_descr_list_length = ", exp_descr_list_length)
-        exp_descr_list = self.bufr_obj.ktdexp
+        # ensure zeros at the end are removed, so explicitely
+        # define the end of the slice
+        exp_descr_list = self.bufr_obj.ktdexp[:exp_descr_list_length]
         if self.verbose:
             print("exp_descr_list = ",  self.bufr_obj.ktdexp)
         self.num_fields = exp_descr_list_length
@@ -434,11 +436,32 @@ class BUFRMessage_W:
     def __setitem__(self, this_key, this_value):
         #  #[ allow addition of date with dict like interface
         # print('searching for: ', this_key)
+
+        # see if an index is provided
+        index = -1
+        if type(this_key) is str:
+            if '[' in this_key:
+                parts = this_key.split('[')
+                this_key = parts[0]
+                index_str = parts[1][:-1]
+                index = int(index_str)
+                
         possible_matches = []
         names_of_possible_matches = []
+        try:
+            reference = int(this_key)
+            fraction = float(this_key)-reference
+            
+            p = self.field_properties[reference]
+            descr_name = p['name']
+        except:
+            # this appears to be not an integer number, so assume
+            # (part of) the name is given
+            descr_name = this_key
+
         for key in self.field_properties_keys:
             p = self.field_properties[key]
-            if this_key in p['name']:
+            if descr_name in p['name']:
                 possible_matches.append(key)
                 names_of_possible_matches.append(p['name'])
         
@@ -453,6 +476,23 @@ class BUFRMessage_W:
             errtxt = ('ERROR: the current BUFRmessage does not contain any '+
                       'fields that have [{}] in their name.'.format(this_key))
             raise IncorrectUsageError(errtxt)
+        elif index >= 0:
+            #  ok, proper location found since an index was supplied
+            try:
+                key = possible_matches[index]
+            except:
+                # invalid index
+                errtxt = ('ERROR: the index on the requested descriptor '+
+                          'is out of the possible range. '+
+                          'Only {0} '.format(len(possible_matches))+
+                          'possible matches are present in this template. '+
+                          'while the requested index was {} '.format(index)+
+                          'for key {0}.'.format(this_key))
+                raise IncorrectUsageError(errtxt)
+            
+            p = self.field_properties[key]
+            index_to_use = p['index']
+            # print('filling row:', p)
         else:
             errtxt = ('ERROR: the current BUFRmessage has multiple '+
                       'fields that have [{}] in their name.'.format(this_key)+

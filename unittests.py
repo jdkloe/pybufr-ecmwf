@@ -653,7 +653,7 @@ class CheckBUFRMessage_W(unittest.TestCase):
         self.msg = self.bwr.add_new_msg(num_subsets=3)
         #  #]
     def test_single_descriptor(self):
-        #  #[ take a single descriptor for pressure in [Pa]
+        #  #[ properties of a single descriptor for pressure
         self.msg.set_template('010004')
         names = self.msg.get_field_names()
         self.assertEqual(names, ['PRESSURE',])
@@ -662,8 +662,8 @@ class CheckBUFRMessage_W(unittest.TestCase):
         self.assertEqual(props['max_allowed_value'], 163830.0)
         self.assertEqual(props['step'], 10.0)
         #  #]
-    def test_range_single_descriptor(self):
-        #  #[ take a single descriptor for pressure in [Pa]
+    def test_str_assign_single_descriptor(self):
+        #  #[ assign to a single descriptor for pressure using str. descr.
         self.msg.set_template('010004')
         self.msg['PRESS'] = -10.0
         def assign(msg, value):
@@ -673,16 +673,43 @@ class CheckBUFRMessage_W(unittest.TestCase):
         self.assertRaises(IncorrectUsageError, assign, self.msg, [])
         self.assertRaises(IncorrectUsageError, assign, self.msg, [10., 20.])
         self.assertEquals(assign(self.msg, 123.), True)
-        self.assertEquals(assign(self.msg, [10., 20., 30.]), True)
+        self.assertEquals(assign(self.msg, [10., 20., 30.]), True)        
+        #  #]
+    def test_numstr_assign_single_descriptor(self):
+        #  #[ assign to a single descr. for pressure using numstr. descr.
+        self.msg.set_template('010004')
+        def assign1(msg, value):
+            msg['010004'] = value
+            return True
+
+        self.assertEquals(assign1(self.msg, 123.), True)
+        self.assertEquals(assign1(self.msg, [10., 20., 30.]), True)        
+        #  #]
+    def test_num_assign_single_descriptor(self):
+        #  #[ assign to a single descr. for pressure using num. descr.
+        self.msg.set_template('010004')
+        def assign2(msg, value):
+            msg[10004] = value
+            return True
+        
+        self.assertEquals(assign2(self.msg, 123.), True)
+        self.assertEquals(assign2(self.msg, [10., 20., 30.]), True)        
+        #  #]
+    def test_range_single_descriptor(self):
+        #  #[ range check for a single descriptor for pressure
+        self.msg.set_template('010004')
+        self.msg['PRESS'] = -10.0
+        def assign(msg, value):
+            msg['PRESS'] = value
+            return True
 
         self.msg.do_range_check = False # default
         self.assertEquals(assign(self.msg, -120.), True)
         self.msg.do_range_check = True
         self.assertRaises(ValueError, assign, self.msg, -120.)
-        
         #  #]
     def test_simple_sequence(self):
-        #  #[ take a shore sequence
+        #  #[ properties for a shore sequence
         self.msg.set_template('301033')
         names = self.msg.get_field_names()
         self.assertEqual(names, 
@@ -695,6 +722,60 @@ class CheckBUFRMessage_W(unittest.TestCase):
                           'MINUTE',
                           'LATITUDE (HIGH ACCURACY)',
                           'LONGITUDE (HIGH ACCURACY)'])
+        #  #]
+    def test_assign_simple_sequence(self):
+        #  #[ assign to an element of a short sequence
+        self.msg.set_template('301033')
+        def assign(msg, value):
+            msg['LATITUDE'] = value
+            return True
+        self.assertEquals(assign(self.msg, 1.), True)
+        self.assertEquals(assign(self.msg, [1., 2., 3.]), True)
+        self.assertRaises(IncorrectUsageError, assign, self.msg, [])
+        self.assertRaises(IncorrectUsageError, assign, self.msg,
+                          [1., 2., 3., 4., 5., 6.])
+        #  #]
+    def test_invalid_assign_simple_sequence(self):
+        #  #[ invalid assignments for a short sequence
+        self.msg.set_template('301033')
+        def assign(msg, value):
+            msg['WRONGTITUDE'] = value
+            return True
+        self.assertRaises(IncorrectUsageError, assign, self.msg, 1.0)
+        #  #]
+    def test_double_assign_simple_sequence(self):
+        #  #[ double assignments for a short sequence
+        self.msg.set_template('301033')
+        def assign(msg, value):
+            msg['ITUDE'] = value
+            return True
+        #assign(self.msg, 1.0)
+        self.assertRaises(IncorrectUsageError, assign, self.msg, 1.0)
+        #  #]
+    def test_assign_longer_sequence(self):
+        #  #[ assign to an element of a longer sequence
+        self.msg.set_template('312021') # ERS scatterometer template
+        names = self.msg.get_field_names()
+        #self.assertEquals('names', names)
+
+        def assign(msg, value):
+            msg['BACKSCATTER[1]'] = value
+            return True
+        self.assertEquals(assign(self.msg, 1.), True)
+        #self.assertEquals(assign(self.msg, [1., 2., 3.]), True)
+        #self.assertRaises(IncorrectUsageError, assign, self.msg, [])
+        #self.assertRaises(IncorrectUsageError, assign, self.msg,
+        #                  [1., 2., 3., 4., 5., 6.])
+        #  #]
+    def test_invalid_assign_longer_sequence(self):
+        #  #[ assign to an element of a longer sequence
+        self.msg.set_template('312021') # ERS scatterometer template
+        names = self.msg.get_field_names()
+        def assign(msg, value):
+            msg['BACKSCATTER'] = value
+            return True
+
+        self.assertRaises(IncorrectUsageError, assign, self.msg, 1.)
         #  #]
     def tearDown(self):
         #print('doing teardown')

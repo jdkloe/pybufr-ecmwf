@@ -815,6 +815,13 @@ class BufrTable:
                           type(tmp_descr))
                     print('for tmp_descr = ', tmp_descr)
                     sys.exit(1)
+
+                # skip zeros. This sometimes happens at the end of the
+                # array when ktdexp is used as input (since that one often
+                # is longer than required)
+                if int_descr==0:
+                    continue
+
                 f_val = int(int_descr/100000.)
                 if f_val == 0:
                     # this one should already be in the table_b dictionary
