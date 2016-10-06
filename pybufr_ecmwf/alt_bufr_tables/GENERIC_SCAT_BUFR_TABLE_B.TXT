@@ -252,6 +252,8 @@
  002197 SATELLITE CHANNEL CENTRE FREQUENCY                               Hz                        -8            0  26
  002198 SATELLITE CHANNEL BAND WIDTH                                     Hz                        -8            0  26
  002199 INTEGRATED MEAN HUMIDITY COMPUTATIONAL METHOD                    CODE TABLE 2199            0            0   4
+ 002200 LATITUDINAL RESOLUTION                                           DEGREE                     5            0  25
+ 002201 LONGITUDINAL RESOLUTION                                          DEGREE                     5            0  25
  002201 SIMULATED SATELLITE INSTRUMENT                                   FLAG TABLE 2201            0            0   4
  002202 SIMULATED DATA PROCESSING TECHNIQUE USED                         FLAG TABLE 2202            0            0   4
  002205 LATITUDINAL RESOLUTION                                           DEGREE                     3            0   9
