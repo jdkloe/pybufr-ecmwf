@@ -433,19 +433,16 @@ class BUFRMessage_W:
         # write the encoded BUFR message
         self.parent.raw_bf.write_raw_bufr_msg(self.bufr_obj.encoded_message)
         #  #]
-    def __setitem__(self, this_key, this_value):
-        #  #[ allow addition of date with dict like interface
-        # print('searching for: ', this_key)
-
+    def str_get_index_to_use(self, this_key):
+        #  #[ convert string input for key to index in exp. descr. list
         # see if an index is provided
         index = -1
-        if type(this_key) is str:
-            if '[' in this_key:
-                parts = this_key.split('[')
-                this_key = parts[0]
-                index_str = parts[1][:-1]
-                index = int(index_str)
-                
+        if '[' in this_key:
+            parts = this_key.split('[')
+            this_key = parts[0]
+            index_str = parts[1][:-1]
+            index = int(index_str)
+            
         possible_matches = []
         names_of_possible_matches = []
         try:
@@ -464,7 +461,7 @@ class BUFRMessage_W:
             if descr_name in p['name']:
                 possible_matches.append(key)
                 names_of_possible_matches.append(p['name'])
-        
+
         # print('possible matches for key: ', possible_matches)
         if len(possible_matches) == 1:
             #  ok, proper location found
@@ -501,6 +498,31 @@ class BUFRMessage_W:
                       format(this_key, names_of_possible_matches))
             raise IncorrectUsageError(errtxt)
 
+        return index_to_use, p
+        #  #]
+    def num_get_index_to_use(self, this_key):
+        #  #[ get properties for direct index
+        # print('self.field_properties_keys = ', self.field_properties_keys)
+        # print('self.field_properties = ', self.field_properties)
+        index_to_use = this_key
+        reference = self.field_properties_keys[this_key]
+        p = self.field_properties[reference]
+        return index_to_use, p
+        #  #]
+    def __setitem__(self, this_key, this_value):
+        #  #[ allow addition of date with dict like interface
+        # print('searching for: ', this_key)
+
+        if type(this_key) is int:
+            # a direct index to the expanded list of descriptors
+            # should be given in this case
+            index_to_use, p = self.num_get_index_to_use(this_key)
+        elif type(this_key) is str:
+            index_to_use, p = self.str_get_index_to_use(this_key)
+        else:
+            errtxt = 'key has unknown type: {}'.format(type(this_key))
+            raise IncorrectUsageError(errtxt)
+        
         # check length of input (scalar or array?)
         try:
             n = len(this_value)

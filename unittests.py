@@ -689,7 +689,7 @@ class CheckBUFRMessage_W(unittest.TestCase):
         #  #[ assign to a single descr. for pressure using num. descr.
         self.msg.set_template('010004')
         def assign2(msg, value):
-            msg[10004] = value
+            msg[0] = value
             return True
         
         self.assertEquals(assign2(self.msg, 123.), True)
@@ -767,6 +767,20 @@ class CheckBUFRMessage_W(unittest.TestCase):
         #self.assertRaises(IncorrectUsageError, assign, self.msg,
         #                  [1., 2., 3., 4., 5., 6.])
         #  #]
+    def test_num_assign_longer_sequence(self):
+        #  #[ assign to an element of a longer sequence
+        self.msg.set_template('312021') # ERS scatterometer template
+        names = self.msg.get_field_names()
+        #self.assertEquals('names', list(enumerate(names)))
+
+        def assign(msg, value):
+            # element with index 28 is first occurrence of BACKSCATTER
+            # in this template
+            msg[28] = value
+            return True
+        self.assertEquals(assign(self.msg, 1.), True)
+        self.assertEquals(assign(self.msg, [1., 2., 3.]), True)
+        #  #]
     def test_invalid_assign_longer_sequence(self):
         #  #[ assign to an element of a longer sequence
         self.msg.set_template('312021') # ERS scatterometer template
@@ -776,6 +790,20 @@ class CheckBUFRMessage_W(unittest.TestCase):
             return True
 
         self.assertRaises(IncorrectUsageError, assign, self.msg, 1.)
+        #  #]
+    def test_invalid_num_assign_longer_sequence(self):
+        #  #[ assign to an element of a longer sequence
+        self.msg.set_template('312021') # ERS scatterometer template
+        names = self.msg.get_field_names()
+        #self.assertEquals('names', list(enumerate(names)))
+
+        def assign(msg, value):
+            # this template has only 44 elements, index 0 upto 43,
+            # so 44 should be out of range
+            msg[44] = value
+            return True
+
+        self.assertRaises(IndexError, assign, self.msg, 1.)
         #  #]
     def tearDown(self):
         #print('doing teardown')
