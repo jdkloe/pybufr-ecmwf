@@ -805,6 +805,60 @@ class CheckBUFRMessage_W(unittest.TestCase):
 
         self.assertRaises(IndexError, assign, self.msg, 1.)
         #  #]
+    def test_assign_2d_array(self):
+        #  #[ fill a bufr msg using a 2d array
+        self.msg.set_template('301033')
+
+        def assign(msg, values):
+            msg.fill(values)
+            return True
+        test_values = [3*[1,],
+                       3*[2,],
+                       3*[2016,],
+                       3*[12,],
+                       3*[31,],
+                       3*[23,],
+                       [57,59,59],
+                       [53.,54.,55.],
+                       [5.,6.,7.], ]
+
+        self.assertEquals(assign(self.msg, test_values), True)
+
+        import numpy
+        np_test_values = numpy.array(test_values)
+        self.assertEquals(assign(self.msg, test_values), True)
+
+        self.assertEquals(numpy.all(np_test_values.T.flatten() ==
+                                    self.msg.values), True)
+
+        self.assertRaises(IncorrectUsageError, assign,
+                          self.msg, np_test_values[:5,:])
+        self.assertRaises(IncorrectUsageError, assign,
+                          self.msg, np_test_values[:,:2])
+        #  #]
+    def test_assign_subset(self):
+        #  #[ fill a given subset of a bufr msg
+        self.msg.set_template('301033')
+
+        def assign(msg, isubset, values):
+            msg.fill_subset(isubset, values)
+            return True
+        test_values = [1, 2, 2016, 12, 31, 23, 59, 55., 7.]
+
+        self.assertEquals(assign(self.msg, 0, test_values), True)
+
+        import numpy
+        np_test_values = numpy.array(test_values)
+        self.assertEquals(assign(self.msg, 0, test_values), True)
+
+        self.assertEquals(numpy.all(np_test_values ==
+                                    self.msg.values[:9]), True)
+
+        self.assertRaises(IncorrectUsageError, assign,
+                          self.msg, 3, np_test_values[:5])
+        self.assertRaises(IncorrectUsageError, assign,
+                          self.msg, 0, np_test_values[:5])
+        #  #]
     def tearDown(self):
         #print('doing teardown')
         pass

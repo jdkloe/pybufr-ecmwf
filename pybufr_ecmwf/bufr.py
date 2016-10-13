@@ -509,6 +509,56 @@ class BUFRMessage_W:
         p = self.field_properties[reference]
         return index_to_use, p
         #  #]
+    def fill(self, values):
+        #  #[ fill all elements for all subsets using a 2d array
+
+        np_values = numpy.array(values)
+        
+        # check array shape
+        nfields_data, nsubsets_data = numpy.shape(np_values)
+        if ( (nsubsets_data != self.num_subsets) or
+             (nfields_data != self.num_fields)     ):
+            errtxt = ('input values array has wrong shape! '+
+                      'values shape: {0}:{1} '.
+                      format(nsubsets_data, nfields_data)+
+                      'but expected shape is: {0}:{1}'.
+                      format(self.num_subsets, self.num_fields))
+            raise IncorrectUsageError(errtxt)
+            
+        # fill the requested row with data
+        for subset in range(self.num_subsets):
+            i = subset*self.num_fields
+            for j in range(self.num_fields):
+                self.values[i+j] = np_values[j, subset]
+
+        #  #]
+    def fill_subset(self, isubset, values):
+        #  #[ fill all elements for a given subset
+
+        np_values = numpy.array(values)
+        
+        # check subset index
+        nfields_data = len(np_values)
+        if ( (isubset < 0) or
+             (isubset >= self.num_subsets) ):
+            errtxt = ('incorrect subset number: {0} '.format(isubset)+
+                      'The subset index must be between {0} and {1}.'.
+                      format(0, self.num_subsets-1))
+            raise IncorrectUsageError(errtxt)
+
+        # check array length
+        if (nfields_data != self.num_fields):
+            errtxt = ('input values array has wrong length! '+
+                      'values length: {0} '.format(nfields_data)+
+                      'but expected length is: {0}'.format(self.num_fields))
+            raise IncorrectUsageError(errtxt)
+            
+        # fill the requested row with data
+        i = isubset*self.num_fields
+        for j in range(self.num_fields):
+            self.values[i+j] = np_values[j]
+
+        #  #]
     def __setitem__(self, this_key, this_value):
         #  #[ allow addition of date with dict like interface
         # print('searching for: ', this_key)
