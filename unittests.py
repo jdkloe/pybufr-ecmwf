@@ -859,6 +859,30 @@ class CheckBUFRMessage_W(unittest.TestCase):
         self.assertRaises(IncorrectUsageError, assign,
                           self.msg, 0, np_test_values[:5])
         #  #]
+    def test_assign_del_repl(self):
+        #  #[ assign templ. that uses del. repl.
+        max_nr_of_replications = [1, ]
+        self.msg.set_template('301028', max_repl = max_nr_of_replications)
+
+        names = self.msg.get_field_names()
+        #self.assertEquals('names', names)
+
+        def assign(msg, value):
+            msg['EFFECTIVE RADIUS OF FEATURE'] = value
+            return True
+
+        self.assertEquals(assign(self.msg, 1.), True)
+        #  #]
+    def test_invalid_assign_del_repl(self):
+        #  #[ assign templ. that uses del. repl.
+
+        # triggers an error because no max_repl parameter
+        # is provided in the set_template call
+        def set_templ(msg, templ):
+            msg.set_template(templ)
+
+        self.assertRaises(IncorrectUsageError, set_templ, self.msg, '301028')
+        #  #]
     def tearDown(self):
         #print('doing teardown')
         pass

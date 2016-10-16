@@ -343,8 +343,11 @@ class BUFRMessage_W:
         # use information from sections 0123 to construct the BUFR table
         # names expected by the ECMWF BUFR library
         self.bufr_obj.setup_tables()
+
+        # init to None
+        self.template = None
         #  #]
-    def set_template(self, *args):
+    def set_template(self, *args, **kwargs):
         #  #[ set the template
         self.template = BufrTemplate()
 
@@ -354,6 +357,10 @@ class BUFRMessage_W:
             # inputs may be integer, string or a Descriptor instance
             # print('adding descriptor: ', descr, ' of type ', type(descr))
             self.template.add_descriptor(descr)
+
+        if 'max_repl' in kwargs:
+            #print('max_repl = ', kwargs['max_repl'])
+            self.template.del_repl_max_nr_of_repeats_list = kwargs['max_repl']
         
         self.bufr_obj.register_and_expand_descriptors(self.template)
 
