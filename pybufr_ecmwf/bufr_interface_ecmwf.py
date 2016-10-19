@@ -1681,17 +1681,20 @@ class BUFRInterfaceECMWF:
     def derive_delayed_repl_factors(self):
         #  #[ extract these factors from the self.ktdexp array
         select = np.where(self.ktdexp != 0)
-        ktdexp = list(self.ktdexp[select])
-        ndr = ktdexp.count(Delayed_Descr_Repl_Factor)
+        ktdexp = np.array(self.ktdexp[select])
 
-        select = np.where(self.ktdexp in
-                          [Short_Delayed_Descr_Repl_Factor,
-                           Delayed_Descr_Repl_Factor,
-                           Extended_Delayed_Descr_Repl_Factor,
-                           Delayed_Descr_and_Data_Rep_Factor,
-                           Ext_Delayed_Descr_and_Data_Rep_Factor])
+        index_list = []
+        for del_descr in [Short_Delayed_Descr_Repl_Factor,
+                          Delayed_Descr_Repl_Factor,
+                          Extended_Delayed_Descr_Repl_Factor,
+                          Delayed_Descr_and_Data_Rep_Factor,
+                          Ext_Delayed_Descr_and_Data_Rep_Factor]:
+            index_list_for_this_descr = np.where(ktdexp == del_descr)[0]
+            index_list.extend(index_list_for_this_descr)
+
+        select = sorted(index_list)
         delayed_repl_data = self.values[select]
-        # print('delayed_repl_data = ', delayed_repl_data)
+
         return delayed_repl_data
         #  #]
     def fill_descriptor_list(self, nr_of_expanded_descriptors=None):
