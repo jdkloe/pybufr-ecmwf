@@ -37,6 +37,7 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
             #brew unlink numpy
             #brew unlink numpy --with-python3
             brew install homebrew/python/numpy --with-python3
+            brew link --overwrite homebrew/python/numpy --with-python3
             ;;
     esac
 else
