@@ -25,16 +25,17 @@ if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     case "${TOXENV}" in
         py27)
             # install Python 2.7 and numpy on OS X
-	    brew unlink python
-            brew install python
-            brew install homebrew/python/numpy
+	    #brew unlink python
+            #brew install python
+            #brew install homebrew/python/numpy
+	    echo "it seems python + numpy is available by default now for OSX"
             ;;
         py35)
             # install Python 3.5 and numpy on OS X
 	    # brew unlink python3
             brew install python3
-            brew unlink numpy
-            brew unlink numpy --with-python3
+            #brew unlink numpy
+            #brew unlink numpy --with-python3
             brew install homebrew/python/numpy --with-python3
             ;;
     esac
