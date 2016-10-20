@@ -322,9 +322,9 @@ class BUFRMessage_W:
         self.num_subsets = num_subsets
         self.verbose = verbose
         self.do_range_check = do_range_check
-        self.bufr_obj = BUFRInterfaceECMWF(verbose=verbose)
+        self._bufr_obj = BUFRInterfaceECMWF(verbose=verbose)
         # fill sections 0, 1, 2 and 3 with default values
-        self.bufr_obj.fill_sections_0123(
+        self._bufr_obj.fill_sections_0123(
             bufr_code_centre =   0, # use official WMO tables
             bufr_obstype     =   3, # sounding
             bufr_subtype     = 253, # L2B
@@ -337,12 +337,12 @@ class BUFRMessage_W:
             # 64=compression/0=no compression
 
         #table_name = 'default'
-        # self.bufr_obj.setup_tables(table_b_to_use='B'+table_name,
+        # self._bufr_obj.setup_tables(table_b_to_use='B'+table_name,
         #                            table_d_to_use='D'+table_name)
 
         # use information from sections 0123 to construct the BUFR table
         # names expected by the ECMWF BUFR library
-        self.bufr_obj.setup_tables()
+        self._bufr_obj.setup_tables()
 
         # init to None
         self.template = None
@@ -362,22 +362,22 @@ class BUFRMessage_W:
             #print('max_repl = ', kwargs['max_repl'])
             self.template.del_repl_max_nr_of_repeats_list = kwargs['max_repl']
         
-        self.bufr_obj.register_and_expand_descriptors(self.template)
+        self._bufr_obj.register_and_expand_descriptors(self.template)
 
         # retrieve the length of the expanded descriptor list
-        exp_descr_list_length = self.bufr_obj.ktdexl
+        exp_descr_list_length = self._bufr_obj.ktdexl
         if self.verbose:
             print("exp_descr_list_length = ", exp_descr_list_length)
         # ensure zeros at the end are removed, so explicitely
         # define the end of the slice
-        exp_descr_list = self.bufr_obj.ktdexp[:exp_descr_list_length]
+        exp_descr_list = self._bufr_obj.ktdexp[:exp_descr_list_length]
         if self.verbose:
-            print("exp_descr_list = ",  self.bufr_obj.ktdexp)
+            print("exp_descr_list = ",  self._bufr_obj.ktdexp)
         self.num_fields = exp_descr_list_length
 
         # ensure all descriptors are instances of bufr_table.Descriptor
         self.normalised_descriptor_list = \
-            self.bufr_obj.bt.normalise_descriptor_list(exp_descr_list)
+            self._bufr_obj.bt.normalise_descriptor_list(exp_descr_list)
 
         # allocate the needed values and cvalues arrays
 
@@ -429,8 +429,8 @@ class BUFRMessage_W:
     def write_msg_to_file(self):
         #  #[ write out the current message
         # do the encoding to binary format
-        self.bufr_obj.encode_data(self.values,
-                                  self.cvals)
+        self._bufr_obj.encode_data(self.values,
+                                   self.cvals)
 
         # check if file was properly opened
         if not self.parent.is_open:
@@ -438,7 +438,7 @@ class BUFRMessage_W:
             raise IncorrectUsageError(errtxt)
         
         # write the encoded BUFR message
-        self.parent.raw_bf.write_raw_bufr_msg(self.bufr_obj.encoded_message)
+        self.parent.raw_bf.write_raw_bufr_msg(self._bufr_obj.encoded_message)
         #  #]
     def str_get_index_to_use(self, this_key):
         #  #[ convert string input for key to index in exp. descr. list

@@ -34,7 +34,7 @@ to make it a bit easier in dayly use.
 #  #]
 #  #[ imported modules
 from __future__ import (absolute_import, division,
-                        print_function) #, unicode_literals)
+                        print_function, with_statement) #, unicode_literals)
 import os          # operating system functions
 import sys         # system functions
 import time        # handling of date and time
@@ -484,7 +484,8 @@ class BUFRInterfaceECMWF:
         
         # now read the temporary file and display the output
         if os.path.exists(self.outp_file):
-            lines = open(self.outp_file).readlines()
+            with open(self.outp_file) as ffd:
+                lines = ffd.readlines()
         else:
             lines = []
         

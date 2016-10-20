@@ -672,8 +672,8 @@ class CheckBUFRMessage_W(unittest.TestCase):
 
         self.assertRaises(IncorrectUsageError, assign, self.msg, [])
         self.assertRaises(IncorrectUsageError, assign, self.msg, [10., 20.])
-        self.assertEquals(assign(self.msg, 123.), True)
-        self.assertEquals(assign(self.msg, [10., 20., 30.]), True)        
+        self.assertEqual(assign(self.msg, 123.), True)
+        self.assertEqual(assign(self.msg, [10., 20., 30.]), True)        
         #  #]
     def test_numstr_assign_single_descriptor(self):
         #  #[ assign to a single descr. for pressure using numstr. descr.
@@ -682,8 +682,8 @@ class CheckBUFRMessage_W(unittest.TestCase):
             msg['010004'] = value
             return True
 
-        self.assertEquals(assign1(self.msg, 123.), True)
-        self.assertEquals(assign1(self.msg, [10., 20., 30.]), True)        
+        self.assertEqual(assign1(self.msg, 123.), True)
+        self.assertEqual(assign1(self.msg, [10., 20., 30.]), True)        
         #  #]
     def test_num_assign_single_descriptor(self):
         #  #[ assign to a single descr. for pressure using num. descr.
@@ -692,8 +692,8 @@ class CheckBUFRMessage_W(unittest.TestCase):
             msg[0] = value
             return True
         
-        self.assertEquals(assign2(self.msg, 123.), True)
-        self.assertEquals(assign2(self.msg, [10., 20., 30.]), True)        
+        self.assertEqual(assign2(self.msg, 123.), True)
+        self.assertEqual(assign2(self.msg, [10., 20., 30.]), True)        
         #  #]
     def test_range_single_descriptor(self):
         #  #[ range check for a single descriptor for pressure
@@ -704,7 +704,7 @@ class CheckBUFRMessage_W(unittest.TestCase):
             return True
 
         self.msg.do_range_check = False # default
-        self.assertEquals(assign(self.msg, -120.), True)
+        self.assertEqual(assign(self.msg, -120.), True)
         self.msg.do_range_check = True
         self.assertRaises(ValueError, assign, self.msg, -120.)
         #  #]
@@ -729,8 +729,8 @@ class CheckBUFRMessage_W(unittest.TestCase):
         def assign(msg, value):
             msg['LATITUDE'] = value
             return True
-        self.assertEquals(assign(self.msg, 1.), True)
-        self.assertEquals(assign(self.msg, [1., 2., 3.]), True)
+        self.assertEqual(assign(self.msg, 1.), True)
+        self.assertEqual(assign(self.msg, [1., 2., 3.]), True)
         self.assertRaises(IncorrectUsageError, assign, self.msg, [])
         self.assertRaises(IncorrectUsageError, assign, self.msg,
                           [1., 2., 3., 4., 5., 6.])
@@ -756,13 +756,13 @@ class CheckBUFRMessage_W(unittest.TestCase):
         #  #[ assign to an element of a longer sequence
         self.msg.set_template('312021') # ERS scatterometer template
         names = self.msg.get_field_names()
-        #self.assertEquals('names', names)
+        #self.assertEqual('names', names)
 
         def assign(msg, value):
             msg['BACKSCATTER[1]'] = value
             return True
-        self.assertEquals(assign(self.msg, 1.), True)
-        #self.assertEquals(assign(self.msg, [1., 2., 3.]), True)
+        self.assertEqual(assign(self.msg, 1.), True)
+        #self.assertEqual(assign(self.msg, [1., 2., 3.]), True)
         #self.assertRaises(IncorrectUsageError, assign, self.msg, [])
         #self.assertRaises(IncorrectUsageError, assign, self.msg,
         #                  [1., 2., 3., 4., 5., 6.])
@@ -771,15 +771,15 @@ class CheckBUFRMessage_W(unittest.TestCase):
         #  #[ assign to an element of a longer sequence
         self.msg.set_template('312021') # ERS scatterometer template
         names = self.msg.get_field_names()
-        #self.assertEquals('names', list(enumerate(names)))
+        #self.assertEqual('names', list(enumerate(names)))
 
         def assign(msg, value):
             # element with index 28 is first occurrence of BACKSCATTER
             # in this template
             msg[28] = value
             return True
-        self.assertEquals(assign(self.msg, 1.), True)
-        self.assertEquals(assign(self.msg, [1., 2., 3.]), True)
+        self.assertEqual(assign(self.msg, 1.), True)
+        self.assertEqual(assign(self.msg, [1., 2., 3.]), True)
         #  #]
     def test_invalid_assign_longer_sequence(self):
         #  #[ assign to an element of a longer sequence
@@ -795,7 +795,7 @@ class CheckBUFRMessage_W(unittest.TestCase):
         #  #[ assign to an element of a longer sequence
         self.msg.set_template('312021') # ERS scatterometer template
         names = self.msg.get_field_names()
-        #self.assertEquals('names', list(enumerate(names)))
+        #self.assertEqual('names', list(enumerate(names)))
 
         def assign(msg, value):
             # this template has only 44 elements, index 0 upto 43,
@@ -822,13 +822,13 @@ class CheckBUFRMessage_W(unittest.TestCase):
                        [53.,54.,55.],
                        [5.,6.,7.], ]
 
-        self.assertEquals(assign(self.msg, test_values), True)
+        self.assertEqual(assign(self.msg, test_values), True)
 
         import numpy
         np_test_values = numpy.array(test_values)
-        self.assertEquals(assign(self.msg, test_values), True)
+        self.assertEqual(assign(self.msg, test_values), True)
 
-        self.assertEquals(numpy.all(np_test_values.T.flatten() ==
+        self.assertEqual(numpy.all(np_test_values.T.flatten() ==
                                     self.msg.values), True)
 
         self.assertRaises(IncorrectUsageError, assign,
@@ -845,13 +845,13 @@ class CheckBUFRMessage_W(unittest.TestCase):
             return True
         test_values = [1, 2, 2016, 12, 31, 23, 59, 55., 7.]
 
-        self.assertEquals(assign(self.msg, 0, test_values), True)
+        self.assertEqual(assign(self.msg, 0, test_values), True)
 
         import numpy
         np_test_values = numpy.array(test_values)
-        self.assertEquals(assign(self.msg, 0, test_values), True)
+        self.assertEqual(assign(self.msg, 0, test_values), True)
 
-        self.assertEquals(numpy.all(np_test_values ==
+        self.assertEqual(numpy.all(np_test_values ==
                                     self.msg.values[:9]), True)
 
         self.assertRaises(IncorrectUsageError, assign,
@@ -865,13 +865,13 @@ class CheckBUFRMessage_W(unittest.TestCase):
         self.msg.set_template('301028', max_repl = max_nr_of_replications)
 
         names = self.msg.get_field_names()
-        #self.assertEquals('names', names)
+        #self.assertEqual('names', names)
 
         def assign(msg, value):
             msg['EFFECTIVE RADIUS OF FEATURE'] = value
             return True
 
-        self.assertEquals(assign(self.msg, 1.), True)
+        self.assertEqual(assign(self.msg, 1.), True)
         #  #]
     def test_invalid_assign_del_repl(self):
         #  #[ assign templ. that uses del. repl.

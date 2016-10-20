@@ -1189,7 +1189,8 @@ class BufrTable:
             print("loading B table from file: "+bfile)
 
         nr_of_ignored_probl_entries = 0
-        for (i, line) in enumerate(open(bfile, 'rt')):
+        bfd = open(bfile, 'rt')
+        for (i, line) in enumerate(bfd.readlines()):
             success = True
             line_copy = line.replace('\r', '').replace('\n', '')
 
@@ -1308,6 +1309,8 @@ class BufrTable:
                 #        raise # reraise
                 #    nr_of_ignored_probl_entries += 1
 
+        bfd.close()
+        
         if self.verbose:
             print("-------------")
             if (nr_of_ignored_probl_entries>0):
@@ -1617,7 +1620,7 @@ class BufrTable:
             cfd = open(cfile, 'rt', encoding='latin_1')
         else:
             cfd = open(cfile, 'rt')
-        for (i, line) in enumerate(cfd):
+        for (i, line) in enumerate(cfd.readlines()):
             line_copy = line.replace('\r', '').replace('\n', '')
             # skip empty lines
             if line_copy == '': continue
@@ -1637,7 +1640,7 @@ class BufrTable:
 
         # handle final definition in the file
         self.add_c_table_entry(this_lineblock)
-        
+        cfd.close()
         #  #]
     def load_d_table(self, dfile):
         #  #[ load the D table from file
@@ -1655,7 +1658,8 @@ class BufrTable:
         #  #[ create a list of blocks of lines
         self.list_of_d_entry_lineblocks = []
         this_lineblock = None
-        for (i, line) in enumerate(open(dfile, 'rt')):
+        dfd = open(dfile, 'rt')
+        for (i, line) in enumerate(dfd.readlines()):
             line_copy = line.replace('\r', '').replace('\n', '')
             # print("considering line "+str(i)+": ["+line_copy+"]")
 
@@ -1700,6 +1704,7 @@ class BufrTable:
             self.list_of_d_entry_lineblocks.append(this_lineblock)
 
         self.num_d_blocks = len(self.list_of_d_entry_lineblocks)
+        dfd.close()
         #  #]
 
         if self.verbose:
