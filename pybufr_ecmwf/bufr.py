@@ -72,7 +72,8 @@ class BUFRMessage_R:
                  section_sizes, section_start_locations,
                  expand_flags, msg_index, verbose,
                  table_b_to_use, table_c_to_use,
-                 table_d_to_use, tables_dir):
+                 table_d_to_use, tables_dir,
+                 expand_strings):
         #  #[ initialise and decode
         ''' delegate the actual work to BUFRInterfaceECMWF '''
         self._bufr_obj = BUFRInterfaceECMWF(raw_msg,
@@ -89,6 +90,7 @@ class BUFRMessage_R:
         self.msg_index = msg_index
         self.expand_flags = expand_flags
         self.current_subset = None
+        self.expand_strings = expand_strings
         #  #]
     def get_num_subsets(self):
         #  #[
@@ -109,7 +111,7 @@ class BUFRMessage_R:
 
         return self._bufr_obj.get_num_elements()
         #  #]
-    def get_value(self, descr_nr, subset_nr, autoget_cval=False):
+    def get_value(self, descr_nr, subset_nr):
         #  #[
         """
         request a value for a given subset and descriptor number
@@ -117,10 +119,11 @@ class BUFRMessage_R:
         if (self.msg_index == -1):
             raise NoMsgLoadedError
 
-        val = self._bufr_obj.get_value(descr_nr, subset_nr, autoget_cval)
+        val = self._bufr_obj.get_value(descr_nr, subset_nr,
+                                       autoget_cval=self.expand_strings)
         return val
         #  #]
-    def get_values(self, descr_nr, autoget_cval=False):
+    def get_values(self, descr_nr):
         #  #[
         """
         request an array of values containing the values
@@ -131,11 +134,12 @@ class BUFRMessage_R:
 
         self._bufr_obj.delayed_repl_check_for_incorrect_use()
 
-        vals = self._bufr_obj.get_values(descr_nr, autoget_cval)
+        vals = self._bufr_obj.get_values(descr_nr,
+                                         autoget_cval=self.expand_strings)
 
         return vals
         #  #]
-    def get_subset_values(self, subset_nr , autoget_cval=False):
+    def get_subset_values(self, subset_nr):
          #  #[
         """
         request an array of values containing the values
@@ -147,11 +151,12 @@ class BUFRMessage_R:
         # needed to have the units ready, so autoget_cval will work
         self._bufr_obj.fill_descriptor_list_subset(subset_nr)
 
-        vals = self._bufr_obj.get_subset_values(subset_nr, autoget_cval)
+        vals = self._bufr_obj.get_subset_values(subset_nr,
+                                            autoget_cval=self.expand_strings)
 
         return vals
         #  #]
-    def get_values_as_2d_array(self,autoget_cval=False):
+    def get_values_as_2d_array(self):
         #  #[
         """
         a convenience method to allow retrieving all data in
@@ -161,6 +166,11 @@ class BUFRMessage_R:
         if (self.msg_index == -1):
             txt = 'Sorry, no BUFR messages available'
             raise NoMsgLoadedError(txt)
+
+        if self.expand_strings:
+            txt = ('Sorry, when expanding strings, the result cannot be '+
+                   'a 2D numerical result')
+            raise IncorrectUsageError(txt)
 
         #if self.expand_flags:
         #    errtxt = ('ERROR: get_values_as_2d_array only returns numeric '+
@@ -346,6 +356,8 @@ class BUFRMessage_W:
 
         # init to None
         self.template = None
+        self.values = None
+        self.cvals = None
         #  #]
     def set_template(self, *args, **kwargs):
         #  #[ set the template
@@ -454,8 +466,6 @@ class BUFRMessage_W:
         names_of_possible_matches = []
         try:
             reference = int(this_key)
-            fraction = float(this_key)-reference
-            
             p = self.field_properties[reference]
             descr_name = p['name']
         except:
@@ -580,11 +590,17 @@ class BUFRMessage_W:
             errtxt = 'key has unknown type: {}'.format(type(this_key))
             raise IncorrectUsageError(errtxt)
         
-        # check length of input (scalar or array?)
-        try:
-            n = len(this_value)
-        except:
-            n = 1
+        # check if input value is character string
+        input_is_ccittia5 = False
+        if type(this_value) is str:
+            input_is_ccittia5 = True
+            n=1
+        else:
+            # check length of input (scalar or array?)
+            try:
+                n = len(this_value)
+            except:
+                n = 1
 
         if n != 1:
             if n != self.num_subsets:
@@ -594,7 +610,7 @@ class BUFRMessage_W:
                 raise IncorrectUsageError(errtxt)
 
         # optional, since this may make the code slower
-        if self.do_range_check:
+        if not input_is_ccittia5 and self.do_range_check:
             if n == 1:
                 check_range(p, this_value)
             else:
@@ -605,10 +621,22 @@ class BUFRMessage_W:
         for subset in range(self.num_subsets):
             i = subset*self.num_fields
             j = i + index_to_use
-            if n==1:
-                self.values[j] = this_value
+            if not input_is_ccittia5:
+                if n==1:
+                    self.values[j] = this_value
+                else:
+                    self.values[j] = this_value[subset]
             else:
-                self.values[j] = this_value[subset]
+                # special case for character strings
+                self.cvals[self.cvals_index, :] = ' ' # init with spaces
+                for ic,c in enumerate(this_value):
+                    self.cvals[self.cvals_index, ic] = c # copy characters
+                # store the cvals_index for the cvals array in the values
+                # array, this is needed so the software can find the the
+                # text string                         
+                self.values[j] = (self.cvals_index+1) * 1000 + len(this_value)
+                self.cvals_index = self.cvals_index + 1
+
         #  #]
     #  #]
 
@@ -622,7 +650,7 @@ class BUFRReaderBUFRDC:
     over the messages in this file.
     """
     def __init__(self, input_bufr_file, warn_about_bufr_size=True,
-                 expand_flags=False, verbose=False):
+                 expand_flags=False, expand_strings=False, verbose=False):
         #  #[
         # get an instance of the RawBUFRFile class
         self._rbf = RawBUFRFile(warn_about_bufr_size=warn_about_bufr_size)
@@ -650,7 +678,11 @@ class BUFRReaderBUFRDC:
 
         # expand flags to text
         self.expand_flags = expand_flags
-        
+
+        # expand CCITTIA5 strings
+        # (getting a 2D numerical values array from a message
+        # will not be possible in this case)
+        self.expand_strings = expand_strings
         #  #]
     def setup_tables(self,table_b_to_use=None, table_c_to_use=None,
                      table_d_to_use=None, tables_dir=None):
@@ -675,7 +707,8 @@ class BUFRReaderBUFRDC:
                                  section_sizes, section_start_locations,
                                  self.expand_flags, msg_index, self.verbose,
                                  self.table_b_to_use, self.table_c_to_use,
-                                 self.table_d_to_use, self.tables_dir)
+                                 self.table_d_to_use, self.tables_dir,
+                                 self.expand_strings)
 
         self.msg_index = msg_index
         #  #]

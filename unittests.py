@@ -631,6 +631,19 @@ class CheckBUFRWriter(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
         #  #]
+    def test_run_test_simple_ccittia5_template(self):
+        #  #[
+        """
+        test a simple writer with ascii text entries
+        """
+
+        # run the provided example code and verify the output
+        testprog = "test_simple_ccittia5_template.py"
+        cmd = os.path.join(TEST_DIR, testprog)
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
     def tearDown(self):
         # cleanup after running the tests from this class
         # print('tearDown running')

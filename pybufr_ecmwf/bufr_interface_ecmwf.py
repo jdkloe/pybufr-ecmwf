@@ -1492,7 +1492,7 @@ class BUFRInterfaceECMWF:
         else:
             values = np.array([])
             return
-        
+
         if autoget_cval:
             # convert numpy values array to standard list to make it mutable
             values = list(values)
@@ -1502,11 +1502,12 @@ class BUFRInterfaceECMWF:
                     if unit == 'CCITTIA5':
                         selection = self.actual_kelem*(subset_nr-1) + i
                         cvals_index = int(values[selection]/1000)-1
-                        text = ''.join(c for c in self.cvals[cvals_index,:])
+                        text = ''.join(c.decode() for c in
+                                       self.cvals[cvals_index,:])
                         cvalue = text.strip()
                         values[i] = cvalue
-                except:
-                    # this may happend for ModificationCommand descriptors
+                except AttributeError:
+                    # this may happen for ModificationCommand descriptors
                     # like 224000, since these have no unit attribute
                     pass
 
