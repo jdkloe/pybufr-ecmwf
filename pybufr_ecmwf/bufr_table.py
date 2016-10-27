@@ -147,11 +147,17 @@ class Descriptor: # [a simple table B entry]
         # ==>this gives for the range of decoded values:
         #    min_val = (0+refvalue)*10^(-scale)
         #    max_val = (2^n-1+refvalue)*10^(-scale)
-
-        step = 10.**(-1.*self.unit_scale)
-        min_allowed_value = self.unit_reference * step
-        max_allowed_value = ((2**self.data_width)-1+self.unit_reference)*step
-        return (min_allowed_value, max_allowed_value, step)
+        if self.unit == 'CCITTIA5':
+            # get min/max number of allowed characters for this descriptor
+            min_allowed_num_chars = 0
+            max_allowed_num_chars = self.data_width//8
+            return (min_allowed_num_chars, max_allowed_num_chars, 0)
+        else:
+            step = 10.**(-1.*self.unit_scale)
+            min_allowed_value = self.unit_reference * step
+            max_allowed_value = ((2**self.data_width)-1+
+                                 self.unit_reference)*step
+            return (min_allowed_value, max_allowed_value, step)
         #  #]
     def __len__(self):
         #  #[ returns length, redefine in subclass if larger than 1

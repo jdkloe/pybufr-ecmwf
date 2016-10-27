@@ -416,13 +416,21 @@ class BUFRMessage_W:
         self.field_properties = {}
         self.field_properties_keys = []
         for idx, descr in enumerate(self.normalised_descriptor_list):
-            (min_allowed_value,
-             max_allowed_value, step) = descr.get_min_max_step()
-            p = {'index':idx,
-                 'name':descr.name,
-                 'min_allowed_value':min_allowed_value,
-                 'max_allowed_value':max_allowed_value,
-                 'step':step}
+            if descr.unit == 'CCITTIA5':
+                 (min_allowed_num_chars, max_allowed_num_chars,
+                  dummy_var) = descr.get_min_max_step()
+                 p = {'index':idx,
+                      'name':descr.name,
+                      'min_allowed_num_chars':min_allowed_num_chars,
+                      'max_allowed_num_chars':max_allowed_num_chars}
+            else:
+                (min_allowed_value,
+                 max_allowed_value, step) = descr.get_min_max_step()
+                p = {'index':idx,
+                     'name':descr.name,
+                     'min_allowed_value':min_allowed_value,
+                     'max_allowed_value':max_allowed_value,
+                     'step':step}
             self.field_properties[descr.reference] = p
             self.field_properties_keys.append(descr.reference)
         #  #]
@@ -599,7 +607,12 @@ class BUFRMessage_W:
             # check length of input (scalar or array?)
             try:
                 n = len(this_value)
-            except:
+                try:
+                    if type(this_value[0]) is str:
+                        input_is_ccittia5 = True
+                except IndexError:
+                    pass
+            except TypeError:
                 n = 1
 
         if n != 1:
@@ -629,14 +642,25 @@ class BUFRMessage_W:
             else:
                 # special case for character strings
                 self.cvals[self.cvals_index, :] = ' ' # init with spaces
-                for ic,c in enumerate(this_value):
-                    self.cvals[self.cvals_index, ic] = c # copy characters
-                # store the cvals_index for the cvals array in the values
-                # array, this is needed so the software can find the the
-                # text string                         
-                self.values[j] = (self.cvals_index+1) * 1000 + len(this_value)
-                self.cvals_index = self.cvals_index + 1
+                if n==1:
+                    for ic,c in enumerate(this_value):
+                        self.cvals[self.cvals_index, ic] = c # copy characters
+                    # store the cvals_index for the cvals array in the values
+                    # array, this is needed so the software can find the the
+                    # text string                         
+                    self.values[j] = ( (self.cvals_index+1) * 1000 +
+                                       len(this_value) )
+                else:
+                    for ic,c in enumerate(this_value[subset]):
+                        self.cvals[self.cvals_index, ic] = c # copy characters
+                    # store the cvals_index for the cvals array in the values
+                    # array, this is needed so the software can find the the
+                    # text string                         
+                    self.values[j] = ( (self.cvals_index+1) * 1000 +
+                                       len(this_value[subset]) )
 
+                self.cvals_index = self.cvals_index + 1
+                    
         #  #]
     #  #]
 

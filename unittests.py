@@ -896,6 +896,51 @@ class CheckBUFRMessage_W(unittest.TestCase):
 
         self.assertRaises(IncorrectUsageError, set_templ, self.msg, '301028')
         #  #]
+    # ascii/ccittia5 tests
+    def test_single_ascii_descriptor(self):
+        #  #[ properties of a single ascii descriptor
+        self.msg.set_template('000015') # units name
+        names = self.msg.get_field_names()
+        self.assertEqual(names, ['UNITS NAME',])
+         # 000015 will be interpreted as octal, dont use that
+        props = self.msg.field_properties[15]
+        self.assertEqual(props['min_allowed_num_chars'], 0)
+        self.assertEqual(props['max_allowed_num_chars'], 24)
+        #  #]
+    def test_str_assign_single_ascii_descriptor(self):
+        #  #[ assign to a single ascii descriptor using str. descr.
+        self.msg.set_template('000015')
+        #self.msg['UNITS NAME'] = "a dummy unit"
+        def assign(msg, value):
+            msg['UNITS NAME'] = value
+            return True
+
+        #self.assertRaises(IncorrectUsageError, assign, self.msg, [])
+        #self.assertRaises(IncorrectUsageError, assign, self.msg, [10., 20.])
+        self.assertEqual(assign(self.msg, "M/S"), True)
+
+        # a bit of cheeting: need to reset internal variable
+        # cvals_index to allow multiple assignment tests in this function
+        self.msg.cvals_index = 0
+        self.assertEqual(assign(self.msg, "MM/SS"), True)
+
+        self.msg.cvals_index = 0
+        self.assertEqual(assign(self.msg, ["A", "B", "C"]), True)        
+        #  #]
+    def test_str_double_assign_single_ascii_descriptor(self):
+        #  #[ double assignment test
+        self.msg.set_template('000015')
+
+        def assign(msg, value):
+            msg['UNITS NAME'] = value
+            return True
+
+        self.assertEqual(assign(self.msg, "M/S"), True)
+        # a second call triggers an error, since we have only
+        # one string per subset in this template!
+        self.assertRaises(IndexError, assign, self.msg, "M/S")
+        #  #]
+
     def tearDown(self):
         #print('doing teardown')
         pass

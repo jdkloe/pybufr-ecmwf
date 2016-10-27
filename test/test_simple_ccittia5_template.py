@@ -30,7 +30,7 @@ print('='*25+'\navailable field names: '+
 
 # NOTE 2: string inputs should be of correct lenght as defined in the
 # template.
-# TODO: force this by truncating or adding spaces (and align left or right)
+#    TODO: force this by truncating or adding spaces (and align left or right)
 
 msg['F DESCRIPTOR TO BE ADDED OR DEFINED'] = '0'
 msg['X DESCRIPTOR TO BE ADDED OR DEFINED'] = '48' # local class
