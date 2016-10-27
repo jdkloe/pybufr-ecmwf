@@ -907,6 +907,23 @@ class CheckBUFRMessage_W(unittest.TestCase):
         self.assertEqual(props['min_allowed_num_chars'], 0)
         self.assertEqual(props['max_allowed_num_chars'], 24)
         #  #]
+    def test_single_too_long_ascii_descriptor(self):
+        #  #[ test truncation
+        self.msg.set_template('000015') # units name
+        names = self.msg.get_field_names()
+        #self.assertEqual(names, ['UNITS NAME',])
+        # 000015 will be interpreted as octal, dont use that
+        from io import StringIO
+        stored_sys_stderr = sys.stderr
+        sys.stderr = StringIO()
+        self.msg[0] = '0123456789'*3
+        expected_result = "WARNING: string is too long and will be truncated"
+        current_stderr_output = sys.stderr.getvalue()
+        sys.stderr = stored_sys_stderr
+
+        self.assertEqual( (expected_result in current_stderr_output),
+                          True)
+        #  #]
     def test_str_assign_single_ascii_descriptor(self):
         #  #[ assign to a single ascii descriptor using str. descr.
         self.msg.set_template('000015')

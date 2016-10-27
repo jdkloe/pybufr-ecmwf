@@ -584,6 +584,46 @@ class BUFRMessage_W:
             self.values[i+j] = np_values[j]
 
         #  #]
+    def check_and_assign_val(self, this_value, p, j):
+        #  #[ chack range and assign
+        if self.do_range_check:
+            # optional, since this may make the code slower
+            check_range(p, this_value)
+
+        self.values[j] = this_value
+        #  #]
+    def check_and_assign_ascii_val(self, this_value, p, j):
+        #  #[ check length of input string and assign to cvals array
+        # no need to check this one I guess
+        #p['min_allowed_num_chars']
+        max_len = p['max_allowed_num_chars']
+        if len(this_value) >max_len:
+            print('WARNING: string is too long and will be truncated',
+                  file=sys.stderr)
+            print('during encoding of: [{0}]'.format(this_value),
+                  file=sys.stderr)
+            print('Maximum allowed lenght in the current template is: {}'.
+                  format(max_len), file=sys.stderr)
+            print('but this string has length: {}'.format(len(this_value)),
+                  file=sys.stderr)
+
+            # truncate string
+            this_value = this_value[:max_len]
+            
+        # ensure input string has correct length
+        # and is left aligned
+        # (if optional right alignment is needed, change < in >)
+        this_value = '{0:<{width}s}'.format(this_value, width=max_len)
+
+        self.cvals[self.cvals_index, :] = ' ' # init with spaces
+        for ic,c in enumerate(this_value):
+            self.cvals[self.cvals_index, ic] = c # copy characters
+        # store the cvals_index for the cvals array in the values
+        # array, this is needed so the software can find the the
+        # text string                         
+        self.values[j] = ( (self.cvals_index+1) * 1000 + len(this_value) )
+        self.cvals_index = self.cvals_index + 1
+        #  #]
     def __setitem__(self, this_key, this_value):
         #  #[ allow addition of date with dict like interface
         # print('searching for: ', this_key)
@@ -622,45 +662,21 @@ class BUFRMessage_W:
                           'but num_subsets is {0}'.format(self.num_subsets))
                 raise IncorrectUsageError(errtxt)
 
-        # optional, since this may make the code slower
-        if not input_is_ccittia5 and self.do_range_check:
-            if n == 1:
-                check_range(p, this_value)
-            else:
-                for val in this_value[:]:
-                    check_range(p, val)
-            
         # fill the requested row with data
         for subset in range(self.num_subsets):
             i = subset*self.num_fields
             j = i + index_to_use
             if not input_is_ccittia5:
                 if n==1:
-                    self.values[j] = this_value
+                    self.check_and_assign_val(this_value, p, j)
                 else:
-                    self.values[j] = this_value[subset]
+                    self.check_and_assign_val(this_value[subset], p, j)
             else:
                 # special case for character strings
-                self.cvals[self.cvals_index, :] = ' ' # init with spaces
                 if n==1:
-                    for ic,c in enumerate(this_value):
-                        self.cvals[self.cvals_index, ic] = c # copy characters
-                    # store the cvals_index for the cvals array in the values
-                    # array, this is needed so the software can find the the
-                    # text string                         
-                    self.values[j] = ( (self.cvals_index+1) * 1000 +
-                                       len(this_value) )
+                    self.check_and_assign_ascii_val(this_value, p, j)
                 else:
-                    for ic,c in enumerate(this_value[subset]):
-                        self.cvals[self.cvals_index, ic] = c # copy characters
-                    # store the cvals_index for the cvals array in the values
-                    # array, this is needed so the software can find the the
-                    # text string                         
-                    self.values[j] = ( (self.cvals_index+1) * 1000 +
-                                       len(this_value[subset]) )
-
-                self.cvals_index = self.cvals_index + 1
-                    
+                    self.check_and_assign_ascii_val(this_value[subset], p, j)
         #  #]
     #  #]
 
