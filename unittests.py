@@ -913,8 +913,14 @@ class CheckBUFRMessage_W(unittest.TestCase):
         names = self.msg.get_field_names()
         #self.assertEqual(names, ['UNITS NAME',])
         # 000015 will be interpreted as octal, dont use that
-        from io import StringIO
         stored_sys_stderr = sys.stderr
+        if python3:
+            # this one fails for python2.7, since it expects unicode strings
+            # but it works just fine for other python versions ...
+            from io import StringIO
+        else:
+            # note: this one allows both bytes, and unicode strings in py2.7
+            from StringIO import StringIO
         sys.stderr = StringIO()
         self.msg[0] = '0123456789'*3
         expected_result = "WARNING: string is too long and will be truncated"
