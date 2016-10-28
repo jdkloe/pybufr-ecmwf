@@ -23,14 +23,10 @@ matrix:
           python: "nightly" # currently points to 3.6-dev
         - os: osx
           language: generic
-          env:
-	  - PYTHON=python2
-	  - TOXENV=py27
+          env: TOXENV=py27 PYTHON=python2
         - os: osx
           language: generic
-          env:
-	  - PYTHON=python3
-          - TOXENV=py35
+          env: TOXENV=py35 PYTHON=python3
 
 # command to install dependencies
 install:
