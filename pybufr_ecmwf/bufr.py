@@ -825,90 +825,71 @@ class BUFRWriterBUFRDC:
         #  #]
     #  #]
 
-# this class implements combined reading and decoding
-# based on the new eccodes library (still in beta version!)
-try:
-    import eccodes, string
-    eccodes_available = True
-except:
-    eccodes_available = False
-
-# eccodes is not functional yet, so deactivate it for now
-#eccodes_available=False
-
-class BUFRReaderECCODES:
+class BUFRMessageECCODES_R:
     #  #[
     """
     a class that combines reading and decoding of a BUFR file
     to allow easier reading and usage of BUFR files
     """
-    def __init__(self, input_bufr_file, warn_about_bufr_size=True,
-                 expand_flags=False, verbose=False):
-        #  #[
-        print('opening BUFR file: ', input_bufr_file)
-
-        # open the BUFR file
-        self.fd = open(input_bufr_file,'r')
-
-        # extract the number of BUFR messages from the file
-        self.num_msgs =  eccodes.codes_count_in_file(self.fd)
-
-        print('self.num_msgs = ', self.num_msgs)
-
-        # not yet used
-        self.verbose = verbose
-    
-        # keep track of which bufr message has been loaded and
-        # decoded from this file
-        self.msg_index = -1
-        self.bufr_id = -1
-
-        # allow manual choice of tables
-        #self.table_b_to_use = None
-        #self.table_c_to_use = None
-        #self.table_d_to_use = None
-        self.tables_dir = None
-
-        # expand flags to text
-        self.expand_flags = expand_flags
+    def __init__(self, bufr, msg_index):
+#                 section_sizes, section_start_locations,
+#                 expand_flags, verbose,
+#                 table_b_to_use, table_c_to_use,
+#                 table_d_to_use, tables_dir,
+#                 expand_strings):
+        #  #[ initialise and decode
+        ''' delegate the actual work to BUFRInterfaceECMWF '''
+        self._bufr = bufr
+        self.msg_index = msg_index
         
-        #  #]
-    def setup_tables(self,table_b_to_use=None, table_c_to_use=None,
-                     table_d_to_use=None, tables_dir=None):
-        #  #[
-        """
-        allow manual choice of bufr tables
-        """
-        #self.table_b_to_use = table_b_to_use
-        #self.table_c_to_use = table_c_to_use
-        #self.table_d_to_use = table_d_to_use
-        self.tables_dir = tables_dir
-        #  #]
-    def get_next_msg(self):
-        #  #[
-        """
-        step to the next BUFR message in the open file
-        """
-        print('getting next message')
-        
-        if self.msg_index < self.num_msgs:
-            self.msg_index += 1
-            # get an instance of the eccodes bufr class
-            self.bufr_id = eccodes.codes_bufr_new_from_file(self.fd)
-            print('self.bufr_id = ', self.bufr_id)
-            if self.bufr_id is None:
-                raise StopIteration
-        else:
-            self.msg_index = -1
-            self.bufr_id = -1
-            raise StopIteration
-
         # unpack this bufr message
-        eccodes.codes_set(self.bufr_id,'unpack',1)
+        print('unpacking msg with index ', self.msg_index)
+        eccodes.codes_set(self._bufr,'unpack',1)
+        print('done with unpacking')
 
-        # possibly extract descriptor list here
-        # self._bufr_obj.fill_descriptor_list_subset(subset=1)
+        self.num_subsets = eccodes.codes_get(self._bufr, "numberOfSubsets")
+        print('num_subsets = ', self.num_subsets)
         
+        # define the attributes to be printed (see BUFR code table B)
+        attrs = [
+            'code',
+            'units',
+            'scale',
+            'reference',
+            'width'
+            ]
+        
+        iterid = eccodes.codes_keys_iterator_new(self._bufr, 'ls')
+        while eccodes.codes_keys_iterator_next(iterid):
+            keyname = eccodes.codes_keys_iterator_get_name(iterid)
+            print('  %s: %s' %
+                  (keyname, eccodes.codes_get(self._bufr, keyname)))
+
+        # get unexpanded descriptors
+        key = 'unexpandedDescriptors'
+        num = eccodes.codes_get_size(self._bufr, key)
+        print('  size of %s is: %s' % (key, num))
+        values = eccodes.codes_get_array(self._bufr, key)
+        for i in xrange(len(values)):
+            print("   %d %06d" % (i + 1, values[i]))
+        
+        # get the expanded descriptors
+        key = 'bufrdcExpandedDescriptors'
+        num = eccodes.codes_get_size(self._bufr, key)
+        print('  size of %s is: %s' % (key, num))
+        values = eccodes.codes_get_array(self._bufr, key)
+        for i in xrange(len(values)):
+            print("   %d %06d" % (i + 1, values[i]))
+
+#        self._bufr_obj.setup_tables(table_b_to_use, table_c_to_use,
+#                                    table_d_to_use, tables_dir)
+#        self._bufr_obj.decode_data()
+#        self._bufr_obj.decode_sections_0123()
+#        self._bufr_obj.fill_descriptor_list_subset(subset=1)
+#        self.msg_index = msg_index
+#        self.expand_flags = expand_flags
+#        self.current_subset = None
+#        self.expand_strings = expand_strings
         #  #]
     def get_num_subsets(self):
         #  #[
@@ -918,7 +899,7 @@ class BUFRReaderECCODES:
         if (self.msg_index == -1):
             raise NoMsgLoadedError
 
-        return eccodes.codes_get(self.bufr_id,"numberOfSubsets")
+        return eccodes.codes_get(self._bufr,"numberOfSubsets")
         #  #]
     def get_num_elements(self):
         #  #[
@@ -928,7 +909,7 @@ class BUFRReaderECCODES:
         if (self.msg_index == -1):
             raise NoMsgLoadedError
 
-        fieldnames = eccodes.codes_get_array(self.bufr_id, 'expandedNames')
+        fieldnames = eccodes.codes_get_array(self._bufr, 'expandedNames')
 
         # other possibilities are:
         # 'expandedAbbreviations'
@@ -966,15 +947,15 @@ class BUFRReaderECCODES:
         list_of_names = self._get_abbr_names()
         keyname = list_of_names[descr_nr]
         print('keyname: ', keyname)
-        s = eccodes.codes_get_size(self.bufr_id,keyname)
-        t = eccodes.codes_get_native_type(self.bufr_id, keyname)
+        s = eccodes.codes_get_size(self._bufr, keyname)
+        t = eccodes.codes_get_native_type(self._bufr, keyname)
         print('key:', keyname, 'size = ', s, 'type = ', t)
 
         if s==1: # or t==str:
-            # values = eccodes.codes_get_string(bufr_id, keyname)
-            values = [eccodes.codes_get(self.bufr_id, keyname),]
+            # values = eccodes.codes_get_string(_bufr, keyname)
+            values = [eccodes.codes_get(self._bufr, keyname),]
         else:
-            values = eccodes.codes_get_array(self.bufr_id, keyname)
+            values = eccodes.codes_get_array(self._bufr, keyname)
 
         return values
         #  #]
@@ -989,22 +970,31 @@ class BUFRReaderECCODES:
 
         data = []
         field_names = self._get_abbr_names(subset_nr)
-        print('field_names = ', field_names)
-        print('DEBUG: names = ',self.get_names(subset_nr))
+        #print('field_names = ', field_names)
+        #print('DEBUG: names = ',self.get_names(subset_nr))
         for field in field_names:
             if field[0] in string.digits:
                 print('cannot get data for field: ',field)
                 continue
-            print('trying field name: ', field)
-            s = eccodes.codes_get_size(self.bufr_id,field)
+            # print('trying field name: ', field)
+            # key = '/subsetNumber={0:d}/{1:s}'.format(subset_nr, field)
+            key = field
+            # print('trying key: ', key)
+            s = eccodes.codes_get_size(self._bufr, key)
+            # print('s=', s)
             if s==1:
-                value = eccodes.codes_get(self.bufr_id,field)
+                value = eccodes.codes_get(self._bufr, key)
                 data.append(value)
             else:
-                values = eccodes.codes_get_array(self.bufr_id,field)
-                data.append(values[subset_nr])
+                values = eccodes.codes_get_array(self._bufr, key)
+                # print('DEBUG: values: ', values)
+                data.append(values)
 
-        return data
+        # finally convert to a numpy array of type object
+        # for user convenience
+        values = numpy.array(data, dtype='object')
+
+        return values
         #  #]
     def get_values_as_2d_array(self,autoget_cval=False):
         #  #[
@@ -1053,7 +1043,7 @@ class BUFRReaderECCODES:
         if (self.msg_index == -1):
             raise NoMsgLoadedError
 
-        return eccodes.codes_get_array(self.bufr_id, 'expandedNames')
+        return eccodes.codes_get_array(self._bufr, 'expandedNames')
         #  #]
     def _get_abbr_names(self, subset=1):
         #  #[ request abbr. name of each descriptor for the given subset
@@ -1067,7 +1057,7 @@ class BUFRReaderECCODES:
         # these typically are replication codes and not part
         # of the field list
         abbr_names = [n for n in
-                      eccodes.codes_get_array(self.bufr_id,
+                      eccodes.codes_get_array(self._bufr,
                                               'expandedAbbreviations')
                       if not n[0] in string.digits]
         return abbr_names
@@ -1077,7 +1067,7 @@ class BUFRReaderECCODES:
         if (self.msg_index == -1):
             raise NoMsgLoadedError
 
-        return eccodes.codes_get_array(self.bufr_id, 'expandedUnits')
+        return eccodes.codes_get_array(self._bufr, 'expandedUnits')
         #  #]        
     def get_unexp_descr_list(self):
         #  #[ get unexpanded descfriptor list
@@ -1087,62 +1077,214 @@ class BUFRReaderECCODES:
         if (self.msg_index == -1):
             raise NoMsgLoadedError
 
-        n = eccodes.codes_get(self.bufr_id, 'numberOfUnexpandedDescriptors')
+        n = eccodes.codes_get(self._bufr, 'numberOfUnexpandedDescriptors')
         if n==1:
-            list_of_unexp_descr = [eccodes.codes_get(self.bufr_id,
+            list_of_unexp_descr = [eccodes.codes_get(self._bufr,
                                                 'unexpandedDescriptors'),]
         else:
-            list_of_unexp_descr = eccodes.codes_get_array(self.bufr_id,
+            list_of_unexp_descr = eccodes.codes_get_array(self._bufr,
                                                 'unexpandedDescriptors')
         
         return list_of_unexp_descr
         #  #]
-    def messages(self):
-        """
-        Raises
-        ------
-        IncorrectUsageError
-            if message can not be packed into a 2D array.
-
-        Yields
-        ------
-        data : dict
-            Dictionary of the data in the BUFR message.
-            Keys are the names of the variables.
-        units: dict
-            The units of each data field in the data dictionary.
-            Keys are the same as in the data dictionary.
-        """
-        for i in numpy.arange(self.num_msgs) + 1:
-            self.get_next_msg()
-            values = self.get_values_as_2d_array()
-            cnames, cunits = self.get_names_and_units()
-
-            data = {}
-            units = {}
-            for i, name in enumerate(cnames):
-                data[name] = values[:, i]
-                units[name] = cunits[i]
-
-            yield data, units
-
     def __enter__(self):
         return self
-
     def __exit__(self, exc, val, trace):
         self.close()
-
     def close(self):
         #  #[
         """
         close the file object
         """
-        if self.bufr_id != -1:
-            eccodes.codes_release(self.bufr_id)
+        if self._bufr != -1:
+            eccodes.codes_release(self._bufr)
 
         self.fd.close()
         #  #]
+    def data_iterator(self):
+        #  #[ define iteration for reading
+        """
+        Iterate over the data from a given BUFR message.
+        If the message can be represented as a 2D array then
+        the data will be returned as such. Otherwise 1D arrays
+        will be returned.
+
+        Yields
+        ------
+        data : numpy.ndarray
+            Array of the data in the BUFR message. Can be a 2D array or a
+            1D array.
+        names: list
+            List of variable names. If data is a 2D array these are the names
+            of the variables along the second axis of the array. So if the
+            data array has a shape of e.g. (361 ,44) there will be 44 elements
+            in this list.
+        units: list
+            The units of each variable in the names list. Same length as the
+            names list.
+        """
+        #walk_over_subsets = False
+        #if self.expand_flags:
+        walk_over_subsets = True
+
+        #if not walk_over_subsets:
+        #    try:
+        #        values = self.get_values_as_2d_array()
+        #        names, units = self.get_names_and_units()
+        #        # store the results as attributes of self and yield self
+        #        self.data = values
+        #        self.names = names
+        #        self.units = units
+        #        yield self
+        #    except IncorrectUsageError:
+        #        walk_over_subsets = True
+
+        if walk_over_subsets:
+            # no 2D representation possible. Return 1D arrays instead. If
+            # there are multiple subsets yield them one after the other.
+            nsubsets = self.num_subsets
+            for subs in range(1, nsubsets+1):
+                self.current_subset = subs
+                names, units = self.get_names_and_units(subs)
+                values = self.get_subset_values(subs)
+                # print('DEBUG: values = ', values)
+                self.data = values
+                self.names = names
+                self.units = units
+                yield self
+        #  #]
+    def __iter__(self):
+        #  #[ return the iterator
+        '''returns the above defined iterator'''
+        return self.data_iterator()
+        #  #]
     #  #]
+
+class BUFRReaderECCODES:
+    #  #[
+    def __init__(self, input_bufr_file, warn_about_bufr_size=True,
+                 expand_flags=False, verbose=False):
+        #  #[
+        print('opening BUFR file: ', input_bufr_file)
+
+        # open the BUFR file
+        self.fd = open(input_bufr_file,'r')
+
+        # extract the number of BUFR messages from the file
+        self.num_msgs =  eccodes.codes_count_in_file(self.fd)
+
+        print('self.num_msgs = ', self.num_msgs)
+
+        # not yet used
+        self.verbose = verbose
+    
+        # keep track of which bufr message has been loaded and
+        # decoded from this file
+        self.msg_index = -1
+        self._bufr = -1
+
+        # allow manual choice of tables
+        #self.table_b_to_use = None
+        #self.table_c_to_use = None
+        #self.table_d_to_use = None
+        self.tables_dir = None
+
+        # expand flags to text
+        self.expand_flags = expand_flags
+        
+        #  #]
+    def setup_tables(self,table_b_to_use=None, table_c_to_use=None,
+                     table_d_to_use=None, tables_dir=None):
+        #  #[
+        """
+        allow manual choice of bufr tables
+        """
+        #self.table_b_to_use = table_b_to_use
+        #self.table_c_to_use = table_c_to_use
+        #self.table_d_to_use = table_d_to_use
+        self.tables_dir = tables_dir
+        #  #]
+    def get_next_msg(self):
+        #  #[
+        """
+        step to the next BUFR message in the open file
+        """
+        print('getting next message')
+        
+        if self.msg_index < self.num_msgs:
+            self.msg_index += 1
+            print('self.msg_index = ', self.msg_index)
+            # get an instance of the eccodes bufr class
+            self._bufr = eccodes.codes_bufr_new_from_file(self.fd)
+            print('self._bufr = ', self._bufr)
+            if self._bufr is None:
+                raise StopIteration
+        else:
+            self.msg_index = -1
+            self._bufr = -1
+            raise StopIteration
+
+        self.msg = BUFRMessageECCODES_R(self._bufr, self.msg_index)
+#                      expand_flags, msg_index, verbose,
+#                      table_b_to_use, table_c_to_use,
+#                      table_d_to_use, tables_dir,
+#                      expand_strings)
+        
+        # possibly extract descriptor list here
+        # self._bufr_obj.fill_descriptor_list_subset(subset=1)
+        
+        #  #]
+    def messages(self):
+        #  #[ iterate over messages for reading
+        """
+        Iterate over BUFR messages. If the message can be represented as a
+        2D array then the data will be returned as such. Otherwise 1D arrays
+        will be returned.
+
+        Yields
+        ------
+        msg:
+            An instance of BUFRMessage that gives access
+            to the actual data, names and units for the
+            current bufr message (if it can be represented as 2D array)
+            or for the current subset of the current bufr message
+            in which case it will be a 1D array.
+        """
+        for i in numpy.arange(self.num_msgs) + 1:
+            self.get_next_msg()
+            yield self.msg
+        #  #]
+    def __iter__(self):
+        #  #[ return the above iterator
+        return self.messages()
+        #  #]
+    def __enter__(self):
+        #  #[ enters the 'with' context
+        return self
+        #  #]
+    def __exit__(self, exc, val, trace):
+        #  #[ exits the 'with' context
+        self.close()
+        #  #]
+    def close(self):
+        #  #[ close the file
+        """
+        close the file object
+        """
+        self.fd.close()
+        #  #]
+    #  #]
+
+# this class implements combined reading and decoding
+# based on the new eccodes library
+try:
+    import eccodes, string
+    eccodes_available = True
+except:
+    eccodes_available = False
+
+# eccodes is not functional yet, so deactivate it for now
+#eccodes_available=False
 
 BUFRReader = BUFRReaderBUFRDC
 BUFRWriter = BUFRWriterBUFRDC

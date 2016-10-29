@@ -111,7 +111,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
                                 separator.join(str(val) for val in data[:])+
                                 "\n")
 
-        if list_of_unexp_descr != list_of_unexp_descr_first_msg:
+        if list(list_of_unexp_descr) != list(list_of_unexp_descr_first_msg):
             print('\n\n')
             print('ERROR: it seems different types of BUFR messages')
             print('are mixed in this BUFR file, meaning that the list of')

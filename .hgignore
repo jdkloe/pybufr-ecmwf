@@ -47,10 +47,5 @@ sample_bufr_files/
 tmp_2to3_converted_sources/
 temp_test/
 
-#syntax: glob
-#
-#/ecmwf_bufr_lib
-#/ecmwf_bufr_lib/*
-#/ecmwf_bufr_lib/*/*
-#/ecmwf_bufr_lib/*/*/*
-#/ecmwf_bufr_lib/*/*/*/*
+# ignore this dir for now
+tools/
