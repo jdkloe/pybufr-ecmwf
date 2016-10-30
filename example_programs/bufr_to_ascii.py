@@ -33,8 +33,12 @@ from pybufr_ecmwf.helpers import python3
 def to_str(val):
     #  #[ a little conversion function
     #print('type(val) = ', type(val))
-    if type(val) in [str, unicode]:
-        return '"'+str(val)+'"'
+    if python3:
+        if type(val) in [bytes, str]:
+            return '"'+str(val)+'"'
+    else:
+        if type(val) in [str, unicode]:
+            return '"'+str(val)+'"'
     return str(val)
     #  #]
 
