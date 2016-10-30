@@ -73,7 +73,7 @@ class BUFRMessage_R:
                  expand_flags, msg_index, verbose,
                  table_b_to_use, table_c_to_use,
                  table_d_to_use, tables_dir,
-                 expand_strings):
+                 expand_strings, descr_multiplyer):
         #  #[ initialise and decode
         ''' delegate the actual work to BUFRInterfaceECMWF '''
         self._bufr_obj = BUFRInterfaceECMWF(raw_msg,
@@ -81,6 +81,11 @@ class BUFRMessage_R:
                                             section_start_locations,
                                             expand_flags=expand_flags,
                                             verbose=verbose)
+
+        #self._bufr_obj.nr_of_descriptors_startval = 10000
+        #self._bufr_obj.nr_of_descriptors_maxval   = 500000
+        #self._bufr_obj.nr_of_descriptors_multiplyer = 2
+        self._bufr_obj.nr_of_descriptors_multiplyer = descr_multiplyer
         self._bufr_obj.decode_sections_012()
         self._bufr_obj.setup_tables(table_b_to_use, table_c_to_use,
                                     table_d_to_use, tables_dir)
@@ -690,7 +695,8 @@ class BUFRReaderBUFRDC:
     over the messages in this file.
     """
     def __init__(self, input_bufr_file, warn_about_bufr_size=True,
-                 expand_flags=False, expand_strings=False, verbose=False):
+                 expand_flags=False, expand_strings=False,
+                 descr_multiplyer=10, verbose=False):
         #  #[
         # get an instance of the RawBUFRFile class
         self._rbf = RawBUFRFile(warn_about_bufr_size=warn_about_bufr_size)
@@ -723,6 +729,11 @@ class BUFRReaderBUFRDC:
         # (getting a 2D numerical values array from a message
         # will not be possible in this case)
         self.expand_strings = expand_strings
+
+        # a multiplier used to increment the array sizes when
+        # trying to decode a bufr message.
+        # Normally this is 10, but in some cases 2 works better.
+        self.descr_multiplyer = descr_multiplyer
         #  #]
     def setup_tables(self,table_b_to_use=None, table_c_to_use=None,
                      table_d_to_use=None, tables_dir=None):
@@ -748,7 +759,8 @@ class BUFRReaderBUFRDC:
                                  self.expand_flags, msg_index, self.verbose,
                                  self.table_b_to_use, self.table_c_to_use,
                                  self.table_d_to_use, self.tables_dir,
-                                 self.expand_strings)
+                                 self.expand_strings,
+                                 descr_multiplyer=self.descr_multiplyer)
 
         self.msg_index = msg_index
         #  #]
@@ -970,8 +982,10 @@ class BUFRMessageECCODES_R:
 
         data = []
         field_names = self._get_abbr_names(subset_nr)
-        #print('field_names = ', field_names)
-        #print('DEBUG: names = ',self.get_names(subset_nr))
+        # print('field_names = ', field_names)
+        # print('DEBUG: names = ',self.get_names(subset_nr))
+        # print('subset: ', subset_nr)
+        
         for field in field_names:
             if field[0] in string.digits:
                 print('cannot get data for field: ',field)
@@ -1021,8 +1035,8 @@ class BUFRMessageECCODES_R:
         num_elements = self.get_num_elements()
         result = numpy.zeros([num_subsets, num_elements], dtype=float)
 
-        print('DEBUG: num_subsets = ', num_subsets)
-        print('DEBUG: num_elements = ', num_elements)
+        # print('DEBUG: num_subsets = ', num_subsets)
+        # print('DEBUG: num_elements = ', num_elements)
 
         for descr_nr in range(num_elements):
             
@@ -1163,7 +1177,7 @@ class BUFRMessageECCODES_R:
 class BUFRReaderECCODES:
     #  #[
     def __init__(self, input_bufr_file, warn_about_bufr_size=True,
-                 expand_flags=False, verbose=False):
+                 expand_flags=False, expand_strings=False, verbose=False):
         #  #[
         print('opening BUFR file: ', input_bufr_file)
 

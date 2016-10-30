@@ -30,6 +30,14 @@ from pybufr_ecmwf.helpers import python3
 
 #  #]
 
+def to_str(val):
+    #  #[ a little conversion function
+    #print('type(val) = ', type(val))
+    if type(val) in [str, unicode]:
+        return '"'+str(val)+'"'
+    return str(val)
+    #  #]
+
 def print_bufr_content1(input_bufr_file, output_fd, separator,
                         max_msg_nr, expand_flags):
     #  #[ implementation 1
@@ -249,7 +257,8 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
     #  #]
 
 def print_bufr_content4(input_bufr_file, output_fd, separator,
-                        max_msg_nr, expand_flags):
+                        max_msg_nr, expand_flags, expand_strings,
+                        descr_multiplier):
     #  #[ implementation 4
     """
     example implementation using the BUFRReader class
@@ -261,16 +270,19 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bufr = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
-#                     verbose=True, expand_flags=expand_flags)
-                     verbose=False, expand_flags=expand_flags)
+                      #verbose=True, expand_flags=expand_flags,
+                      verbose=False, expand_flags=expand_flags,
+                      expand_strings=expand_strings,
+                      descr_multiplyer=descr_multiplier)
 
     msg_nr = -1
     for msg_nr, msg in enumerate(bufr):
         # since this example assumes a bufr file using delayed replication
         # always request and add the header for each subset
         nsubsets = msg.get_num_subsets()
+        # print('nsubsets = ', nsubsets)
 
-        for subs, msg_or_subset_data in enumerate(msg):
+        for msg_or_subs_nr, msg_or_subset_data in enumerate(msg):
             # add header strings
             list_of_names = msg_or_subset_data.names
             list_of_units = msg_or_subset_data.units
@@ -278,15 +290,28 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
             if numpy.shape(data)[0] == 0:
                 print('NO DATA FOUND! this seems an empty BUFR message !')
                 continue
-
             output_fd.write('"subset nr"'+separator+
                             separator.join(list_of_names) + "\n")
             output_fd.write('""'+separator+
                             separator.join(list_of_units) + "\n")
-            output_fd.write(str(subs+1)+separator+
-                            separator.join(str(val) for val in data[:])+
-                            "\n")
 
+            # print(data.shape)
+            if len(data.shape) == 1:
+                # we are walking over subsets
+                subs = msg_or_subs_nr
+                output_fd.write(str(subs+1)+separator+
+                                separator.join(to_str(val)
+                                               for val in data[:])+
+                                "\n")
+            else:
+                # we are getting a 2D array as result
+                for subs in range(data.shape[0]):
+                    output_fd.write(str(subs+1)+separator+
+                                    separator.join(to_str(val)
+                                                   for val in data[subs, :])+
+                                    "\n")
+                    
+                
         print('converted BUFR msg nr. ', msg_nr+1)
         if (max_msg_nr >= 0) and (msg_nr >= max_msg_nr):
             print('skipping remainder of this BUFR file')
@@ -410,6 +435,9 @@ def usage():
     print('-1, -2, -3, -4 or -5 test implementation 1 upto 5 [default is 1]')
     print('-m or --maxmsgnr defines max number of BUFR messages to convert')
     print('-f or --expand_flags converts flags to text using table C')
+    print('-s or --expand_strings converts CCITT IA5 entries to text')
+    print('-u <n> or --descr_multiplier=<n> sets the descriptor multiplier')
+    print('     value, which may help decode large messages')
     print('-h               display this help text')
     #  #]
 
@@ -422,9 +450,10 @@ def main():
     try:
         # command line handling; the ':' and '=' note that the
         # options must have a value following it
-        short_options = 'aci:o:m:h12345f'
+        short_options = 'aci:o:m:h12345fsu:'
         long_options = ['ascii', 'csv', 'infile=', 'outfile=',
-                        'maxmsgnr=', 'help', 'expand_flags']
+                        'maxmsgnr=', 'help', 'expand_flags',
+                        'expand_strings', 'descr_multiplier=']
         (options, other_args) = getopt.getopt(sys.argv[1:],
                                               short_options, long_options)
     except getopt.GetoptError as err:
@@ -444,7 +473,8 @@ def main():
     implementation_nr = 1
     max_msg_nr = -1
     expand_flags = False
-
+    expand_strings = False
+    descr_multiplier = 10
     for (opt, value) in options:
         if   (opt == '-h') or (opt == '--help'):
             usage()
@@ -470,6 +500,10 @@ def main():
             max_msg_nr = int(value)
         elif (opt == '-f') or (opt == '--expand_flags'):
             expand_flags = True
+        elif (opt == '-s') or (opt == '--expand_strings'):
+            expand_strings = True
+        elif (opt == '-u') or (opt == '--descr_multiplier'):
+            descr_multiplier = int(value)
         else:
             print("Unhandled option: "+opt)
             usage()
@@ -508,7 +542,8 @@ def main():
                             separator, max_msg_nr, expand_flags)
     elif implementation_nr == 4:
         print_bufr_content4(input_bufr_file, output_fd,
-                            separator, max_msg_nr, expand_flags)
+                            separator, max_msg_nr, expand_flags,
+                            expand_strings, descr_multiplier)
     elif implementation_nr == 5:
         print_bufr_content5(input_bufr_file, output_fd,
                             separator, max_msg_nr, expand_flags)

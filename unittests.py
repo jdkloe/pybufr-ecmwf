@@ -260,8 +260,25 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True):
             print("to find out what happended execute this diff command:")
             print("xdiff "+actual_stdout+' '+expected_stdout)
             if verbose:
-                for l in lines_stdout: print('output:      ['+l+']')
-                for l in expected_lines_stdout: print('exp. output: ['+l+']')
+                nlines = max(len(lines_stdout),
+                             len(expected_lines_stdout))
+                for iline in range(nlines):
+                    try:
+                        line_stdout = lines_stdout[iline]
+                    except:
+                        line_stdout = '[empty]'
+
+                    try:
+                        exp_line_stdout = expected_lines_stdout[iline]
+                    except:
+                        exp_line_stdout = '[empty]'
+
+                    if line_stdout != exp_line_stdout:
+                        print('line {0} stdout output:      [{1}]'.
+                              format(iline, line_stdout[:80]))
+                        print('line {0} stdout exp. output: [{1}]'.
+                              format(iline, exp_line_stdout[:80]))
+                        
             success = False
 
         if lines_stderr != expected_lines_stderr:
@@ -269,8 +286,24 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True):
             print("to find out what happended execute this diff command:")
             print("xdiff "+actual_stderr+' '+expected_stderr)
             if verbose:
-                for l in lines_stderr: print('output:      ['+l+']')
-                for l in expected_lines_stderr: print('exp. output: ['+l+']')
+                nlines = max(len(lines_stderr),
+                             len(expected_lines_stderr))
+                for iline in range(nlines):
+                    try:
+                        line_stderr = lines_stderr[iline]
+                    except IndexError:
+                        line_stderr = '[empty]'
+
+                    try:
+                        exp_line_strerr = expected_lines_stderr[line]
+                    except IndexError:
+                        exp_line_strerr = '[empty]'
+
+                    if line_stderr != exp_line_strerr:
+                        print('line {0} stderr output:      [{1}]'.
+                              format(iline, line_stderr[:80]))
+                        print('line {0} stderr exp. output: [{1}]'.
+                              format(iline, exp_line_strerr[:80]))
             success = False
 
     except IOError:

@@ -133,6 +133,7 @@ class BUFRInterfaceECMWF:
         #self.nr_of_descriptors_maxval   = 400000000
         self.nr_of_descriptors_maxval   = 500000
         self.nr_of_descriptors_multiplyer = 10
+        #self.nr_of_descriptors_multiplyer = 2
         
         #
         # note: these maximum constants are only used by the decoder,
@@ -1063,7 +1064,7 @@ class BUFRInterfaceECMWF:
         self.actual_kelem = nr_of_descriptors
         
         # debug
-        #self.kvals = self.kvals*120
+        #self.kvals = self.kvals/120.
         
         # print('DEBUG: nr_of_descriptors = ', nr_of_descriptors)
         # print('DEBUG: nr_of_subsets = ', nr_of_subsets)
@@ -1815,7 +1816,8 @@ class BUFRInterfaceECMWF:
             # print('self.cunits.shape = ', self.cunits.shape)
             # print('kerr = ', kerr)
             # print('self.actual_kelem = ', self.actual_kelem)
-            
+
+        # print('DEBUG: len(self.ktdexp) = ', len(self.ktdexp))
         self.store_fortran_stdout()
         ecmwfbufr.busel2(subset,      # subset to be inspected
                          kelem,       # Max number of expected elements
@@ -1831,6 +1833,8 @@ class BUFRInterfaceECMWF:
         self.display_fortran_stdout(lines)
         if (kerr != 0):
             raise EcmwfBufrLibError(self.explain_error(kerr, 'busel2'))
+
+        # print('DEBUG: call to busel2 finished')
 
         # It is not clear to me why busel seems to correctly produce
         # the descriptor lists (both bare and expanded), but yet it does
