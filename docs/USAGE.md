@@ -51,7 +51,7 @@ all subsets (rows) of data with numbers by providing one value
 or an array of values (one for each subset for a given field).
 
 A script to write BUFR files could like like this:
-```
+```python
 from pybufr_ecmwf.bufr import BUFRWriter
 bwr = BUFRWriter()
 bwr.open(output_bufr_file)
