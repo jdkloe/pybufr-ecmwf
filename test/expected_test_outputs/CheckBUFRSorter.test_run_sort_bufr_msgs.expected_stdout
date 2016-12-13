@@ -18,14 +18,14 @@ handling message nr 34 out of 40
 handling message nr 36 out of 40
 handling message nr 38 out of 40
 handling message nr 40 out of 40
-file 307080 contains 30 messages
 file 001101_001102_001019_0020 contains 1 messages
-file 307086 contains 2 messages
 file 307079_004025_011042 contains 7 messages
+file 307080 contains 30 messages
+file 307086 contains 2 messages
 Sorting results:
 BUFR messages with 4 different templates are present in this file
 generated_files:
-   307080
    001101_001102_001019_002001_004001_004002_0f71af046024a7128ca4203e74860a5cd
-   307086
    307079_004025_011042
+   307080
+   307086

@@ -672,6 +672,11 @@ class CheckBUFRSorter(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
         #  #]
+    def tearDown(self):
+        # cleanup after running the tests from this class
+        # print('tearDown running')
+        os.system('\\rm -f 3070*')
+        os.system('\\rm -f 001101_001102*')
     #  #]
 
 class CheckBUFRWriter(unittest.TestCase):

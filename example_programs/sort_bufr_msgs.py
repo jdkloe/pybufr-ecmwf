@@ -109,7 +109,9 @@ def sort_msgs(input_bufr_file):
     generated_files = files_dict.keys()
     num_that_can_be_decoded = 0
     num_that_cannot_be_decoded = 0
-    for k in files_dict:
+    # note: sort the output to make the result reproducible
+    # (makes its behaviour much nicer in the unittests)
+    for k in sorted(files_dict):
         fdescr, count, can_be_decoded, list_of_unexp_descr = files_dict[k]
         print('file {} contains {} messages'.format(k[:25], count))
         files_dict[k][0].close()
@@ -143,6 +145,8 @@ if __name__ == '__main__':
 
     INPUT_BUFR_FILE = sys.argv[1]
     GEN_FILES = sort_msgs(INPUT_BUFR_FILE)
+    # note: sort the output to make the result reproducible
+    # (makes its behaviour much nicer in the unittests)
     print('generated_files:')
-    print('\n'.join('   {}'.format(fn) for fn in GEN_FILES))
+    print('\n'.join('   {}'.format(fn) for fn in sorted(GEN_FILES)))
     #  #]
