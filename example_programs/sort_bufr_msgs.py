@@ -23,6 +23,7 @@ import sys     # operating system functions
 # import the python file defining the RawBUFRFile class
 #from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf.bufr import BUFRReader
+from pybufr_ecmwf.helpers import python3
 
 #  #]
 
@@ -40,7 +41,10 @@ def construct_unique_filename(list_of_unexp_descr, max_filename_len=75):
     if len(output_filename) > max_filename_len:
         import hashlib
         md5 = hashlib.md5()
-        md5.update(output_filename)
+        if python3:
+            md5.update(output_filename.encode())
+        else:
+            md5.update(output_filename)
         md5hexsum = md5.hexdigest()
         md5_len = len(md5hexsum)
         if md5_len > max_filename_len:
@@ -65,7 +69,7 @@ def sort_msgs(input_bufr_file):
     # get an instance of the BUFR class
     # which automatically opens the file for reading and decodes it
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
-    num_msgs = bob.rbf.get_num_bufr_msgs()
+    num_msgs = bob._rbf.get_num_bufr_msgs()
     progress_step = max(1, int(num_msgs/20))
 
     files_dict = {}
@@ -90,9 +94,9 @@ def sort_msgs(input_bufr_file):
         if progress_step*int(msg_nr/progress_step) == msg_nr:
             print('handling message nr {} out of {}'.format(msg_nr, num_msgs))
 
-        list_of_unexp_descr = bob.bufr_obj.py_unexp_descr_list
+        list_of_unexp_descr = bob.msg._bufr_obj.py_unexp_descr_list
         output_filename = construct_unique_filename(list_of_unexp_descr)
-        if files_dict.has_key(output_filename):
+        if output_filename in files_dict:
             fdescr = files_dict[output_filename][0]
             files_dict[output_filename][1] += 1 # increment count
         else:
@@ -100,7 +104,7 @@ def sort_msgs(input_bufr_file):
             count = 1
             files_dict[output_filename] = [fdescr, count, can_be_decoded,
                                            list_of_unexp_descr]
-        fdescr.write(bob.bufr_obj.encoded_message)
+        fdescr.write(bob.msg._bufr_obj.encoded_message)
 
     generated_files = files_dict.keys()
     num_that_can_be_decoded = 0

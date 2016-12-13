@@ -649,6 +649,31 @@ class CheckBUFRReader(unittest.TestCase):
 
     #  #]
 
+class CheckBUFRSorter(unittest.TestCase):
+    #  #[ 1 test
+    """
+    a class to check the sort_bufr_msgs tool
+    """
+    # common settings for the following tests
+    testinputfile = os.path.join(
+        TESTDATADIR, 'synop2.bin')
+
+    def test_run_sort_bufr_msgs(self):
+        #  #[
+        """
+        test the sort_bufr_msgs tool
+        """
+
+        # run the provided example code and verify the output
+        testprog = "sort_bufr_msgs.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' ' + self.testinputfile
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+    #  #]
+
 class CheckBUFRWriter(unittest.TestCase):
     #  #[ 1 test
     def test_run_test_simple_wmo_template(self):
