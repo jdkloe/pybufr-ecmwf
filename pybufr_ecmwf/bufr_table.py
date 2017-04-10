@@ -832,7 +832,11 @@ class BufrTable:
                 if f_val == 0:
                     # this one should already be in the table_b dictionary
                     # otherwise the wrong table_b is loaded
-                    descr = self.table_b[int_descr]
+                    try:
+                        descr = self.table_b[int_descr]
+                    except KeyError:
+                         self.print_descriptor_not_found_error('B', int_descr)
+                        sys.exit(1)
                 if f_val == 1:
                     if int_descr not in self.specials:
                         new_descr = SpecialCommand(int_descr)
@@ -846,7 +850,11 @@ class BufrTable:
                 if f_val == 3:
                     # this one should already be in the table_d dictionary
                     # otherwise the wrong table_d is loaded
-                    descr = self.table_d[int_descr]
+                    try:
+                        descr = self.table_d[int_descr]
+                    except KeyError:
+                        self.print_descriptor_not_found_error('D', int_descr)
+                        sys.exit(1)
 
                 normalised_descriptor_list.append(descr)
                 
@@ -2193,6 +2201,32 @@ class BufrTable:
                 return True
 
         return False
+        #  #]
+    def print_descriptor_not_found_error(self, table, int_descr):
+        #  #[ print an extended error message
+        currently_loaded_table_name = '[undefined]'
+        if table == 'B':
+            currently_loaded_table_name = \
+                      self.__class__.currently_loaded_B_table
+        if table == 'D':
+            currently_loaded_table_name = \
+                      self.__class__.currently_loaded_D_table
+        
+        txt = '''
+        EXTENDED ERROR: the BUFR message that you tried to decode used a
+        descriptor that is not defined in the currently active BUFR tables.
+        Probably this means that this BUFR message was encoded using a
+        local set of BUFR tables that differ from the standard WMO set of
+        BUFR tables.
+        To decode this message you need to contact the person responsible
+        for encoding this message and ask for a copy of the BUFR tables
+        that have been used during encoding.
+
+        The problematic BUFR descriptor is: {}
+        and this is not present in BUFR {} table that was loaded from
+        file {}
+        '''.format(int_descr, table, currently_loaded_B_table)
+        print(txt)
         #  #]
     #  #]
 

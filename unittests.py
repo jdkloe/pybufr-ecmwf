@@ -707,6 +707,19 @@ class CheckBUFRWriter(unittest.TestCase):
         success = call_cmd_and_verify_output(cmd)
         self.assertEqual(success, True)
         #  #]
+    def test_run_unknown_descriptor_case(self):
+        #  #[
+        """
+        test composing a BUFR message with an unknown descriptor
+        """
+
+        # run the provided script and verify the output
+        testprog = "test_unknown_descriptor_in_template.py"
+        cmd = os.path.join(TEST_DIR, testprog)
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
     def tearDown(self):
         # cleanup after running the tests from this class
         # print('tearDown running')

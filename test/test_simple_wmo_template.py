@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-some python code to demonstrate the simples way to create
+some python code to demonstrate the simplest way to create
 a new bufr message using a template from the official WMO
 tables (i.e. 305038 in table D; moored buoys)
 '''

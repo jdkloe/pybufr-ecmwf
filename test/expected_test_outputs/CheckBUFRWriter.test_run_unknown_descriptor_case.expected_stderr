@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "test/test_unknown_descriptor_in_template.py", line 16, in <module>
+    msg.set_template(B_entries)
+  File "/home/jos/werk/pybufr_ecmwf_interface/pybufr-ecmwf/pybufr_ecmwf/bufr.py", line 382, in set_template
+    self._bufr_obj.register_and_expand_descriptors(self.template)
+  File "/home/jos/werk/pybufr_ecmwf_interface/pybufr-ecmwf/pybufr_ecmwf/bufr_interface_ecmwf.py", line 2092, in register_and_expand_descriptors
+    raise EcmwfBufrLibError(errtxt)
+pybufr_ecmwf.custom_exceptions.EcmwfBufrLibError: you tried to use a descriptor in your template that is not available in the current BUFR tables: 40239
