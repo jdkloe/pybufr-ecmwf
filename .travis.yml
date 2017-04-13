@@ -30,6 +30,15 @@ matrix:
           language: generic
           env: TOXENV=py35 PYTHON=python3
 
+before_install:
+   # Skip build if the commit message contains [skip travis] or [travis skip]
+   # see: https://github.com/htgoebel/pyinstaller/blob/develop/.travis.yml
+   - >
+       echo "$TRAVIS_COMMIT_MESSAGE"
+       | grep -E  '\[(skip travis|travis skip)\]'
+       && echo "[skip travis] has been found, exiting."
+       && exit 0 || true
+
 # command to install dependencies
 install:
    - ./.travis/install.sh

@@ -1,34 +1,46 @@
 # appveyor configuration, based on the example provided by
-# https://github.com/timcera/wdmtoolbox/blob/master/appveyor.yml
+# https://github.com/timcera/wdmtoolbox/
+# other python examples are given in:
+# https://github.com/ogrisel/python-appveyor-demo/
+# http://tjelvarolsson.com/blog/how-to-continuously-test-your-python-code-on-windows-using-appveyor/
 
 environment:
   matrix:
     - PYTHON_VERSION: "2.7"
+      MINICONDA: C:\Miniconda
     - PYTHON_VERSION: "3.4"
+      MINICONDA: C:\Miniconda3
 
-platform:
-  - x86
-  - x64
+#platform:
+#  - x86
+#  - x64
 
 matrix:
   # set this flag to immediately finish build once one of the jobs fails.
   fast_finish: true
   # fast_finish: false
 
+init:
+  - "ECHO %PYTHON_VERSION% %MINICONDA%"
+
 install:
-  - set PATH= C:\Miniconda\Scripts
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
   # excecute this test in powershell
-  - ps: if ($env:Platform -Match "x64") {$env:PATH="C:\Miniconda-x64\Scripts"}
+#  - ps: if ($env:Platform -Match "x64") {$env:PATH="C:\Miniconda-x64\Scripts"}
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION% 
+  - conda info -a
+  - conda create -q -n test-environment python=%PYTHON_VERSION% numpy"
+#       --name python%PYTHON_VERSION%
   - echo %PATH%
   - dir %PATH%
   - echo %PYTHONHOME%
   - echo "===== content of activate.bat:"
   - type %PATH%\activate.bat
   - echo "===== end of content of activate:"
-  - activate python%PYTHON_VERSION%
+  - activate test-environment
+#  - activate python%PYTHON_VERSION%
+  - pip install coverage
   - pip install -i https://pypi.anaconda.org/carlkl/simple mingwpy
   - conda install -q --name python%PYTHON_VERSION% setuptools numpy wheel
   - python.exe -c "print 'numpy test:'; import numpy; print numpy.__file__"
