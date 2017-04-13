@@ -47,8 +47,8 @@ import glob
 import csv
 
 from pybufr_ecmwf.helpers import python3
-from pybufr_ecmwf.custom_exceptions \
-     import ProgrammingError, EcmwfBufrTableError
+from pybufr_ecmwf.custom_exceptions import (
+    ProgrammingError, EcmwfBufrTableError)
 #  #]
 
 # some constants
@@ -75,12 +75,12 @@ class Descriptor: # [a simple table B entry]
         #  #]
     def __str__(self):
         #  #[
-        txt = "reference: ["+str(self.reference)+"] "+\
-              "name: ["+self.name+"] "+\
-              "unit: ["+self.unit+"] "+\
-              "unit_scale: ["+str(self.unit_scale)+"] "+\
-              "unit_reference: ["+str(self.unit_reference)+"] "+\
-              "data_width: ["+str(self.data_width)+"] "
+        txt = ("reference: ["+str(self.reference)+"] "+
+               "name: ["+self.name+"] "+
+               "unit: ["+self.unit+"] "+
+               "unit_scale: ["+str(self.unit_scale)+"] "+
+               "unit_reference: ["+str(self.unit_reference)+"] "+
+               "data_width: ["+str(self.data_width)+"] ")
         return txt
         #  #]
     def checkinit(self, other):
@@ -408,8 +408,6 @@ class Replicator:
         xx = '%02d' % len(self)
         yyy = '%03d' % self.repeats
         return int(f+xx+yyy)
-        #return f+xx+yyy+';'+str(";".join(str(d.reference) for d
-        #                                 in self.descriptor_list))
         #  #]
     def __len__(self):
         #  #[ returns len of descriptor list
@@ -548,8 +546,8 @@ class CompositeDescriptor(Descriptor): # [table D entry]
         # (essential information to enable unpacking this D descriptor!)
         self.bufr_table_set = bufr_table_set
 
-        self.descriptor_list = \
-             self.handle_descriptors_and_handle_replication(descriptor_list)
+        self.descriptor_list = (
+            self.handle_descriptors_and_handle_replication(descriptor_list) )
         #  #]
     def handle_descriptors_and_handle_replication(self, descriptor_list):
         #  #[ recursively handle replication
@@ -564,9 +562,9 @@ class CompositeDescriptor(Descriptor): # [table D entry]
                 if isinstance(d, DelayedReplicator):
                     repl = self.bufr_table_set.table_b[d.repl_code]
                     proper_list.append(repl)
-                nested_list = \
-                       self.handle_descriptors_and_handle_replication(\
-                                   d.descriptor_list)
+                nested_list = (
+                       self.handle_descriptors_and_handle_replication(
+                                   d.descriptor_list) )
                 proper_list.extend(nested_list)
             else:
                 proper_list.append(d)
@@ -575,9 +573,9 @@ class CompositeDescriptor(Descriptor): # [table D entry]
         #  #]
     def __str__(self):
         #  #[
-        txt = "reference: ["+str(self.reference)+"] "+\
-              "refers to: "+\
-              ";".join(str(d.reference) for d in self.descriptor_list)
+        txt = ( "reference: ["+str(self.reference)+"] "+
+                "refers to: "+
+                ";".join(str(d.reference) for d in self.descriptor_list) )
         return txt
         #  #]
     def expand(self):
@@ -649,8 +647,8 @@ class CompositeDescriptor(Descriptor): # [table D entry]
                             if self.bufr_table_set.verbose:
                                 print('%i: adding copy of: %6.6i' %
                                       (j, repl_descr.reference))
-                            expanded_descriptor_list.\
-                                     append(repl_descr.reference)
+                            (expanded_descriptor_list.
+                                     append(repl_descr.reference))
                 
                 # print('DEBUG: breakpoint')
                 # sys.exit(1)
@@ -835,7 +833,7 @@ class BufrTable:
                     try:
                         descr = self.table_b[int_descr]
                     except KeyError:
-                         self.print_descriptor_not_found_error('B', int_descr)
+                        self.print_descriptor_not_found_error('B', int_descr)
                         sys.exit(1)
                 if f_val == 1:
                     if int_descr not in self.specials:
