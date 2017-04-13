@@ -20,7 +20,9 @@ matrix:
         - os: linux
           python: "3.5"
         - os: linux
-          python: "nightly" # currently points to 3.6-dev
+          python: "3.6"
+        - os: linux
+          python: "nightly" # currently points to 3.7-dev
         - os: osx
           language: generic
           env: TOXENV=py27 PYTHON=python2
