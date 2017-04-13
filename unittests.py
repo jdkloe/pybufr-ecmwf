@@ -312,15 +312,15 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
                         line_stderr = '[empty]'
 
                     try:
-                        exp_line_strerr = expected_lines_stderr[line]
+                        exp_line_stderr = expected_lines_stderr[iline]
                     except IndexError:
-                        exp_line_strerr = '[empty]'
+                        exp_line_stderr = '[empty]'
 
-                    if line_stderr != exp_line_strerr:
+                    if line_stderr != exp_line_stderr:
                         print('line {0} stderr output:      [{1}]'.
                               format(iline, line_stderr[:80]))
                         print('line {0} stderr exp. output: [{1}]'.
-                              format(iline, exp_line_strerr[:80]))
+                              format(iline, exp_line_stderr[:80]))
             success = False
 
     except IOError:
