@@ -17,6 +17,8 @@ from pybufr_ecmwf.bufr_table import CompositeDescriptor
 from pybufr_ecmwf.bufr_table import Replicator
 from pybufr_ecmwf.bufr_table import BufrTable
 import numpy # , sys
+# import global namespace __main__ as g
+import __main__ as g
 
 # see: WMO_BUFR_Guide_Layer3-English-only.pdf
 #
@@ -35,9 +37,6 @@ OUTPUT_BUFR_FILE = 'test_bufr_file.bfr'
 # USE_DELAYED_REPLICATION = False
 USE_DELAYED_REPLICATION = True
 
-
-# import global namespace __main__ as g
-import __main__ as g
 # some dummy initialisations to prevent pylint from complaining
 # about undefined variables
 D_301192, D_301193 = 0, 0

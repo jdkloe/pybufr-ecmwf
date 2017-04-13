@@ -11,7 +11,9 @@ generated during building and testing.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 from __future__ import print_function
-import os, glob, sys
+import os
+import glob
+import sys
 
 # delete these dirs
 DIRS_GLOB_PATTERNS = ['pybufr_ecmwf/ecmwf_bufr_lib/bufr_000*',

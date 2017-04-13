@@ -19,7 +19,7 @@ from __future__ import (absolute_import, division,
 
 import os
 import sys
-
+from sys import version
 from distutils.core import setup, Extension
 from distutils import log
 from distutils.errors import DistutilsSetupError
@@ -39,16 +39,15 @@ from distutils.command.install_lib import install_lib as _install_lib
 
 # make the build process more silent
 # (this setting is also passed on to InstallBUFRInterfaceECMWF)
-verbose = False
-    
-if not verbose:
+VERBOSE = False
+
+if not VERBOSE:
     # set the logging to WARN only
     from distutils.log import set_verbosity
     set_verbosity(0)
 
 # patch distutils if it can't cope with the "classifiers" or
 # "download_url" keywords [is this still needed?]
-from sys import version
 if version < '2.2.3':
     from distutils.dist import DistributionMetadata
     DistributionMetadata.classifiers = None
@@ -308,7 +307,7 @@ class BuildExt(_build_ext):
         # run the build method from the InstallBUFRInterfaceECMWF class
         # defined in the custom build script, to build the extension module
         ibi = InstallBUFRInterfaceECMWF(
-                  verbose=verbose,
+                  verbose=VERBOSE,
                   preferred_fortran_compiler=self.preferred_fortran_compiler,
                   preferred_c_compiler=self.preferred_c_compiler,
                   fortran_compiler=self.fortran_compiler,
