@@ -4,6 +4,9 @@
 # https://github.com/ogrisel/python-appveyor-demo/
 # http://tjelvarolsson.com/blog/how-to-continuously-test-your-python-code-on-windows-using-appveyor/
 
+skip_commits:
+  message: /.*\[skip appveyor\].*/
+
 environment:
   matrix:
     - PYTHON_VERSION: "2.7"
@@ -33,7 +36,6 @@ install:
   - conda create -q -n test-environment python=%PYTHON_VERSION% numpy"
 #       --name python%PYTHON_VERSION%
   - echo %PATH%
-  - dir %PATH%
   - echo %PYTHONHOME%
   - echo "===== content of activate.bat:"
   - type %PATH%\activate.bat
