@@ -48,7 +48,7 @@ install:
   - python.exe -c "print 'numpy test:'; import numpy; print numpy.__file__"
   - python.exe -c "print 'wheel test:'; import wheel; print wheel.__file__"
   #### to use this, I'll probably need to use numpy.distutils.core
-  #- python.exe setup.py build --compiler=mingw32 --fcompiler=gfortran
+  ##- python.exe setup.py build --compiler=mingw32 --fcompiler=gfortran
   #### why does this not work?
   - python.exe setup.py build --preferred-c-compiler=mingw32 --preferred-fortran-compiler=gfortran
   - python.exe setup.py install
