@@ -50,6 +50,8 @@ import sys        # operating system functions
 import shutil     # operating system functions
 import unittest   # import the unittest functionality
 import subprocess # support running additional executables
+import stat       # to retrieve a file modification timestamp
+import time       # to handle date/time formatting
 
 from pybufr_ecmwf.helpers import (get_and_set_the_module_path, python3,
                                   python_major_minor)
@@ -153,7 +155,8 @@ def call_cmd(cmd, rundir=''):
     #  #]
 
 #def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
-def call_cmd_and_verify_output(cmd, rundir='', verbose=True):
+def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
+                               template_values={}):
     #  #[
     """ a wrapper around run_shell_command for easier testing.
     It automatically constructs a name for the test output based
@@ -245,6 +248,20 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True):
         expected_lines_stderr = fd_stderr.readlines()
         fd_stdout.close()
         fd_stderr.close()
+
+        if template_values:
+            for key in template_values:
+                value = template_values[key]
+
+                for i, line in enumerate(expected_lines_stdout):
+                    if '#'+key+'#' in line:
+                        modified_line = line.replace('#'+key+'#', value)
+                        expected_lines_stdout[i] = modified_line
+
+                for i, line in enumerate(expected_lines_stderr):
+                    if '#'+key+'#' in line:
+                        modified_line = line.replace('#'+key+'#', value)
+                        expected_lines_stderr[i] = modified_line
 
         # since the python3 version changes much printing properties,
         # make life easier by ignoring whitespace for this case
@@ -1552,9 +1569,19 @@ class CheckVersionInfo(unittest.TestCase):
         '''
         print some version info variables to ensure they are filled
         '''
+        # get install date by looking at the modification date
+        # of the generated pybufr_ecmwf/version.py file
+        file_to_test = 'pybufr_ecmwf/version.py'
+        stats = os.stat(file_to_test)
+        mtime = time.localtime(stats.st_mtime)
+        myformat = '%Y'
+        mtime_txt = time.strftime(myformat, mtime)
+        template_values = {'YEAR':mtime_txt}
+
         testprog = "print_version_info.py"
         cmd = os.path.join(TEST_DIR, testprog)
-        success = call_cmd_and_verify_output(cmd)
+        success = call_cmd_and_verify_output(cmd,
+                                             template_values=template_values)
         self.assertEqual(success, True)
     #  #]
 
