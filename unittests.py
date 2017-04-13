@@ -105,7 +105,7 @@ if not os.path.exists(ACT_OUTP_DIR):
 #  #]
 
 def call_cmd(cmd, rundir=''):
-    #  #[
+    #  #[ do the actual call to an external test script
     """ a wrapper around run_shell_command for easier testing.
     It sets the environment setting PYTHONPATH to allow the
     code to find the current pybufr-ecmwf library"""
@@ -154,10 +154,32 @@ def call_cmd(cmd, rundir=''):
         return (lines_stdout, lines_stderr)
     #  #]
 
+def prune_stderr_line(line):
+    #  #[ remove paths from stderr
+    '''
+    in case of an error the stderr lines will contain full paths
+    to the problematic python files, and these may differ from
+    installation to installation, so cut them away.
+    '''
+    search_str1 = 'File "/'
+    search_str2 = '", line '
+    if (search_str1 in line) and (search_str2 in line):
+        start_index = line.index(search_str1) + len(search_str1) - 1
+        end_index   = line.index(search_str2)
+        problematic_file = line[start_index:end_index]
+        
+        pruned_line = ( line[:start_index] +
+                        os.path.split(problematic_file)[1] +
+                        line[end_index:] )
+        return pruned_line
+    else:
+        return line
+    #  #]
+
 #def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
 def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
                                template_values={}):
-    #  #[
+    #  #[ call a test script and verify its output
     """ a wrapper around run_shell_command for easier testing.
     It automatically constructs a name for the test output based
     on the class and function name from which it was called.
@@ -249,80 +271,6 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
         fd_stdout.close()
         fd_stderr.close()
 
-        if template_values:
-            for key in template_values:
-                value = template_values[key]
-
-                for i, line in enumerate(expected_lines_stdout):
-                    if '#'+key+'#' in line:
-                        modified_line = line.replace('#'+key+'#', value)
-                        expected_lines_stdout[i] = modified_line
-
-                for i, line in enumerate(expected_lines_stderr):
-                    if '#'+key+'#' in line:
-                        modified_line = line.replace('#'+key+'#', value)
-                        expected_lines_stderr[i] = modified_line
-
-        # since the python3 version changes much printing properties,
-        # make life easier by ignoring whitespace for this case
-        if python3:
-            lines_stdout = [l.strip() for l in lines_stdout]
-            lines_stderr = [l.strip() for l in lines_stderr]
-            expected_lines_stdout = [l.strip() for l in expected_lines_stdout]
-            expected_lines_stderr = [l.strip() for l in expected_lines_stderr]
-
-        # compare the actual and expected outputs
-        if lines_stdout != expected_lines_stdout:
-            print("stdout differs from what was expected!!!")
-            print("to find out what happended execute this diff command:")
-            print("xdiff "+actual_stdout+' '+expected_stdout)
-            if verbose:
-                nlines = max(len(lines_stdout),
-                             len(expected_lines_stdout))
-                for iline in range(nlines):
-                    try:
-                        line_stdout = lines_stdout[iline]
-                    except:
-                        line_stdout = '[empty]'
-
-                    try:
-                        exp_line_stdout = expected_lines_stdout[iline]
-                    except:
-                        exp_line_stdout = '[empty]'
-
-                    if line_stdout != exp_line_stdout:
-                        print('line {0} stdout output:      [{1}]'.
-                              format(iline, line_stdout[:80]))
-                        print('line {0} stdout exp. output: [{1}]'.
-                              format(iline, exp_line_stdout[:80]))
-                        
-            success = False
-
-        if lines_stderr != expected_lines_stderr:
-            print("stderr differs from what was expected!!!")
-            print("to find out what happended execute this diff command:")
-            print("xdiff "+actual_stderr+' '+expected_stderr)
-            if verbose:
-                nlines = max(len(lines_stderr),
-                             len(expected_lines_stderr))
-                for iline in range(nlines):
-                    try:
-                        line_stderr = lines_stderr[iline]
-                    except IndexError:
-                        line_stderr = '[empty]'
-
-                    try:
-                        exp_line_stderr = expected_lines_stderr[iline]
-                    except IndexError:
-                        exp_line_stderr = '[empty]'
-
-                    if line_stderr != exp_line_stderr:
-                        print('line {0} stderr output:      [{1}]'.
-                              format(iline, line_stderr[:80]))
-                        print('line {0} stderr exp. output: [{1}]'.
-                              format(iline, exp_line_stderr[:80]))
-            success = False
-
     except IOError:
         print("ERROR: expected output not found; probably because")
         print("you just defined a new unittest case.")
@@ -333,6 +281,85 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
         if not os.path.exists(expected_stderr):
             print("expected_stderr: ", expected_stderr)
             print("(actual output available in: ", actual_stderr, ")")
+        success = False
+        return success
+
+    for i, line in enumerate(lines_stderr):
+        lines_stderr[i] = prune_stderr_line(line)
+    for i, line in enumerate(expected_lines_stderr):
+        expected_lines_stderr[i] = prune_stderr_line(line)
+            
+    if template_values:
+        for key in template_values:
+            value = template_values[key]
+
+            for i, line in enumerate(expected_lines_stdout):
+                if '#'+key+'#' in line:
+                    modified_line = line.replace('#'+key+'#', value)
+                    expected_lines_stdout[i] = modified_line
+
+            for i, line in enumerate(expected_lines_stderr):
+                if '#'+key+'#' in line:
+                    modified_line = line.replace('#'+key+'#', value)
+                    expected_lines_stderr[i] = modified_line
+
+    # since the python3 version changes much printing properties,
+    # make life easier by ignoring whitespace for this case
+    if python3:
+        lines_stdout = [l.strip() for l in lines_stdout]
+        lines_stderr = [l.strip() for l in lines_stderr]
+        expected_lines_stdout = [l.strip() for l in expected_lines_stdout]
+        expected_lines_stderr = [l.strip() for l in expected_lines_stderr]
+
+    # compare the actual and expected outputs
+    if lines_stdout != expected_lines_stdout:
+        print("stdout differs from what was expected!!!")
+        print("to find out what happended execute this diff command:")
+        print("xdiff "+actual_stdout+' '+expected_stdout)
+        if verbose:
+            nlines = max(len(lines_stdout),
+                         len(expected_lines_stdout))
+            for iline in range(nlines):
+                try:
+                    line_stdout = lines_stdout[iline]
+                except:
+                    line_stdout = '[empty]'
+
+                try:
+                    exp_line_stdout = expected_lines_stdout[iline]
+                except:
+                    exp_line_stdout = '[empty]'
+
+                if line_stdout != exp_line_stdout:
+                    print('line {0} stdout output:      [{1}]'.
+                          format(iline, line_stdout[:80]))
+                    print('line {0} stdout exp. output: [{1}]'.
+                          format(iline, exp_line_stdout[:80]))
+        success = False
+
+    if lines_stderr != expected_lines_stderr:
+        print("stderr differs from what was expected!!!")
+        print("to find out what happended execute this diff command:")
+        print("xdiff "+actual_stderr+' '+expected_stderr)
+        if verbose:
+            nlines = max(len(lines_stderr),
+                         len(expected_lines_stderr))
+            for iline in range(nlines):
+                try:
+                    line_stderr = lines_stderr[iline]
+                except IndexError:
+                    line_stderr = '[empty]'
+
+                try:
+                    exp_line_stderr = expected_lines_stderr[iline]
+                except IndexError:
+                    exp_line_stderr = '[empty]'
+
+                if line_stderr != exp_line_stderr:
+                    print('line {0} stderr output:      [{1}]'.
+                          format(iline, line_stderr[:80]))
+                    print('line {0} stderr exp. output: [{1}]'.
+                          format(iline, exp_line_stderr[:80]))
         success = False
 
     return success
