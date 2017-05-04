@@ -257,6 +257,17 @@ class BUFRMessage_R:
         list_of_unexp_descr = self._bufr_obj.py_unexp_descr_list
         return list_of_unexp_descr
         #  #]
+    def get_exp_descr_list(self):
+        #  #[ get expanded descfriptor list
+        '''
+        wrapper around  self._bufr_obj.py_expanded_descr_list
+        '''
+        if (self.msg_index == -1):
+            raise NoMsgLoadedError
+
+        list_of_exp_descr = self._bufr_obj.py_expanded_descr_list
+        return list_of_exp_descr
+        #  #]
     def data_iterator(self):
         #  #[ define iteration for reading
         """

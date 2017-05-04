@@ -148,7 +148,7 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
             continue
 
         print('converted BUFR msg nr. ', msg_nr+1)
-        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
+        if msg_nr >= max_msg_nr:
             print('skipping remainder of this BUFR file')
             break
 
@@ -249,7 +249,7 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
                             separator.join(str(val) for val in data_list)+
                             "\n")
         print('converted BUFR msg nr. ', msg_nr)
-        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
+        if msg_nr >= max_msg_nr:
             print('skipping remainder of this BUFR file')
             break
 
@@ -317,7 +317,7 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
                     
                 
         print('converted BUFR msg nr. ', msg_nr+1)
-        if (max_msg_nr >= 0) and (msg_nr >= max_msg_nr):
+        if msg_nr >= max_msg_nr:
             print('skipping remainder of this BUFR file')
             break
 
@@ -366,14 +366,14 @@ def print_bufr_content5(input_bufr_file, output_fd, separator,
 
         # since this example assumes a bufr file using delayed replication
         # always request and add the header for each subset
-        nsubsets = bob.get_num_subsets()
+        nsubsets = bob.msg.get_num_subsets()
         for subs in range(1, nsubsets+1):
 
             print('==> subset ', subs)
 
             # add header strings
-            (list_of_names, list_of_units) = bob.get_names_and_units(subs)
-            data = bob.get_subset_values(subs) #,autoget_cval=True)
+            (list_of_names, list_of_units) = bob.msg.get_names_and_units(subs)
+            data = bob.msg.get_subset_values(subs) #,autoget_cval=True)
 
             selected_names = []
             selected_units = []
@@ -412,7 +412,7 @@ def print_bufr_content5(input_bufr_file, output_fd, separator,
         print('='*25)
         print('converted BUFR msg nr. ', msg_nr)
         print('='*25)
-        if (max_msg_nr > 0) and (msg_nr >= max_msg_nr):
+        if msg_nr >= max_msg_nr:
             print('skipping remainder of this BUFR file')
             break
 
