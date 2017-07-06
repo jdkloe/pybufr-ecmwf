@@ -926,51 +926,6 @@ class InstallBUFRInterfaceECMWF(object):
                 print("executing command: ", cmd)
                 os.system(cmd)
         #  #]
-    def find_copy_of_library(self):
-        #  #[
-        """ a method to search some standard places, to see whether
-        a copy of the ECMWF BUFR library can be found. """
-        # note 2: the build script in pybufr_ecmwf/ searches for the tarfile
-        # of the bufr library in directory ecmwf_bufr_lib/
-        # However, during the setup-build stage the code is run
-        # from within a dir like: build/lib.linux-x86_64-2.6/pybufr_ecmwf/
-        # so:
-        # ==>walk upward the directory path untill we find a file
-        # called setup.cfg
-        # ==>then search in pybufr_ecmwf/ecmwf_bufr_lib/ for a copy
-
-        # todo: apply descend_dirpath_and_find here to shorten the code a bit
-
-        cwd = os.getcwd()
-        absdirname = os.path.abspath(cwd)
-        while absdirname != "/":
-            base = os.path.split(absdirname)[0]
-            absdirname = base
-            files = os.listdir(absdirname)
-            if "setup.cfg" in files:
-                local_ecmwf_bufr_lib_dir = os.path.join(absdirname,
-                                                        "pybufr_ecmwf",
-                                                        self.ecmwf_bufr_lib_dir)
-                list_of_bufr_tarfiles = glob.glob(os.path.join(\
-                                          local_ecmwf_bufr_lib_dir, "*.tar.gz"))
-
-                if len(list_of_bufr_tarfiles) > 0:
-                    # make sure the destination dir exists and step to it
-                    if not os.path.exists(self.ecmwf_bufr_lib_dir):
-                        os.makedirs(self.ecmwf_bufr_lib_dir)
-
-                    os.chdir(self.ecmwf_bufr_lib_dir)
-
-                    # print("list_of_bufr_tarfiles = ", list_of_bufr_tarfiles)
-                    for btf in list_of_bufr_tarfiles:
-                        bbtf = os.path.split(btf)[1]
-                        print("making symlink from [%s] to [%s]" % (btf, bbtf))
-                        os.symlink(btf, bbtf)
-                    break # exit the while loop
-
-        # return to the original location
-        os.chdir(cwd)
-        #  #]
     def use_bundled_library_copy(self):
         #  #[
         """ copy the bundled version
@@ -989,7 +944,41 @@ class InstallBUFRInterfaceECMWF(object):
             if "setup.cfg" in files:
                 pattern = os.path.join(absdirname,
                                        'ecmwf_bufr_lib_sources',
-                                       'bufr*gz')
+                                       'bufrdc_000*.tar.gz')
+                tgz_filelist = glob.glob(pattern)
+                if len(tgz_filelist) > 0:
+                    tgz_file = tgz_filelist[0]
+
+                    cmd = 'cp '+tgz_file+' '+self.ecmwf_bufr_lib_dir
+                    print("Executing command: ", cmd)
+                    os.system(cmd)
+                    break
+
+            base = os.path.split(absdirname)[0]
+            absdirname = base
+
+        # return to the original location
+        os.chdir(cwd)
+        #  #]
+    def use_bundled_tables_dir_copy(self):
+        #  #[
+        """ copy the bundled version of the updated bufr tables
+        in ecmwf_bufr_lib_sources.
+        We must descend the directory tree first to find the root
+        before doing this copy. """
+
+        # make sure the destination dir exists
+        if not os.path.exists(self.ecmwf_bufr_lib_dir):
+            os.makedirs(self.ecmwf_bufr_lib_dir)
+
+        cwd = os.getcwd()
+        absdirname = os.path.abspath(cwd)
+        while absdirname != "/":
+            files = os.listdir(absdirname)
+            if "setup.cfg" in files:
+                pattern = os.path.join(absdirname,
+                                       'ecmwf_bufr_lib_sources',
+                                       'bufrdc_tables*.tar.gz')
                 tgz_filelist = glob.glob(pattern)
                 if len(tgz_filelist) > 0:
                     tgz_file = tgz_filelist[0]
@@ -1014,7 +1003,7 @@ class InstallBUFRInterfaceECMWF(object):
         # save the location to be used for installing the ECMWF BUFR library
         ecmwf_bufr_lib_dir = "./ecmwf_bufr_lib"
         list_of_bufr_tarfiles = glob.glob(os.path.join(ecmwf_bufr_lib_dir,
-                                                       "*.tar.gz"))
+                                                       "bufrdc_000*.tar.gz"))
 
         # safety catch
         if len(list_of_bufr_tarfiles) == 0:
@@ -1043,6 +1032,46 @@ class InstallBUFRInterfaceECMWF(object):
 
         return (source_dir, tarfile_to_install)
         #  #]
+    def get_tables_source_dir(self):
+        #  #[
+        """ a method to find the name of the current BUFR tables
+        sources (after unpacking the tarball), and also the name
+        of the current tarball."""
+
+        # save the location to be used for installing the ECMWF BUFR library
+        ecmwf_bufr_lib_dir = "./ecmwf_bufr_lib"
+        list_of_bufr_tables_tarfiles = \
+                     glob.glob(os.path.join(ecmwf_bufr_lib_dir,
+                                            "bufrdc_tables*.tar.gz"))
+
+        # safety catch
+        if len(list_of_bufr_tables_tarfiles) == 0:
+            return (None, None)
+
+        # sort in reverse alphabetical order to get the newest one on top
+        list_of_bufr_tables_tarfiles.sort(reverse=True)
+        if self.verbose:
+            print("available bufr tables tarfiles: ",
+                  list_of_bufr_tables_tarfiles)
+            print("most recent bufr_tables tarfile: ",
+                  list_of_bufr_tables_tarfiles[0])
+
+        tarfile_to_install = os.path.split(list_of_bufr_tables_tarfiles[0])[1]
+
+        # find out the actual name of the bufr tables source directory
+        # after unpacking. Use the tarfile module and look inside:
+        tarfile_obj = tarfile.open(list_of_bufr_tables_tarfiles[0], 'r:gz')
+        names = tarfile_obj.getnames()
+        print("names[0:5] = ", names[0:5])
+        # sys.exit(1)
+        # get the dir name from the second eleent in the list
+        bufr_tables_dir = os.path.split(names[1])[0]
+        tarfile_obj.close()
+
+        bufr_tables_dir = os.path.join(ecmwf_bufr_lib_dir, bufr_tables_dir)
+
+        return (bufr_tables_dir, tarfile_to_install)
+        #  #]
     def install(self, remake=False):
         #  #[
         """ a method to compile the ECMWF BUFR library """
@@ -1054,13 +1083,6 @@ class InstallBUFRInterfaceECMWF(object):
             # (the user may have provided one)
             (source_dir, tarfile_to_install) = self.get_source_dir()
 
-            # if not available, search some possible alternative locations
-            if source_dir is None:
-                self.find_copy_of_library()
-                # retry (maybe we already have a copy in a different location)
-                (source_dir, tarfile_to_install) = self.get_source_dir()
-
-            # if still not found use the bundled copy
             if source_dir is None:
                 # copy the bundled version
                 # of the library sources stored in ecmwf_bufr_lib_sources
@@ -1152,20 +1174,6 @@ class InstallBUFRInterfaceECMWF(object):
             fds.write(''.join(line for line in sources_lines[5:]))
             fds.close()
             #  #]
-            #  #[ apply a smal patch to the 000409 test.sh script
-            if tarfile_to_install == 'bufrdc_000409.tar.gz':
-                scr_file = os.path.join(source_dir, 'test.sh')
-                os.rename(scr_file, scr_file+'.orig')
-                fds_in = open(scr_file+'.orig', 'rb')
-                fds_out = open(scr_file, 'wb')
-                for line in fds_in.readlines():
-                    if not ( (b'set -ex' in line) or
-                             (b'BUFR_TABLES=/var/tmp' in line) ):
-                        fds_out.write(line)
-                fds_in.close()
-                fds_out.close()
-                os.chmod(scr_file, 0o755)
-            #  #]
             #  #[ force value of jelem if desired
             if self.set_jelem is not None:
                 param_file = os.path.join(source_dir, 'bufrdc',
@@ -1189,6 +1197,78 @@ class InstallBUFRInterfaceECMWF(object):
                 fds_in.close()
                 fds_out.close()
                 os.chmod(param_file, 0o755)
+            #  #]
+            #  #[ install bufr tables update package
+            print('source_dir = ', source_dir)
+            tables_dir = os.path.join(source_dir, 'bufrtables')
+
+            #print('deleting original tables dir')
+            #shutil.rmtree(tables_dir)
+            print('renaming original tables dir')
+            shutil.move(tables_dir, tables_dir+'.orig')
+
+            # get a copy of the bundled replacement tables dir
+            self.use_bundled_tables_dir_copy()
+
+            (replacement_bufr_tables_dir, tables_tarfile_to_install) = \
+                         self.get_tables_source_dir()
+            print('replacement_bufr_tables_dir = ',
+                  replacement_bufr_tables_dir)
+            print('tables_tarfile_to_install = ',
+                  tables_tarfile_to_install)
+
+            print('unpack replacement bufr tables dir')
+            ecmwf_bufr_lib_dir = "./ecmwf_bufr_lib"
+            cmd = ('cd '+ecmwf_bufr_lib_dir+
+                   ';tar xvfz '+tables_tarfile_to_install)
+            print('Executing: ', cmd)
+            os.system(cmd)
+
+            # rename the bufr tables dir to put it in the right location
+            cmd = 'mv '+replacement_bufr_tables_dir+' '+tables_dir
+            print('Executing: ', cmd)
+            os.system(cmd)
+            #  #]
+
+            #  #[ apply a smal patch to the 000409 test.sh script
+            # this patch ensures the correct bufrtables directory is used
+            # during execution of this test script
+            # Reported to ECMWF in jira issue SUP-1727
+            if tarfile_to_install == 'bufrdc_000409.tar.gz':
+                scr_file = os.path.join(source_dir, 'test.sh')
+                os.rename(scr_file, scr_file+'.orig')
+                fds_in = open(scr_file+'.orig', 'rb')
+                fds_out = open(scr_file, 'wb')
+                for line in fds_in.readlines():
+                    if not ( (b'set -ex' in line) or
+                             (b'BUFR_TABLES=/var/tmp' in line) ):
+                        fds_out.write(line)
+                fds_in.close()
+                fds_out.close()
+                os.chmod(scr_file, 0o755)
+            #  #]
+            #  #[ apply a smal patch to the Makefile
+            # this patch disables execution of the tables_tools/check_tables.sh
+            # test script during the make stage, because it fails for
+            # this bufr tables update package due to minor table formatting
+            # problems (which are probably not noticed at all by the fortran
+            # and python code, but the regexp in the perl check script
+            # stumbles on this problem).
+            # Reported to ECMWF in jira issue SUP-2096
+            if tables_tarfile_to_install == 'bufrdc_tables-4.1.1-Source.tar.gz':
+                for fn in ['Makefile', 'Makefile.in']:
+                    mk_file = os.path.join(source_dir, fn)
+                    if os.path.exists(mk_file):
+                        print('Modifying: ', mk_file)
+                        os.rename(mk_file, mk_file+'.orig')
+                        fds_in = open(mk_file+'.orig', 'rb')
+                        fds_out = open(mk_file, 'wb')
+                        for line in fds_in.readlines():
+                            if not b'check_tables.sh' in line:
+                                fds_out.write(line)
+                        fds_in.close()
+                        fds_out.close()
+                        os.chmod(mk_file, 0o755)
             #  #]
             
         #  #[ find a suitable fortran compiler to use

@@ -1,6 +1,10 @@
-this tar file bufrdc_000409.tar.gz  was downloaded from:
+this tar files
+    bufrdc_000409.tar.gz
+    bufrdc_tables-4.1.1-Source.tar.gz
 
-https://software.ecmwf.int/wiki/display/BUFR/BUFRDC+Home
+were downloaded from:
+
+    https://software.ecmwf.int/wiki/display/BUFR/BUFRDC+Home
 
 This software is copyright ECMWF and is Apache licensed.
 Redistribution is permitted only according to the terms specified
