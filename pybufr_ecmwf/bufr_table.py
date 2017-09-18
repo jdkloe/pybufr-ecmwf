@@ -2223,7 +2223,7 @@ class BufrTable:
         The problematic BUFR descriptor is: {}
         and this is not present in BUFR {} table that was loaded from
         file {}
-        '''.format(int_descr, table, currently_loaded_B_table)
+        '''.format(int_descr, table, currently_loaded_table_name)
         print(txt)
         #  #]
     #  #]

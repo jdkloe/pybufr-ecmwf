@@ -586,7 +586,7 @@ class BUFRInterfaceECMWF:
         debug=False
         if debug:
             self.verbose = True
-            
+
         if (not self.sections012_decoded):
             errtxt = ("Sorry, setting up BUFR tables is only possible after "+
                       "sections 0,1,2 of a BUFR message have been decoded "+
@@ -711,6 +711,10 @@ class BUFRInterfaceECMWF:
                                                 'D_default.TXT')
         if debug:
             print('Debug:')
+            print('table_b_to_use = ', table_b_to_use)
+            print('table_c_to_use = ', table_c_to_use)
+            print('table_d_to_use = ', table_d_to_use)
+            print('tables_dir     = ', tables_dir)
             print('userpath_table_b:',userpath_table_b)
             print('userpath_table_c:',userpath_table_c)
             print('userpath_table_d:',userpath_table_d)
@@ -747,17 +751,53 @@ class BUFRInterfaceECMWF:
         source_d = None
         
         if (table_b_to_use and table_d_to_use):
-            if (os.path.exists(table_b_to_use) and
-                os.path.exists(table_d_to_use)    ):
-                # case 1)
-                # create symbolic links from the provided tables to the
-                # expected names in the private_bufr_tables_dir
-                if debug:
-                    print('using user specified tables:')
-                    print('table_b_to_use = ',table_b_to_use)
-                    print('table_d_to_use = ',table_d_to_use)
-                source_b = table_b_to_use
-                source_d = table_d_to_use
+            # case 1)
+            # look in the current working directory
+            if (source_b is None) or (source_d is None):
+                table_b_to_use1 = os.path.join('./', table_b_to_use)
+                table_d_to_use1 = os.path.join('./', table_d_to_use)
+                if (os.path.exists(table_b_to_use1) and
+                    os.path.exists(table_d_to_use1)    ):
+                    # create symbolic links from the provided tables to the
+                    # expected names in the private_bufr_tables_dir
+                    if debug:
+                        print('using user specified tables:')
+                        print('table_b_to_use1 = ',table_b_to_use1)
+                        print('table_d_to_use1 = ',table_d_to_use1)
+                    source_b = table_b_to_use1
+                    source_d = table_d_to_use1
+
+            # case 2)
+            # try again, but now assume the user provided tables_dir
+            # is the location to find them
+            if (source_b is None) or (source_d is None):
+                if (tables_dir is not None):
+                    table_b_to_use2 = os.path.join(tables_dir, table_b_to_use)
+                    table_d_to_use2 = os.path.join(tables_dir, table_d_to_use)
+                    if (os.path.exists(table_b_to_use2) and
+                        os.path.exists(table_d_to_use2)    ):
+                        # create symbolic links from the provided tables to the
+                        # expected names in the private_bufr_tables_dir
+                        if debug:
+                            print('using user specified tables:')
+                            print('table_b_to_use2 = ',table_b_to_use2)
+                            print('table_d_to_use2 = ',table_d_to_use2)
+                        source_b = table_b_to_use2
+                        source_d = table_d_to_use2
+
+            if (source_b is None) or (source_d is None):
+                print('WARNING: cannot use user defined tables.')
+                print('These files do not seem to exist!')
+                if not os.path.exists(table_b_to_use1):
+                    print('File not found: ', table_b_to_use1)
+                if not os.path.exists(table_d_to_use1):
+                    print('File not found: ', table_d_to_use1)
+                if (tables_dir is not None):
+                    if not os.path.exists(table_b_to_use2):
+                        print('File not found: ', table_b_to_use2)
+                    if not os.path.exists(table_d_to_use2):
+                        print('File not found: ', table_d_to_use2)
+                sys.exit(1)
 
         # may be absent for now, so handle this one separately
         if table_c_to_use:
