@@ -1149,6 +1149,8 @@ class InstallBUFRInterfaceECMWF(object):
 
             additional_fortran_files = ['handle_stdout.F',
                                         'retrieve_settings.F',
+                                        #'add_debug_code.F',
+                                        'reset_global_variables.F',
                                         'set_nokey.F']
             for fortr_file in additional_fortran_files:
                 shutil.copy(os.path.join(add_fortran_dir, fortr_file),

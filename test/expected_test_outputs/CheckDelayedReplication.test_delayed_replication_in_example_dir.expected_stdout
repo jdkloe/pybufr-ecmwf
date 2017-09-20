@@ -13,9 +13,6 @@ reference: [363192] refers to: 63251;101007;63252
 adding descriptor: reference: [63250] name: [TEST VARIABLE 1] unit: [UNIT 1] unit_scale: [0] unit_reference: [0] data_width: [10] 
 adding delayed replication for 1 descriptors
 replicating them at most 5 times
-Warning: no matching C table available for B,D tables
-==> B_test_table.txt
-==> D_test_table.txt
 Table names expected by the library:
 B0000000000000000000.TXT
 C0000000000000000000.TXT
@@ -39,9 +36,6 @@ words =
 [1380341058   78643200    1441792 ...,          0          0          0]
 encoded size:  44  words or  176  bytes
 **************************************************
-Warning: no matching C table available for B,D tables
-==> B_test_table.txt
-==> D_test_table.txt
 [  12.      3.      2.3   130.5   132.01  133.52  135.03  136.54  138.05
   139.56    2.3   142.6   144.11  145.62  147.13  148.64  150.15  151.66
     2.3   154.7   156.21  157.72  159.23  160.74  162.25  163.76]

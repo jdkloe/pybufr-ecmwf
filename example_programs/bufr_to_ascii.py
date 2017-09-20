@@ -276,8 +276,9 @@ def print_bufr_content4(input_bufr_file, output_fd, separator,
     bufr = BUFRReader(input_bufr_file, warn_about_bufr_size=False,
                       #verbose=True, expand_flags=expand_flags,
                       verbose=False, expand_flags=expand_flags,
-                      expand_strings=expand_strings,
-                      descr_multiplyer=descr_multiplier)
+                      expand_strings=expand_strings)
+    
+    bufr.tune_decoding_parameters(nr_of_descriptors_multiplier=descr_multiplier)
 
     msg_nr = -1
     for msg_nr, msg in enumerate(bufr):

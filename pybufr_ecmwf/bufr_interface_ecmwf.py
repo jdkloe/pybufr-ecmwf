@@ -132,8 +132,8 @@ class BUFRInterfaceECMWF:
         self.nr_of_descriptors_startval = 50
         #self.nr_of_descriptors_maxval   = 400000000
         self.nr_of_descriptors_maxval   = 500000
-        self.nr_of_descriptors_multiplyer = 10
-        #self.nr_of_descriptors_multiplyer = 2
+        self.nr_of_descriptors_multiplier = 10
+        #self.nr_of_descriptors_multiplier = 2
         
         #
         # note: these maximum constants are only used by the decoder,
@@ -854,10 +854,12 @@ class BUFRInterfaceECMWF:
                       'you wish to use')
             raise EcmwfBufrTableError(errtxt)
 
-        if not source_c:
-            print('Warning: no matching C table available for B,D tables')
-            print('==>', os.path.split(source_b)[1])
-            print('==>', os.path.split(source_d)[1])
+        # c-tables are not used by the ecmwf bufrdc library,
+        # so this warning is not very useful
+        #if not source_c:
+        #    print('Warning: no matching C table available for B,D tables')
+        #    print('==>', os.path.split(source_b)[1])
+        #    print('==>', os.path.split(source_d)[1])
             
         # full names, containing full path, are not nice to print
         # in the unit tests since they will differ on different
@@ -1064,8 +1066,8 @@ class BUFRInterfaceECMWF:
                 self.try_decode_data(nr_of_descriptors, nr_of_subsets)
                 increment_arraysize = False
             except EcmwfBufrLibError as e:
-                nr_of_descriptors = (nr_of_descriptors *
-                                     self.nr_of_descriptors_multiplyer)
+                nr_of_descriptors = int(nr_of_descriptors *
+                                        self.nr_of_descriptors_multiplier)
                 if nr_of_descriptors>self.nr_of_descriptors_maxval:
                     lines = self.get_fortran_stdout()
                     self.display_fortran_stdout(lines)
@@ -1129,8 +1131,14 @@ class BUFRInterfaceECMWF:
         # print('DEBUG: len(self.cunits)=',len(self.cunits))
         # print('DEBUG: len(self.values)=',len(self.values))
         # print('DEBUG: len(self.cvals)=',len(self.cvals))
-        
+
+        # catch stdout from the fortran code
         self.store_fortran_stdout()
+
+        # reset global variables to enter the decoding process
+        # (this does not happen in the bufrdc library, which is a bug)
+        ecmwfbufr.reset_global_vars()
+        
         ecmwfbufr.bufrex(self.encoded_message, # input
                          self.ksup,   # output
                          self.ksec0,  # output

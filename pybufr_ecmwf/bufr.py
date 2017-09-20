@@ -43,6 +43,9 @@ from .custom_exceptions import \
      (NoMsgLoadedError, CannotExpandFlagsError,
       IncorrectUsageError, NotYetImplementedError)
 from pybufr_ecmwf.bufr_template import BufrTemplate
+
+# for debugging only
+# from . import ecmwfbufr
 #  #]
 
 def check_range(p, value):
@@ -73,7 +76,8 @@ class BUFRMessage_R:
                  expand_flags, msg_index, verbose,
                  table_b_to_use, table_c_to_use,
                  table_d_to_use, tables_dir,
-                 expand_strings, descr_multiplyer):
+                 expand_strings, nr_of_descriptors_startval,
+                 nr_of_descriptors_maxval, nr_of_descriptors_multiplier):
         #  #[ initialise and decode
         ''' delegate the actual work to BUFRInterfaceECMWF '''
         self._bufr_obj = BUFRInterfaceECMWF(raw_msg,
@@ -82,10 +86,10 @@ class BUFRMessage_R:
                                             expand_flags=expand_flags,
                                             verbose=verbose)
 
-        #self._bufr_obj.nr_of_descriptors_startval = 10000
-        #self._bufr_obj.nr_of_descriptors_maxval   = 500000
-        #self._bufr_obj.nr_of_descriptors_multiplyer = 2
-        self._bufr_obj.nr_of_descriptors_multiplyer = descr_multiplyer
+        self._bufr_obj.nr_of_descriptors_startval = nr_of_descriptors_startval
+        self._bufr_obj.nr_of_descriptors_maxval = nr_of_descriptors_maxval
+        self._bufr_obj.nr_of_descriptors_multiplier = nr_of_descriptors_multiplier
+
         self._bufr_obj.decode_sections_012()
         self._bufr_obj.setup_tables(table_b_to_use, table_c_to_use,
                                     table_d_to_use, tables_dir)
@@ -707,7 +711,7 @@ class BUFRReaderBUFRDC:
     """
     def __init__(self, input_bufr_file, warn_about_bufr_size=True,
                  expand_flags=False, expand_strings=False,
-                 descr_multiplyer=10, verbose=False):
+                 verbose=False):
         #  #[
         # get an instance of the RawBUFRFile class
         self._rbf = RawBUFRFile(warn_about_bufr_size=warn_about_bufr_size)
@@ -741,10 +745,11 @@ class BUFRReaderBUFRDC:
         # will not be possible in this case)
         self.expand_strings = expand_strings
 
-        # a multiplier used to increment the array sizes when
-        # trying to decode a bufr message.
-        # Normally this is 10, but in some cases 2 works better.
-        self.descr_multiplyer = descr_multiplyer
+        # Set default for tuning parameters for decoding
+        self.nr_of_descriptors_startval = 50
+        self.nr_of_descriptors_maxval = 500000
+        self.nr_of_descriptors_multiplier = 10
+
         #  #]
     def setup_tables(self,table_b_to_use=None, table_c_to_use=None,
                      table_d_to_use=None, tables_dir=None):
@@ -757,22 +762,50 @@ class BUFRReaderBUFRDC:
         self.table_d_to_use = table_d_to_use
         self.tables_dir = tables_dir
         #  #]
+    def tune_decoding_parameters(self,
+                                 nr_of_descriptors_startval=None,
+                                 nr_of_descriptors_maxval=None,
+                                 nr_of_descriptors_multiplier=None):
+        #  #[ allow tuning of decoding array sizes
+        '''
+        set some settings that are used for array allocation when
+        trying to decode a bufr message using the bufrdc decoding library.
+        These parameters are used to increment the array sizes when
+        trying to decode a bufr message.
+        Normally defaults are good, but in some cases for example
+        nr_of_descriptors_multiplier=2 works better.
+        '''
+        if nr_of_descriptors_startval:
+            self.nr_of_descriptors_startval = nr_of_descriptors_startval
+        if nr_of_descriptors_maxval:
+            self.nr_of_descriptors_maxval = nr_of_descriptors_maxval
+        if nr_of_descriptors_multiplier:
+            self.nr_of_descriptors_multiplier = nr_of_descriptors_multiplier
+        #  #]
     def get_next_msg(self):
-        #  #[
+        #  #[ step to next msg
         """
         step to the next BUFR message in the open file
         """
         (raw_msg, section_sizes, section_start_locations) = \
                  self._rbf.get_next_raw_bufr_msg()
         msg_index = self._rbf.last_used_msg
-        self.msg = BUFRMessage_R(raw_msg,
-                                 section_sizes, section_start_locations,
-                                 self.expand_flags, msg_index, self.verbose,
-                                 self.table_b_to_use, self.table_c_to_use,
-                                 self.table_d_to_use, self.tables_dir,
-                                 self.expand_strings,
-                                 descr_multiplyer=self.descr_multiplyer)
+        self.msg = BUFRMessage_R(
+            raw_msg,
+            section_sizes, section_start_locations,
+            self.expand_flags, msg_index, self.verbose,
+            self.table_b_to_use, self.table_c_to_use,
+            self.table_d_to_use, self.tables_dir,
+            self.expand_strings,
+            nr_of_descriptors_startval=self.nr_of_descriptors_startval,
+            nr_of_descriptors_maxval=self.nr_of_descriptors_maxval,
+            nr_of_descriptors_multiplier=self.nr_of_descriptors_multiplier)
 
+        #if msg_index>2995:
+        #    print('writing debug file.')
+        #    ecmwfbufr.do_mem_dump("/nobackup/users/kloedej/temp_python/debug/"+
+        #                          "memdump_{:04d}.txt".format(msg_index))
+        
         self.msg_index = msg_index
         #  #]
 
@@ -792,9 +825,17 @@ class BUFRReaderBUFRDC:
             or for the current subset of the current bufr message
             in which case it will be a 1D array.
         """
+        allow_skip_invalid_messages = False
         for i in numpy.arange(self.num_msgs) + 1:
-            self.get_next_msg()
-            yield self.msg
+            if allow_skip_invalid_messages:
+                try:
+                    self.get_next_msg()
+                    yield self.msg
+                except EcmwfBufrLibError:
+                    pass
+            else:
+                self.get_next_msg()
+                yield self.msg
         #  #]
     def __iter__(self):
         #  #[ return the above iterator

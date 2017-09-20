@@ -9,9 +9,6 @@ D-table:
 reference: [363192] refers to: 63251;101000;31002;63251
 ==================================================
 adding descriptor: reference: [363192] refers to: 63251;101000;31002;63251
-Warning: no matching C table available for B,D tables
-==> B_test_table.txt
-==> D_test_table.txt
 Table names expected by the library:
 B0000000000000000000.TXT
 C0000000000000000000.TXT
@@ -34,9 +31,6 @@ words =
 [1380341058   72482816    1441792 ...,          0          0          0]
 encoded size:  21  words or  84  bytes
 **************************************************
-Warning: no matching C table available for B,D tables
-==> B_test_table.txt
-==> D_test_table.txt
 num_subsets =  3
 "subset nr",DUMMY VARIABLE,EXTENDED DELAYED DESCRIPTOR REPLICATION FACTOR,DUMMY VARIABLE
 "",DUMMY UNIT,NUMERIC,DUMMY UNIT
