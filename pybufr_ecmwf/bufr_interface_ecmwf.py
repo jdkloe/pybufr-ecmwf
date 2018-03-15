@@ -64,6 +64,8 @@ from .custom_exceptions import (EcmwfBufrLibError, EcmwfBufrTableError,
                                 IncorrectUsageError)
 #  #]
 
+MISSING_INDICATOR = 1.7e38
+
 class BUFRInterfaceECMWF:
     #  #[
     """
@@ -2394,6 +2396,11 @@ class BUFRInterfaceECMWF:
         # copy incoming data into instance namespace
         self.values = values
         self.cvals  = cvals
+
+        # ensure any incoming NaN values are translated
+        # to the special missing value 1.7e38
+        select_nan = np.where(np.isnan(self.values))
+        self.values[select_nan] = MISSING_INDICATOR
 
         #cval_strings = np.zeros(self.kvals, dtype = '|S64')
         #for i in range(self.kvals):

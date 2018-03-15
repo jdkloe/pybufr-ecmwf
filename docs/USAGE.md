@@ -73,6 +73,13 @@ An example on how to use it can be found in this example script:
 
 * example_programs/example_for_using_bufrinterface_ecmwf_for_encoding.py
 
+Please take care when encoding "missing" values.
+The ECMWF bufrdc software uses the special value 1.7e38 to indicate missing values,
+and you should use this value when filling a bufr message with data, even if
+this value is far outside the allowed value range for the parameter in question.
+Starting from version 0.84 upward it will also be possible to use
+the numpy.nan value to indicate missing in the pybufr-ecmwf module.
+
 ### TEMPLATE DESIGN
 
 On top of the functionality provided by the bufrdc fortran library,

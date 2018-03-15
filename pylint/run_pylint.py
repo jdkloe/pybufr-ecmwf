@@ -31,7 +31,7 @@ except ImportError:
 #sys.path.append("./")
 
 # see: the Run class in:
-# /usr/lib/python2.6/site-packages/pylint/lint.py
+# /usr/lib/python2.7/site-packages/pylint/lint.py
 # for examples on how to run the checkers manually
 
 if len(sys.argv) > 1:
@@ -70,7 +70,7 @@ def check(msg, pycode, additional_args):
         # the checking is done
 
         # debug print
-        # print 'launching: lint.Run('+str(args)+')'
+        # print('launching: lint.Run('+str(args)+')')
         lint.Run(args)
 
         # this point is never reached ...
@@ -126,7 +126,7 @@ def check_all_py_files():
     """
 
     # check for problems when importing numpy
-    # (since some older pylint versions cannot properly handlethis dependency)
+    # (since some older pylint versions cannot properly handle this dependency)
     use_numpy_checks = check_pylint_numpy_handling()
     if use_numpy_checks:
         print('==>numpy imports can safely be checked by pylint')

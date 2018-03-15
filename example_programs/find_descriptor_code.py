@@ -26,4 +26,3 @@ for k in sorted(KEYS):
         #print('descriptor: {:06d} name: {}'.format(k, obj.name))
         # so use this in stead
         print('descriptor: %06d name: %s' % (k, obj.name))
-

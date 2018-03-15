@@ -46,7 +46,7 @@ for (varname, reference, name, unit, unit_scale,
 D_entries = [
     ('363192', [var2, # variable 2
                 Replicator(7, [var3,]), # 7 repeats for variable 3
-                ],
+               ],
      "dummy test template"),
     ]
 
