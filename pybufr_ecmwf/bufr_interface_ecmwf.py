@@ -1196,11 +1196,14 @@ class BUFRInterfaceECMWF:
                       "is only possible after a BUFR message has been " +
                       "partially decoded with a call to decode_sections_012")
             raise EcmwfBufrLibError(errtxt)
-        
-        print("ksup : ", self.ksup)
-        print("sec0 : ", self.ksec0)
-        print("sec1 : ", self.ksec1)
-        print("sec2 : ", self.ksec2)
+
+        # convert the arrays to a list before printing, since
+        # the standard print for numpy arrays is no longer reproducible
+        # (old versions use spaces, new versions use commas as separator)
+        print("ksup : ", self.ksup.tolist())
+        print("sec0 : ", self.ksec0.tolist())
+        print("sec1[:25] : ", self.ksec1[:25].tolist())
+        print("sec2[:25] : ", self.ksec2[:25].tolist())
         #  #]
     def print_sections_0123_metadata(self):
         #  #[
@@ -1214,11 +1217,14 @@ class BUFRInterfaceECMWF:
                       "partially decoded with a call to decode_sections_0123")
             raise EcmwfBufrLibError(errtxt)
         
-        print("ksup : ", self.ksup)
-        print("sec0 : ", self.ksec0)
-        print("sec1 : ", self.ksec1)
-        print("sec2 : ", self.ksec2)
-        print("sec3 : ", self.ksec3)
+        # convert the arrays to a list before printing, since
+        # the standard print for numpy arrays is no longer reproducible
+        # (old versions use spaces, new versions use commas as separator)
+        print("ksup : ", self.ksup.tolist())
+        print("sec0 : ", self.ksec0.tolist())
+        print("sec1[:25] : ", self.ksec1[:25].tolist())
+        print("sec2[:25] : ", self.ksec2[:25].tolist())
+        print("sec3 : ", self.ksec3.tolist())
         #  #]
     def print_sections_01234_metadata(self):
         #  #[
@@ -1232,12 +1238,15 @@ class BUFRInterfaceECMWF:
                       "with a call to decode_data")
             raise EcmwfBufrLibError(errtxt)
         
-        print("ksup : ", self.ksup)
-        print("sec0 : ", self.ksec0)
-        print("sec1 : ", self.ksec1)
-        print("sec2 : ", self.ksec2)
-        print("sec3 : ", self.ksec3)
-        print("sec4 : ", self.ksec4)
+        # convert the arrays to a list before printing, since
+        # the standard print for numpy arrays is no longer reproducible
+        # (old versions use spaces, new versions use commas as separator)
+        print("ksup : ", self.ksup.tolist())
+        print("sec0 : ", self.ksec0.tolist())
+        print("sec1[:25] : ", self.ksec1[:25].tolist())
+        print("sec2[:25] : ", self.ksec2[:25].tolist())
+        print("sec3 : ", self.ksec3.tolist())
+        print("sec4 : ", self.ksec4.tolist())
         #  #]
     def print_names_and_units(self, subset=1):
         #  #[
@@ -2440,8 +2449,13 @@ class BUFRInterfaceECMWF:
         #          
 
         if self.verbose:
-            print("words = ")
-            print(words)
+            # convert the arrays to a list before printing, since
+            # the standard print for numpy arrays is no longer reproducible
+            # (old versions use spaces, new versions use commas as separator)
+            print("words[:5] = ", words[:5].tolist())
+            # dont print word 7, since it contains the current datetime
+            # of the encoding, and makes the test irreproducible
+            print("words[10:25] = ", words[10:25].tolist())
 
         nonzero_locations = np.where(words!=0)
         #print('nonzero_locations = ',nonzero_locations[0])

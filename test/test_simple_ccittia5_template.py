@@ -45,7 +45,8 @@ msg['UNITS REFERENCE VALUE'] = '{:10s}'.format("100") # 10 chars/80 bits
 msg['ELEMENT DATA WIDTH'] = " 24" # 3 chars (24 bits)
 
 # debug
-print('values: ', list(msg.values))
+print('values[:25]: ', msg.values[:25].tolist())
+print('values[-25:]: ', msg.values[-25:].tolist())
 
 msg.write_msg_to_file()
 bwr.close()

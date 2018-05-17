@@ -33,7 +33,8 @@ msg['LATI'] = [55.2, 66.3, 77.4]
 msg['LONG'] = [5.1, 6.2, 7.3]
 
 # debug
-print('values: ', list(msg.values))
+print('values[:25]: ', msg.values[:25].tolist())
+print('values[-25:]: ', msg.values[-25:].tolist())
 
 msg.write_msg_to_file()
 bwr.close()
@@ -56,6 +57,6 @@ for msg in bufr:
         data = msg_or_subset_data.data
         print('"subset nr"'+','+','.join(list_of_names))
         print('""'+','+','.join(list_of_units))
-        print(str(subs+1)+','+','.join(str(val) for val in data[:]))
+        print(str(subs+1)+','+', '.join('{}'.format(val) for val in data[:]))
 
 bufr.close()

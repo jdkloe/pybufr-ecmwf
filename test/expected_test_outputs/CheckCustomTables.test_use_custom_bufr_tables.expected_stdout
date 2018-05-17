@@ -16,8 +16,8 @@ ktdlst =  [ 48001  48002 348001]
 ktdexp =  [48001 48002 48001 48002]
 exp_descr_list_length =  4
 bufren call finished
-words = 
-[1380341058   71041024    1441792 ...,          0          0          0]
+words[:5] =  [1380341058, 71041024, 1441792, 25088, 196608]
+words[10:25] =  [126978, 536874240, 339348584, -1538683618, 926365495, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 encoded size:  15  words or  60  bytes
 succesfully written BUFR encoded data to file:  TESTCUSTOM.BUFR
 --------------------------------------------------

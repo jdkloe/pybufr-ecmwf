@@ -48,9 +48,9 @@ def read_bufr_file(input_bufr_file):
                   'shape = ', data.shape)
 
             if len(data.shape) == 1:
-                print('data[:2] = ', data[:2])
+                print('data[:2] = ', data[:2].tolist())
             else:
-                print('data[:2,:2] = ', data[:2,:2])
+                print('data[:2,:2] = ', data[:2,:2].tolist())
 
             if subs > 1:
                 break

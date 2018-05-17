@@ -135,7 +135,8 @@ for subset in range(num_subsets):
         i = i+1
 
 # debug
-print('values: ', list(values)) #numpy.where(values != 0)]))
+print('values[:25]: ', values[:25].tolist()) #numpy.where(values != 0)]))
+print('values[-25:]: ', values[-25:].tolist())
 
 # do the encoding to binary format
 bufr.encode_data(values, cvals)

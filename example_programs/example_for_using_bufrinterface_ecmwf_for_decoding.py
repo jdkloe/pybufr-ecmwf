@@ -44,7 +44,11 @@ def display_results(bufr):
     print('------------------------------')
     print("Decoded BUFR message:")
 
-    print("values array: ", bufr.values)
+    # convert the arrays to a list before printing, since
+    # the standard print for numpy arrays is no longer reproducible
+    # (old versions use spaces, new versions use commas as separator)
+    print("values[:50] array: ", bufr.values[:50].tolist())
+    print("values[-50:] array: ", bufr.values[-50:].tolist())
     txt = ''.join(str(v)+';' for v in bufr.values[:20] if v > 0.)
     print("values[:20] : ", txt)
 

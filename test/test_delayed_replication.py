@@ -137,11 +137,12 @@ for subset in range(num_subsets):
         i = i+1
 
 # debug
-print('values: ', list(values)) #numpy.where(values != 0)]))
+print('values[:25]: ', values[:25].tolist()) #numpy.where(values != 0)]))
+print('values[-25:]: ', values[-25:].tolist())
 
 # do the encoding to binary format
 bufr.kdata = numpy.array(repl_counts)
-print('bufr.kdata = ', bufr.kdata)
+print('bufr.kdata = ', bufr.kdata.tolist())
 bufr.encode_data(values, cvals)
 
 # get an instance of the RawBUFRFile class

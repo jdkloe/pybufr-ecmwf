@@ -1350,7 +1350,7 @@ except:
     eccodes_available = False
 
 # eccodes is not functional yet, so deactivate it for now
-#eccodes_available=False
+eccodes_available=False
 
 BUFRReader = BUFRReaderBUFRDC
 BUFRWriter = BUFRWriterBUFRDC

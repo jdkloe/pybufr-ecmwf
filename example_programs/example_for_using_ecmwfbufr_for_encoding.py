@@ -372,8 +372,13 @@ def encoding_example(output_bufr_file):
         print("kerr = ", kerr)
         sys.exit(1)
 
-    print("words=")
-    print(words)
+    # convert the arrays to a list before printing, since
+    # the standard print for numpy arrays is no longer reproducible
+    # (old versions use spaces, new versions use commas as separator)
+    print("words[:5] =", words[:5].tolist())
+    # dont print word 7, since it contains the current datetime
+    # of the encoding, and makes the test irreproducible
+    print("words[10:25] =", words[10:25].tolist())
 
     nonzero_locations = np.where(words != 0)
     #print('nonzero_locations = ',nonzero_locations[0])

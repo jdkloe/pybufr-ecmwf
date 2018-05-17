@@ -164,15 +164,18 @@ def decoding_example(input_bufr_file):
     ecmwfbufr.bus012(words, ksup, ksec0, ksec1, ksec2, kerr)
     check_error_flag('ecmwfbufr.bus012', kerr)
 
-    print('ksup = ', ksup)
+    # convert the arrays to a list before printing, since
+    # the standard print for numpy arrays is no longer reproducible
+    # (old versions use spaces, new versions use commas as separator)
+    print('ksup = ', ksup.tolist())
     print('------------------------------')
     print("printing content of section 0:")
-    print("sec0 : ", ksec0)
+    print("sec0 : ", ksec0.tolist())
     # print("sec0[hex] : ",[hex(i) for i in ksec0])
     ecmwfbufr.buprs0(ksec0)
     print('------------------------------')
     print("printing content of section 1:")
-    print("sec1 : ", ksec1)
+    print("sec1[:25] : ", ksec1[:25].tolist())
     # print("sec1[hex] : ",[hex(i) for i in ksec1])
     ecmwfbufr.buprs1(ksec1)
     key = np.zeros(46, dtype=np.int)
@@ -184,7 +187,7 @@ def decoding_example(input_bufr_file):
         print('------------------------------')
         print("calling buukey")
         ecmwfbufr.buukey(ksec1, ksec2, key, ksup, kerr)
-        print("sec2 : ", ksec2)
+        print("sec2[:25] : ", ksec2[:25].tolist())
         print("printing content of section 2:")
         ecmwfbufr.buprs2(ksup, key)
     else:
@@ -213,12 +216,12 @@ def decoding_example(input_bufr_file):
     # print a selection of the decoded numbers
     print('------------------------------')
     print("Decoded BUFR message:")
-    print("ksup : ", ksup)
-    print("sec0 : ", ksec0)
-    print("sec1 : ", ksec1)
-    print("sec2 : ", ksec2)
-    print("sec3 : ", ksec3)
-    print("sec4 : ", ksec4)
+    print("ksup : ", ksup.tolist())
+    print("sec0 : ", ksec0.tolist())
+    print("sec1[:25] : ", ksec1[:25].tolist())
+    print("sec2[:25] : ", ksec2[:25].tolist())
+    print("sec3 : ", ksec3.tolist())
+    print("sec4 : ", ksec4.tolist())
     print("cnames [cunits] : ")
     for (i, cnm) in enumerate(cnames):
         cun = cunits[i]
@@ -232,7 +235,8 @@ def decoding_example(input_bufr_file):
         if txtn.strip() != '':
             print('[%3.3i]:%s [%s]' % (i, txtn, txtu))
 
-    print("values : ", values)
+    print("values[:25] : ", values[:25].tolist())
+    print("values[-25:] : ", values[-25:].tolist())
     txt = ''.join(str(v)+';' for v in values[:20] if v > 0.)
     print("values[:20] : ", txt)
 
@@ -299,7 +303,7 @@ def decoding_example(input_bufr_file):
 
     print('------------------------------')
     print("printing content of section 3:")
-    print("sec3 : ", ksec3)
+    print("sec3 : ", ksec3.tolist())
     ecmwfbufr.buprs3(ksec3, ktdlst, ktdexp, cnames)
     #  #]
 
