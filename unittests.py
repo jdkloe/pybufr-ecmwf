@@ -142,6 +142,7 @@ def call_cmd(cmd, rundir=''):
     lines_stderr = subpr.stderr.readlines()
     subpr.stdout.close()
     subpr.stderr.close()
+    subpr.wait()
 
     if rundir:
         os.chdir(cwd)
