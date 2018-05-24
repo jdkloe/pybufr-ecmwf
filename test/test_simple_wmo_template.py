@@ -57,6 +57,10 @@ for msg in bufr:
         data = msg_or_subset_data.data
         print('"subset nr"'+','+','.join(list_of_names))
         print('""'+','+','.join(list_of_units))
-        print(str(subs+1)+','+', '.join('{}'.format(val) for val in data[:]))
+        print('data.shape = ', data.shape)
+        for irow, row in enumerate(data):
+            print('{}, {} : {}'.
+                  format(subs+1, irow,
+                         ', '.join('{}'.format(val) for val in row.tolist())))
 
 bufr.close()

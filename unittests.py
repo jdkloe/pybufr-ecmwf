@@ -1156,49 +1156,57 @@ class CheckRawBUFRFile(unittest.TestCase):
         self.assertRaises(IOError, bufrfile.open, 'dummy', 'rb',
                           silent=True)
 
-        # check behaviour when reading a file without proper permission
-        testfile = "tmp_testfile.read.BUFR"
-        if os.path.exists(testfile):
-            # force the file to be readwrite
-            os.chmod(testfile, 0o666)
-            os.remove(testfile)
+        # check the name of the user
+        user = os.getenv("USER")
+        if user != 'root':
+            # note, this following permission test fails when running the
+            # test suite as root, so skip it if that is the case
 
-        # create a small dummy file
-        fdescr = open(testfile, 'w')
-        fdescr.write('dummy data')
-        fdescr.close()
-        # force the file to be unaccessible
-        os.chmod(testfile, 0000)
-        # do the test
-        self.assertRaises(IOError, bufrfile.open, testfile, 'rb',
-                          silent=True)
-        # cleanup
-        if os.path.exists(testfile):
-            # force the file to be readwrite
-            os.chmod(testfile, 0o666)
-            os.remove(testfile)
+            # check behaviour when reading a file without proper permission
+            testfile = "tmp_testfile.read.BUFR"
+            if os.path.exists(testfile):
+                # force the file to be readwrite
+                os.chmod(testfile, 0o666)
+                os.remove(testfile)
 
-        # check behaviour when writing to file without proper permission
-        testfile = "tmp_testfile.write.BUFR"
-        if os.path.exists(testfile):
-            # force the file to be readwrite
-            os.chmod(testfile, 0o666)
-            os.remove(testfile)
+            # create a small dummy file
+            fdescr = open(testfile, 'w')
+            fdescr.write('dummy data')
+            fdescr.close()
+            # force the file to be unaccessible
+            os.chmod(testfile, 0000)
+            # do the test
+            self.assertRaises(IOError, bufrfile.open, testfile, 'rb',
+                              silent=True)
 
-        # create a small dummy fle
-        fdescr = open(testfile, 'w')
-        fdescr.write('dummy data')
-        fdescr.close()
-        # force the file to be readonly
-        os.chmod(testfile, 0o444)
-        # do the test
-        self.assertRaises(IOError, bufrfile.open, testfile, 'wb',
-                          silent=True)
-        # cleanup
-        if os.path.exists(testfile):
-            # force the file to be readwrite
-            os.chmod(testfile, 0o666)
-            os.remove(testfile)
+            # cleanup
+            if os.path.exists(testfile):
+                # force the file to be readwrite
+                os.chmod(testfile, 0o666)
+                os.remove(testfile)
+
+            # check behaviour when writing to file without proper permission
+            testfile = "tmp_testfile.write.BUFR"
+            if os.path.exists(testfile):
+                # force the file to be readwrite
+                os.chmod(testfile, 0o666)
+                os.remove(testfile)
+
+            # create a small dummy fle
+            fdescr = open(testfile, 'w')
+            fdescr.write('dummy data')
+            fdescr.close()
+            # force the file to be readonly
+            os.chmod(testfile, 0o444)
+            # do the test
+            self.assertRaises(IOError, bufrfile.open, testfile, 'wb',
+                              silent=True)
+
+            # cleanup
+            if os.path.exists(testfile):
+                # force the file to be readwrite
+                os.chmod(testfile, 0o666)
+                os.remove(testfile)
         #  #]
     def test_close(self):
         #  #[

@@ -146,7 +146,7 @@ for subset in range(num_subsets):
 
 # do the encoding to binary format
 bufr.kdata = numpy.array(repl_counts)
-print('bufr.kdata = ', bufr.kdata)
+print('bufr.kdata = ', bufr.kdata.tolist())
 bufr.encode_data(values, cvals)
 
 # get an instance of the RawBUFRFile class
@@ -177,7 +177,7 @@ for msg in bufr:
         names = msg_or_subset_data.names
         units = msg_or_subset_data.units
         data = msg_or_subset_data.data
-    print(data)
+    print(data.tolist())
     print(names)
     print(units)
 
