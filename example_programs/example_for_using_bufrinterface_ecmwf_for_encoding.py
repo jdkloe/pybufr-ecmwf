@@ -127,7 +127,7 @@ def encoding_example(output_bufr_file):
     # python to fortran interface breaks down. This also ofcourse is the
     # cause of the huge memory use of cvals in case num_values is large.
     num_cvalues = num_values
-    cvals = np.zeros((num_cvalues, 80), dtype=np.character)
+    cvals = np.zeros((num_cvalues, 80), dtype='S1')
 
     for subset in range(num_subsets):
         # note that python starts counting with 0, unlike fortran,

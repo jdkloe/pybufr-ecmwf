@@ -29,6 +29,10 @@ are planned as well.
 #       with "test" otherwise the unittest module will not use them
 #
 
+# note for debugging:
+# run a single testcase like this:
+# ./unittests.py CheckBUFRWriter.test_run_unknown_descriptor_case
+
 #  #]
 #  #[ pylint exceptions
 #
@@ -119,6 +123,12 @@ def call_cmd(cmd, rundir=''):
     else:
         env['PYTHONPATH'] = MY_MODULE_PATH
 
+    if use_eccodes:
+        env['PYBUFR_ECMWF_USE_ECCODES'] = 'True'
+    else:
+        env['PYBUFR_ECMWF_USE_ECCODES'] = 'False'
+        
+
     # print('DEBUG: env[PYTHONPATH] = ',env['PYTHONPATH'])
     # print('DEBUG: env[BUFR_TABLES] = ',env.get('BUFR_TABLES','undefined'))
     # print('DEBUG: cmd = ',cmd)
@@ -162,16 +172,22 @@ def prune_stderr_line(line):
     to the problematic python files, and these may differ from
     installation to installation, so cut them away.
     '''
-    search_str1 = 'File "/'
+    search_str1 = 'File "'
     search_str2 = '", line '
     if (search_str1 in line) and (search_str2 in line):
-        start_index = line.index(search_str1) + len(search_str1) - 1
+        start_index = line.index(search_str1) + len(search_str1)
         end_index   = line.index(search_str2)
         problematic_file = line[start_index:end_index]
-        
+        # print('DEBUG: problematic_file = [{0}]'.format(problematic_file))
+        # print('DEBUG: start_index = ', start_index)
+        # print('DEBUG: end_index   = ', end_index)
+        # print('DEBUG: line = [{0}]'.format(line))
+        # print('DEBUG: line[:start_index] = [{0}]'.format(line[:start_index]))
+        # print('DEBUG: line[end_index:] ) = [{0}]'.format(line[end_index:]  ))
         pruned_line = ( line[:start_index] +
                         os.path.split(problematic_file)[1] +
                         line[end_index:] )
+        # print('DEBUG: pruned_line = [{0}]'.format(pruned_line))
         return pruned_line
     else:
         return line
@@ -305,12 +321,11 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
                     expected_lines_stderr[i] = modified_line
 
     # since the python3 version changes much printing properties,
-    # make life easier by ignoring whitespace for this case
-    if python3:
-        lines_stdout = [l.strip() for l in lines_stdout]
-        lines_stderr = [l.strip() for l in lines_stderr]
-        expected_lines_stdout = [l.strip() for l in expected_lines_stdout]
-        expected_lines_stderr = [l.strip() for l in expected_lines_stderr]
+    # make life easier by ignoring whitespace
+    lines_stdout = [l.strip() for l in lines_stdout]
+    lines_stderr = [l.strip() for l in lines_stderr]
+    expected_lines_stdout = [l.strip() for l in expected_lines_stdout]
+    expected_lines_stderr = [l.strip() for l in expected_lines_stderr]
 
     # compare the actual and expected outputs
     if lines_stdout != expected_lines_stdout:
@@ -371,7 +386,111 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
 
 print("Starting test program:")
 
-class CheckRawECMWFBUFR(unittest.TestCase):
+use_eccodes = False # not yet default
+if '--eccodes' in sys.argv:
+    use_eccodes = True
+    sys.argv.remove('--eccodes')
+    print('using eccodes for unittest run')
+else:
+    print('using bufrdc for unittest run')
+
+
+# test classes that work for both bufrdc and eccodes
+
+# manual run:
+'''
+setenv PYTHONPATH `pwd`
+setenv PYBUFR_ECMWF_USE_ECCODES True
+./example_programs/example_for_using_bufr_message_iteration.py test/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr
+'''
+
+class CheckBUFRReader(unittest.TestCase):
+    #  #[ 3 tests
+    """
+    a class to check the BUFRReader class
+    """
+    # common settings for the following tests
+    testinputfileERS = os.path.join(
+        TESTDATADIR, 'ISXH58EUSR199812162225')
+
+    testinputfileGOME = os.path.join(
+        TESTDATADIR,
+        'S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr')
+
+    testinputfileGRAS = os.path.join(
+        TESTDATADIR,
+        'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR')
+
+    # taken from development branch nl8_CY45R1_May23
+    testinputfileAEOLUS = os.path.join(TESTDATADIR, "aeolus_l2b.bufr")
+        
+
+    def test_run_decoding_example_message_iter_ERS(self):
+        #  #[
+        """
+        test the decoding example program
+        """
+
+        # run the provided example code and verify the output
+        testprog = "example_for_using_bufr_message_iteration.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' ' + self.testinputfileERS
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+
+    def test_run_decoding_example_message_iter_GOME(self):
+        #  #[
+        """
+        test the decoding example program
+        """
+
+        # run the provided example code and verify the output
+        testprog = "example_for_using_bufr_message_iteration.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' ' + self.testinputfileGOME
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+
+    def test_run_decoding_example_message_iter_GRAS(self):
+        #  #[
+        """
+        test the decoding example program
+        """
+
+        # run the provided example code and verify the output
+        testprog = "example_for_using_bufr_message_iteration.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' ' + self.testinputfileGRAS
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+
+    def test_run_decoding_example_message_iter_AEOLUS(self):
+        #  #[
+        """
+        test the decoding example program
+        """
+
+        # run the provided example code and verify the output
+        testprog = "example_for_using_bufr_message_iteration.py"
+        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
+        cmd = cmd + ' ' + self.testinputfileAEOLUS
+
+        success = call_cmd_and_verify_output(cmd)
+        self.assertEqual(success, True)
+        #  #]
+
+    #  #]
+
+# test classes that only work for bufrdc
+
+if not use_eccodes:
+  class CheckRawECMWFBUFR(unittest.TestCase):
     #  #[ 4 tests
     """
     a class to check the ecmwf_bufr_lib interface
@@ -499,7 +618,7 @@ class CheckRawECMWFBUFR(unittest.TestCase):
         #  #]
     #  #]
 
-class CheckBUFRInterfaceECMWF(unittest.TestCase):
+  class CheckBUFRInterfaceECMWF(unittest.TestCase):
     #  #[ 5 tests
     """
     a class to check the bufr_interface_ecmwf class
@@ -630,71 +749,7 @@ class CheckBUFRInterfaceECMWF(unittest.TestCase):
 
     #  #]
 
-class CheckBUFRReader(unittest.TestCase):
-    #  #[ 3 tests
-    """
-    a class to check the BUFRReader class
-    """
-    # common settings for the following tests
-    testinputfileERS = os.path.join(
-        TESTDATADIR, 'ISXH58EUSR199812162225')
-
-    testinputfileGOME = os.path.join(
-        TESTDATADIR,
-        'S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr')
-
-    testinputfileGRAS = os.path.join(
-        TESTDATADIR,
-        'S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR')
-
-    def test_run_decoding_example_message_iter_ERS(self):
-        #  #[
-        """
-        test the decoding example program
-        """
-
-        # run the provided example code and verify the output
-        testprog = "example_for_using_bufr_message_iteration.py"
-        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
-        cmd = cmd + ' ' + self.testinputfileERS
-
-        success = call_cmd_and_verify_output(cmd)
-        self.assertEqual(success, True)
-        #  #]
-
-    def test_run_decoding_example_message_iter_GOME(self):
-        #  #[
-        """
-        test the decoding example program
-        """
-
-        # run the provided example code and verify the output
-        testprog = "example_for_using_bufr_message_iteration.py"
-        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
-        cmd = cmd + ' ' + self.testinputfileGOME
-
-        success = call_cmd_and_verify_output(cmd)
-        self.assertEqual(success, True)
-        #  #]
-
-    def test_run_decoding_example_message_iter_GRAS(self):
-        #  #[
-        """
-        test the decoding example program
-        """
-
-        # run the provided example code and verify the output
-        testprog = "example_for_using_bufr_message_iteration.py"
-        cmd = os.path.join(EXAMPLE_PROGRAMS_DIR, testprog)
-        cmd = cmd + ' ' + self.testinputfileGRAS
-
-        success = call_cmd_and_verify_output(cmd)
-        self.assertEqual(success, True)
-        #  #]
-
-    #  #]
-
-class CheckBUFRSorter(unittest.TestCase):
+  class CheckBUFRSorter(unittest.TestCase):
     #  #[ 1 test
     """
     a class to check the sort_bufr_msgs tool
@@ -724,7 +779,7 @@ class CheckBUFRSorter(unittest.TestCase):
         os.system('\\rm -f 001101_001102*')
     #  #]
 
-class CheckBUFRWriter(unittest.TestCase):
+  class CheckBUFRWriter(unittest.TestCase):
     #  #[ 1 test
     def test_run_test_simple_wmo_template(self):
         #  #[
@@ -771,7 +826,7 @@ class CheckBUFRWriter(unittest.TestCase):
         os.system('\\rm -f dummy_bufr_file*')
     #  #]
 
-class CheckBUFRMessage_W(unittest.TestCase):
+  class CheckBUFRMessage_W(unittest.TestCase):
     #  #[ test filling BUFRMessage_W instances
     # for the default WMO definitions see:
     # pybufr_ecmwf/ecmwf_bufrtables/B0000000000000026000.TXT
@@ -1090,7 +1145,7 @@ class CheckBUFRMessage_W(unittest.TestCase):
         pass
     #  #]
 
-class CheckRawBUFRFile(unittest.TestCase):
+  class CheckRawBUFRFile(unittest.TestCase):
     #  #[ 5 tests
     """
     a class to check the raw_bufr_file class
@@ -1245,7 +1300,7 @@ class CheckRawBUFRFile(unittest.TestCase):
         #  #]
     #  #]
 
-class CheckBufrTable(unittest.TestCase):
+  class CheckBufrTable(unittest.TestCase):
     #  #[ 4 tests
     """
     a class to check the bufr_table.py file
@@ -1308,7 +1363,7 @@ class CheckBufrTable(unittest.TestCase):
         #  #]
     #  #]
 
-class CheckCustomTables(unittest.TestCase):
+  class CheckCustomTables(unittest.TestCase):
     #  #[ 2 tests
     """
     a class to check the creation and use of custom BUFR table files
@@ -1409,7 +1464,7 @@ class CheckCustomTables(unittest.TestCase):
     #pylint: enable=C0103
     #  #]
 
-class CheckBufr(unittest.TestCase):
+  class CheckBufr(unittest.TestCase):
     #  #[ 11 tests
     """
     a class to check the bufr.py file
@@ -1581,22 +1636,7 @@ class CheckBufr(unittest.TestCase):
         #  #]
     #  #]
 
-class CheckAddedFortranCode(unittest.TestCase):
-    #  #[ 1 test
-    '''
-    a class to test some fortran code added to the BUFR library
-    '''
-    def test_retrieve_settings(self):
-        '''
-        test a little script to retrieve fortran settings in the BUFR library
-        '''
-        testprog = "test_retrieve_settings.py"
-        cmd = os.path.join(TEST_DIR, testprog)
-        success = call_cmd_and_verify_output(cmd)
-        self.assertEqual(success, True)
-    #  #]
-
-class CheckVersionInfo(unittest.TestCase):
+  class CheckVersionInfo(unittest.TestCase):
     #  #[ 1 test
     '''
     a class to test the retrieval of version info works correct
@@ -1621,7 +1661,7 @@ class CheckVersionInfo(unittest.TestCase):
         self.assertEqual(success, True)
     #  #]
 
-class CheckDelayedReplication(unittest.TestCase):
+  class CheckDelayedReplication(unittest.TestCase):
     #  #[ 4 tests
     '''
     a class to test the encoding and decoding of BUFR files
@@ -1673,6 +1713,26 @@ class CheckDelayedReplication(unittest.TestCase):
         os.remove(d_table_file)
         os.remove(test_bufr_file)
     #  #]
+
+if not use_eccodes:
+    # specific tests on bufrdc internals that cannot be ported to eccodes
+    class CheckAddedFortranCode(unittest.TestCase):
+        #  #[ 1 test
+        '''
+        a class to test some fortran code added to the BUFR library
+        '''
+        def test_retrieve_settings(self):
+            '''
+            test a little script to retrieve fortran settings
+            in the BUFR library
+            '''
+            testprog = "test_retrieve_settings.py"
+            cmd = os.path.join(TEST_DIR, testprog)
+            success = call_cmd_and_verify_output(cmd)
+            self.assertEqual(success, True)
+        #  #]
+
+    
 
 # cleanup old tmp_BUFR_TABLES dir that may have been created by a previous run
 os.system('\\rm -rf tmp_BUFR_TABLES')

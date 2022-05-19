@@ -154,10 +154,10 @@ def decoding_example(input_bufr_file):
     # is not yet redirected to the above defined fileunit
     os.environ['PRINT_TABLE_NAMES'] = 'FALSE'
 
-    ksup = np.zeros(9, dtype=np.int)
-    ksec0 = np.zeros(3, dtype=np.int)
-    ksec1 = np.zeros(40, dtype=np.int)
-    ksec2 = np.zeros(4096, dtype=np.int)
+    ksup = np.zeros(9, dtype=int)
+    ksec0 = np.zeros(3, dtype=int)
+    ksec1 = np.zeros(40, dtype=int)
+    ksec2 = np.zeros(4096, dtype=int)
     kerr = 0
 
     print("calling: ecmwfbufr.bus012():")
@@ -178,7 +178,7 @@ def decoding_example(input_bufr_file):
     print("sec1[:25] : ", ksec1[:25].tolist())
     # print("sec1[hex] : ",[hex(i) for i in ksec1])
     ecmwfbufr.buprs1(ksec1)
-    key = np.zeros(46, dtype=np.int)
+    key = np.zeros(46, dtype=int)
     sec2_len = ksec2[0]
     print('------------------------------')
     print("length of sec2: ", sec2_len)
@@ -194,18 +194,18 @@ def decoding_example(input_bufr_file):
         print('skipping section 2 [since it seems unused]')
 
     # these 4 are filled by the BUS012 call above
-    # ksup   = np.zeros(         9, dtype = np.int)
-    # ksec0  = np.zeros(         3, dtype = np.int)
-    # ksec1  = np.zeros(        40, dtype = np.int)
-    # ksec2  = np.zeros(      4096, dtype = np.int)
+    # ksup   = np.zeros(         9, dtype = int)
+    # ksec0  = np.zeros(         3, dtype = int)
+    # ksec1  = np.zeros(        40, dtype = int)
+    # ksec2  = np.zeros(      4096, dtype = int)
 
     print('------------------------------')
-    ksec3 = np.zeros(4, dtype=np.int)
-    ksec4 = np.zeros(2, dtype=np.int)
-    cnames = np.zeros((kelem, 64), dtype=np.character)
-    cunits = np.zeros((kelem, 24), dtype=np.character)
+    ksec3 = np.zeros(4, dtype=int)
+    ksec4 = np.zeros(2, dtype=int)
+    cnames = np.zeros((kelem, 64), dtype='S1')
+    cunits = np.zeros((kelem, 24), dtype='S1')
     values = np.zeros(kvals, dtype=np.float64) # this is the default
-    cvals = np.zeros((kvals, 80), dtype=np.character)
+    cvals = np.zeros((kvals, 80), dtype='S1')
     kerr = 0
 
     print("calling: ecmwfbufr.bufrex():")
@@ -271,9 +271,9 @@ def decoding_example(input_bufr_file):
     # not seem to fill the ktdlen and ktdexl values.
 
     ktdlen = 0
-    ktdlst = np.zeros(max_nr_descriptors, dtype=np.int)
+    ktdlst = np.zeros(max_nr_descriptors, dtype=int)
     ktdexl = 0
-    ktdexp = np.zeros(max_nr_expanded_descriptors, dtype=np.int)
+    ktdexp = np.zeros(max_nr_expanded_descriptors, dtype=int)
     kerr = 0
 
     print("calling: ecmwfbufr.busel():")

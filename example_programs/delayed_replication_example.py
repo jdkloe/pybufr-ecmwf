@@ -116,7 +116,7 @@ values = numpy.zeros(num_values, dtype=numpy.float64) # this is the default
 # python to fortran interface breaks down. This also ofcourse is the
 # cause of the huge memory use of cvals in case num_values is large.
 num_cvalues = num_values
-cvals = numpy.zeros((num_cvalues, 80), dtype=numpy.character)
+cvals = numpy.zeros((num_cvalues, 80), dtype='S1')
 cvals_index = 0
 repl_counts = []
 

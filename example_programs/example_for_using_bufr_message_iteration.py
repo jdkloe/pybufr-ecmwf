@@ -15,6 +15,13 @@ import os
 
 from pybufr_ecmwf.bufr import BUFRReader
 
+def limit_to_6_digits(x):
+    import numpy
+    #print('INSIDE: x=',x )
+    result = numpy.round(x*1e6)/1e6
+    #print('INSIDE: r=',result )
+    return result
+
 def decoding_example(input_bufr_file):
     """
     wrap the example in a function to circumvent the pylint
@@ -27,15 +34,27 @@ def decoding_example(input_bufr_file):
     os.environ['PRINT_TABLE_NAMES'] = 'FALSE'
     # read the binary data using the BUFRReader class
     print('loading testfile: ', input_bufr_file)
+    example_printed = False
     with BUFRReader(input_bufr_file) as bufr:
         for msg in bufr:
             for msg_or_subset_data in msg:
                 data = msg_or_subset_data.data
                 names = msg_or_subset_data.names
                 units = msg_or_subset_data.units
-                print(data.shape)
-                print(len(names))
-                print(len(units))
+                print('data.shape = ', data.shape)
+                print('len(names) = ', len(names))
+                print('len(units) = ', len(units))
+
+                if not example_printed:
+                    # print some of the values to show
+                    # that decoding really happened
+                    if len(data.shape) == 2:
+                        values = limit_to_6_digits(data[0, :25])
+                        print('data[0, :25] = ', values.tolist())
+                    else:
+                        values = limit_to_6_digits(data[:25])
+                        print('data[:25] = ', values.tolist())
+                    example_printed = True
 
 if len(sys.argv) < 2:
     print('please give a BUFR file as first argument')
@@ -48,10 +67,10 @@ print("BUFR decoding example")
 print("-"*50)
 
 EXAMPLES_DIR = os.path.dirname(os.path.abspath(__file__))
-if 'noaa_mos' in INP_BUFR_FILE:
-    BUFRMSG = decoding_example(INP_BUFR_FILE)
-else:
-    BUFRMSG = decoding_example(INP_BUFR_FILE)
+#if 'noaa_mos' in INP_BUFR_FILE:
+#    BUFRMSG = decoding_example(INP_BUFR_FILE)
+#else:
+BUFRMSG = decoding_example(INP_BUFR_FILE)
 
 print('succesfully decoded data from file: ', INP_BUFR_FILE)
 

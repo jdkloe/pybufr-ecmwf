@@ -165,13 +165,13 @@ class BUFRInterfaceECMWF:
         # self.jsup   = size_ksup
     
         # arrays to hold the meta data
-        self.ksup   = np.zeros(self.size_ksup,  dtype = np.int)
-        self.ksec0  = np.zeros(self.size_ksec0, dtype = np.int)
-        self.ksec1  = np.zeros(self.size_ksec1, dtype = np.int)
-        self.ksec2  = np.zeros(self.size_ksec2, dtype = np.int)
-        self.key    = np.zeros(self.size_key,   dtype = np.int)
-        self.ksec3  = np.zeros(self.size_ksec3, dtype = np.int)
-        self.ksec4  = np.zeros(self.size_ksec4, dtype = np.int)
+        self.ksup   = np.zeros(self.size_ksup,  dtype = int)
+        self.ksec0  = np.zeros(self.size_ksec0, dtype = int)
+        self.ksec1  = np.zeros(self.size_ksec1, dtype = int)
+        self.ksec2  = np.zeros(self.size_ksec2, dtype = int)
+        self.key    = np.zeros(self.size_key,   dtype = int)
+        self.ksec3  = np.zeros(self.size_ksec3, dtype = int)
+        self.ksec4  = np.zeros(self.size_ksec4, dtype = int)
 
         # arrays to hold the descriptors
         self.ktdlen = 0 # will hold nr of descriptors
@@ -1120,7 +1120,7 @@ class BUFRInterfaceECMWF:
         # allocate space for decoding
         # note: float64 is the default, but it doesn't hurt to make it explicit
         self.values = np.zeros(      self.kvals, dtype = np.float64)
-        self.cvals  = np.zeros((self.kvals, 80), dtype = np.character)
+        self.cvals  = np.zeros((self.kvals, 80), dtype = 'S1')
         self.cnames = np.zeros((nr_of_descriptors, 64), dtype = '|S1')
         self.cunits = np.zeros((nr_of_descriptors, 24), dtype = '|S1')
 
@@ -1784,17 +1784,17 @@ class BUFRInterfaceECMWF:
 
         actual_nr_of_descriptors = len(self.py_unexp_descr_list)
         if nr_of_expanded_descriptors:
-            actual_nr_of_expanded_descriptors = nr_of_expanded_descriptors
+            actual_nr_of_expanded_descriptors = int(nr_of_expanded_descriptors)
         else:
             actual_nr_of_expanded_descriptors = len(self.py_expanded_descr_list)
 
         # arrays to hold the descriptors
         self.ktdlen = 0 # will hold nr of descriptors
         self.ktdlst = np.zeros(actual_nr_of_descriptors,
-                               dtype = np.int)
+                               dtype = int)
         self.ktdexl = 0 # will hold nr of expanded descriptors
         self.ktdexp = np.zeros(actual_nr_of_expanded_descriptors,
-                               dtype = np.int)
+                               dtype = int)
     
         kerr   = 0
 
@@ -1858,10 +1858,10 @@ class BUFRInterfaceECMWF:
         # arrays to hold the descriptors
         self.ktdlen = 0 # will hold nr of descriptors
         self.ktdlst = np.zeros(actual_nr_of_descriptors,
-                               dtype = np.int)
+                               dtype = int)
         self.ktdexl = 0 # will hold nr of expanded descriptors
         self.ktdexp = np.zeros(kelem,
-                               dtype = np.int)
+                               dtype = int)
     
         if self.verbose:
             print("calling: ecmwfbufr.busel2():")
@@ -2096,8 +2096,8 @@ class BUFRInterfaceECMWF:
         #  #[ define and fill the list of replication factors
         self.kdata = np.zeros(self.nr_subsets*
                               len(del_repl_max_nr_of_repeats_list),
-                              dtype=np.int)
-        #                      nr_of_delayed_repl_factors, dtype=np.int)
+                              dtype=int)
+        #                      nr_of_delayed_repl_factors, dtype=int)
         i = 0
         for subset in range(self.nr_subsets):
             # Warning: just set the whole array to the maximum you wish to have.
@@ -2135,7 +2135,7 @@ class BUFRInterfaceECMWF:
         # convert the unexpanded descriptor list to a numpy array
         #print("DEBUG: ",[str(d) for d in unexpanded_descriptor_list])
 
-        self.ktdlst = np.array(unexpanded_descriptor_list, dtype=np.int)
+        self.ktdlst = np.array(unexpanded_descriptor_list, dtype=int)
         if self.verbose:
             print("unexpanded nr of descriptors = ", self.ktdlen)
             print("The current list is: ", self.ktdlst)
@@ -2174,7 +2174,7 @@ class BUFRInterfaceECMWF:
         #sys.exit(1)
 
         # define a list to store the expanded descriptor list
-        self.ktdexp = np.zeros(self.max_nr_expanded_descriptors, dtype = np.int)
+        self.ktdexp = np.zeros(self.max_nr_expanded_descriptors, dtype = int)
 
         # define space for decoding text strings
         kelem  = self.max_nr_expanded_descriptors
@@ -2314,13 +2314,13 @@ class BUFRInterfaceECMWF:
             
             # self.ktdlen = 0 # will hold nr of descriptors
             # self.ktdlst = np.zeros(actual_nr_of_descriptors,
-            #                        dtype = np.int)
+            #                        dtype = int)
             # self.ktdexl = 0 # will hold nr of expanded descriptors
             # self.ktdexp = np.zeros(actual_nr_of_expanded_descriptors,
-            #                        dtype = np.int)
+            #                        dtype = int)
             
             self.ktdexp = np.zeros(self.max_nr_expanded_descriptors,
-                                   dtype = np.int)
+                                   dtype = int)
             
             # define space for decoding text strings
             kelem  = self.max_nr_expanded_descriptors
@@ -2419,7 +2419,7 @@ class BUFRInterfaceECMWF:
         num_bytes = self.estimated_num_bytes_for_encoding
         # num_bytes = 15000
         num_words = num_bytes//4
-        words = np.zeros(int(num_words), dtype=np.int)
+        words = np.zeros(int(num_words), dtype=int)
 
         # call BUFREN
         self.store_fortran_stdout()
@@ -2598,7 +2598,7 @@ class BUFRInterfaceECMWF:
                  (defs_ksup, 'ksup', self.ksup),
                  ]:
             for i, key in enumerate(key_defs):
-                if key is not 'Reserved':
+                if key != 'Reserved':
                     hdr_info[sec_name+'.'+key] = section[i]
         
         #for i, key in enumerate(defs_ksec0):

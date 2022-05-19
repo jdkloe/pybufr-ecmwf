@@ -75,7 +75,7 @@ def pb_example(input_bufr_file):
         msg_count += 1
 
         print("calling: ecmwfbufr.pbbufr()")
-        databuffer = np.zeros(buffer_size_words, dtype=np.int)
+        databuffer = np.zeros(buffer_size_words, dtype=int)
         ecmwfbufr.pbbufr(c_file_unit, databuffer, buffer_size_bytes,
                          msg_size_bytes, bufr_error_flag)
         print("BUFR message: ", msg_count)
@@ -83,7 +83,7 @@ def pb_example(input_bufr_file):
         # this always gives zero so is not very useful
         # print("pbbufr result: msg_size_bytes = ", msg_size_bytes)
 
-        rawbytes = databuffer.tostring()
+        rawbytes = databuffer.tobytes()
 
         if python3:
             end_section = rawbytes.find(b'7777')

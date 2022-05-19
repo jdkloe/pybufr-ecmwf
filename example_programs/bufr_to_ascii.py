@@ -56,6 +56,9 @@ def print_bufr_content1(input_bufr_file, output_fd, separator,
                       expand_flags=expand_flags)
     msg_nr = -1
     for msg_nr, msg in enumerate(bufr):
+        # msg._bufr_obj.print_sections_012()
+        # return
+
         num_subsets = msg.get_num_subsets()
         list_of_unexp_descr = msg.get_unexp_descr_list()
 
@@ -381,11 +384,11 @@ def print_bufr_content5(input_bufr_file, output_fd, separator,
             selected_values = []
             for i, name in enumerate(list_of_names):
                 selected = False
-                for name in names_to_be_selected:
-                    if name in name.lower():
+                for name2 in names_to_be_selected:
+                    if name2 in name.lower():
                         selected = True
-                for name in names_to_be_excluded:
-                    if name in name.lower():
+                for name2 in names_to_be_excluded:
+                    if name2 in name.lower():
                         selected = False
 
                 if selected:

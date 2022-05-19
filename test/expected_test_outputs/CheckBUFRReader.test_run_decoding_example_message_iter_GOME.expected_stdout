@@ -2,93 +2,94 @@
 BUFR decoding example
 --------------------------------------------------
 loading testfile:  test/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
-(394,)
-394
-394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data[:25] =  [4.0, 220.0, 99.0, 1.0, 2012.0, 9.0, 11.0, 3.0, 42.0, 4.0, 63.20341, -110.45915, 59.53892, -126.76469, 58.77685, -125.7216, 65.5093, -91.24712, 64.94129, -91.15694, 101.07, 1.0, 1.7e+38, 1.7e+38, 1.7e+38]
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
+data.shape =  (394,)
+len(names) =  394
+len(units) =  394
 succesfully decoded data from file:  test/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr
 --------------------------------------------------
 done

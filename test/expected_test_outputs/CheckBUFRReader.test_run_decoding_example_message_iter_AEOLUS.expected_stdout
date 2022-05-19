@@ -1,0 +1,18 @@
+--------------------------------------------------
+BUFR decoding example
+--------------------------------------------------
+loading testfile:  test/testdata/aeolus_l2b.bufr
+data.shape =  (18, 51)
+len(names) =  51
+len(units) =  51
+data[0, :25] =  [48.0, 130.0, 0.0, 0.0, 2015.0, 10.0, 1.0, 1.0, 3.0, 6.653997, 1.0, 1.0, 0.0, 1.0, 2.0, 43.05866, 77.66238, 38.0, 3.0, 42.92885, 77.63153, 40.0, 4.0, 42.98077, 77.64386]
+data.shape =  (33, 51)
+len(names) =  51
+len(units) =  51
+data.shape =  (21, 51)
+len(names) =  51
+len(units) =  51
+succesfully decoded data from file:  test/testdata/aeolus_l2b.bufr
+--------------------------------------------------
+done
+--------------------------------------------------

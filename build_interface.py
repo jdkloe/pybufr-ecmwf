@@ -56,6 +56,8 @@ CFLAGS_COMMON = ['-O', '-fPIC']
 # needed to build the ECMWF BUFR library
 FFLAGS_NEEDED = {'g95': ['-i4', '-r8', '-fno-second-underscore'],
                  'gfortran': ['-fno-second-underscore', ],
+                 'gfortran_10': ['-fno-second-underscore',
+                                 '-fallow-argument-mismatch',],
                  'g77': ['-i4', ],
                  'f90': ['-i4', ],
                  'f77': ['-i4', ],
@@ -981,12 +983,17 @@ class InstallBUFRInterfaceECMWF(object):
                                        'bufrdc_tables*.tar.gz')
                 tgz_filelist = glob.glob(pattern)
                 if len(tgz_filelist) > 0:
-                    tgz_file = tgz_filelist[0]
+                    tgz_file = tgz_filelist[-1] # take the newest file
 
                     cmd = 'cp '+tgz_file+' '+self.ecmwf_bufr_lib_dir
                     print("Executing command: ", cmd)
                     os.system(cmd)
                     break
+                else:
+                    errtxt = ('Sorry, could not find replacement bufr tables '+
+                              'tar file. Something seems wrong with '+
+                              'this installation.')
+                    raise LibraryBuildError(errtxt)
 
             base = os.path.split(absdirname)[0]
             absdirname = base
@@ -1062,14 +1069,18 @@ class InstallBUFRInterfaceECMWF(object):
         # after unpacking. Use the tarfile module and look inside:
         tarfile_obj = tarfile.open(list_of_bufr_tables_tarfiles[0], 'r:gz')
         names = tarfile_obj.getnames()
-        print("names[0:5] = ", names[0:5])
-        # sys.exit(1)
-        # get the dir name from the second eleent in the list
+        # print("names[0:5] = ", names[0:5])
+
+        # get the dir name from the second element in the list
         bufr_tables_dir = os.path.split(names[1])[0]
         tarfile_obj.close()
 
         bufr_tables_dir = os.path.join(ecmwf_bufr_lib_dir, bufr_tables_dir)
 
+        # print('bufr_tables_dir = ', bufr_tables_dir)
+        # print('tarfile_to_install = ', tarfile_to_install)
+        # sys.exit(1)
+        
         return (bufr_tables_dir, tarfile_to_install)
         #  #]
     def install(self, remake=False):
@@ -1210,6 +1221,7 @@ class InstallBUFRInterfaceECMWF(object):
             shutil.move(tables_dir, tables_dir+'.orig')
 
             # get a copy of the bundled replacement tables dir
+            # and place it in the ecmwf_bufr_lib dir
             self.use_bundled_tables_dir_copy()
 
             (replacement_bufr_tables_dir, tables_tarfile_to_install) = \
@@ -1226,6 +1238,13 @@ class InstallBUFRInterfaceECMWF(object):
             print('Executing: ', cmd)
             os.system(cmd)
 
+            # ensure permissions are sane
+            # (version 000412 has no write permission, which
+            #  breaks the clean command...)
+            cmd = 'chmod -R u+w '+replacement_bufr_tables_dir
+            print('Executing: ', cmd)
+            os.system(cmd)
+            
             # rename the bufr tables dir to put it in the right location
             cmd = 'mv '+replacement_bufr_tables_dir+' '+tables_dir
             print('Executing: ', cmd)
@@ -1257,7 +1276,9 @@ class InstallBUFRInterfaceECMWF(object):
             # and python code, but the regexp in the perl check script
             # stumbles on this problem).
             # Reported to ECMWF in jira issue SUP-2096
-            if tables_tarfile_to_install == 'bufrdc_tables-4.1.1-Source.tar.gz':
+            if tables_tarfile_to_install in \
+                   ['bufrdc_tables-4.1.1-Source.tar.gz',
+                    'bufrdc_tables-4.1.2.tar.gz']:
                 for fn in ['Makefile', 'Makefile.in']:
                     mk_file = os.path.join(source_dir, fn)
                     if os.path.exists(mk_file):
@@ -1473,7 +1494,23 @@ class InstallBUFRInterfaceECMWF(object):
                 fflags = ' '.join(flags for flags in FFLAGS_COMMON)
             else:
                 fcmp = self.fortran_compiler_to_use
-                fflags = ' '.join(flags for flags in FFLAGS_NEEDED[fcmp])
+                fflags_to_use = FFLAGS_NEEDED[fcmp]
+
+                # exception for gfortran v10+
+                if fcmp == 'gfortran':
+                    version_file = 'gfortran_version.txt'
+                    cmd = '{}  --version > {}'.format(fcmp, version_file)
+                    os.system(cmd)
+                    with open(version_file, 'rt') as fd_ver:
+                        line = fd_ver.readline()
+                    parts = line.split()
+                    version = parts[3]
+                    version_major = int(version.split('.')[0])
+
+                    if version_major >= 10:
+                        fflags_to_use = FFLAGS_NEEDED['gfortran_10']
+
+                fflags = ' '.join(flags for flags in fflags_to_use)
 
             # add any custom flags given by the user
             if self.fortran_flags != None:

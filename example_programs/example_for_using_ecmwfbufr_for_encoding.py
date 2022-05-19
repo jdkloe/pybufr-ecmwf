@@ -75,21 +75,21 @@ def encoding_example(output_bufr_file):
     print('------------------------------')
     print('reinitialising all arrays...')
     print('------------------------------')
-    #ksup   = np.zeros(          9, dtype = np.int)
-    ksec0 = np.zeros(3, dtype=np.int)
-    ksec1 = np.zeros(40, dtype=np.int)
-    ksec2 = np.zeros(4096, dtype=np.int)
-    #key    = np.zeros(         52, dtype = np.int)
-    ksec3 = np.zeros(4, dtype=np.int)
-    ksec4 = np.zeros(2, dtype=np.int)
-    cnames = np.zeros((kelem, 64), dtype=np.character)
-    cunits = np.zeros((kelem, 24), dtype=np.character)
+    #ksup   = np.zeros(          9, dtype = int)
+    ksec0 = np.zeros(3, dtype=int)
+    ksec1 = np.zeros(40, dtype=int)
+    ksec2 = np.zeros(4096, dtype=int)
+    #key    = np.zeros(         52, dtype = int)
+    ksec3 = np.zeros(4, dtype=int)
+    ksec4 = np.zeros(2, dtype=int)
+    cnames = np.zeros((kelem, 64), dtype='S1')
+    cunits = np.zeros((kelem, 24), dtype='S1')
     values = np.zeros(kvals, dtype=np.float64) # this is the default
-    cvals = np.zeros((kvals, 80), dtype=np.character)
+    cvals = np.zeros((kvals, 80), dtype='S1')
     ktdlen = 0
-    ktdlst = np.zeros(max_nr_descriptors, dtype=np.int)
+    ktdlst = np.zeros(max_nr_descriptors, dtype=int)
     ktdexl = 0
-    ktdexp = np.zeros(max_nr_expanded_descriptors, dtype=np.int)
+    ktdexp = np.zeros(max_nr_expanded_descriptors, dtype=int)
     kerr = 0
 
     # handle BUFR tables
@@ -207,7 +207,7 @@ def encoding_example(output_bufr_file):
 
     # define a descriptor list
     ktdlen = 9 # length of unexpanded descriptor list
-    ktdlst = np.zeros(ktdlen, dtype=np.int)
+    ktdlst = np.zeros(ktdlen, dtype=int)
 
     # define descriptor 1
     dd_d_date_yyyymmdd = 301011 # date
@@ -285,7 +285,7 @@ def encoding_example(output_bufr_file):
 
     # define and fill the list of replication factors
     num_del_repl_factors = 1
-    kdata = np.zeros(num_subsets*num_del_repl_factors, dtype=np.int)
+    kdata = np.zeros(num_subsets*num_del_repl_factors, dtype=int)
     for i in range(num_subsets):
         # Warning: just set the whole array to the maximum you wish to have.
         # Letting this number vary seems not to work with the current
@@ -356,12 +356,12 @@ def encoding_example(output_bufr_file):
     # call BUFREN
     #   bufren: encode a bufr message
     #sizewords = 200
-    #kbuff = np.zeros(num_values, dtype = np.int)
-    cvals = np.zeros((num_values, 80), dtype=np.character)
+    #kbuff = np.zeros(num_values, dtype = int)
+    cvals = np.zeros((num_values, 80), dtype='S1')
     # define the output buffer
     num_bytes = 5000
     num_words = num_bytes//4
-    words = np.zeros(num_words, dtype=np.int)
+    words = np.zeros(num_words, dtype=int)
 
     ecmwfbufr.bufren(ksec0, ksec1, ksec2, ksec3, ksec4,
                      ktdlst, kdata, exp_descr_list_length,
