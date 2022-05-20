@@ -28,7 +28,6 @@ from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf.bufr_template import BufrTemplate
 #from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 #from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
-#from pybufr_ecmwf.helpers import python3
 
 #  #]
 

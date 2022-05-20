@@ -83,17 +83,4 @@ def get_software_root():
                 break
     return software_root
     #  #]
-
-python3=False
-try:
-    if sys.version_info.major == 3:
-        python3=True
-except AttributeError:
-    # python 2.6 and before has no major attibute in sys.version_info
-    # so these will fall back to the default python3
-    pass
-
-major = sys.version_info[0]
-minor = sys.version_info[1]
-python_major_minor = str(major)+'.'+str(minor)
     

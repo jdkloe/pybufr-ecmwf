@@ -59,7 +59,6 @@ from .bufr_table import (BufrTable,
                          Extended_Delayed_Descr_Repl_Factor,
                          Delayed_Descr_and_Data_Rep_Factor,
                          Ext_Delayed_Descr_and_Data_Rep_Factor)
-from .helpers import python3
 from .custom_exceptions import (EcmwfBufrLibError, EcmwfBufrTableError,
                                 IncorrectUsageError)
 #  #]
@@ -1292,12 +1291,8 @@ class BUFRInterfaceECMWF:
             cname_str = b''.join(cname).strip()
             cunit_str = b''.join(cunit).strip()
             # append the string to the list and quote them
-            if python3:
-                txtn = cname_str.decode()
-                txtu = cunit_str.decode()
-            else:
-                txtn = cname_str
-                txtu = cunit_str
+            txtn = cname_str.decode()
+            txtu = cunit_str.decode()
 
             #if (txtn.strip() != ''):
             list_of_names.append(txtn)
@@ -1604,12 +1599,8 @@ class BUFRInterfaceECMWF:
                       "(remember the arrays are counted starting with 0)")
             raise EcmwfBufrLibError(errtxt)
 
-        if python3:
-            txtn = ''.join(c.decode() for c in self.cnames[i])
-            txtu = ''.join(c.decode() for c in self.cunits[i])
-        else:
-            txtn = ''.join(c for c in self.cnames[i])
-            txtu = ''.join(c for c in self.cunits[i])
+        txtn = ''.join(c.decode() for c in self.cnames[i])
+        txtu = ''.join(c.decode() for c in self.cunits[i])
             
         return (txtn.strip(), txtu.strip())
         #  #]

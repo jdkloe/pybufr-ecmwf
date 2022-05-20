@@ -26,19 +26,15 @@ import numpy  # import numerical capabilities
 from pybufr_ecmwf.bufr import BUFRReader
 from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf.bufr_interface_ecmwf import BUFRInterfaceECMWF
-from pybufr_ecmwf.helpers import python3
 
 #  #]
 
 def to_str(val):
     #  #[ a little conversion function
-    #print('type(val) = ', type(val))
-    if python3:
-        if type(val) in [bytes, str]:
-            return '"'+str(val)+'"'
-    else:
-        if type(val) in [str, unicode]:
-            return '"'+str(val)+'"'
+    # print('type(val) = ', type(val))
+    if type(val) in [bytes, str]:
+        return '"'+str(val)+'"'
+
     return str(val)
     #  #]
 
@@ -216,12 +212,8 @@ def print_bufr_content3(input_bufr_file, output_fd, separator,
             list_of_units = []
             for (cname, cunit) in zip(bufr_obj.cnames, bufr_obj.cunits):
                 # glue the ndarray of characters together to form strings
-                if python3:
-                    cname_str = ''.join(c.decode() for c in cname).strip()
-                    cunit_str = ''.join(c.decode() for c in cunit).strip()
-                else:
-                    cname_str = ''.join(cname).strip()
-                    cunit_str = ''.join(cunit).strip()
+                cname_str = ''.join(c.decode() for c in cname).strip()
+                cunit_str = ''.join(c.decode() for c in cunit).strip()
 
                 # cnames is a bit over dimensioned, so check for empty values
                 if cname_str.strip() == '':

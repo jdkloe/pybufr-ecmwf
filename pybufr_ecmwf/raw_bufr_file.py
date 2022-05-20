@@ -32,7 +32,6 @@ from __future__ import (absolute_import, division,
 import os          # operating system functions
 import numpy as np # import numerical capabilities
 import struct      # allow converting c datatypes and structs
-from .helpers import python3
 #  #]
 
 class RawBUFRFile:
@@ -605,11 +604,7 @@ class RawBUFRFile:
             # print('nbytes_rounded = ',nbytes_rounded)
             num_zeros_to_add = nbytes_rounded+4-nbytes
             # print('num_zeros_to_add = ',num_zeros_to_add)
-            if python3:
-                str_to_add = b''.join(b'\x00' for i in range(num_zeros_to_add))
-            else:
-                str_to_add = ''.join(b'\x00' for i in range(num_zeros_to_add))
-
+            str_to_add = b''.join(b'\x00' for i in range(num_zeros_to_add))
             raw_data_bytes = raw_data_bytes + str_to_add
 
         if (self.verbose):

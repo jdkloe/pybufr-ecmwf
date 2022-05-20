@@ -32,7 +32,6 @@ import numpy as np # import numerical capabilities
 
 # import the raw wrapper interface to the ECMWF BUFR library
 from pybufr_ecmwf import ecmwfbufr
-from pybufr_ecmwf.helpers import python3
 #  #]
 
 def pb_example(input_bufr_file):
@@ -84,11 +83,7 @@ def pb_example(input_bufr_file):
         # print("pbbufr result: msg_size_bytes = ", msg_size_bytes)
 
         rawbytes = databuffer.tobytes()
-
-        if python3:
-            end_section = rawbytes.find(b'7777')
-        else:
-            end_section = rawbytes.find('7777')
+        end_section = rawbytes.find(b'7777')
 
         print('end_section = ', end_section)
         if end_section == -1:
@@ -108,10 +103,8 @@ def pb_example(input_bufr_file):
         # print("(rough estimate) msg_size_bytes = ", msg_size_bytes)
 
         print("raw words [0:4] = ", databuffer[0:4])
-        if python3:
-            print("raw bytes [0:4] = ", rawbytes[0:4].decode())
-        else:
-            print("raw bytes [0:4] = ", rawbytes[0:4])
+        print("raw bytes [0:4] = ", rawbytes[0:4].decode())
+
         # print("raw bytes [0:4] = ", [ord(b) for b in rawbytes[0:4]])
         print("pbbufr: bufr_error_flag = ", bufr_error_flag)
 

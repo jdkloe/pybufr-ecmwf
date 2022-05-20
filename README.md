@@ -44,12 +44,12 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home
 
 ## Requirements
 
-* python 2.6 or above or python 3.x
+* python 3.x
 
 * numpy (and its f2py component)
   (note that on linux they may be packaged separately, for example
-   Fedora splits them in python2-numpy and python2-numpy-f2py)
-  
+   Fedora splits them in python3-numpy and python3-numpy-f2py)
+
 * gcc and gfortran
 
 ## Compatibility
@@ -102,7 +102,7 @@ https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home
 ## Copyright
 
 The python source code for this module
-is copyright (c) 2009-2016 by Jos de Kloe
+is copyright (c) 2009-2022 by Jos de Kloe
 and placed under the LGPLv3 license.
 The included unaltered copy of the ECMWF bufrdc library source code
 is copyright (c) 1981-2016 ECMWF and is Apache v2.0 licensed.
@@ -113,4 +113,4 @@ Questions, issues and requests for new features can be posted
 on the issues page: https://github.com/jdkloe/pybufr-ecmwf/issues
 or directly emailed to me at josdekloe@gmail.com
 
-Jos de Kloe, 18-Aug-2016.
+Jos de Kloe, 20-May-2022.

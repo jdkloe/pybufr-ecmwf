@@ -36,7 +36,7 @@ import stat        # handling of file stat data
 import datetime    # date handling functions
 
 from pybufr_ecmwf.helpers import (get_and_set_the_module_path,
-                                  get_software_root, python3)
+                                  get_software_root)
 from pybufr_ecmwf.custom_exceptions import (ProgrammingError,
                                             LibraryBuildError,
                                             InterfaceBuildError)
@@ -73,11 +73,7 @@ for k in FFLAGS_NEEDED:
 for k in CFLAGS_NEEDED:
     CFLAGS_NEEDED[k].extend(CFLAGS_COMMON)
 
-# python2 version
-SO_FILE_PATTERN = 'ecmwfbufr.so'
-if python3:
-    # python3 version
-    SO_FILE_PATTERN = 'ecmwfbufr.cpython*.so'
+SO_FILE_PATTERN = 'ecmwfbufr.cpython*.so'
 
 #  #]
 
@@ -1838,10 +1834,8 @@ class InstallBUFRInterfaceECMWF(object):
 
         #  #[ some settings
         signatures_filename = "signatures.pyf"
-        if python3:
-            f2py_tool_name = 'python3 ./run_f2py_tool.py'
-        else:
-            f2py_tool_name = 'python ./run_f2py_tool.py'
+        f2py_tool_name = 'python3 ./run_f2py_tool.py'
+
         #f2py_tool_name = 'f2py'
         #os.system('chmod u+x '+f2py_tool_name)
 

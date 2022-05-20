@@ -47,7 +47,6 @@ import sys
 import glob
 import csv
 
-from pybufr_ecmwf.helpers import python3
 from pybufr_ecmwf.custom_exceptions import (
     ProgrammingError, EcmwfBufrTableError)
 #  #]
@@ -58,12 +57,6 @@ Delayed_Descr_Repl_Factor = int('031001', 10)
 Extended_Delayed_Descr_Repl_Factor = int('031002', 10)
 Delayed_Descr_and_Data_Rep_Factor = int('031011', 10)
 Ext_Delayed_Descr_and_Data_Rep_Factor = int('031012', 10)
-
-if python3:
-    # workaround to silence flake8 when I use long in
-    # python2 specific workarounds
-    long = int
-
 
 class Descriptor:  # [a simple table B entry]
     #  #[
@@ -140,12 +133,6 @@ class Descriptor:  # [a simple table B entry]
             #       self.__class__.__instance_dict__)
             raise aerr
         #  #]
-
-    def __long__(self):
-        if python3:
-            return int(self.reference)
-        else:
-            return long(self.reference)
 
     def get_count(self):
         return 1
@@ -1698,15 +1685,14 @@ class BufrTable:
 
         # load blocks of lines that define each flag
         this_lineblock = []
-        if python3:
-            # note: bufr uses CCITT-5 encoding (also known as us-ascii)
-            # for all text fields. However there is no such
-            # definition for the descriptions in the c-table file.
-            # From experience with the ECMWF files it seems they
-            # use the latin-1 alphabet in stead.
-            cfd = open(cfile, 'rt', encoding='latin_1')
-        else:
-            cfd = open(cfile, 'rt')
+
+        # note: bufr uses CCITT-5 encoding (also known as us-ascii)
+        # for all text fields. However there is no such
+        # definition for the descriptions in the c-table file.
+        # From experience with the ECMWF files it seems they
+        # use the latin-1 alphabet in stead.
+        cfd = open(cfile, 'rt', encoding='latin_1')
+
         for (i, line) in enumerate(cfd.readlines()):
             line_copy = line.replace('\r', '').replace('\n', '')
             # skip empty lines

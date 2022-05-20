@@ -57,8 +57,7 @@ import subprocess # support running additional executables
 import stat       # to retrieve a file modification timestamp
 import time       # to handle date/time formatting
 
-from pybufr_ecmwf.helpers import (get_and_set_the_module_path, python3,
-                                  python_major_minor)
+from pybufr_ecmwf.helpers import get_and_set_the_module_path
 from pybufr_ecmwf.custom_exceptions import IncorrectUsageError
 
 DUMMY_SYS_PATH = sys.path[:] # provide a copy
@@ -157,12 +156,9 @@ def call_cmd(cmd, rundir=''):
     if rundir:
         os.chdir(cwd)
 
-    if python3:
-        text_lines_stdout = [l.decode() for l in lines_stdout]
-        text_lines_stderr = [l.decode() for l in lines_stderr]
-        return (text_lines_stdout, text_lines_stderr)
-    else:
-        return (lines_stdout, lines_stderr)
+    text_lines_stdout = [l.decode() for l in lines_stdout]
+    text_lines_stderr = [l.decode() for l in lines_stderr]
+    return (text_lines_stdout, text_lines_stderr)
     #  #]
 
 def prune_stderr_line(line):
@@ -264,9 +260,7 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
     expected_stdout = basename_exp+".expected_stdout"
     expected_stderr = basename_exp+".expected_stderr"
 
-    tmp_cmd = 'python '+cmd
-    if python3:
-        tmp_cmd = 'python3 '+cmd
+    tmp_cmd = 'python3 '+cmd
     # execute the test and catch all output
     (lines_stdout, lines_stderr) = call_cmd(tmp_cmd, rundir)
 
@@ -1090,13 +1084,7 @@ if not use_eccodes:
         #self.assertEqual(names, ['UNITS NAME',])
         # 000015 will be interpreted as octal, dont use that
         stored_sys_stderr = sys.stderr
-        if python3:
-            # this one fails for python2.7, since it expects unicode strings
-            # but it works just fine for other python versions ...
-            from io import StringIO
-        else:
-            # note: this one allows both bytes, and unicode strings in py2.7
-            from StringIO import StringIO
+        from io import StringIO
         sys.stderr = StringIO()
         self.msg[0] = '0123456789'*3
         expected_result = "WARNING: string is too long and will be truncated"
@@ -1190,22 +1178,17 @@ if not use_eccodes:
                           bufrfile.open, self.corruptedtestinputfile, 'q')
 
         # check behaviour when filename is not a string
-        if python3:
-            expected_exception = OSError
-            if python_major_minor == '3.2':
-                expected_exception = TypeError
-            # Note: the python3 case for this assert prints some info
-            # to stdout in case the test succeeds, which doesn't give the
-            # nice dotted lines when running unit tests that all pass...
-            # Therefore suppress stdout for this line.
-            devnull = open(os.devnull, 'w')
-            stdout_saved = sys.stdout
-            sys.stdout = devnull
-            self.assertRaises(expected_exception, bufrfile.open, 123, 'rb')
-            sys.stdout = stdout_saved
-            devnull.close()
-        else:
-            self.assertRaises(TypeError, bufrfile.open, 123, 'rb')
+        expected_exception = OSError
+        # Note: the python3 case for this assert prints some info
+        # to stdout in case the test succeeds, which doesn't give the
+        # nice dotted lines when running unit tests that all pass...
+        # Therefore suppress stdout for this line.
+        devnull = open(os.devnull, 'w')
+        stdout_saved = sys.stdout
+        sys.stdout = devnull
+        self.assertRaises(expected_exception, bufrfile.open, 123, 'rb')
+        sys.stdout = stdout_saved
+        devnull.close()
 
         # check behaviour when file does not exist
         self.assertRaises(IOError, bufrfile.open, 'dummy', 'rb',
@@ -1740,24 +1723,8 @@ os.system('\\rm -rf /tmp/pybufr_ecmwf_temporary_files_*/tmp_BUFR_TABLES')
 
 # this just runs all tests
 print("Running unit tests:")
-
-if python_major_minor <= '2.6':
-    # see: http://stackoverflow.com/questions/79754/unittest-causing-sys-exit
-    # and: https://docs.python.org/2/library/unittest.html#basic-example
-    testclasses = [CheckRawECMWFBUFR, CheckBUFRInterfaceECMWF,
-                   CheckRawBUFRFile, CheckBufrTable,
-                   CheckCustomTables, CheckBufr,
-                   CheckAddedFortranCode, CheckVersionInfo]
-    suites = [unittest.TestLoader().loadTestsFromTestCase(testclass)
-              for testclass in testclasses]
-    alltests = unittest.TestSuite(suites)
-    runner = unittest.TextTestRunner()
-    test_result = runner.run(alltests)
-    test_success = test_result.wasSuccessful()
-else:
-    # exit parameter was introduced in python 2.7
-    test_result = unittest.main(exit=False)
-    test_success = test_result.result.wasSuccessful()
+test_result = unittest.main(exit=False)
+test_success = test_result.result.wasSuccessful()
 
 # this will exit and not run any code following the next line!
 # unittest.main()

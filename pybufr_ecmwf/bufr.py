@@ -39,7 +39,6 @@ import os
 import numpy   # array functionality
 from .raw_bufr_file import RawBUFRFile
 from .bufr_interface_ecmwf import BUFRInterfaceECMWF, EcmwfBufrLibError
-# from .helpers import python3
 from .custom_exceptions import \
      (NoMsgLoadedError, CannotExpandFlagsError,
       IncorrectUsageError, NotYetImplementedError)

@@ -23,8 +23,6 @@ import sys     # operating system functions
 # import the python file defining the RawBUFRFile class
 #from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
 from pybufr_ecmwf.bufr import BUFRReader
-from pybufr_ecmwf.helpers import python3
-
 #  #]
 
 def construct_unique_filename(list_of_unexp_descr, max_filename_len=75):
@@ -41,10 +39,8 @@ def construct_unique_filename(list_of_unexp_descr, max_filename_len=75):
     if len(output_filename) > max_filename_len:
         import hashlib
         md5 = hashlib.md5()
-        if python3:
-            md5.update(output_filename.encode())
-        else:
-            md5.update(output_filename)
+        md5.update(output_filename.encode())
+
         md5hexsum = md5.hexdigest()
         md5_len = len(md5hexsum)
         if md5_len > max_filename_len:
