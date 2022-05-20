@@ -8,6 +8,9 @@ from __future__ import print_function
 
 import numpy
 
+# import global namespace __main__ as g
+import __main__ as g
+
 # import pybufr_ecmwf
 from pybufr_ecmwf.bufr_table import Descriptor
 from pybufr_ecmwf.bufr_table import CompositeDescriptor
@@ -26,10 +29,15 @@ B_entries = [
      'NUMERIC', 0, 0, 16),
     ]
 
+# 3 dummy definitions to prevent flake8 from complaining
+# since these are actually set by the setattr in the for loop below.
+dummy1 = 'dummy1'
+dummy2 = 'dummy2'
+extdelrepl = 'extdelrepl'
+
+
 bufr_table_set = BufrTable()
 
-# import global namespace __main__ as g
-import __main__ as g
 for (varname, reference, name, unit, unit_scale,
      unit_reference, data_width) in B_entries:
     reference_nr = int(reference, 10)
@@ -45,7 +53,7 @@ for (varname, reference, name, unit, unit_scale,
 D_363192 = CompositeDescriptor(363192,
                                [dummy1,
                                 EDR1([dummy2,
-                                      EDR1([dummy2,]),
+                                      EDR1([dummy2, ]),
                                       ])
                                 ],
                                "test nested delayed replication",
@@ -75,8 +83,8 @@ num_replications1 = [1, 2, 3]
 num_replications2 = [[1, ], [2, 2, ], [3, 3, 3]]
 
 template = BufrTemplate(verbose=True)
-template.add_descriptor(D_363192) # 1 item
-template.del_repl_max_nr_of_repeats_list = ([max_nr_of_replications,]*
+template.add_descriptor(D_363192)  # 1 item
+template.del_repl_max_nr_of_repeats_list = ([max_nr_of_replications, ] *
                                             max_nr_of_replications*num_subsets)
 
 # and use this BUFR template to create a test BUFR message
@@ -92,7 +100,7 @@ bufr.fill_sections_0123(bufr_code_centre=0,
                         bufr_code_subcentre=0,
                         num_subsets=num_subsets,
                         bufr_compression_flag=0)
-                        # 64=compression/0=no compression
+# 64=compression/0=no compression
 
 # determine information from sections 0123 to construct the BUFR table
 # names expected by the ECMWF BUFR library and create symlinks to the
@@ -107,11 +115,11 @@ bufr.register_and_expand_descriptors(template)
 # retrieve the length of the expanded descriptor list
 exp_descr_list_length = bufr.ktdexl
 print("exp_descr_list_length = ", exp_descr_list_length)
-#print("exp_descr_list = ",  bufr.ktdexp)
+# print("exp_descr_list = ",  bufr.ktdexp)
 
 # fill the values array with some dummy varying data
 num_values = num_subsets*bufr.max_nr_expanded_descriptors
-values = numpy.zeros(num_values, dtype=numpy.float64) # this is the default
+values = numpy.zeros(num_values, dtype=numpy.float64)  # this is the default
 print("num_values = ", num_values)
 
 # note: these two must be identical for now, otherwise the
@@ -141,21 +149,20 @@ for subset in range(num_subsets):
         # fill dummy var
         values[i] = 23456.
         i = i+1
-        
+
         # set actual delayed replication number
         values[i] = num_replications2[subset][j]
         i = i+1
         repl_counts.append(num_replications2[subset][j])
-        
-        for l in range(num_replications2[subset][j]):
-            
+
+        for counter in range(num_replications2[subset][j]):
             # fill dummy var
             values[i] = 45678.
             i = i+1
 
 # debug
-print('values[:10]: ', values[:10].tolist()) #numpy.where(values != 0)]))
-print('values[-10:]: ', values[-10:].tolist()) #numpy.where(values != 0)]))
+print('values[:10]: ', values[:10].tolist())  # numpy.where(values != 0)]))
+print('values[-10:]: ', values[-10:].tolist())  # numpy.where(values != 0)]))
 
 # do the encoding to binary format
 bufr.kdata = numpy.array(repl_counts)
@@ -196,4 +203,3 @@ for msg in bufr:
         print(str(subs+1)+','+','.join(str(val) for val in data[:]))
 
 bufr.close()
-
