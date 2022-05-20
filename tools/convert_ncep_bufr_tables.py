@@ -14,7 +14,9 @@ can use them.
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
 #  #[ imported modules
-import os, sys, urllib
+import os, sys
+import urllib, urllib.request, urllib.parse, urllib.error
+
 #  #]
 #  #[ settings
 ascii_source_table_url = 'http://www.emc.ncep.noaa.gov/mmb/data_processing/'+\
@@ -44,28 +46,28 @@ def remove_tags(txt):
 #  #[ if needed, download the html tables
 if not os.path.exists(local_copy):
     try:
-        html_fd = urllib.urlopen(ascii_source_table_url)
+        html_fd = urllib.request.urlopen(ascii_source_table_url)
         html_data = html_fd.read()
         html_fd.close()
     except IOError:
-        print 'Sorry, download of NCEP ASCII BUFR tables html page failed'
-        print 'Please try again later.'
+        print('Sorry, download of NCEP ASCII BUFR tables html page failed')
+        print('Please try again later.')
         sys.exit(1)
 
     # at this point we have one chunck of text in a string,
     # not splitted into lines
-    print 'html_data contains ', len(html_data), ' bytes'
-    fd = open(local_copy, 'w')
+    print('html_data contains ', len(html_data), ' bytes')
+    fd = open(local_copy, 'wb')
     fd.write(html_data)
     fd.close()
 #  #]
 #  #[ read the tables (again) into a list of cleaned lines
 html_data = open(local_copy).readlines()
 
-print 'html_data contains ', len(html_data), ' bytes'
-print 'type(html_data) = ', type(html_data)
-print 'type(html_data[0]) = ', type(html_data[0])
-print 'html_data[0:5] = ', html_data[0:5]
+print('html_data contains ', len(html_data), ' bytes')
+print('type(html_data) = ', type(html_data))
+print('type(html_data[0]) = ', type(html_data[0]))
+print('html_data[0:5] = ', html_data[0:5])
 
 table_start_found = False
 table_lines = []
@@ -75,7 +77,7 @@ for l in html_data:
     if table_start_found:
         table_lines.append(l)
 
-print 'html BUFR table contains ', len(table_lines), ' lines'
+print('html BUFR table contains ', len(table_lines), ' lines')
 
 all_lines_as_text = ''.join(l.strip() for l in table_lines)
 new_lines = all_lines_as_text.split('</p>')
@@ -90,7 +92,7 @@ for l in new_lines:
 #  #[ now extract the actual data and sort into 3 dicts
 
 #for l in cleaned_table_lines:
-#    print l
+#    print(l)
 #sys.exit(1)
 
 mnemonic_defs   = {} # definition of symbols (mnemonics)
@@ -147,18 +149,18 @@ for l in cleaned_table_lines:
                 descriptor_defs[mnemonic] = (scale, reference, numbits, unit)
     #  #]
 #  #[ test prints for the extraction results
-print 'mnemonic_defs:'
-for (key, data) in mnemonic_defs.items():
-    print key+'[%s][%s]' % data
+print('mnemonic_defs:')
+for (key, data) in list(mnemonic_defs.items()):
+    print(key+'[%s][%s]' % data)
 
-print 'sequence_defs:'
-for (key, data) in sequence_defs.items():
-    print key+': [%s]' % data
+print('sequence_defs:')
+for (key, data) in list(sequence_defs.items()):
+    print(key+': [%s]' % data)
 
-print 'descriptor_defs:'
-for (mnemonic, data) in descriptor_defs.items():
-    print mnemonic+'[%s][%s][%s][%s]' % data,
-    print mnemonic_defs[mnemonic]
+print('descriptor_defs:')
+for (mnemonic, data) in list(descriptor_defs.items()):
+    print(mnemonic+'[%s][%s][%s][%s]' % data,)
+    print(mnemonic_defs[mnemonic])
 
 sys.exit(1)
 #  #]
@@ -176,9 +178,9 @@ for (mnemonic, data) in descriptor_defs.items():
     table_b_lines.append(line)
 
 table_b_lines.sort()
-# print '\n'.join(l for l in table_b_lines)
+# print('\n'.join(l for l in table_b_lines))
 
-fd = open(ncep_table_b, 'w')
+fd = open(ncep_table_b, 'wb')
 for l in table_b_lines:
     fd.write(l+'\n')
 fd.close()
