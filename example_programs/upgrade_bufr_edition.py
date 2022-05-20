@@ -75,7 +75,7 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
 
         # encode the data
         bufr_obj.encode_data(bufr_obj.values, bufr_obj.cvals)
-        print 'Encode BUFR msg %i' % msg_nr
+        print('Encode BUFR msg %i' % msg_nr)
 
         rbf_out.write_raw_bufr_msg(bufr_obj.encoded_message)
 
@@ -86,7 +86,7 @@ def upgrade_bufr_file(input_bufr_file, output_bufr_file):
 
 #  #[ run the tool
 if len(sys.argv) < 3:
-    print 'please specify the input and output BUFR file names as argument'
+    print('please specify the input and output BUFR file names as argument')
     sys.exit(1)
 
 INPUT_BUFR_FILE = sys.argv[1]

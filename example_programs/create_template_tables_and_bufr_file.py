@@ -101,15 +101,15 @@ def create_bufr_tables(table_name):
         d_descr = getattr(g, varname)
         bufr_table_set.add_to_D_table(d_descr)
 
-    print '='*50
-    print "B-table:"
-    print '='*50
+    print('='*50)
+    print("B-table:")
+    print('='*50)
     bufr_table_set.print_B_table()
-    print '='*50
-    print "D-table:"
-    print '='*50
+    print('='*50)
+    print("D-table:")
+    print('='*50)
     bufr_table_set.print_D_table()
-    print '='*50
+    print('='*50)
 
     # define the table name without preceding 'B' or 'D' character
     # (which will be prepended by the below write method)
@@ -167,7 +167,7 @@ def create_bufr_file(output_bufr_file, template):
 
     # retrieve the length of the expanded descriptor list
     exp_descr_list_length = bufr.ktdexl
-    print "exp_descr_list_length = ", exp_descr_list_length
+    print("exp_descr_list_length = ", exp_descr_list_length)
 
     # fill the values array with some dummy varying data
     num_values = num_subsets*bufr.max_nr_expanded_descriptors
@@ -186,7 +186,7 @@ def create_bufr_file(output_bufr_file, template):
         # note that python starts counting with 0, unlike fortran,
         # so there is no need to take (subset-1)
 
-        print 'subset,exp_descr_list_length = ', subset, exp_descr_list_length
+        print('subset,exp_descr_list_length = ', subset, exp_descr_list_length)
         i = subset*exp_descr_list_length
 
         # fill the message with some dummy data
@@ -217,7 +217,7 @@ def create_bufr_file(output_bufr_file, template):
         if USE_DELAYED_REPLICATION:
             # set actual delayed replication repeats
             num_repl = 3 + 2*subset
-            print 'num_repl = ', num_repl
+            print('num_repl = ', num_repl)
             values[i] = num_repl
             i += 1
             repl_counts.append(num_repl)
@@ -231,10 +231,10 @@ def create_bufr_file(output_bufr_file, template):
 
     # do the encoding to binary format
     bufr.kdata = numpy.array(repl_counts)
-    print 'bufr.kdata = ', bufr.kdata
+    print('bufr.kdata = ', bufr.kdata)
     bufr.encode_data(values, cvals)
 
-    print 'DEBUG: values = ', values
+    print('DEBUG: values = ', values)
 
     from pybufr_ecmwf.raw_bufr_file import RawBUFRFile
     # get an instance of the RawBUFRFile class
@@ -253,7 +253,7 @@ def reopen_bufr_file(input_bufr_file):
     '''
     open a bufr file for reading and print its content
     '''
-    print '*'*50
+    print('*'*50)
     from pybufr_ecmwf.bufr import BUFRReader
 
     bob = BUFRReader(input_bufr_file, warn_about_bufr_size=False)
@@ -261,29 +261,29 @@ def reopen_bufr_file(input_bufr_file):
                      table_d_to_use='D'+TABLE_NAME)
 
     bob.get_next_msg()
-    print 'num_subsets:  ', bob.get_num_subsets()
+    print('num_subsets:  ', bob.get_num_subsets())
 
     if USE_DELAYED_REPLICATION:
         data1 = bob.get_subset_values(0)
-        print 'data1 = ', data1
+        print('data1 = ', data1)
         data2 = bob.get_subset_values(1)
-        print 'data2 = ', data2
+        print('data2 = ', data2)
     else:
-        print 'num_elements: ', bob.get_num_elements()
-        print bob.get_names()
-        print bob.get_units()
+        print('num_elements: ', bob.get_num_elements())
+        print(bob.get_names())
+        print(bob.get_units())
         data = bob.get_values_as_2d_array()
-        print data.shape
-        print data
-        print 'bob.bufr_obj.values = '
-        print bob.bufr_obj.values
+        print(data.shape)
+        print(data)
+        print('bob.bufr_obj.values = ')
+        print(bob.bufr_obj.values)
 
     textdata = bob.get_value(3, 0)
-    print 'textdata(3,0)', textdata
+    print('textdata(3,0)', textdata)
     textdata = bob.get_value(3, 0, get_cval=True)
-    print 'textdata(3,0)', textdata
+    print('textdata(3,0)', textdata)
     textdata = bob.get_values(3, get_cval=True)
-    print 'textdata(3,:)', textdata
+    print('textdata(3,:)', textdata)
 
     bob.close()
     #  #]

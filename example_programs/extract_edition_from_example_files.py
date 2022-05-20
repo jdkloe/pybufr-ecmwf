@@ -16,6 +16,5 @@ and show the bufr edition numbers for them.
 import os, glob
 for f in glob.glob('pybufr_ecmwf/ecmwf_bufr_lib/000401/data/*.bufr'):
     cmd = 'example_programs/bufr_extract_edition.py '+f
-    print f
+    print(f)
     os.system(cmd)
-

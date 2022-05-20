@@ -86,7 +86,7 @@ try:
     # from pybufr_ecmwf import bufr
     # from pybufr_ecmwf import bufr_table
     from pybufr_ecmwf import ecmwfbufr
-except (SyntaxError, ImportError) as err:
+except (SyntaxError, ImportError):  # as err:
     # ensure the code reaches the point where the pybufr_ecmwf.renamed
     # is renamed back to pybufr_ecmwf, so allow imports to fail
     print('ERROR: some imports failed!!!')

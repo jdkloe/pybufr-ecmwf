@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 this small example program loads the BUFR B- and D-tables
@@ -13,7 +13,7 @@ import sys
 from pybufr_ecmwf.bufr_table import BufrTable
 
 if len(sys.argv) < 3:
-    print 'please give 2 BUFR TABLE files as argument'
+    print('please give 2 BUFR TABLE files as argument')
     sys.exit(1)
 
 BTABLE_FILE = sys.argv[1]
