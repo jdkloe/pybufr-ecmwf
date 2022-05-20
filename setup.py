@@ -376,7 +376,6 @@ CL = ["Development Status :: 3 - Alpha",
       "Natural Language :: English",
       "Operating System :: POSIX",
       "Programming Language :: Fortran",
-      "Programming Language :: Python :: 2",
       "Programming Language :: Python :: 3",
       "Topic :: Scientific/Engineering",
       "Topic :: Software Development :: Libraries"]
