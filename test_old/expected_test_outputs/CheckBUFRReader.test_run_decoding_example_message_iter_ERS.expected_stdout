@@ -1,12 +1,12 @@
 --------------------------------------------------
 BUFR decoding example
 --------------------------------------------------
-loading testfile:  test/testdata/ISXH58EUSR199812162225
+loading testfile:  test_old/testdata/ISXH58EUSR199812162225
 data.shape =  (361, 44)
 len(names) =  44
 len(units) =  44
 data[0, :25] =  [2.0, 803.0, 210.0, 1.0, 348.0, 1998.0, 12.0, 16.0, 22.0, 26.0, 36.49, 7164713.59, 106558.26, -27.79, 15.73201, -1631.52779, 7377.06727, 8.0, 1998.0, 12.0, 16.0, 22.0, 25.0, 27.776, -3.63]
-succesfully decoded data from file:  test/testdata/ISXH58EUSR199812162225
+succesfully decoded data from file:  test_old/testdata/ISXH58EUSR199812162225
 --------------------------------------------------
 done
 --------------------------------------------------

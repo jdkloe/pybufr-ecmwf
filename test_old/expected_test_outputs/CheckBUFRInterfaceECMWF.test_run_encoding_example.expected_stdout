@@ -25,7 +25,7 @@ bufren call finished
 words[:5] =  [1380341058, 79298560, 1441792, 25088, 196608]
 words[10:25] =  [520110604, 201590529, 84099585, 67073, 2080407296, -2114093316, 1398679375, -1635526455, 1949024674, 1209955880, 251724070, -771487987, -235691665, 486929659, 1531418469]
 encoded size:  47  words or  188  bytes
-succesfully written BUFR encoded data to file:  test/testdata/Testoutputfile1u.BUFR
+succesfully written BUFR encoded data to file:  test_old/testdata/Testoutputfile1u.BUFR
 --------------------------------------------------
 done
 --------------------------------------------------

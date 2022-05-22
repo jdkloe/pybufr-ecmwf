@@ -98,7 +98,7 @@ except (SyntaxError, ImportError):  # as err:
 #  #]
 #  #[ some constants
 EXAMPLE_PROGRAMS_DIR = 'example_programs'
-TEST_DIR = 'test'
+TEST_DIR = 'test_old'
 TESTDATADIR = os.path.join(TEST_DIR, 'testdata')
 EXP_OUTP_DIR = os.path.join(TEST_DIR, 'expected_test_outputs')
 ACT_OUTP_DIR = os.path.join(TEST_DIR, 'actual_test_outputs')
@@ -1326,9 +1326,12 @@ if not use_eccodes:
         require different templates and different tables.
         """
         # run the provided example code and verify the output
-        testfile1 = 'test/testdata/S-O3M_GOME_NOP_02_M02_20120911'+\
-                    '034158Z_20120911034458Z_N_O_20120911043724Z.bufr'
-        testfile2 = 'test/testdata/Testfile.BUFR'
+        testfile1 = os.path.join(TESTDATADIR,
+                                 'S-O3M_GOME_NOP_02_M02_20120911' +
+                                 '034158Z_20120911034458Z_N_O_' +
+                                 '20120911043724Z.bufr')
+        testfile2 = os.path.join(TESTDATADIR, 'Testfile.BUFR')
+                                 
 
         # example_programs/
         testprog = "test_read_multiple_bufr_files.py"
@@ -1367,13 +1370,13 @@ if not use_eccodes:
         self.assertEqual(success, True)
 
         # verify the content of the created table files
-        expected_b_table_file = os.path.join('test',
+        expected_b_table_file = os.path.join(TEST_DIR,
                                              'expected_test_outputs',
                                              b_table_file+'.expected')
-        expected_c_table_file = os.path.join('test',
+        expected_c_table_file = os.path.join(TEST_DIR,
                                              'expected_test_outputs',
                                              c_table_file+'.expected')
-        expected_d_table_file = os.path.join('test',
+        expected_d_table_file = os.path.join(TEST_DIR,
                                              'expected_test_outputs',
                                              d_table_file+'.expected')
 

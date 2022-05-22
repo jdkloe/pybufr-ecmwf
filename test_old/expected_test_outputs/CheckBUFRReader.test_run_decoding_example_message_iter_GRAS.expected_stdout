@@ -1,12 +1,12 @@
 --------------------------------------------------
 BUFR decoding example
 --------------------------------------------------
-loading testfile:  test/testdata/S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR
+loading testfile:  test_old/testdata/S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR
 data.shape =  (7210,)
 len(names) =  7210
 len(units) =  7210
 data[:25] =  [4.0, 202.0, 94.0, 2.0, 1.7e+38, 17.0, 2012.0, 9.0, 11.0, 3.0, 27.0, 6.538, 8192.0, 1.7e+38, -111436.63, -7016936.0, 1491552.25, -1849.8407, 382.24701, 7198.45947, 401.0, 8.0, 8733850.0, 11646385.0, 22299568.0]
-succesfully decoded data from file:  test/testdata/S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR
+succesfully decoded data from file:  test_old/testdata/S-GRM_-GRAS_RO_L12_20120911032706_001_METOPA_2080463714_DMI.BUFR
 --------------------------------------------------
 done
 --------------------------------------------------

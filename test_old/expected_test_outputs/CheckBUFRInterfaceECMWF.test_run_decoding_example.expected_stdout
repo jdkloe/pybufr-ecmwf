@@ -1,7 +1,7 @@
 --------------------------------------------------
 BUFR decoding example
 --------------------------------------------------
-loading testfile:  test/testdata/Testfile.BUFR
+loading testfile:  test_old/testdata/Testfile.BUFR
 ------------------------------
 calling: decode_sections_012():
 calling: ecmwfbufr.bus012():
@@ -252,7 +252,7 @@ ksup.Real number of elements in CVALS array:0
 ksup.Real number of expanded elements:44
 ksup.Total Bufr message length in bytes:6598
 ------------------------------
-succesfully decoded data from file:  test/testdata/Testfile.BUFR
+succesfully decoded data from file:  test_old/testdata/Testfile.BUFR
 --------------------------------------------------
 done
 --------------------------------------------------

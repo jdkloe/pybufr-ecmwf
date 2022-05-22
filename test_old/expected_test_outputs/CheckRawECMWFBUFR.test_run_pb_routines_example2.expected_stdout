@@ -1,7 +1,7 @@
 --------------------------------------------------
 pb usage example
 --------------------------------------------------
-input_bufr_file = [test/testdata/Testfile3CorruptedMsgs.BUFR]
+input_bufr_file = [test_old/testdata/Testfile3CorruptedMsgs.BUFR]
 calling: ecmwfbufr.pbopen()
 c_file_unit =  0
 pbopen: bufr_error_flag =  0
@@ -34,7 +34,7 @@ BUFR message:  4
 end_section =  -1
 calling: ecmwfbufr.pbclose()
 pbclose: bufr_error_flag =  0
-succesfully read data from file:  test/testdata/Testfile3CorruptedMsgs.BUFR
+succesfully read data from file:  test_old/testdata/Testfile3CorruptedMsgs.BUFR
 --------------------------------------------------
 done
 --------------------------------------------------

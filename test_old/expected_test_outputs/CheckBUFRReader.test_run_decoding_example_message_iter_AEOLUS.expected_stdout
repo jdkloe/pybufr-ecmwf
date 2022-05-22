@@ -1,7 +1,7 @@
 --------------------------------------------------
 BUFR decoding example
 --------------------------------------------------
-loading testfile:  test/testdata/aeolus_l2b.bufr
+loading testfile:  test_old/testdata/aeolus_l2b.bufr
 data.shape =  (18, 51)
 len(names) =  51
 len(units) =  51
@@ -12,7 +12,7 @@ len(units) =  51
 data.shape =  (21, 51)
 len(names) =  51
 len(units) =  51
-succesfully decoded data from file:  test/testdata/aeolus_l2b.bufr
+succesfully decoded data from file:  test_old/testdata/aeolus_l2b.bufr
 --------------------------------------------------
 done
 --------------------------------------------------

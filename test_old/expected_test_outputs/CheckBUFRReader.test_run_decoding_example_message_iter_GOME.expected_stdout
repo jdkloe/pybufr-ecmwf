@@ -1,7 +1,7 @@
 --------------------------------------------------
 BUFR decoding example
 --------------------------------------------------
-loading testfile:  test/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr
+loading testfile:  test_old/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr
 data.shape =  (394,)
 len(names) =  394
 len(units) =  394
@@ -90,7 +90,7 @@ len(units) =  394
 data.shape =  (394,)
 len(names) =  394
 len(units) =  394
-succesfully decoded data from file:  test/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr
+succesfully decoded data from file:  test_old/testdata/S-O3M_GOME_NOP_02_M02_20120911034158Z_20120911034458Z_N_O_20120911043724Z.bufr
 --------------------------------------------------
 done
 --------------------------------------------------
