@@ -11,5 +11,14 @@ even if numpy and numpy.f2py are available as python module.
 # This software is licensed under the terms of the LGPLv3 Licence
 # which can be obtained from https://www.gnu.org/licenses/lgpl.html
 
-from numpy.f2py import main
+import sys
+print('DEBUG: starting f2py main() with options: {}'.format(sys.argv))
+
+try:
+    from numpy.f2py import main
+except ImportError:
+    print('ERROR: import of numpy.f2py failed')
+    print('ERROR: are you sure it is installed?')
+    raise
+
 main()
