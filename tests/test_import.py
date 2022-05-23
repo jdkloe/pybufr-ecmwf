@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import unittest   # import the unittest functionality
+import sys
+import pytest
 
-class CheckImport(unittest.TestCase):
-    def test_importing_pybufr_ecmwf(self):
-        from pybufr_ecmwf.custom_exceptions import EcmwfBufrTableError
-        err = EcmwfBufrTableError()
-        self.assertIsInstance(err, Exception)
-
+def test_importing_pybufr_ecmwf(setup):
+    from pybufr_ecmwf.custom_exceptions import EcmwfBufrTableError
+    from pybufr_ecmwf.ecmwfbufr import bufrex
+    err = EcmwfBufrTableError()
+    assert isinstance(err, Exception)

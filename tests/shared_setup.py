@@ -9,27 +9,6 @@ import subprocess # support running additional executables
 from pybufr_ecmwf.helpers import get_and_set_the_module_path
 
 #  #]
-#  #[ path handling
-DUMMY_SYS_PATH = sys.path[:] # provide a copy
-(DUMMY_SYS_PATH, MY_MODULE_PATH) = get_and_set_the_module_path(DUMMY_SYS_PATH)
-# print '(sys.path, MY_MODULE_PATH) = ',(sys.path, MY_MODULE_PATH)
-
-# in case the build is done by setup.py, the created ecmwfbufr.so module will
-# be in a path like SWROOT/build/lib.linux-x86_64-2.7/pybufr_ecmwf/
-# To ensure the unittests find it, temporarily rename SWROOT/pybufr_ecmwf/
-# and create a symlink to SWROOT/build/lib.linux-x86_64-2.7/pybufr_ecmwf/
-PYBUFR_ECMWF_MODULE_WAS_RENAMED = False
-if 'build/lib' in MY_MODULE_PATH:
-    print('renaming pybufr_ecmwf to pybufr_ecmwf.renamed')
-    shutil.move('pybufr_ecmwf', 'pybufr_ecmwf.renamed')
-    print('creating symlink pybufr_ecmwf')
-    os.symlink(os.path.join(MY_MODULE_PATH, 'pybufr_ecmwf'), # source
-               'pybufr_ecmwf') # destination
-    PYBUFR_ECMWF_MODULE_WAS_RENAMED = True
-#else:
-#    print('MY_MODULE_PATH = ', MY_MODULE_PATH)
-
-#  #]
 #  #[ some constants
 EXAMPLE_PROGRAMS_DIR = 'example_programs'
 TEST_DIR = 'test_old'
@@ -58,6 +37,7 @@ def call_cmd(cmd, rundir=''):
 
     # get the list of already defined env settings
     env = os.environ
+    MY_MODULE_PATH = os.getcwd()
     if 'PYTHONPATH' in env:
         settings = env['PYTHONPATH'].split(':')
         if not MY_MODULE_PATH in settings:
@@ -133,7 +113,7 @@ def prune_stderr_line(line):
     #  #]
 
 #def call_cmd_and_verify_output(cmd, rundir='', verbose=False):
-def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
+def call_cmd_and_verify_output(cmd, testname, rundir='', verbose=True,
                                template_values={}):
     #  #[ call a test script and verify its output
     """ a wrapper around run_shell_command for easier testing.
@@ -180,24 +160,10 @@ def call_cmd_and_verify_output(cmd, rundir='', verbose=True,
 
     # disable the pylint warning:
     # "Access to a protected member _getframe of a client class"
-    # pylint: disable=W0212
-
-    # determine the name of the calling function
-    name_of_calling_function = sys._getframe(1).f_code.co_name
-
-    # determine the name of the class that defines the calling function
-    classname_of_calling_function = \
-                 sys._getframe(1).f_locals['self'].__class__.__name__
-
-    # pylint: enable=W0212
 
     # construct filenames for the actual and expected outputs
-    basename_exp = os.path.join(EXP_OUTP_DIR,
-                                classname_of_calling_function+"."+\
-                                name_of_calling_function)
-    basename_act = os.path.join(ACT_OUTP_DIR,
-                                classname_of_calling_function+"."+\
-                                name_of_calling_function)
+    basename_exp = os.path.join(EXP_OUTP_DIR, testname)
+    basename_act = os.path.join(ACT_OUTP_DIR, testname)
     actual_stdout = basename_act+".actual_stdout"
     actual_stderr = basename_act+".actual_stderr"
     expected_stdout = basename_exp+".expected_stdout"

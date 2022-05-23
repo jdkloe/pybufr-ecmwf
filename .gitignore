@@ -1,1 +1,6 @@
 __pycache__
+.pytest_cache
+test_old/actual_test_outputs/
+test_old/testdata/Testoutputfile*.BUFR
+build
+tmp_BUFR_TABLES

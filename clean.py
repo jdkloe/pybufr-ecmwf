@@ -38,20 +38,24 @@ FILE_GLOB_PATTERNS = ['*~', '*/*~', '*/*/*~', '*.pyc', '*/*.pyc',
                       'pybufr_ecmwf/ecmwfbufr*.so',
                       'pybufr_ecmwf/expected_test_outputs/*.actual_std*',
                       'pybufr_ecmwf/GetByteSize*',
+                      'pybufr_ecmwf/ecmwfbufr.cpython*.so',
                       'pylint_*.txt', '*_my_test_BUFR_table.txt']
-FILES_TO_DELETE = ['pybufr_ecmwf/libbufr.a', 'libbufr.a', 'MANIFEST',
-                   'ecmwfbufr.so',
-                   'pybufr_ecmwf/ecmwf_bufr_lib/config_file',
-                   'ecmwf_bufr_lib/config_file',
-                   'pybufr_ecmwf/ecmwfbufr_parameters.py',
-                   'pybufr_ecmwf/version.py',
-                   'test/testdata/Testoutputfile1u.BUFR',
-                   'test/testdata/Testoutputfile2u.BUFR',
-                   'test/testdata/Testoutputfile3u.BUFR',
-                   'test/testdata/Testoutputfile1.BUFR',
-                   'test/testdata/Testoutputfile1.BUFR.selected_subsets_only',
-                   'test/testdata/Testoutputfile2.BUFR',
-                   'test/testdata/Testoutputfile3.BUFR']
+# files and symlinks to delete
+FILES_TO_DELETE = [
+    'pybufr_ecmwf/libbufr.a', 'libbufr.a', 'MANIFEST',
+    'ecmwfbufr.so',
+    'pybufr_ecmwf/ecmwf_bufr_lib/config_file',
+    'ecmwf_bufr_lib/config_file',
+    'pybufr_ecmwf/ecmwfbufr_parameters.py',
+    'pybufr_ecmwf/version.py',
+    'pybufr_ecmwf/ecmwf_bufrtables',
+    'test_old/testdata/Testoutputfile1u.BUFR',
+    'test_old/testdata/Testoutputfile2u.BUFR',
+    'test_old/testdata/Testoutputfile3u.BUFR',
+    'test_old/testdata/Testoutputfile1.BUFR',
+    'test_old/testdata/Testoutputfile1.BUFR.selected_subsets_only',
+    'test_old/testdata/Testoutputfile2.BUFR',
+    'test_old/testdata/Testoutputfile3.BUFR']
 
 if len(sys.argv) > 1:
     if sys.argv[1] == '--all':
@@ -81,6 +85,9 @@ for pattern in FILE_GLOB_PATTERNS:
 
 for d in dirs_to_delete:
     if os.path.exists(d):
+        if os.path.islink(d):
+            print('deleting symlink to dir: ', d)
+            os.system(r'\rm -rf '+d)
         if os.path.isdir(d):
             print('deleting dir: ', d)
             os.system(r'\rm -rf '+d)
@@ -88,11 +95,11 @@ for d in dirs_to_delete:
     #os.removedirs(d)
 
 for f in files_to_delete:
-    if os.path.exists(f):
-        print('deleting file: ', f)
-        os.remove(f)
     if os.path.islink(f):
         print('deleting symlink: ', f)
+        os.remove(f)
+    if os.path.exists(f):
+        print('deleting file: ', f)
         os.remove(f)
 
 print('done')
