@@ -1,0 +1,4 @@
+numpy
+numpy.f2py
+gcc
+gfortran
