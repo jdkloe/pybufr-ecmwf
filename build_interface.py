@@ -1675,8 +1675,8 @@ class InstallBUFRInterfaceECMWF(object):
         # construct the compilation command:
         cmd = "cd "+source_dir+";make ARCH="+arch+" CNAME="+\
               cname+" R64="+r64+" A64="+a64
-        #if not self.verbose:
-        cmd += " 2>1 > bufrdc_build.log"
+        if not self.verbose:
+            cmd += " 2>1 > bufrdc_build.log"
 
         # now issue the Make command
         if libpath == "":
