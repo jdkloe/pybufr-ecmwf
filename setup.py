@@ -40,6 +40,7 @@ from distutils.command.install_lib import install_lib as _install_lib
 # make the build process more silent
 # (this setting is also passed on to InstallBUFRInterfaceECMWF)
 VERBOSE = False
+VERBOSE = True
 
 if not VERBOSE:
     # set the logging to WARN only
