@@ -1,6 +1,12 @@
 __pycache__
+tests/__pycache__
 .pytest_cache
+pybufr_ecmwf/ecmwf_bufrtables
+pybufr_ecmwf/ecmwfbufr.cpython-310-x86_64-linux-gnu.so
+pybufr_ecmwf/ecmwfbufr_parameters.py
+pybufr_ecmwf/version.py
 test_old/actual_test_outputs/
 test_old/testdata/Testoutputfile*.BUFR
 build
+sample_bufr_files
 tmp_BUFR_TABLES
