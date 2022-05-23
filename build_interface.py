@@ -1689,8 +1689,11 @@ class InstallBUFRInterfaceECMWF(object):
         #  #]
         #  #[ scan the build log for possible problems
         logfile = os.path.join(source_dir, 'bufrdc_build.log')
-        fds = open(logfile,'rb')
-        text = fds.read()
+        text = b''
+        if os.path.exists(logfile):
+            fds = open(logfile,'rb')
+            text = fds.read()
+            fds.close()            
         problem_detected = False
         if b'failed' in text:
             problem_detected = True
@@ -1706,7 +1709,6 @@ class InstallBUFRInterfaceECMWF(object):
             print("Build failed, aborting")
             sys.exit(1)
 
-        fds.close()
         #  #]
         #  #[ check the result and move the library file
         fullname_bufr_lib_file = os.path.join(source_dir, self.bufr_lib_file)
