@@ -620,7 +620,6 @@ def adapt_f2py_signature_file(signature_file, integer_sizes, set_jelem):
                 mod_line = mod_line.replace('dimension(1)', 'dimension(*)')
 
         if 'dimension' in mod_line:
-            #print("adapting line: ", mod_line)
             for edit in edits:
                 txt = '(('+edit.lower()+'))'
                 value = edits[edit]
@@ -631,13 +630,16 @@ def adapt_f2py_signature_file(signature_file, integer_sizes, set_jelem):
                     if txt in mod_line:
                         mod_line = mod_line.replace(txt, '('+str(value)+')')
 
-            #print("to           : ", mod_line)
-
         if mod_line.strip() == "end interface":
             # NOTE: the pb interface routines are written in c, so f2py
             # will not automatically generate their signature. This next
             # subroutine call explicitely adds these signatures.
             insert_pb_interface_definition(sfd, integer_sizes)
+
+        if self.verbose:
+            if mod_line != line:
+                print("adapting line: ", line)
+                print("to           : ", mod_line)
 
         sfd.write(mod_line)
 
@@ -693,13 +695,23 @@ def extract_version():
             quoted_version = line.split('=')[1].replace(',', '')
             software_version = quoted_version.replace("'", '').strip()
 
-    # retrieve the mercurial revision
-    cmd = 'hg log -l 1'
-    lines_stdout = run_shell_command(cmd)[0]
+    # retrieve mercurial revision if possible
     hg_version = 'undefined'
-    for line in lines_stdout:
-        if 'changeset:' in line:
-            hg_version = line.split()[1]
+    if os.path.exists('.hg'):
+        cmd = 'hg log -l 1'
+        lines_stdout = run_shell_command(cmd)[0]
+        for line in lines_stdout:
+            if 'changeset:' in line:
+                hg_version = line.split()[1]
+
+    # retrieve git revision if possible
+    git_version = 'undefined'
+    if os.path.exists('.git'):
+        cmd = 'git log -n 1'
+        lines_stdout = run_shell_command(cmd)[0]
+        for line in lines_stdout:
+            if 'commit:' in line:
+                git_version = line.split()[1]
 
     # retrieve the install date (i.e. todays date)
     # current date formatted as: 07-aug-2009
@@ -710,6 +722,7 @@ def extract_version():
     fds = open(version_file, 'w')
     fds.write("software_version = '"+software_version+"'\n")
     fds.write("hg_version = '"+hg_version+"'\n")
+    fds.write("git_version = '"+git_version+"'\n")
     fds.write("install_date = '"+install_date+"'\n")
     fds.write("version = '"+software_version+'; '+\
              hg_version+'; '+install_date+"'\n")
@@ -908,6 +921,11 @@ class InstallBUFRInterfaceECMWF(object):
         #  #[
         """ a method to clean-up things that I don't want to have
         included in the binary/rpm distributions."""
+
+        # if verbose is set this signals we are debugging the
+        # code, so do not remove temp folders in that case
+        #if self.verbose:
+        return
 
         # this is a bit of a dirty hack.
         # It removes the subdir ecmwf_bufr_lib and everything below

@@ -4,7 +4,10 @@ tests/__pycache__
 pybufr_ecmwf/ecmwf_bufrtables
 pybufr_ecmwf/ecmwfbufr.cpython-310-x86_64-linux-gnu.so
 pybufr_ecmwf/ecmwfbufr_parameters.py
+pybufr_ecmwf/gfortran_version.txt
 pybufr_ecmwf/version.py
+pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_000409.tar.gz
+pybufr_ecmwf/ecmwf_bufr_lib/bufrdc_tables-4.1.1-Source.tar.gz
 test_old/actual_test_outputs/
 test_old/testdata/Testoutputfile*.BUFR
 build
