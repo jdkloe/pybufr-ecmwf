@@ -622,14 +622,24 @@ def adapt_f2py_signature_file(signature_file, integer_sizes, set_jelem,
 
         if 'dimension' in mod_line:
             for edit in edits:
-                txt = '(('+edit.lower()+'))'
-                value = edits[edit]
-                if txt in mod_line:
-                    mod_line = mod_line.replace(txt, '('+str(value)+')')
-                else:
-                    txt = '('+edit.lower()+')'
-                    if txt in mod_line:
-                        mod_line = mod_line.replace(txt, '('+str(value)+')')
+                # the value inside the dimension() spec
+                # in the signature file sometimes has extra braces.
+                # sometimes not (depending on the f2py version).
+                # and in case of 2 dimensions, the value to be replaced
+                # ends with a comma.
+                # So at least 3 cases are to be considered here.
+                txt1 = '(('+edit.lower()+'))'
+                txt2 = '('+edit.lower()+')'
+                txt3 = '('+edit.lower()+','
+                value1 = '('+str(edits[edit])+')'
+                value2 = '('+str(edits[edit])+')'
+                value3 = '('+str(edits[edit])+','
+                if txt1 in mod_line:
+                    mod_line = mod_line.replace(txt1, value1)
+                elif txt2 in mod_line:
+                    mod_line = mod_line.replace(txt2, value2)
+                elif txt3 in mod_line:
+                    mod_line = mod_line.replace(txt3, value3)
 
         if mod_line.strip() == "end interface":
             # NOTE: the pb interface routines are written in c, so f2py
