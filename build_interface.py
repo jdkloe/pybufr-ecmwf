@@ -1694,8 +1694,8 @@ class InstallBUFRInterfaceECMWF(object):
         # construct the compilation command:
         cmd = "cd "+source_dir+";make ARCH="+arch+" CNAME="+\
               cname+" R64="+r64+" A64="+a64
-        if not self.verbose:
-            cmd += " 2>1 > bufrdc_build.log"
+        #if not self.verbose:
+        cmd += " 2>1 > bufrdc_build.log"
 
         # now issue the Make command
         if libpath == "":
@@ -1901,8 +1901,8 @@ class InstallBUFRInterfaceECMWF(object):
                       " -h "+signatures_filename+
                       " "+source_file_list)
 
-            if not self.verbose:
-                cmd += " 2>1 > f2py_build.log"
+            #if not self.verbose:
+            cmd += " 2>1 > f2py_build.log"
 
             if libpath == "":
                 print("Executing command: ", cmd)
@@ -1923,6 +1923,16 @@ class InstallBUFRInterfaceECMWF(object):
                 print("ERROR: build of python wrapper failed")
                 print("the signatures file could not be found")
                 raise InterfaceBuildError
+
+            if self.verbose:
+                # display signatures file since it seems not
+                # possible to extract it from the github workflow
+                fd_sig = open(signatures_fullfilename, 'rb')
+                text = fd_sig.read()
+                print('Starting dump of ', signatures_fullfilename)
+                print(text)
+                print('End of dump of ', signatures_fullfilename)
+                fd_sig.close()
 
             # adapt the signature file
             # this is needed, since the wrapper generation fails to do a number
